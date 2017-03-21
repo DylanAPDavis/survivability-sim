@@ -16,4 +16,10 @@ public class AwsConfig {
 
     @Value("${aws_region}")
     private String region;
+
+    @Value("${aws_role_arn}")
+    private String roleArn;
+
+    @Value("${aws_role_session_name}")
+    private String roleSessionName;
 }
