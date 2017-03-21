@@ -26,8 +26,8 @@ public class SurvivabilitySimApplicationTests {
 		ScanResult result = dynamoInterface.scan("TestsMeta");
 		System.out.println(result.toString());
 
-		List<String> tablesList = dynamoInterface.listTables();
-		System.out.println(tablesList);
+		//List<String> tablesList = dynamoInterface.listTables();
+		//System.out.println(tablesList);
 	}
 
 }
