@@ -22,4 +22,13 @@ public class AwsConfig {
 
     @Value("${aws_role_session_name}")
     private String roleSessionName;
+
+    @Value("${aws_meta_db}")
+    private String metaDb;
+
+    @Value("${aws_raw_bucket}")
+    private String rawBucket;
+
+    @Value("${aws_analyzed_bucket}")
+    private String analyzedBucket;
 }

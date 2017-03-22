@@ -22,9 +22,11 @@ import java.util.List;
 public class DynamoInterface {
 
     private AmazonDynamoDB database;
+    private AwsConfig awsConfig;
 
     @Autowired
-    public DynamoInterface(AwsConfig awsConfig){
+    public DynamoInterface(AwsConfig config){
+        awsConfig = config;
         BasicAWSCredentials awsCreds = new BasicAWSCredentials(awsConfig.getAccessKeyId(), awsConfig.getSecretAccessKey());
         Regions regions = Regions.fromName(awsConfig.getRegion());
         AWSSecurityTokenServiceClient client = new AWSSecurityTokenServiceClient(awsCreds);
@@ -38,9 +40,8 @@ public class DynamoInterface {
                 .build();
     }
 
-    public List<String> listTables(){
-        ListTablesResult listTablesResult = database.listTables();
-        return listTablesResult.getTableNames();
+    public ScanResult scanMetaTable(){
+        return scan(awsConfig.getMetaDb());
     }
 
     public ScanResult scan(String tableName){
@@ -48,5 +49,8 @@ public class DynamoInterface {
         return database.scan(scanRequest);
     }
 
+    public void shutdown(){
+        database.shutdown();
+    }
 
 }
