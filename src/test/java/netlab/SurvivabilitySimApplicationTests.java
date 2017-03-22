@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @RunWith(SpringRunner.class)
@@ -36,8 +37,15 @@ public class SurvivabilitySimApplicationTests {
 	@Test
 	public void uploadToRawS3() {
 		File f = new File("test.txt");
-		Boolean success = s3Interface.uploadToRaw(f, "test.txt");
-		assert(success);
+		try {
+			if(!f.exists()){
+                assert(f.createNewFile());
+            }
+			Boolean success = s3Interface.uploadToRaw(f, "test.txt");
+			assert(success);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Test
@@ -50,8 +58,15 @@ public class SurvivabilitySimApplicationTests {
 	@Test
 	public void uploadToAnalyzedS3() {
 		File f = new File("test.txt");
-		Boolean success = s3Interface.uploadToAnalyzed(f, "test.txt");
-		assert(success);
+		try {
+            if(!f.exists()){
+                assert(f.createNewFile());
+            }
+			Boolean success = s3Interface.uploadToAnalyzed(f, "test.txt");
+			assert(success);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Test
