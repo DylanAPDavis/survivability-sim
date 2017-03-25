@@ -12,12 +12,14 @@ import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import lombok.extern.slf4j.Slf4j;
 import netlab.aws.config.AwsConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.File;
 
+@Slf4j
 @Controller
 public class S3Interface {
 
@@ -29,7 +31,7 @@ public class S3Interface {
     public S3Interface(AwsConfig config){
         // Store the configuration
         awsConfig = config;
-        System.out.println(awsConfig.toString());
+        log.info(awsConfig.toString());
 
         // Build up the credentials
         BasicAWSCredentials awsCreds = new BasicAWSCredentials(awsConfig.getAccessKeyId(), awsConfig.getSecretAccessKey());
@@ -64,7 +66,7 @@ public class S3Interface {
             xfer.waitForCompletion();
             return true;
         } catch (AmazonServiceException | InterruptedException e) {
-            System.err.println(e.getMessage());
+            log.error(e.getMessage());
             return false;
         }
     }
@@ -85,7 +87,7 @@ public class S3Interface {
             // loop with Transfer.isDone()
             // or block with Transfer.waitForCompletion()
         } catch (AmazonServiceException | InterruptedException e) {
-            System.err.println(e.getMessage());
+            log.error(e.getMessage());
             return null;
         }
     }
