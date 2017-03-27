@@ -28,7 +28,7 @@ public class Topology {
 
     Map<Node, Set<Link>> nodeLinkMap;
 
-    public Topology(Set<Node> nodes, Set<Link> links){
+    public Topology(String id, Set<Node> nodes, Set<Link> links){
         this.nodes = nodes;
         this.links = links;
         nodeIdMap = nodes.stream().collect(Collectors.toMap(Node::getId, node -> node));

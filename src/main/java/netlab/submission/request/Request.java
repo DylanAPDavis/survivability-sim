@@ -8,6 +8,8 @@ import netlab.topology.elements.Failure;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,6 +18,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Request {
+
+    private String id;
 
     private Set<Node> sources;
     private Set<Node> destinations;
@@ -27,7 +31,9 @@ public class Request {
     // If any of the above three parameters are not set, use parameters from the pairs
     private Set<SourceDestPair> pairs;
 
-    private Map<SourceDestPair, Integer> numConnectionsMap;
+    private Map<SourceDestPair, List<Integer>> minMaxConnectionsMap;
     private Map<SourceDestPair, Integer> numCutsMap;
     private Map<SourceDestPair, Set<Failure>> failuresMap;
+
+    private Map<SourceDestPair, List<Path>> chosenPaths;
 }

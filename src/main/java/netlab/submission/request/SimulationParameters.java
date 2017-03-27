@@ -1,9 +1,6 @@
 package netlab.submission.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 import java.util.Map;
@@ -14,55 +11,67 @@ import java.util.Map;
 @AllArgsConstructor
 public class SimulationParameters {
 
-    private Long simulationId;
-
+    @NonNull
     private Long seed;
 
+    @NonNull
     private String topologyId;
+
+    @NonNull
     private Integer numRequests;
+
+    @NonNull
     private String algorithm;
 
     // S
+    @NonNull
     private Integer numSources;
     // D
+    @NonNull
     private Integer numDestinations;
 
     // F - pick one field
+    @NonNull
     private Integer numFailures;
-    private Map<String, Map<String, Integer>> numFailuresPairs;
+    @NonNull
     private List<Integer> minMaxFailures;
+    @NonNull
+    private String failureClass;
 
     // C - pick one field
+    @NonNull
     private Integer numConnections;
-    private Map<String, Map<String, Integer>> numConnectionsPairs;
+    @NonNull
     private List<Integer> minMaxConnections;
 
     // k - pick one field
+    @NonNull
     private Integer numCuts;
-    private Map<String, Map<String, Integer>> numCutsPairs;
+    @NonNull
     private List<Integer> minMaxCuts;
 
     // Failure probability - pick one field
+    @NonNull
     private Double failureProb;
-    private Map<String, Map<String, Double>> failureProbPairs;
+    @NonNull
     private List<Double> minMaxFailureProb;
 
-    private boolean batchProcessing;
-
+    @NonNull
     private String batchType;
 
-    private boolean sdn;
+    @NonNull
+    private Boolean sdn;
 
-    private boolean useAws;
+    @NonNull
+    private Boolean useAws;
 
-    private boolean srcFailuresAllowed;
+    @NonNull
+    private Boolean srcFailuresAllowed;
 
-    private Integer numSrcFailures;
+    @NonNull
+    private Boolean dstFailuresAllowed;
 
-    private boolean dstFailuresAllowed;
-
-    private Integer numDstFailures;
-
-    private boolean sourceDestOverlap;
+    @NonNull
+    private Boolean sourceDestCanOverlap;
 
 }

@@ -6,8 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import netlab.submission.enums.Algorithm;
-import netlab.submission.enums.BatchType;
+import netlab.submission.enums.FailureClass;
+import netlab.submission.enums.ProcessingType;
 
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -16,15 +18,19 @@ import java.util.Set;
 @AllArgsConstructor
 public class RequestSet {
 
-    Set<Request> requests;
+    Map<String, Request> requests;
 
-    private Long id;
+    private String id;
 
     private Long seed;
 
+    private String status;
+
     private String topologyId;
 
-    private BatchType batchType;
+    private ProcessingType processingType;
+
+    private FailureClass failureClass;
 
     private Algorithm algorithm;
 
