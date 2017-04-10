@@ -5,15 +5,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-
-public enum FailureClass {
-    Node("Node"),
-    Link("Link"),
-    Both("Both");
+public enum OverlapType {
+    None("None"),
+    Partial("Partial"),
+    Total("Total");
 
     private String code;
 
-    FailureClass(String code) {
+    OverlapType(String code) {
         this.code = code;
     }
 
@@ -21,15 +20,15 @@ public enum FailureClass {
         return this.code;
     }
 
-    private static final Map<String, FailureClass> lookup = new HashMap<>();
+    private static final Map<String, OverlapType> lookup = new HashMap<>();
 
     static {
-        for (FailureClass pc : EnumSet.allOf(FailureClass.class)) {
+        for (OverlapType pc : EnumSet.allOf(OverlapType.class)) {
             lookup.put(pc.getCode(), pc);
         }
     }
 
-    public static Optional<FailureClass> get(String code) {
+    public static Optional<OverlapType> get(String code) {
         if (lookup.containsKey(code)) {
             return Optional.of(lookup.get(code));
         } else {

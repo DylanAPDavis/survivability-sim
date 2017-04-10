@@ -57,7 +57,7 @@ public class SimulationParameters {
     private List<Double> minMaxFailureProb;
 
     @NonNull
-    private String batchType;
+    private String processingType;
 
     @NonNull
     private Boolean sdn;
@@ -72,6 +72,6 @@ public class SimulationParameters {
     private Boolean dstFailuresAllowed;
 
     @NonNull
-    private Boolean sourceDestCanOverlap;
+    private String srcDstOverlap;
 
 }

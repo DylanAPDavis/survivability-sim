@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.FailureClass;
+import netlab.submission.enums.OverlapType;
 import netlab.submission.enums.ProcessingType;
 
 import java.util.Map;
@@ -33,6 +34,8 @@ public class RequestSet {
     private FailureClass failureClass;
 
     private Algorithm algorithm;
+
+    private OverlapType overlapType;
 
     private boolean sdn;
 

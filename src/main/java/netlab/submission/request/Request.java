@@ -31,7 +31,8 @@ public class Request {
     // If any of the above three parameters are not set, use parameters from the pairs
     private Set<SourceDestPair> pairs;
 
-    private Map<SourceDestPair, List<Integer>> minMaxConnectionsMap;
+    private Map<SourceDestPair, Integer> minConnectionsMap;
+    private Map<SourceDestPair, Integer> maxConnectionsMap;
     private Map<SourceDestPair, Integer> numCutsMap;
     private Map<SourceDestPair, Set<Failure>> failuresMap;
 

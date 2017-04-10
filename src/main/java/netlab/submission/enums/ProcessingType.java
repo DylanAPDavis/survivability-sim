@@ -9,7 +9,7 @@ import java.util.Optional;
 public enum ProcessingType {
     WDM("WDM"),
     Grooming("Grooming"),
-    SOLO("Solo");
+    Solo("Solo");
 
     private String code;
 
