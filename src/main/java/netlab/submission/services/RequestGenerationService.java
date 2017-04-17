@@ -62,17 +62,17 @@ public class RequestGenerationService {
         Random rng = new Random(params.getSeed());
 
         // Connection params
-        Integer numConnections = params.getNumConnections();
-        List<Integer> minMaxConnections = params.getMinMaxConnections();
+        Integer numConnections = params.getNumConnections() >= 0 ? params.getNumConnections() : null;
+        List<List<Integer>> minMaxConnections = params.getMinMaxConnections();
+
+        // Cut params
+        Integer numCuts = params.getNumCuts() >= 0 ? params.getNumCuts() : null;
+        List<Integer> minMaxCuts = params.getMinMaxCuts();
 
         // Failure params
         Integer numFailures = params.getNumFailures();
         List<Integer> minMaxFailures = params.getMinMaxFailures();
         FailureClass failureClass = getFailureClass(params.getFailureClass());
-
-        // Cut params
-        Integer numCuts = params.getNumCuts();
-        List<Integer> minMaxCuts = params.getMinMaxCuts();
 
         for(int i = 0; i < params.getNumRequests(); i++){
 
@@ -80,6 +80,11 @@ public class RequestGenerationService {
             Set<Node> destinations = pickDestinations(topo.getNodes(), params.getNumDestinations(), rng,
                     getOverlapType(params.getSrcDstOverlap()), sources);
             Set<SourceDestPair> pairs = createPairs(sources, destinations);
+
+            List<SourceDestPair> sortedPairs = new ArrayList<>(pairs);
+            Comparator<SourceDestPair> bySrc = Comparator.comparing(p -> p.getSrc().getId());
+            Comparator<SourceDestPair> byDst = Comparator.comparing(p -> p.getDst().getId());
+            sortedPairs.sort(bySrc.thenComparing(byDst));
 
             // Create failures
             Set<Failure> failures = null;
@@ -103,22 +108,39 @@ public class RequestGenerationService {
             }
 
             // Determine number of cuts
-            Map<SourceDestPair, Integer> numCutsMap;
+            Map<SourceDestPair, Integer> numCutsMap = null;
+            if(minMaxCuts.size() == 2){
+                Integer minCuts = minMaxCuts.get(0);
+                Integer maxCuts = minMaxCuts.get(1);
+                numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minCuts, maxCuts, rng)));
+            }
 
             // Determine number of connections
-            Map<SourceDestPair, Integer> numConnectionsMap;
+            Map<SourceDestPair, Integer> minConnectionsMap = null;
+            Map<SourceDestPair, Integer> maxConnectionsMap = null;
+            if(minMaxConnections.size() == 2){
+                // Get the minimum/maximum for generating mins (index 0) and maxes (index 1)
+                List<Integer> minMaxForMin = minMaxConnections.get(0);
+                List<Integer> minMaxForMax = minMaxConnections.get(1);
+                Integer minMin = minMaxForMin.get(0);
+                Integer maxMin = minMaxForMin.get(1);
+                Integer minMax = minMaxForMax.get(0);
+                Integer maxMax = minMaxForMax.get(1);
+                minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minMin, maxMin, rng)));
+                maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minMax, maxMax, rng)));
+            }
 
             Request request = Request.builder()
-                    .id()
+                    .id(UUID.randomUUID().toString())
                     .sources(sources)
                     .destinations(destinations)
                     .numConnections(numConnections)
                     .failures(failures)
                     .numCuts(numCuts)
                     .pairs(pairs)
-                    .minConnectionsMap()
-                    .maxConnectionsMap()
-                    .numCutsMap()
+                    .minConnectionsMap(minConnectionsMap)
+                    .maxConnectionsMap(maxConnectionsMap)
+                    .numCutsMap(numCutsMap)
                     .failuresMap(failuresMap)
                     .build();
             requests.put(request.getId(), request);

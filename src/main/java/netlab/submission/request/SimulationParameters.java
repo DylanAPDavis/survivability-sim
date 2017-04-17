@@ -42,7 +42,7 @@ public class SimulationParameters {
     @NonNull
     private Integer numConnections;
     @NonNull
-    private List<Integer> minMaxConnections;
+    private List<List<Integer>> minMaxConnections;
 
     // k - pick one field
     @NonNull
