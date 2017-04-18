@@ -62,11 +62,11 @@ public class RequestGenerationService {
         Random rng = new Random(params.getSeed());
 
         // Connection params
-        Integer numConnections = params.getNumConnections() >= 0 ? params.getNumConnections() : null;
+        Integer numConnections = params.getNumConnections();
         List<List<Integer>> minMaxConnections = params.getMinMaxConnections();
 
         // Cut params
-        Integer numCuts = params.getNumCuts() >= 0 ? params.getNumCuts() : null;
+        Integer numCuts = params.getNumCuts();
         List<Integer> minMaxCuts = params.getMinMaxCuts();
 
         // Failure params
@@ -108,27 +108,39 @@ public class RequestGenerationService {
             }
 
             // Determine number of cuts
-            Map<SourceDestPair, Integer> numCutsMap = null;
+            Map<SourceDestPair, Integer> numCutsMap;
             if(minMaxCuts.size() == 2){
                 Integer minCuts = minMaxCuts.get(0);
                 Integer maxCuts = minMaxCuts.get(1);
                 numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minCuts, maxCuts, rng)));
             }
+            else{
+                numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> numCuts));
+            }
 
             // Determine number of connections
-            Map<SourceDestPair, Integer> minConnectionsMap = null;
-            Map<SourceDestPair, Integer> maxConnectionsMap = null;
+            Map<SourceDestPair, Integer> minConnectionsMap;
+            Map<SourceDestPair, Integer> maxConnectionsMap;
             if(minMaxConnections.size() == 2){
                 // Get the minimum/maximum for generating mins (index 0) and maxes (index 1)
                 List<Integer> minMaxForMin = minMaxConnections.get(0);
                 List<Integer> minMaxForMax = minMaxConnections.get(1);
-                Integer minMin = minMaxForMin.get(0);
-                Integer maxMin = minMaxForMin.get(1);
-                Integer minMax = minMaxForMax.get(0);
-                Integer maxMax = minMaxForMax.get(1);
-                minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minMin, maxMin, rng)));
-                maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minMax, maxMax, rng)));
+                Integer minForMinConn = minMaxForMin.get(0);
+                Integer maxForMinConn = minMaxForMin.get(1);
+                Integer minForMaxConn = minMaxForMax.get(0);
+                Integer maxForMaxConn = minMaxForMax.get(1);
+                minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minForMinConn, maxForMinConn, rng)));
+                maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minForMaxConn, maxForMaxConn, rng)));
+
+                //Update number of required connections for request to be equal to the total min
+                numConnections = minConnectionsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
             }
+            else{
+                // If no max or mins were set, give every pair a min of 0 and a max of the requested number of conns
+                minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
+                maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> params.getNumConnections()));
+            }
+
 
             Request request = Request.builder()
                     .id(UUID.randomUUID().toString())
