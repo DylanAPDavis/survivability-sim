@@ -20,12 +20,12 @@ import java.util.stream.DoubleStream;
 
 @Service
 @Slf4j
-public class RequestGenerationService {
+public class GenerationService {
 
     private TopologyService topologyService;
 
     @Autowired
-    public RequestGenerationService(TopologyService topologyService) {
+    public GenerationService(TopologyService topologyService) {
         this.topologyService = topologyService;
     }
 

@@ -1,9 +1,13 @@
 package netlab.submission.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.analyzed.AnalyzedSet;
+import netlab.analysis.services.AnalysisService;
+import netlab.processing.ProcessingService;
+import netlab.storage.StorageService;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
-import netlab.submission.services.RequestGenerationService;
+import netlab.submission.services.GenerationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,18 +19,31 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class SubmissionController {
 
     @Autowired
-    public SubmissionController(RequestGenerationService requestGenerationService) {
-        this.requestGenerationService = requestGenerationService;
+    public SubmissionController(GenerationService generationService, ProcessingService processingService,
+                                StorageService storageService) {
+        this.generationService = generationService;
+        this.processingService = processingService;
+        this.storageService = storageService;
     }
 
-    private RequestGenerationService requestGenerationService;
+    private GenerationService generationService;
+
+    private ProcessingService processingService;
+
+    private StorageService storageService;
 
     @RequestMapping(value = "/resv/connection/add", method = RequestMethod.POST)
     @ResponseBody
-    public RequestSet submitSimulationRequest(SimulationParameters simulationParameters){
-        RequestSet requestSet = requestGenerationService.generateRequests(simulationParameters);
-        if(requestSet == null){
-
+    public String submitRequestSet(SimulationParameters simulationParameters){
+        RequestSet requestSet = generationService.generateRequests(simulationParameters);
+        // Find solutions for the request set, as long as at least one request has been generated
+        if(requestSet.getRequests().keySet().size() > 0){
+            requestSet = processingService.processRequestSet(requestSet);
         }
+        // Store the request set
+        storageService.storeRequestSet(requestSet);
+
+        // Return the request set ID
+        return requestSet.getId();
     }
 }
