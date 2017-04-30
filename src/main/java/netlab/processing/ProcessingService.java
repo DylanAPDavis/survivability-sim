@@ -6,6 +6,8 @@ import netlab.submission.enums.Algorithm;
 import netlab.submission.request.Request;
 import netlab.submission.request.RequestSet;
 import netlab.topology.elements.SourceDestPair;
+import netlab.topology.elements.Topology;
+import netlab.topology.services.TopologyService;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -20,10 +22,13 @@ public class ProcessingService {
 
     private AmplService amplService;
 
+    private TopologyService topoService;
+
     public RequestSet processRequestSet(RequestSet requestSet) {
 
+        Topology topo = topoService.getTopologyById(requestSet.getTopologyId());
         for(Request request : requestSet.getRequests().values()){
-            Map<SourceDestPair, List<Path>> paths =  processRequest(request, requestSet.getAlgorithm(),
+            Map<SourceDestPair, List<Path>> paths =  processRequest(request, requestSet.getAlgorithm(), topo,
                     requestSet.isUseAws(), requestSet.isSdn());
             request.setChosenPaths(paths);
         }
@@ -31,14 +36,14 @@ public class ProcessingService {
         return requestSet;
     }
 
-    public Map<SourceDestPair, List<Path>> processRequest(Request request, Algorithm algorithm, Boolean useAws,
-                                                          Boolean sdn){
+    public Map<SourceDestPair, List<Path>> processRequest(Request request, Algorithm algorithm, Topology topology,
+                                                          Boolean useAws, Boolean sdn){
         Map<SourceDestPair, List<Path>> paths = new HashMap<>();
 
         switch(algorithm){
             case FixedILP:
             case FlexibleILP:
-                paths = amplService.solve(request, algorithm);
+                paths = amplService.solve(request, algorithm, topology);
         }
         return paths;
     }
