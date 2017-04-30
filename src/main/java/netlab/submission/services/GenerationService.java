@@ -31,6 +31,7 @@ public class GenerationService {
 
     public RequestSet generateRequests(SimulationParameters params){
 
+        assignDefaults(params);
         Map<String, Request> requests = createRequestsFromParameters(params);
         String status = "Processing";
         if(requests.isEmpty()){
@@ -52,10 +53,62 @@ public class GenerationService {
                 .build();
     }
 
+    private void assignDefaults(SimulationParameters params) {
+
+        if(params.getNumFailures() == null || params.getNumFailures() < 0){
+            params.setNumFailures(0);
+        }
+        if(params.getMinMaxFailures() == null){
+            params.setMinMaxFailures(new ArrayList<>());
+        }
+        if(params.getFailureClass() == null){
+            params.setFailureClass("Both");
+        }
+        if(params.getNumConnections() == null || params.getNumConnections() < 0){
+            params.setNumConnections(0);
+        }
+        if(params.getMinConnectionsRange() == null){
+            params.setMinConnectionsRange(new ArrayList<>());
+        }
+        if(params.getMaxConnectionsRange() == null){
+            params.setMaxConnectionsRange(new ArrayList<>());
+        }
+        if(params.getNumCuts() == null || params.getNumCuts() < 0){
+            params.setNumCuts(0);
+        }
+        if(params.getMinMaxCuts() == null){
+            params.setMinMaxCuts(new ArrayList<>());
+        }
+        if(params.getFailureProb() == null || params.getFailureProb() < 0 || params.getFailureProb() > 1){
+            params.setFailureProb(1.0);
+        }
+        if(params.getMinMaxFailureProb() == null){
+            params.setMinMaxFailureProb(new ArrayList<>());
+        }
+        if(params.getProcessingType() == null){
+            params.setProcessingType("Solo");
+        }
+        if(params.getSdn() == null){
+            params.setSdn(false);
+        }
+        if(params.getUseAws() == null){
+            params.setUseAws(false);
+        }
+        if(params.getSrcFailuresAllowed() == null){
+            params.setSrcFailuresAllowed(false);
+        }
+        if(params.getDstFailuresAllowed() == null){
+            params.setSrcFailuresAllowed(false);
+        }
+        if(params.getSrcDstOverlap() == null){
+            params.setSrcDstOverlap("None");
+        }
+    }
+
     public Map<String, Request> createRequestsFromParameters(SimulationParameters params) {
         Map<String, Request> requests = new HashMap<>();
         Topology topo = topologyService.getTopologyById(params.getTopologyId());
-        if(topo == null || !checkValidParams(params, topo)){
+        if(topo == null){
             return requests;
         }
 
@@ -72,7 +125,8 @@ public class GenerationService {
     public Request createRequest(SimulationParameters params, Topology topo, Random rng){
         // Connection params
         Integer numConnections = params.getNumConnections();
-        List<List<Integer>> minMaxConnections = params.getMinMaxConnections();
+        List<Integer> minConnectionsRange = params.getMinConnectionsRange();
+        List<Integer> maxConnectionsRange = params.getMaxConnectionsRange();
 
         // Cut params
         Integer numCuts = params.getNumCuts();
@@ -120,22 +174,23 @@ public class GenerationService {
             Integer minCuts = minMaxCuts.get(0);
             Integer maxCuts = minMaxCuts.get(1);
             numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minCuts, maxCuts, rng)));
+
+            //Update number of required cuts for request to be equal to the total min
+            numCuts = numCutsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
         }
         else{
-            numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> numCuts));
+            numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> params.getNumCuts()));
         }
 
         // Determine number of connections
         Map<SourceDestPair, Integer> minConnectionsMap;
         Map<SourceDestPair, Integer> maxConnectionsMap;
-        if(minMaxConnections.size() == 2){
+        if(minConnectionsRange.size() == 2 && maxConnectionsRange.size() == 2){
             // Get the minimum/maximum for generating mins (index 0) and maxes (index 1)
-            List<Integer> minMaxForMin = minMaxConnections.get(0);
-            List<Integer> minMaxForMax = minMaxConnections.get(1);
-            Integer minForMinConn = minMaxForMin.get(0);
-            Integer maxForMinConn = minMaxForMin.get(1);
-            Integer minForMaxConn = minMaxForMax.get(0);
-            Integer maxForMaxConn = minMaxForMax.get(1);
+            Integer minForMinConn = minConnectionsRange.get(0);
+            Integer maxForMinConn = minConnectionsRange.get(1);
+            Integer minForMaxConn = maxConnectionsRange.get(0);
+            Integer maxForMaxConn = maxConnectionsRange.get(1);
             // Give random min/max num of connections per pair
             // If src = dst for a pair, both numbers are 0
             minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
@@ -182,59 +237,6 @@ public class GenerationService {
             }
         }
         return pairs;
-    }
-
-    private boolean checkValidParams(SimulationParameters params, Topology topo) {
-        Integer numNodes = topo.getNodes().size();
-        Integer numLinks = topo.getLinks().size();
-        Integer numSources = params.getNumSources();
-        Integer numDestinations = params.getNumDestinations();
-        Integer numFailures = params.getMinMaxFailures().size() == 2 ?
-                params.getMinMaxFailures().get(1) : params.getNumFailures();
-        OverlapType srcDestOverlap = OverlapType.get(params.getSrcDstOverlap()).orElse(OverlapType.None);
-        boolean srcFailures = params.getSrcFailuresAllowed();
-        boolean dstFailures = params.getDstFailuresAllowed();
-        String failureClass = params.getFailureClass();
-
-        // Check if there are enough nodes for:
-        // sources, destinations, failures, sources + destinations (when they can't overlap),
-        // failures + sources + destinations (when no overlap)
-        // failures + sources (failures and destinations can overlap)
-        // failures + destinations (failures and sources can overlap)
-        // failures + max(sources, destinations) (sources and destinations can overlap, but failures can't with either)
-        boolean enoughForSources = numNodes >= numSources;
-        boolean enoughForDestinations = numNodes >= numDestinations;
-        boolean enoughForFailures = numNodes >= numFailures && failureClass.equals("Node")
-                || numLinks >= numFailures && failureClass.equals("Link")
-                || numLinks + numNodes >= numFailures && failureClass.equals("Both");
-        boolean enoughForNonOverlapSrcDest = numNodes >= numSources + numDestinations && srcDestOverlap.equals(OverlapType.None)
-                && failureClass.equals("Node");
-        boolean enoughForNonOverlapSrcDestFailsSrcDestOverlap = !srcFailures && !dstFailures && !srcDestOverlap.equals(OverlapType.None)
-                && numNodes >= Math.max(numSources, numDestinations) && failureClass.equals("Node");
-        boolean enoughForNonOverlapSrcDestFails = !srcFailures && !dstFailures
-                && numNodes >= numFailures + numSources + numDestinations && failureClass.equals("Node");
-        boolean enoughForNonOverlapSrcFails = !srcFailures && numNodes >= numFailures + numSources
-                && failureClass.equals("Node");
-        boolean enoughForNonOverlapDstFails = !dstFailures && numNodes >= numFailures + numDestinations
-                && failureClass.equals("Node");
-        boolean enoughForNonOverlapSrcDestBoth = numNodes + numLinks >= numSources + numDestinations && srcDestOverlap.equals(OverlapType.None)
-                && failureClass.equals("Both");
-        boolean enoughForNonOverlapSrcDestFailsSrcDestOverlapBoth = !srcFailures && !dstFailures && !srcDestOverlap.equals(OverlapType.None)
-                && numNodes + numLinks >= Math.max(numSources, numDestinations) && failureClass.equals("Both");
-        boolean enoughForNonOverlapSrcDestFailsBoth = !srcFailures && !dstFailures
-                && numNodes + numLinks >= numFailures + numSources + numDestinations && failureClass.equals("Both");
-        boolean enoughForNonOverlapSrcFailsBoth = !srcFailures && numNodes + numLinks >= numFailures + numSources
-                && failureClass.equals("Both");
-        boolean enoughForNonOverlapDstFailsBoth = !dstFailures && numNodes + numLinks >= numFailures + numDestinations
-                && failureClass.equals("Both");
-
-
-        return enoughForSources && enoughForDestinations && enoughForFailures && enoughForNonOverlapSrcDest
-                && enoughForNonOverlapSrcDestFails && enoughForNonOverlapSrcDestFailsSrcDestOverlap
-                && enoughForNonOverlapSrcFails && enoughForNonOverlapDstFails && enoughForNonOverlapSrcDestBoth
-                && enoughForNonOverlapSrcDestFailsSrcDestOverlapBoth && enoughForNonOverlapSrcDestFailsBoth
-                && enoughForNonOverlapSrcFailsBoth && enoughForNonOverlapDstFailsBoth;
-
     }
 
 

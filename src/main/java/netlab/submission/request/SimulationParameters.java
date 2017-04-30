@@ -30,48 +30,35 @@ public class SimulationParameters {
     @NonNull
     private Integer numDestinations;
 
-    // F - pick one field
-    @NonNull
+    // F
     private Integer numFailures;
-    @NonNull
     private List<Integer> minMaxFailures;
-    @NonNull
+
     private String failureClass;
 
-    // C - pick one field
-    @NonNull
+    // C
     private Integer numConnections;
-    @NonNull
-    private List<List<Integer>> minMaxConnections;
+    private List<Integer> minConnectionsRange;
+    private List<Integer> maxConnectionsRange;
 
     // k - pick one field
-    @NonNull
     private Integer numCuts;
-    @NonNull
     private List<Integer> minMaxCuts;
 
     // Failure probability - pick one field
-    @NonNull
     private Double failureProb;
-    @NonNull
     private List<Double> minMaxFailureProb;
 
-    @NonNull
     private String processingType;
 
-    @NonNull
     private Boolean sdn;
 
-    @NonNull
     private Boolean useAws;
 
-    @NonNull
     private Boolean srcFailuresAllowed;
 
-    @NonNull
     private Boolean dstFailuresAllowed;
 
-    @NonNull
     private String srcDstOverlap;
 
 }
