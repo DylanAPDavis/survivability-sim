@@ -2,7 +2,6 @@ package netlab.processing.ampl;
 
 import com.ampl.*;
 import lombok.extern.slf4j.Slf4j;
-import netlab.submission.enums.Algorithm;
 import netlab.submission.request.Request;
 import netlab.topology.elements.Failure;
 import netlab.topology.elements.Node;
