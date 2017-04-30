@@ -169,17 +169,25 @@ public class GenerationService {
         }
 
         // Determine number of cuts
-        Map<SourceDestPair, Integer> numCutsMap;
+        Map<SourceDestPair, Integer> numCutsMap = new HashMap<>();
         if(minMaxCuts.size() == 2){
             Integer minCuts = minMaxCuts.get(0);
             Integer maxCuts = minMaxCuts.get(1);
-            numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minCuts, maxCuts, rng)));
-
+            // Assign random number of cuts between min and max
+            // Except: cap out at the number of failures for a pair, so you're not trying to cut more than than the
+            // size of the failure set
+            for(SourceDestPair pair : pairs){
+                Integer numFails = failuresMap != null ? failuresMap.get(pair).size() : failures.size();
+                numCutsMap.put(pair, Math.min(numFails, randomInt(minCuts, maxCuts, rng)));
+            }
             //Update number of required cuts for request to be equal to the total min
             numCuts = numCutsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
         }
         else{
-            numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> params.getNumCuts()));
+            for(SourceDestPair pair : pairs){
+                Integer numFails = failuresMap != null ? failuresMap.get(pair).size() : failures.size();
+                numCutsMap.put(pair, Math.min(numFails, params.getNumCuts()));
+            }
         }
 
         // Determine number of connections

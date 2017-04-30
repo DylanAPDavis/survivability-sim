@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,8 +31,11 @@ public class AmplService {
         try {
             ampl = assignValues(request, topology);
             ampl.solve();
-            Variable C = ampl.getVariable("C");
-            System.out.println(C.getInstances().stream().filter(vi -> vi.value() > 0).count());
+            Variable numConn = ampl.getVariable("Num_Conn");
+            Map<String, Double> numConnections = numConn.getInstances().stream()
+                    .filter(nc -> nc.value() > 0)
+                    .collect(Collectors.toMap(VariableInstance::name, VariableInstance::value));
+            System.out.println(numConnections);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -91,14 +95,8 @@ public class AmplService {
         // Assign SD pairs and parameters indexed on those pairs
         DataFrame pairParams = new DataFrame(1, "SD", "c_min_sd", "c_max_sd", "NumGroups");
 
-        // Failure set
-        com.ampl.Set f = ampl.getSet("F");
-
-        // Failure groups
-        com.ampl.Set fg = ampl.getSet("FG");
-
         ArrayList<SourceDestPair> pairList = new ArrayList<>(request.getPairs());
-        Object[] pairs = pairList.stream().map(pair -> new Tuple(pair.getSrc(), pair.getDst())).toArray();
+        Object[] pairs = pairList.stream().map(pair -> new Tuple(pair.getSrc().getId(), pair.getDst().getId())).toArray();
 
         double[] c_min_sd = new double[pairs.length];
         double[] c_max_sd = new double[pairs.length];
@@ -110,14 +108,40 @@ public class AmplService {
         Map<SourceDestPair, Set<Failure>> failureSetMap = request.getFailuresMap();
         for(int index = 0; index < pairList.size(); index++){
             SourceDestPair pair = pairList.get(index);
-            Set<Failure> failures = failureSetMap != null ? failureSetMap.get(pair) : request.getFailures();
-            Integer numCuts = numCutsMap.get(pair);
 
             c_min_sd[index] = minConnMap.get(pair);
             c_max_sd[index] = maxConnMap.get(pair);
+
+            Set<Failure> failures = failureSetMap != null ? failureSetMap.get(pair) : request.getFailures();
+            Integer numCuts = numCutsMap.get(pair);
             // Calculate the number of numCuts-sized combinations of the failure set
             double divisor = ArithmeticUtils.factorial(numCuts) * ArithmeticUtils.factorial(failures.size() - numCuts);
             numGroups[index] = ArithmeticUtils.factorial(failures.size()) / divisor;
+        }
+        pairParams.setColumn("SD", pairs);
+        pairParams.setColumn("c_min_sd", c_min_sd);
+        pairParams.setColumn("c_max_sd", c_max_sd);
+        pairParams.setColumn("NumGroups", numGroups);
+        ampl.setData(pairParams, "SD");
+
+        assignFailureSetsAndGroups(ampl, pairList, pairs, request);
+    }
+
+    // Must be done after the numGroups has been assigned to the model
+    private void assignFailureSetsAndGroups(AMPL ampl, List<SourceDestPair> pairList, Object[] pairs, Request request){
+        Map<SourceDestPair, Integer> numCutsMap = request.getNumCutsMap();
+        Map<SourceDestPair, Set<Failure>> failureSetMap = request.getFailuresMap();
+
+        // Failure set
+        com.ampl.Set f = ampl.getSet("F");
+
+        // Failure groups
+        com.ampl.Set fg = ampl.getSet("FG");
+
+        for(int index = 0; index < pairList.size(); index++){
+            SourceDestPair pair = pairList.get(index);
+            Set<Failure> failures = failureSetMap != null ? failureSetMap.get(pair) : request.getFailures();
+            Integer numCuts = numCutsMap.get(pair);
 
             Object[] failureSet = createFailureSetArray(failures);
             f.get(pairs[index]).setValues(failureSet);
@@ -127,12 +151,6 @@ public class AmplService {
                 fg.get(fgTriplet).setValues(failureGroups.get(fgTriplet));
             }
         }
-
-        pairParams.setColumn("SD", pairs);
-        pairParams.setColumn("c_min_sd", c_min_sd);
-        pairParams.setColumn("c_max_sd", c_max_sd);
-        pairParams.setColumn("NumGroups", numGroups);
-        ampl.setData(pairParams, "SD");
     }
 
     private Object[] createFailureSetArray(Set<Failure> failures) {
@@ -140,9 +158,9 @@ public class AmplService {
 
         int index = 0;
         for(Failure failure: failures){
-            String id = failure.getLink() != null ?
-                    "(" + failure.getLink().getOrigin().getId() +  "," + failure.getLink().getTarget().getId() + ")" :
-                    "(" + failure.getNode().getId() +  "," + failure.getNode().getId() + ")";
+            Tuple id = failure.getLink() != null ?
+                    new Tuple(failure.getLink().getOrigin().getId(), failure.getLink().getTarget().getId()):
+                    new Tuple(failure.getNode().getId(), failure.getNode().getId());
             failureSet[index] = id;
             index++;
         }
@@ -155,7 +173,7 @@ public class AmplService {
         Object dst = pair.getDst().getId();
         // Find all k-size subsets of this failure set
         Integer groupCounter = 1;
-        if(failureSet.length < k){
+        if(failureSet.length <= k){
             groups.put(new Tuple(src, dst, groupCounter), failureSet);
         }
         else{
