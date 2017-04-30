@@ -136,16 +136,22 @@ public class GenerationService {
             Integer maxForMinConn = minMaxForMin.get(1);
             Integer minForMaxConn = minMaxForMax.get(0);
             Integer maxForMaxConn = minMaxForMax.get(1);
-            minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minForMinConn, maxForMinConn, rng)));
-            maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minForMaxConn, maxForMaxConn, rng)));
+            // Give random min/max num of connections per pair
+            // If src = dst for a pair, both numbers are 0
+            minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
+                    p -> p.getSrc() == p.getDst() ? 0 : randomInt(minForMinConn, maxForMinConn, rng)));
+            maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
+                    p -> p.getSrc() == p.getDst() ? 0 : randomInt(minForMaxConn, maxForMaxConn, rng)));
 
             //Update number of required connections for request to be equal to the total min
             numConnections = minConnectionsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
         }
         else{
             // If no max or mins were set, give every pair a min of 0 and a max of the requested number of conns
+            // If src = dst for a pair, both numbers are 0
             minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
-            maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> params.getNumConnections()));
+            maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
+                    p -> p.getSrc() == p.getDst() ? 0 : params.getNumConnections()));
         }
 
 
@@ -172,9 +178,7 @@ public class GenerationService {
         Set<SourceDestPair> pairs = new HashSet<>();
         for(Node source : sources){
             for(Node dest: destinations){
-                if(!source.equals(dest)){
-                    pairs.add(SourceDestPair.builder().src(source).dst(dest).build());
-                }
+                pairs.add(SourceDestPair.builder().src(source).dst(dest).build());
             }
         }
         return pairs;
