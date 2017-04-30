@@ -8,6 +8,7 @@ import netlab.submission.request.RequestSet;
 import netlab.topology.elements.SourceDestPair;
 import netlab.topology.elements.Topology;
 import netlab.topology.services.TopologyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -23,6 +24,12 @@ public class ProcessingService {
     private AmplService amplService;
 
     private TopologyService topoService;
+
+    @Autowired
+    public ProcessingService(TopologyService topologyService, AmplService amplService) {
+        this.topoService = topologyService;
+        this.amplService = amplService;
+    }
 
     public RequestSet processRequestSet(RequestSet requestSet) {
 
@@ -43,7 +50,7 @@ public class ProcessingService {
         switch(algorithm){
             case FixedILP:
             case FlexibleILP:
-                paths = amplService.solve(request, algorithm, topology);
+                paths = amplService.solve(request, topology);
         }
         return paths;
     }

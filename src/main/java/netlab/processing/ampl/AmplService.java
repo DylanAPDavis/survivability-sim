@@ -24,12 +24,14 @@ public class AmplService {
 
     private String modelDirectory = "linear-programs/models";
 
-    public Map<SourceDestPair, List<Path>> solve(Request request, Algorithm algorithm, Topology topology){
+    public Map<SourceDestPair, List<Path>> solve(Request request, Topology topology){
         Map<SourceDestPair, List<Path>> paths = new HashMap<>();
         AMPL ampl = new AMPL();
         try {
             ampl = assignValues(request, topology);
             ampl.solve();
+            Variable C = ampl.getVariable("C");
+            System.out.println(C.getInstances().stream().filter(vi -> vi.value() > 0).count());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -89,6 +91,12 @@ public class AmplService {
         // Assign SD pairs and parameters indexed on those pairs
         DataFrame pairParams = new DataFrame(1, "SD", "c_min_sd", "c_max_sd", "NumGroups");
 
+        // Failure set
+        com.ampl.Set f = ampl.getSet("F");
+
+        // Failure groups
+        com.ampl.Set fg = ampl.getSet("FG");
+
         ArrayList<SourceDestPair> pairList = new ArrayList<>(request.getPairs());
         Object[] pairs = pairList.stream().map(pair -> new Tuple(pair.getSrc(), pair.getDst())).toArray();
 
@@ -111,7 +119,13 @@ public class AmplService {
             double divisor = ArithmeticUtils.factorial(numCuts) * ArithmeticUtils.factorial(failures.size() - numCuts);
             numGroups[index] = ArithmeticUtils.factorial(failures.size()) / divisor;
 
-            //TODO: Calculate the failure sets and numCut-sized failure groups
+            Object[] failureSet = createFailureSetArray(failures);
+            f.get(pairs[index]).setValues(failureSet);
+            // Find all k-size subsets of this failure set
+            Map<Tuple, Object[]> failureGroups = generateFailureGroups(numCuts, failureSet, pair);
+            for(Tuple fgTriplet : failureGroups.keySet()){
+                fg.get(fgTriplet).setValues(failureGroups.get(fgTriplet));
+            }
         }
 
         pairParams.setColumn("SD", pairs);
@@ -121,74 +135,42 @@ public class AmplService {
         ampl.setData(pairParams, "SD");
     }
 
+    private Object[] createFailureSetArray(Set<Failure> failures) {
+        Object[] failureSet = new Object[failures.size()];
 
-    private static Map<Tuple,Object[]> generateFailureGroups(Integer k, Map<Tuple, Object[]> failureSets) {
+        int index = 0;
+        for(Failure failure: failures){
+            String id = failure.getLink() != null ?
+                    "(" + failure.getLink().getOrigin().getId() +  "," + failure.getLink().getTarget().getId() + ")" :
+                    "(" + failure.getNode().getId() +  "," + failure.getNode().getId() + ")";
+            failureSet[index] = id;
+            index++;
+        }
+        return failureSet;
+    }
+
+    private static Map<Tuple,Object[]> generateFailureGroups(Integer k, Object[] failureSet, SourceDestPair pair) {
         Map<Tuple, Object[]> groups = new HashMap<>();
-        for(Tuple sdPair : failureSets.keySet()){
-            Object[] failureSet = failureSets.get(sdPair);
-            Object src = sdPair.get(0);
-            Object dst = sdPair.get(1);
-            // Find all k-size subsets of this failure set
-            Integer groupCounter = 1;
-            if(failureSet.length < k){
-                groups.put(new Tuple(src, dst, groupCounter), failureSet);
-            }
-            else{
-                Combinations combos = new Combinations(failureSet.length, k);
-                for (int[] comboIndices : combos) {
-                    Object[] group = new Object[k];
-                    for (int index = 0; index < comboIndices.length; index++) {
-                        group[index] = failureSet[comboIndices[index]];
-                    }
-                    groups.put(new Tuple(src, dst, groupCounter), group);
-                    groupCounter++;
+        Object src = pair.getSrc().getId();
+        Object dst = pair.getDst().getId();
+        // Find all k-size subsets of this failure set
+        Integer groupCounter = 1;
+        if(failureSet.length < k){
+            groups.put(new Tuple(src, dst, groupCounter), failureSet);
+        }
+        else{
+            Combinations combos = new Combinations(failureSet.length, k);
+            for (int[] comboIndices : combos) {
+                Object[] group = new Object[k];
+                for (int index = 0; index < comboIndices.length; index++) {
+                    group[index] = failureSet[comboIndices[index]];
                 }
+                groups.put(new Tuple(src, dst, groupCounter), group);
+                groupCounter++;
             }
         }
         return groups;
     }
 
-    private static Map<Tuple,Object[]> generateFailureSets(java.util.Set<Object> fSetKeys) {
-        Map<Tuple, Object[]> map = new HashMap<>();
-        for(Object key : fSetKeys){
-            Tuple sdPair = (Tuple) key;
-            Object src = sdPair.get(0);
-            Object dst = sdPair.get(1);
-            if(src.equals("1")){
-                if(dst.equals("11")){
-                    map.put(sdPair, new Object[] {new Tuple("5", "5"), new Tuple("8", "8"), new Tuple("10", "9")});
-                }
-                if(dst.equals("13")){
-                    map.put(sdPair, new Object[] {new Tuple("5", "5"), new Tuple("8", "8"), new Tuple("10", "9")});
-                }
-                if(dst.equals("14")){
-                    map.put(sdPair, new Object[] {new Tuple("1", "3"), new Tuple("1", "2"), new Tuple("1", "8")});
-                }
-            }
-            if(src.equals("2")){
-                if(dst.equals("11")){
-                    map.put(sdPair, new Object[] {new Tuple("5", "5"), new Tuple("8", "8"), new Tuple("10", "9")});
-                }
-                if(dst.equals("13")){
-                    map.put(sdPair, new Object[] {new Tuple("5", "5"), new Tuple("8", "8"), new Tuple("10", "9")});
-                }
-                if(dst.equals("14")){
-                    map.put(sdPair, new Object[] {new Tuple("5", "5"), new Tuple("8", "8"), new Tuple("10", "9")});
-                }
-            }
-            if(src.equals("3")){
-                if(dst.equals("11")){
-                    map.put(sdPair, new Object[] {new Tuple("5", "5"), new Tuple("8", "8"), new Tuple("10", "9")});
-                }
-                if(dst.equals("13")){
-                    map.put(sdPair, new Object[] {new Tuple("5", "5"), new Tuple("8", "8"), new Tuple("10", "9")});
-                }
-                if(dst.equals("14")){
-                    map.put(sdPair, new Object[] {new Tuple("5", "5"), new Tuple("8", "8"), new Tuple("10", "9")});
-                }
-            }
-        }
-        return map;
-    }
 
 }

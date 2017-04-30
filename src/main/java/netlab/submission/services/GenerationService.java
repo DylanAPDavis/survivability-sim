@@ -52,7 +52,7 @@ public class GenerationService {
                 .build();
     }
 
-    private Map<String, Request> createRequestsFromParameters(SimulationParameters params) {
+    public Map<String, Request> createRequestsFromParameters(SimulationParameters params) {
         Map<String, Request> requests = new HashMap<>();
         Topology topo = topologyService.getTopologyById(params.getTopologyId());
         if(topo == null || !checkValidParams(params, topo)){
@@ -61,6 +61,15 @@ public class GenerationService {
 
         Random rng = new Random(params.getSeed());
 
+        for(int i = 0; i < params.getNumRequests(); i++){
+            Request r = createRequest(params, topo, rng);
+            requests.put(r.getId(), r);
+        }
+        return requests;
+    }
+
+
+    public Request createRequest(SimulationParameters params, Topology topo, Random rng){
         // Connection params
         Integer numConnections = params.getNumConnections();
         List<List<Integer>> minMaxConnections = params.getMinMaxConnections();
@@ -74,93 +83,86 @@ public class GenerationService {
         List<Integer> minMaxFailures = params.getMinMaxFailures();
         FailureClass failureClass = getFailureClass(params.getFailureClass());
 
-        for(int i = 0; i < params.getNumRequests(); i++){
+        Set<Node> sources = pickSources(topo.getNodes(), params.getNumSources(), rng);
+        Set<Node> destinations = pickDestinations(topo.getNodes(), params.getNumDestinations(), rng,
+                getOverlapType(params.getSrcDstOverlap()), sources);
+        Set<SourceDestPair> pairs = createPairs(sources, destinations);
 
-            Set<Node> sources = pickSources(topo.getNodes(), params.getNumSources(), rng);
-            Set<Node> destinations = pickDestinations(topo.getNodes(), params.getNumDestinations(), rng,
-                    getOverlapType(params.getSrcDstOverlap()), sources);
-            Set<SourceDestPair> pairs = createPairs(sources, destinations);
+        List<SourceDestPair> sortedPairs = new ArrayList<>(pairs);
+        Comparator<SourceDestPair> bySrc = Comparator.comparing(p -> p.getSrc().getId());
+        Comparator<SourceDestPair> byDst = Comparator.comparing(p -> p.getDst().getId());
+        sortedPairs.sort(bySrc.thenComparing(byDst));
 
-            List<SourceDestPair> sortedPairs = new ArrayList<>(pairs);
-            Comparator<SourceDestPair> bySrc = Comparator.comparing(p -> p.getSrc().getId());
-            Comparator<SourceDestPair> byDst = Comparator.comparing(p -> p.getDst().getId());
-            sortedPairs.sort(bySrc.thenComparing(byDst));
-
-            // Create failures
-            Set<Failure> failures = null;
-            Map<SourceDestPair, Set<Failure>> failuresMap = null;
-            // If a min and max aren't specified, or they are equal, just create a set of failures
-            if(minMaxFailures.size() < 2 || minMaxFailures.get(0).equals(minMaxFailures.get(1)) && numFailures > -1){
-                failures = generateFailureSet(topo.getNodes(), topo.getLinks(), sources, destinations,
-                        params.getSrcFailuresAllowed(), params.getDstFailuresAllowed(), numFailures, failureClass,
-                        params.getFailureProb(), params.getMinMaxFailureProb(), rng);
-            }
-            // Otherwise create a unique set for each connection pair
-            else{
-                failuresMap = new HashMap<>();
-                for(SourceDestPair pair : pairs){
-                    Integer randomNumFailures = randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
-                    Set<Failure> failureSet = generateFailureSet(topo.getNodes(), topo.getLinks(), Collections.singleton(pair.getSrc()),
-                            Collections.singleton(pair.getDst()), params.getSrcFailuresAllowed(), params.getDstFailuresAllowed(),
-                            randomNumFailures, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(), rng);
-                    failuresMap.put(pair, failureSet);
-                }
-            }
-
-            // Determine number of cuts
-            Map<SourceDestPair, Integer> numCutsMap;
-            if(minMaxCuts.size() == 2){
-                Integer minCuts = minMaxCuts.get(0);
-                Integer maxCuts = minMaxCuts.get(1);
-                numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minCuts, maxCuts, rng)));
-            }
-            else{
-                numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> numCuts));
-            }
-
-            // Determine number of connections
-            Map<SourceDestPair, Integer> minConnectionsMap;
-            Map<SourceDestPair, Integer> maxConnectionsMap;
-            if(minMaxConnections.size() == 2){
-                // Get the minimum/maximum for generating mins (index 0) and maxes (index 1)
-                List<Integer> minMaxForMin = minMaxConnections.get(0);
-                List<Integer> minMaxForMax = minMaxConnections.get(1);
-                Integer minForMinConn = minMaxForMin.get(0);
-                Integer maxForMinConn = minMaxForMin.get(1);
-                Integer minForMaxConn = minMaxForMax.get(0);
-                Integer maxForMaxConn = minMaxForMax.get(1);
-                minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minForMinConn, maxForMinConn, rng)));
-                maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minForMaxConn, maxForMaxConn, rng)));
-
-                //Update number of required connections for request to be equal to the total min
-                numConnections = minConnectionsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
-            }
-            else{
-                // If no max or mins were set, give every pair a min of 0 and a max of the requested number of conns
-                minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
-                maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> params.getNumConnections()));
-            }
-
-
-            Request request = Request.builder()
-                    .id(UUID.randomUUID().toString())
-                    .sources(sources)
-                    .destinations(destinations)
-                    .numConnections(numConnections)
-                    .failures(failures)
-                    .numCuts(numCuts)
-                    .pairs(pairs)
-                    .minConnectionsMap(minConnectionsMap)
-                    .maxConnectionsMap(maxConnectionsMap)
-                    .numCutsMap(numCutsMap)
-                    .failuresMap(failuresMap)
-                    .build();
-            requests.put(request.getId(), request);
+        // Create failures
+        Set<Failure> failures = null;
+        Map<SourceDestPair, Set<Failure>> failuresMap = null;
+        // If a min and max aren't specified, or they are equal, just create a set of failures
+        if(minMaxFailures.size() < 2 || minMaxFailures.get(0).equals(minMaxFailures.get(1)) && numFailures > -1){
+            failures = generateFailureSet(topo.getNodes(), topo.getLinks(), sources, destinations,
+                    params.getSrcFailuresAllowed(), params.getDstFailuresAllowed(), numFailures, failureClass,
+                    params.getFailureProb(), params.getMinMaxFailureProb(), rng);
         }
-        return requests;
+        // Otherwise create a unique set for each connection pair
+        else{
+            failuresMap = new HashMap<>();
+            for(SourceDestPair pair : pairs){
+                Integer randomNumFailures = randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
+                Set<Failure> failureSet = generateFailureSet(topo.getNodes(), topo.getLinks(), Collections.singleton(pair.getSrc()),
+                        Collections.singleton(pair.getDst()), params.getSrcFailuresAllowed(), params.getDstFailuresAllowed(),
+                        randomNumFailures, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(), rng);
+                failuresMap.put(pair, failureSet);
+            }
+        }
+
+        // Determine number of cuts
+        Map<SourceDestPair, Integer> numCutsMap;
+        if(minMaxCuts.size() == 2){
+            Integer minCuts = minMaxCuts.get(0);
+            Integer maxCuts = minMaxCuts.get(1);
+            numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minCuts, maxCuts, rng)));
+        }
+        else{
+            numCutsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> numCuts));
+        }
+
+        // Determine number of connections
+        Map<SourceDestPair, Integer> minConnectionsMap;
+        Map<SourceDestPair, Integer> maxConnectionsMap;
+        if(minMaxConnections.size() == 2){
+            // Get the minimum/maximum for generating mins (index 0) and maxes (index 1)
+            List<Integer> minMaxForMin = minMaxConnections.get(0);
+            List<Integer> minMaxForMax = minMaxConnections.get(1);
+            Integer minForMinConn = minMaxForMin.get(0);
+            Integer maxForMinConn = minMaxForMin.get(1);
+            Integer minForMaxConn = minMaxForMax.get(0);
+            Integer maxForMaxConn = minMaxForMax.get(1);
+            minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minForMinConn, maxForMinConn, rng)));
+            maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> randomInt(minForMaxConn, maxForMaxConn, rng)));
+
+            //Update number of required connections for request to be equal to the total min
+            numConnections = minConnectionsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
+        }
+        else{
+            // If no max or mins were set, give every pair a min of 0 and a max of the requested number of conns
+            minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
+            maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> params.getNumConnections()));
+        }
+
+
+        return Request.builder()
+                .id(UUID.randomUUID().toString())
+                .sources(sources)
+                .destinations(destinations)
+                .numConnections(numConnections)
+                .failures(failures)
+                .numCuts(numCuts)
+                .pairs(pairs)
+                .minConnectionsMap(minConnectionsMap)
+                .maxConnectionsMap(maxConnectionsMap)
+                .numCutsMap(numCutsMap)
+                .failuresMap(failuresMap)
+                .build();
     }
-
-
 
     private Integer randomInt(Integer min, Integer max, Random rng){
         return rng.nextInt((max - min) + 1) + min;
