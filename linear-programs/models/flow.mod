@@ -69,6 +69,8 @@ var Num_Conn{(s,d) in SD} = sum{i in I} C[s,d,i];
 # Number of link usages
 var Num_Link_Usages = sum{s in V, d in V, i in I, u in V, v in V} L[s,d,i,u,v];
 
+var maxFg_Sum{(s,d) in SD} = max{g in GroupIndices[s,d]} FG_Sum[s,d,g];
+
 
 # OBJECTIVE
 
