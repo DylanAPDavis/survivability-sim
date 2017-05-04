@@ -3,11 +3,9 @@ package netlab.submission.services;
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.FailureClass;
-import netlab.submission.enums.OverlapType;
+import netlab.submission.enums.ProblemClass;
 import netlab.submission.enums.ProcessingType;
-import netlab.submission.request.Request;
-import netlab.submission.request.RequestSet;
-import netlab.submission.request.SimulationParameters;
+import netlab.submission.request.*;
 import netlab.topology.elements.*;
 import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,15 +41,19 @@ public class GenerationService {
                 .status(status)
                 .id(setId)
                 .seed(params.getSeed())
+                .problemClass(getProblemClass(params.getProblemClass()))
                 .algorithm(getAlgorithm(params.getAlgorithm()))
                 .processingType(getProcessingType(params.getProcessingType()))
                 .failureClass(getFailureClass(params.getFailureClass()))
-                .overlapType(getOverlapType(params.getSrcDstOverlap()))
+                .percentSrcAlsoDest(params.getPercentSrcAlsoDest())
+                .percentSrcFail(params.getPercentSrcFail())
+                .percentDestFail(params.getPercentDestFail())
                 .sdn(params.getSdn())
                 .useAws(params.getUseAws())
                 .topologyId(params.getTopologyId())
                 .build();
     }
+
 
     private void assignDefaults(SimulationParameters params) {
 
@@ -73,11 +75,11 @@ public class GenerationService {
         if(params.getMaxConnectionsRange() == null){
             params.setMaxConnectionsRange(new ArrayList<>());
         }
-        if(params.getNumCuts() == null || params.getNumCuts() < 0){
-            params.setNumCuts(0);
+        if(params.getNumFails() == null || params.getNumFails() < 0){
+            params.setNumFails(0);
         }
-        if(params.getMinMaxCuts() == null){
-            params.setMinMaxCuts(new ArrayList<>());
+        if(params.getMinMaxFails() == null){
+            params.setMinMaxFails(new ArrayList<>());
         }
         if(params.getFailureProb() == null || params.getFailureProb() < 0 || params.getFailureProb() > 1){
             params.setFailureProb(1.0);
@@ -94,14 +96,14 @@ public class GenerationService {
         if(params.getUseAws() == null){
             params.setUseAws(false);
         }
-        if(params.getSrcFailuresAllowed() == null){
-            params.setSrcFailuresAllowed(false);
+        if(params.getPercentSrcAlsoDest() == null || params.getPercentSrcAlsoDest() < 0.0){
+            params.setPercentSrcAlsoDest(0.0);
         }
-        if(params.getDstFailuresAllowed() == null){
-            params.setSrcFailuresAllowed(false);
+        if(params.getPercentSrcFail() == null || params.getPercentSrcFail() < 0.0){
+            params.setPercentSrcFail(0.0);
         }
-        if(params.getSrcDstOverlap() == null){
-            params.setSrcDstOverlap("None");
+        if(params.getPercentDestFail() == null || params.getPercentDestFail() < 0.0){
+            params.setPercentDestFail(0.0);
         }
     }
 
@@ -123,115 +125,174 @@ public class GenerationService {
 
 
     public Request createRequest(SimulationParameters params, Topology topo, Random rng){
-        // Connection params
-        Integer numConnections = params.getNumConnections();
-        List<Integer> minConnectionsRange = params.getMinConnectionsRange();
-        List<Integer> maxConnectionsRange = params.getMaxConnectionsRange();
-
-        // Cut params
-        Integer numCuts = params.getNumCuts();
-        List<Integer> minMaxCuts = params.getMinMaxCuts();
-
-        // Failure params
-        Integer numFailures = params.getNumFailures();
-        List<Integer> minMaxFailures = params.getMinMaxFailures();
-        FailureClass failureClass = getFailureClass(params.getFailureClass());
 
         Set<Node> sources = pickSources(topo.getNodes(), params.getNumSources(), rng);
         Set<Node> destinations = pickDestinations(topo.getNodes(), params.getNumDestinations(), rng,
-                getOverlapType(params.getSrcDstOverlap()), sources);
-        Set<SourceDestPair> pairs = createPairs(sources, destinations);
+                params.getPercentSrcAlsoDest(), sources);
 
+        Set<SourceDestPair> pairs = createPairs(sources, destinations);
         List<SourceDestPair> sortedPairs = new ArrayList<>(pairs);
         Comparator<SourceDestPair> bySrc = Comparator.comparing(p -> p.getSrc().getId());
         Comparator<SourceDestPair> byDst = Comparator.comparing(p -> p.getDst().getId());
         sortedPairs.sort(bySrc.thenComparing(byDst));
 
-        // Create failures
-        Set<Failure> failures = null;
-        Map<SourceDestPair, Set<Failure>> failuresMap = null;
-        // If a min and max aren't specified, or they are equal, just create a set of failures
-        if(minMaxFailures.size() < 2 || minMaxFailures.get(0).equals(minMaxFailures.get(1)) && numFailures > -1){
-            failures = generateFailureSet(topo.getNodes(), topo.getLinks(), sources, destinations,
-                    params.getSrcFailuresAllowed(), params.getDstFailuresAllowed(), numFailures, failureClass,
-                    params.getFailureProb(), params.getMinMaxFailureProb(), rng);
-        }
-        // Otherwise create a unique set for each connection pair
-        else{
-            failuresMap = new HashMap<>();
-            for(SourceDestPair pair : pairs){
-                Integer randomNumFailures = randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
-                Set<Failure> failureSet = generateFailureSet(topo.getNodes(), topo.getLinks(), Collections.singleton(pair.getSrc()),
-                        Collections.singleton(pair.getDst()), params.getSrcFailuresAllowed(), params.getDstFailuresAllowed(),
-                        randomNumFailures, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(), rng);
-                failuresMap.put(pair, failureSet);
-            }
-        }
+        List<Node> sortedSources = sortedPairs.stream().map(SourceDestPair::getSrc).collect(Collectors.toList());
+        List<Node> sortedDests = sortedPairs.stream().map(SourceDestPair::getDst).collect(Collectors.toList());
+
+        Failures failureCollection = assignFailureSets(params, sortedSources, sortedDests, sortedPairs, topo, rng);
 
         // Determine number of cuts
-        Map<SourceDestPair, Integer> numCutsMap = new HashMap<>();
-        if(minMaxCuts.size() == 2){
-            Integer minCuts = minMaxCuts.get(0);
-            Integer maxCuts = minMaxCuts.get(1);
-            // Assign random number of cuts between min and max
-            // Except: cap out at the number of failures for a pair, so you're not trying to cut more than than the
-            // size of the failure set
-            for(SourceDestPair pair : pairs){
-                Integer numFails = failuresMap != null ? failuresMap.get(pair).size() : failures.size();
-                numCutsMap.put(pair, Math.min(numFails, randomInt(minCuts, maxCuts, rng)));
-            }
-            //Update number of required cuts for request to be equal to the total min
-            numCuts = numCutsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
-        }
-        else{
-            for(SourceDestPair pair : pairs){
-                Integer numFails = failuresMap != null ? failuresMap.get(pair).size() : failures.size();
-                numCutsMap.put(pair, Math.min(numFails, params.getNumCuts()));
-            }
-        }
+        NumFails numFailsCollection = assignNumFails(params, sortedPairs, failureCollection, rng);
+
 
         // Determine number of connections
-        Map<SourceDestPair, Integer> minConnectionsMap;
-        Map<SourceDestPair, Integer> maxConnectionsMap;
-        if(minConnectionsRange.size() == 2 && maxConnectionsRange.size() == 2){
-            // Get the minimum/maximum for generating mins (index 0) and maxes (index 1)
-            Integer minForMinConn = minConnectionsRange.get(0);
-            Integer maxForMinConn = minConnectionsRange.get(1);
-            Integer minForMaxConn = maxConnectionsRange.get(0);
-            Integer maxForMaxConn = maxConnectionsRange.get(1);
-            // Give random min/max num of connections per pair
-            // If src = dst for a pair, both numbers are 0
-            minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
-                    p -> p.getSrc() == p.getDst() ? 0 : randomInt(minForMinConn, maxForMinConn, rng)));
-            maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
-                    p -> p.getSrc() == p.getDst() ? 0 : randomInt(minForMaxConn, maxForMaxConn, rng)));
-
-            //Update number of required connections for request to be equal to the total min
-            numConnections = minConnectionsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
-        }
-        else{
-            // If no max or mins were set, give every pair a min of 0 and a max of the requested number of conns
-            // If src = dst for a pair, both numbers are 0
-            minConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
-            maxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
-                    p -> p.getSrc() == p.getDst() ? 0 : params.getNumConnections()));
-        }
+        Connections connectionsCollection = assignConnections(params, sortedPairs, rng);
 
 
         return Request.builder()
                 .id(UUID.randomUUID().toString())
                 .sources(sources)
                 .destinations(destinations)
-                .numConnections(numConnections)
-                .failures(failures)
-                .numCuts(numCuts)
+                .connections(connectionsCollection)
+                .failures(failureCollection)
+                .numFails(numFailsCollection)
                 .pairs(pairs)
-                .minConnectionsMap(minConnectionsMap)
-                .maxConnectionsMap(maxConnectionsMap)
-                .numCutsMap(numCutsMap)
-                .failuresMap(failuresMap)
                 .build();
     }
+
+    private Connections assignConnections(SimulationParameters params, List<SourceDestPair> pairs, Random rng){
+        ProblemClass problemClass = getProblemClass(params.getProblemClass());
+        // Connection params
+        Integer numConnections = params.getNumConnections();
+        List<Integer> minConnectionsRange = params.getMinConnectionsRange();
+        List<Integer> maxConnectionsRange = params.getMaxConnectionsRange();
+
+        Map<SourceDestPair, Integer> pairMinConnectionsMap = new HashMap<>();
+        Map<SourceDestPair, Integer> pairMaxConnectionsMap = new HashMap<>();
+
+        if(problemClass.equals(ProblemClass.Flex) && minConnectionsRange.size() == 2 && maxConnectionsRange.size() == 2){
+            numConnections = randomInt(maxConnectionsRange.get(0), maxConnectionsRange.get(1), rng);
+        }
+        else {
+            if(minConnectionsRange.size() == 2 && maxConnectionsRange.size() == 2){
+                // Get the minimum/maximum for generating mins (index 0) and maxes (index 1)
+                Integer minForMinConn = minConnectionsRange.get(0);
+                Integer maxForMinConn = minConnectionsRange.get(1);
+                Integer minForMaxConn = maxConnectionsRange.get(0);
+                Integer maxForMaxConn = maxConnectionsRange.get(1);
+                if(problemClass.equals(ProblemClass.Flow)){
+                    // Give random min/max num of connections per pair
+                    // If src = dst for a pair, both numbers are 0
+                    pairMinConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
+                            p -> p.getSrc() == p.getDst() ? 0 : randomInt(minForMinConn, maxForMinConn, rng)));
+                    pairMaxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
+                            p -> p.getSrc() == p.getDst() ? 0 : randomInt(minForMaxConn, maxForMaxConn, rng)));
+
+                    //Update number of required connections for request to be equal to the total min
+                    if(numConnections == 0)
+                        numConnections = pairMinConnectionsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
+                }
+            }
+            else{
+                if(problemClass.equals(ProblemClass.Flow)){
+                    pairMinConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
+                    pairMaxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
+                            p -> p.getSrc() == p.getDst() ? 0 : params.getNumConnections()));
+                }
+            }
+        }
+
+        return Connections.builder()
+                .numConnections(numConnections)
+                .pairMinConnectionsMap(pairMinConnectionsMap)
+                .pairMaxConnectionsMap(pairMaxConnectionsMap)
+                .build();
+    }
+
+    private NumFails assignNumFails(SimulationParameters params, List<SourceDestPair> pairs, Failures failureCollection,
+                                    Random rng) {
+        ProblemClass problemClass = getProblemClass(params.getProblemClass());
+
+        // Cut params
+        Integer numFails = params.getNumFails();
+        List<Integer> minMaxFails = params.getMinMaxFails();
+
+        Map<SourceDestPair, Integer> pairNumFailsMap = new HashMap<>();
+
+        // Assign random number of cuts between min and max
+        // Except: cap out at the number of failures for a pair, so you're not trying to cut more than than the
+        // size of the failure set
+        if(problemClass.equals(ProblemClass.Flex) && minMaxFails.size() == 2){
+            numFails = Math.min(failureCollection.getFailures().size(), randomInt(minMaxFails.get(0), minMaxFails.get(1), rng));
+        }
+        if(problemClass.equals(ProblemClass.Flow)){
+            for(SourceDestPair pair : pairs){
+                int failSetSize = failureCollection.getPairFailuresMap() != null ?
+                        failureCollection.getPairFailuresMap().get(pair).size() : failureCollection.getFailures().size();
+                int thisNumFails = minMaxFails.size() == 2 ?
+                        Math.min(failSetSize, randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
+                pairNumFailsMap.put(pair, thisNumFails);
+            }
+            //Update number of required cuts for request to be equal to the total min
+            numFails = pairNumFailsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
+        }
+
+        return NumFails.builder()
+                .totalNumFails(numFails)
+                .pairNumFailsMap(pairNumFailsMap)
+                .build();
+    }
+
+    private Failures assignFailureSets(SimulationParameters params, List<Node> sources,
+                                       List<Node> destinations, List<SourceDestPair> sortedPairs,
+                                       Topology topo, Random rng){
+
+        Integer numFailures = params.getNumFailures();
+        List<Integer> minMaxFailures = params.getMinMaxFailures();
+        FailureClass failureClass = getFailureClass(params.getFailureClass());
+
+        ProblemClass problemClass = getProblemClass(params.getProblemClass());
+
+        Set<Failure> failures = new HashSet<>();
+        Map<SourceDestPair, Set<Failure>> pairFailuresMap = new HashMap<>();
+
+        // Based on ProblemClass and numFailures / minMaxFailures input, generate the number of needed failures
+        // If Flex, use the total number of failures
+        // Otherwise, use min/max, unless that field isn't set.
+        // Create failures
+        Set<Node> srcDstFailures = choosePercentageSubsetNodes(new HashSet<>(sources), params.getPercentSrcFail(), rng);
+        srcDstFailures.addAll(choosePercentageSubsetNodes(new HashSet<>(destinations), params.getPercentDestFail(), rng));
+
+        Integer failureSetSize = numFailures;
+
+        if(minMaxFailures.size() < 2 || minMaxFailures.get(0).equals(minMaxFailures.get(1))){
+            numFailures = minMaxFailures.size() > 1 ? minMaxFailures.get(1) : numFailures;
+            failures = generateFailureSet(topo.getNodes(), topo.getLinks(), numFailures, failureClass,
+                    params.getFailureProb(), params.getMinMaxFailureProb(), sources, destinations, srcDstFailures, rng);
+        }
+        else{
+            if(problemClass.equals(ProblemClass.Flow)){
+                for(SourceDestPair pair : sortedPairs){
+                    Integer randomNumFailures = randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
+                    Set<Failure> failureSet = generateFailureSet(topo.getNodes(), topo.getLinks(),
+                            randomNumFailures, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(),
+                            sources, destinations, srcDstFailures, rng);
+                    pairFailuresMap.put(pair, failureSet);
+                    failureSetSize += failureSet.size();
+                }
+            }
+            else if(problemClass.equals(ProblemClass.Flex)){
+                failureSetSize = randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
+            }
+        }
+
+        return Failures.builder()
+                .failureSetSize(failureSetSize)
+                .failures(failures)
+                .pairFailuresMap(pairFailuresMap)
+                .build();
+    }
+
 
     private Integer randomInt(Integer min, Integer max, Random rng){
         return rng.nextInt((max - min) + 1) + min;
@@ -249,57 +310,69 @@ public class GenerationService {
 
 
     private Set<Node> pickSources(Set<Node> nodes, Integer numSources, Random rng) {
-        return new HashSet<>(chooseRandomSubsetNodes(new ArrayList<>(nodes), numSources, rng));
+        return new HashSet<>(chooseRandomSubsetNodes(nodes, numSources, rng));
     }
 
-    private Set<Node> pickDestinations(Set<Node> nodes, Integer numDestinations, Random rng, OverlapType sourceDestOverlap,
+    private Set<Node> pickDestinations(Set<Node> nodes, Integer numDestinations, Random rng, Double percentSrcAlsoDest,
                                        Set<Node> sources) {
         Set<Node> remainingNodes = new HashSet<>(nodes);
-        if(sourceDestOverlap.equals(OverlapType.None)){
-            remainingNodes.removeAll(sources);
+        Set<Node> chosenNodes = new HashSet<>();
+        // If any sources also must be destinations
+        if(percentSrcAlsoDest > 0.0){
+            chosenNodes.addAll(choosePercentageSubsetNodes(sources, percentSrcAlsoDest, rng));
         }
-        else if(sourceDestOverlap.equals(OverlapType.Total)){
-            return sources;
+        // If you still haven't picked enough yet
+        if(chosenNodes.size() < numDestinations){
+            remainingNodes.removeAll(chosenNodes);
+            Set<Node> remainingChoices = chooseRandomSubsetNodes(remainingNodes, numDestinations-chosenNodes.size(), rng);
+            chosenNodes.addAll(remainingChoices);
         }
-        return new HashSet<>(chooseRandomSubsetNodes(new ArrayList<>(remainingNodes), numDestinations, rng));
+        return chosenNodes;
     }
 
-    private Set<Failure> generateFailureSet(Set<Node> nodes, Set<Link> links, Set<Node> sources, Set<Node> destinations,
-                                            Boolean srcFailuresAllowed, Boolean dstFailuresAllowed, Integer numFailures,
-                                            FailureClass failureClass, Double probability, List<Double> minMaxFailureProb, Random rng) {
+    private Set<Failure> generateFailureSet(Set<Node> nodes, Set<Link> links, Integer numFailures, FailureClass failureClass,
+                                            Double probability, List<Double> minMaxFailureProb, List<Node> sources, List<Node> destinations,
+                                            Set<Node> prioritySet, Random rng) {
+
+        List<Link> chosenLinks = new ArrayList<>();
+        List<Node> chosenNodes = new ArrayList<>();
+
+        Set<Node> nodeOptions = new HashSet<>(nodes);
 
         if(numFailures == 0){
             return new HashSet<>();
         }
-        List<Link> chosenLinks = new ArrayList<>();
-        List<Node> chosenNodes = new ArrayList<>();
-
-        List<Link> linkOptions = new ArrayList<>(links);
-        if(failureClass.equals(FailureClass.Link)){
-            chosenLinks = chooseRandomSubsetLinks(linkOptions, numFailures, rng);
+        if(!prioritySet.isEmpty()){
+            chosenNodes.addAll(chooseRandomSubsetNodes(prioritySet, numFailures, rng));
+            prioritySet.removeAll(chosenNodes);
         }
+        // If we still haven't gotten enough failures, make some more
+        if(chosenNodes.size() < numFailures){
+            int numLeftToChoose = numFailures - chosenNodes.size();
 
-        // remove any nodes, if necessary
-        List<Node> nodeOptions = new ArrayList<>(nodes);
-        if(!srcFailuresAllowed){
+            Set<Link> linkOptions = new HashSet<>(links);
+            if(failureClass.equals(FailureClass.Link)){
+                chosenLinks.addAll(chooseRandomSubsetLinks(linkOptions, numLeftToChoose, rng));
+            }
+
+            // remove any nodes, if necessary
             nodeOptions.removeAll(sources);
-        }
-        if(!dstFailuresAllowed){
             nodeOptions.removeAll(destinations);
-        }
-        if(failureClass.equals(FailureClass.Node)){
-            chosenNodes = chooseRandomSubsetNodes(nodeOptions, numFailures, rng);
-        }
 
-        if(failureClass.equals(FailureClass.Both)){
-            Integer numNodeFailures = rng.nextInt(numFailures);
-            Integer numLinkFailures = numFailures - numNodeFailures;
-            chosenNodes = chooseRandomSubsetNodes(nodeOptions, numNodeFailures, rng);
-            chosenLinks = chooseRandomSubsetLinks(linkOptions, numLinkFailures, rng);
+            if(failureClass.equals(FailureClass.Node)){
+                chosenNodes.addAll(chooseRandomSubsetNodes(nodeOptions, numLeftToChoose, rng));
+            }
+
+            if(failureClass.equals(FailureClass.Both)){
+                Integer numNodeFailures = rng.nextInt(numLeftToChoose);
+                Integer numLinkFailures = numLeftToChoose - numNodeFailures;
+                chosenNodes.addAll(chooseRandomSubsetNodes(nodeOptions, numNodeFailures, rng));
+                chosenLinks.addAll(chooseRandomSubsetLinks(linkOptions, numLinkFailures, rng));
+            }
         }
 
         // Determine probabilities
-        List<Double> probabilities = generateProbabilities(probability, minMaxFailureProb, numFailures, rng);
+        List<Double> probabilities = generateProbabilities(probability, minMaxFailureProb, chosenNodes.size() + chosenLinks.size(), rng);
 
         return generateFailuresFromNodeLinks(chosenNodes, chosenLinks, probabilities);
     }
@@ -326,24 +399,39 @@ public class GenerationService {
         return failures;
     }
 
-    private List<Node> chooseRandomSubsetNodes(List<Node> options, Integer numChoices, Random rng) {
-        if(numChoices == 0){
-            return new ArrayList<>();
-        }
-        Collections.shuffle(options, rng);
-        return options.subList(0, numChoices);
+    private Set<Node> choosePercentageSubsetNodes(Set<Node> options, Double percentage, Random rng){
+        int numToChoose = numFromPercentage(options.size(), percentage);
+        return chooseRandomSubsetNodes(options, numToChoose, rng);
     }
 
-    private List<Link> chooseRandomSubsetLinks(List<Link> options, Integer numChoices, Random rng){
+    private int numFromPercentage(int numOptions, double percentage){
+        return (int) Math.round(percentage * numOptions);
+    }
+
+
+    private Set<Node> chooseRandomSubsetNodes(Set<Node> options, Integer numChoices, Random rng) {
         if(numChoices == 0){
-            return new ArrayList<>();
+            return new HashSet<>();
         }
-        Collections.shuffle(options, rng);
-        return options.subList(0, numChoices);
+        if(numChoices > options.size()){
+            return options;
+        }
+        List<Node> choices = new ArrayList<>(options);
+        Collections.shuffle(choices, rng);
+        return new HashSet<>(choices.subList(0, numChoices));
+    }
+
+    private Set<Link> chooseRandomSubsetLinks(Set<Link> options, Integer numChoices, Random rng){
+        if(numChoices == 0){
+            return new HashSet<>();
+        }
+        List<Link> choices = new ArrayList<>(options);
+        Collections.shuffle(choices, rng);
+        return new HashSet<>(choices.subList(0, numChoices));
     }
 
     private Algorithm getAlgorithm(String alg){
-        return Algorithm.get(alg).orElse(Algorithm.FlexibleILP);
+        return Algorithm.get(alg).orElse(Algorithm.ServiceILP);
     }
 
     private ProcessingType getProcessingType(String type){
@@ -354,7 +442,7 @@ public class GenerationService {
         return FailureClass.get(fClass).orElse(FailureClass.Both);
     }
 
-    private OverlapType getOverlapType(String oType){
-        return OverlapType.get(oType).orElse(OverlapType.None);
+    private ProblemClass getProblemClass(String problemClass) {
+        return ProblemClass.get(problemClass).orElse(ProblemClass.Flex);
     }
 }

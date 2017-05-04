@@ -7,8 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public enum Algorithm {
-    FlexibleILP("FlexibleILP"),
-    FixedILP("FixedILP");
+    ServiceILP("ServiceILP");
 
     private String code;
 

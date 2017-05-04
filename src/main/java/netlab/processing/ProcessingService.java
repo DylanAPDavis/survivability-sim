@@ -48,8 +48,7 @@ public class ProcessingService {
         Map<SourceDestPair, List<Path>> paths = new HashMap<>();
 
         switch(algorithm){
-            case FixedILP:
-            case FlexibleILP:
+            case ServiceILP:
                 paths = amplService.solve(request, topology);
         }
         return paths;

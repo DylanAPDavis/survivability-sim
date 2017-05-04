@@ -7,11 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.FailureClass;
-import netlab.submission.enums.OverlapType;
+import netlab.submission.enums.ProblemClass;
 import netlab.submission.enums.ProcessingType;
 
 import java.util.Map;
-import java.util.Set;
 
 @Data
 @Builder
@@ -35,7 +34,13 @@ public class RequestSet {
 
     private Algorithm algorithm;
 
-    private OverlapType overlapType;
+    private ProblemClass problemClass;
+
+    private Double percentSrcAlsoDest;
+
+    private Double percentSrcFail;
+
+    private Double percentDestFail;
 
     private boolean sdn;
 

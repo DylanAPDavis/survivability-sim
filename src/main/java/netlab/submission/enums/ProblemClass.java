@@ -1,18 +1,18 @@
 package netlab.submission.enums;
 
+
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public enum OverlapType {
-    None("None"),
-    Partial("Partial"),
-    Total("Total");
+public enum ProblemClass {
+    Flex("Flex"),
+    Flow("Flow");
 
     private String code;
 
-    OverlapType(String code) {
+    ProblemClass(String code) {
         this.code = code;
     }
 
@@ -20,15 +20,15 @@ public enum OverlapType {
         return this.code;
     }
 
-    private static final Map<String, OverlapType> lookup = new HashMap<>();
+    private static final Map<String, ProblemClass> lookup = new HashMap<>();
 
     static {
-        for (OverlapType pc : EnumSet.allOf(OverlapType.class)) {
+        for (ProblemClass pc : EnumSet.allOf(ProblemClass.class)) {
             lookup.put(pc.getCode(), pc);
         }
     }
 
-    public static Optional<OverlapType> get(String code) {
+    public static Optional<ProblemClass> get(String code) {
         if (lookup.containsKey(code)) {
             return Optional.of(lookup.get(code));
         } else {

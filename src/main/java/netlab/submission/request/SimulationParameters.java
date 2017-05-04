@@ -21,6 +21,9 @@ public class SimulationParameters {
     private Integer numRequests;
 
     @NonNull
+    private String ProblemClass;
+
+    @NonNull
     private String algorithm;
 
     // S
@@ -30,35 +33,41 @@ public class SimulationParameters {
     @NonNull
     private Integer numDestinations;
 
-    // F
+    // F - Total number of possible failures
     private Integer numFailures;
+    // Alternatively, give a random number between values at index 0 and index 1
     private List<Integer> minMaxFailures;
 
     private String failureClass;
-
-    // C
-    private Integer numConnections;
-    private List<Integer> minConnectionsRange;
-    private List<Integer> maxConnectionsRange;
-
-    // k - pick one field
-    private Integer numCuts;
-    private List<Integer> minMaxCuts;
 
     // Failure probability - pick one field
     private Double failureProb;
     private List<Double> minMaxFailureProb;
 
+    // C - total number of connections
+    private Integer numConnections;
+
+    // Alternatively, give a random number between values at index 0 and index 1
+    private List<Integer> minConnectionsRange;
+    private List<Integer> maxConnectionsRange;
+
+    // Number of failures that will occur
+    private Integer numFails;
+
+    // Alternatively, give a random number between values at index 0 and index 1
+    private List<Integer> minMaxFails;
+
     private String processingType;
+
+    private Double percentSrcAlsoDest;
+
+    private Double percentSrcFail;
+
+    private Double percentDestFail;
 
     private Boolean sdn;
 
     private Boolean useAws;
 
-    private Boolean srcFailuresAllowed;
-
-    private Boolean dstFailuresAllowed;
-
-    private String srcDstOverlap;
 
 }

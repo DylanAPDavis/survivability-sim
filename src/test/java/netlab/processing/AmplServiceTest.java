@@ -35,10 +35,10 @@ public class AmplServiceTest {
     public void solve(){
 
 
-        SimulationParameters params = makeParameters(2L, "NSFnet", 1, "FixedILP",
+        SimulationParameters params = makeParameters(2L, "NSFnet", 1, "EndpointILP",
                 3, 3, null, Arrays.asList(1, 2), "Both", 1.0, new ArrayList<>(),
-                null, Arrays.asList(0, 1), Arrays.asList(1, 2), null, Arrays.asList(1, 2), "Solo",
-                false, false, false, false, "Partial");
+                10, Arrays.asList(0, 0), Arrays.asList(10, 10), null, Arrays.asList(1, 2), "Solo",
+                false, false, 0.0, 0.0, 0.0);
         Topology topo = topologyService.getTopologyById("NSFnet");
         Map<String, Request> requests = generationService.createRequestsFromParameters(params);
         for(Request r : requests.values()){
@@ -51,9 +51,9 @@ public class AmplServiceTest {
                                                 List<Integer> minMaxFailures, String failureClass, Double failureProb,
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
-                                                Integer numCuts, List<Integer> minMaxCuts, String processingType, Boolean sdn,
-                                                Boolean useAws, Boolean srcFailuresAllowed, Boolean dstFailuresAllowed,
-                                                String srcDestOverlap){
+                                                Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
+                                                Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
+                                                double percentDstFail){
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
@@ -69,14 +69,14 @@ public class AmplServiceTest {
                 .numConnections(numConnections)
                 .minConnectionsRange(minConnectionsRange)
                 .maxConnectionsRange(maxConnectionsRange)
-                .numCuts(numCuts)
-                .minMaxCuts(minMaxCuts)
+                .numFails(numFails)
+                .minMaxFails(minMaxFails)
                 .processingType(processingType)
                 .sdn(sdn)
                 .useAws(useAws)
-                .srcFailuresAllowed(srcFailuresAllowed)
-                .dstFailuresAllowed(dstFailuresAllowed)
-                .srcDstOverlap(srcDestOverlap)
+                .percentSrcAlsoDest(percentSrcAlsoDest)
+                .percentSrcFail(percentSrcFail)
+                .percentDestFail(percentDstFail)
                 .build();
     }
 }

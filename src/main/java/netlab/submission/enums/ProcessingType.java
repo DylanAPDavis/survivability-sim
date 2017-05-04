@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public enum ProcessingType {
-    WDM("WDM"),
-    Grooming("Grooming"),
+    WDMBatch("WDMBatch"),
+    GroomingBatch("GroomingBatch"),
     Solo("Solo");
 
     private String code;

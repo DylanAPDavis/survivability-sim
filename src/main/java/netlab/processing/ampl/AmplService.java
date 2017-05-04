@@ -47,7 +47,7 @@ public class AmplService {
     private AMPL assignValues(Request request, Topology topology) throws IOException{
         AMPL ampl = new AMPL();
         ampl.setOption("solver", "gurobi");
-        ampl.read(modelDirectory + "/minMax.mod");
+        ampl.read(modelDirectory + "/flow.mod");
 
         // Assign nodes, links, sources, and destinations
         assignTopoValues(ampl, topology);
@@ -113,7 +113,7 @@ public class AmplService {
 
             Set<Failure> failures = failureSetMap != null ? failureSetMap.get(pair) : request.getFailures();
             Integer numCuts = numCutsMap.get(pair);
-            // Calculate the number of numCuts-sized combinations of the failure set
+            // Calculate the number of totalNumFails-sized combinations of the failure set
             double divisor = ArithmeticUtils.factorial(numCuts) * ArithmeticUtils.factorial(failures.size() - numCuts);
             numGroups[index] = ArithmeticUtils.factorial(failures.size()) / divisor;
         }
