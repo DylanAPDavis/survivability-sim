@@ -4,17 +4,13 @@ import com.ampl.*;
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Request;
-import netlab.topology.elements.Failure;
-import netlab.topology.elements.Node;
-import netlab.topology.elements.SourceDestPair;
-import netlab.topology.elements.Topology;
+import netlab.topology.elements.*;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.springframework.stereotype.Service;
 
 import org.apache.commons.math3.util.Combinations;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,17 +21,18 @@ public class AmplService {
 
     private String modelDirectory = "linear-programs/models";
 
-    public Map<SourceDestPair, List<Path>> solve(Request request, ProblemClass problemClass, Topology topology){
-        Map<SourceDestPair, List<Path>> paths = new HashMap<>();
+    public Map<SourceDestPair, Map<String, Path>> solve(Request request, ProblemClass problemClass, Topology topology){
+        Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         AMPL ampl = new AMPL();
         try {
             ampl = assignValues(request, problemClass, topology);
             ampl.solve();
-            Variable numConn = ampl.getVariable("Num_Conn");
+            /*Variable numConn = ampl.getVariable("Num_Conn");
             Map<String, Double> numConnections = numConn.getInstances().stream()
                     .filter(nc -> nc.value() > 0)
                     .collect(Collectors.toMap(VariableInstance::name, VariableInstance::value));
-            System.out.println(numConnections);
+            System.out.println(numConnections);*/
+            paths = translateFlowsIntoPaths(ampl.getVariable("L"), request.getPairs(), topology);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -44,6 +41,104 @@ public class AmplService {
         }
         return paths;
     }
+
+    private Map<SourceDestPair,Map<String,Path>> translateFlowsIntoPaths(Variable linkFlows, Set<SourceDestPair> pairs, Topology topo) {
+        List<String> flows = linkFlows.getInstances().stream()
+                .filter(f -> f.value() > 0)
+                .map(VariableInstance::name)
+                .collect(Collectors.toList());
+        Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream()
+                .collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Map<String, Node> nodeIdMap = topo.getNodeIdMap();
+        for(String flow : flows){
+            String[] components = flow.substring(2, flow.length()-1).split(",");
+            System.out.println(Arrays.toString(components));
+            String src = components[0].replace("'", "");
+            String dst = components[1].replace("'", "");
+            String pathId = components[2].replace("'", "");
+            String origin = components[3].replace("'", "");
+            String target = components[4].replace("'", "");
+
+            SourceDestPair thisPair = SourceDestPair.builder()
+                    .src(nodeIdMap.get(src))
+                    .dst(nodeIdMap.get(dst))
+                    .build();
+            Link link = linkIdMap.get(origin + "-" + target);
+            Map<String, Path> pairMap = pathMap.get(thisPair);
+            // Path already exists, add to it
+            if(pairMap.containsKey(pathId)){
+                Path thisPath = pairMap.get(pathId);
+                thisPath.getLinks().add(link);
+            }
+            // New path
+            else{
+                List<Link> links = new ArrayList<>();
+                links.add(link);
+                Path newPath = Path.builder()
+                        .links(links)
+                        .build();
+                pairMap.put(pathId, newPath);
+            }
+        }
+        //printPaths(pathMap);
+        pathMap = sortPaths(pathMap);
+        //System.out.println("-----------------------------");
+        //printPaths(pathMap);
+        return pathMap;
+    }
+
+    private void printPaths(Map<SourceDestPair, Map<String, Path>> pairPathMap){
+        for(SourceDestPair pair : pairPathMap.keySet()){
+            System.out.println("Pair: (" + pair.getSrc().getId() + ", " + pair.getDst().getId() + ")");
+            System.out.println("---");
+            Map<String, Path> pathMap = pairPathMap.get(pair);
+            for(String pathId : pathMap.keySet()){
+                String pathString = pathId + ": ";
+                for(Link link : pathMap.get(pathId).getLinks()){
+                    pathString += "(" + link.getOrigin().getId() + ", " + link.getTarget().getId() + ") ";
+                }
+                System.out.println(pathString);
+            }
+            System.out.println("~~~~~~~");
+        }
+    }
+
+    private Map<SourceDestPair, Map<String, Path>> sortPaths(Map<SourceDestPair, Map<String, Path>> pathMap) {
+        for(SourceDestPair pair : pathMap.keySet()){
+            Map<String, Path> mapForPair = pathMap.get(pair);
+            for(Path path : mapForPair.values()){
+                sortPath(path, pair);
+            }
+        }
+        return pathMap;
+    }
+
+    private void sortPath(Path path, SourceDestPair pair) {
+        List<Link> links = path.getLinks();
+
+        List<Link> sortedLinks = new ArrayList<>();
+        List<Node> sortedNodes = new ArrayList<>();
+
+        Map<Node, Link> outgoingLinks = new HashMap<>();
+        for(Link link : links){
+            outgoingLinks.put(link.getOrigin(), link);
+        }
+        Link currLink = outgoingLinks.get(pair.getSrc());
+
+        // While the next node has an outgoing link
+        while(outgoingLinks.containsKey(currLink.getTarget())){
+            sortedLinks.add(currLink);
+            sortedNodes.add(currLink.getOrigin());
+            currLink = outgoingLinks.get(currLink.getTarget());
+        }
+        sortedLinks.add(currLink);
+        sortedNodes.add(currLink.getTarget());
+
+        path.setLinks(sortedLinks);
+        path.setNodes(sortedNodes);
+    }
+
 
     private AMPL assignValues(Request request, ProblemClass problemClass, Topology topology) throws IOException{
         AMPL ampl = new AMPL();

@@ -4,11 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import netlab.topology.elements.Failure;
 import netlab.topology.elements.Node;
+import netlab.topology.elements.Path;
 import netlab.topology.elements.SourceDestPair;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,5 +29,5 @@ public class Request {
 
     private Set<SourceDestPair> pairs;
 
-    private Map<SourceDestPair, List<Path>> chosenPaths;
+    private Map<SourceDestPair, Map<String, Path>> chosenPaths;
 }

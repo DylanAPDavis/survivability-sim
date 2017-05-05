@@ -6,13 +6,13 @@ import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Request;
 import netlab.submission.request.RequestSet;
+import netlab.topology.elements.Path;
 import netlab.topology.elements.SourceDestPair;
 import netlab.topology.elements.Topology;
 import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +36,7 @@ public class ProcessingService {
 
         Topology topo = topoService.getTopologyById(requestSet.getTopologyId());
         for(Request request : requestSet.getRequests().values()){
-            Map<SourceDestPair, List<Path>> paths =  processRequest(request, requestSet.getAlgorithm(), requestSet.getProblemClass(),
+            Map<SourceDestPair, Map<String, Path>> paths =  processRequest(request, requestSet.getAlgorithm(), requestSet.getProblemClass(),
                     topo, requestSet.isUseAws(), requestSet.isSdn());
             request.setChosenPaths(paths);
         }
@@ -44,9 +44,9 @@ public class ProcessingService {
         return requestSet;
     }
 
-    public Map<SourceDestPair, List<Path>> processRequest(Request request, Algorithm algorithm, ProblemClass problemClass,
-                                                          Topology topology, Boolean useAws, Boolean sdn){
-        Map<SourceDestPair, List<Path>> paths = new HashMap<>();
+    public Map<SourceDestPair, Map<String, Path>> processRequest(Request request, Algorithm algorithm, ProblemClass problemClass,
+                                                                 Topology topology, Boolean useAws, Boolean sdn){
+        Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
 
         switch(algorithm){
             case ServiceILP:
