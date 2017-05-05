@@ -156,8 +156,8 @@ public class AmplService {
         f.setValues(failureSet);
         // Find all k-size subsets of this failure set
         Map<Tuple, Object[]> failureGroups = generateFailureGroups(numFails, failureSet, new ArrayList<>());
-        for(Tuple fgTriplet : failureGroups.keySet()){
-            fg.get(fgTriplet).setValues(failureGroups.get(fgTriplet));
+        for(Tuple fgTuple : failureGroups.keySet()){
+            fg.get(fgTuple.get(0)).setValues(failureGroups.get(fgTuple));
         }
     }
 
@@ -181,8 +181,8 @@ public class AmplService {
             f.get(pairs[index]).setValues(failureSet);
             // Find all k-size subsets of this failure set
             List<Object> tupleArgs = new ArrayList<>();
-            tupleArgs.add(pair.getSrc());
-            tupleArgs.add(pair.getDst());
+            tupleArgs.add(pair.getSrc().getId());
+            tupleArgs.add(pair.getDst().getId());
             Map<Tuple, Object[]> failureGroups = generateFailureGroups(numFails, failureSet, tupleArgs);
             for(Tuple fgTriplet : failureGroups.keySet()){
                 fg.get(fgTriplet).setValues(failureGroups.get(fgTriplet));

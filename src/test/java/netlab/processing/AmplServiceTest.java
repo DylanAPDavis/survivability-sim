@@ -6,6 +6,7 @@ import netlab.TestConfiguration;
 import netlab.processing.ampl.AmplService;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Request;
+import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
 import netlab.topology.elements.Topology;
@@ -35,15 +36,15 @@ public class AmplServiceTest {
     @Test
     public void solve(){
 
-
-        SimulationParameters params = makeParameters(2L, "NSFnet", 1, "ServiceILP", "Flex",
-                3, 3, null, Arrays.asList(1, 2), "Both", 1.0, new ArrayList<>(),
-                10, Arrays.asList(0, 0), Arrays.asList(10, 10), null, Arrays.asList(1, 2), "Solo",
+        String problemClass = "Flow";
+        SimulationParameters params = makeParameters(2L, "NSFnet", 1, "ServiceILP", problemClass,
+                3, 3, null, Arrays.asList(0, 1), "Both", 1.0, new ArrayList<>(),
+                10, Arrays.asList(0, 0), Arrays.asList(1, 1), null, Arrays.asList(1, 2), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         Topology topo = topologyService.getTopologyById("NSFnet");
-        Map<String, Request> requests = generationService.createRequestsFromParameters(params);
-        for(Request r : requests.values()){
-            amplService.solve(r, ProblemClass.Flex, topo);
+        RequestSet requestSet = generationService.generateRequests(params);
+        for(Request request : requestSet.getRequests().values()){
+            amplService.solve(request, requestSet.getProblemClass(), topo);
         }
     }
 

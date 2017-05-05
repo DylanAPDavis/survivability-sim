@@ -171,7 +171,7 @@ public class GenerationService {
         Map<SourceDestPair, Integer> pairMaxConnectionsMap = new HashMap<>();
 
         if(problemClass.equals(ProblemClass.Flex) && minConnectionsRange.size() == 2 && maxConnectionsRange.size() == 2){
-            numConnections = randomInt(maxConnectionsRange.get(0), maxConnectionsRange.get(1), rng);
+            numConnections = randomInt(minConnectionsRange.get(0), maxConnectionsRange.get(1), rng);
         }
         else {
             if(minConnectionsRange.size() == 2 && maxConnectionsRange.size() == 2){
@@ -227,8 +227,7 @@ public class GenerationService {
         }
         if(problemClass.equals(ProblemClass.Flow)){
             for(SourceDestPair pair : pairs){
-                int failSetSize = failureCollection.getPairFailuresMap() != null ?
-                        failureCollection.getPairFailuresMap().get(pair).size() : failureCollection.getFailures().size();
+                int failSetSize = failureCollection.getPairFailuresMap().getOrDefault(pair, failureCollection.getFailures()).size();
                 int thisNumFails = minMaxFails.size() == 2 ?
                         Math.min(failSetSize, randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
                 pairNumFailsMap.put(pair, thisNumFails);
@@ -263,10 +262,11 @@ public class GenerationService {
         Set<Node> srcDstFailures = choosePercentageSubsetNodes(new HashSet<>(sources), params.getPercentSrcFail(), rng);
         srcDstFailures.addAll(choosePercentageSubsetNodes(new HashSet<>(destinations), params.getPercentDestFail(), rng));
 
-        Integer failureSetSize = numFailures;
+        Integer failureSetSize = numFailures != null ? numFailures : 0;
 
         if(minMaxFailures.size() < 2 || minMaxFailures.get(0).equals(minMaxFailures.get(1))){
             numFailures = minMaxFailures.size() > 1 ? minMaxFailures.get(1) : numFailures;
+            failureSetSize = numFailures;
             failures = generateFailureSet(topo.getNodes(), topo.getLinks(), numFailures, failureClass,
                     params.getFailureProb(), params.getMinMaxFailureProb(), sources, destinations, srcDstFailures, rng);
         }
