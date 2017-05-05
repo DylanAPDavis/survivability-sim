@@ -21,7 +21,7 @@ public class SimulationParameters {
     private Integer numRequests;
 
     @NonNull
-    private String ProblemClass;
+    private String problemClass;
 
     @NonNull
     private String algorithm;

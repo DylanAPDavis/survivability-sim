@@ -4,6 +4,7 @@ package netlab.processing;
 import lombok.NonNull;
 import netlab.TestConfiguration;
 import netlab.processing.ampl.AmplService;
+import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
@@ -35,18 +36,18 @@ public class AmplServiceTest {
     public void solve(){
 
 
-        SimulationParameters params = makeParameters(2L, "NSFnet", 1, "EndpointILP",
+        SimulationParameters params = makeParameters(2L, "NSFnet", 1, "ServiceILP", "Flex",
                 3, 3, null, Arrays.asList(1, 2), "Both", 1.0, new ArrayList<>(),
                 10, Arrays.asList(0, 0), Arrays.asList(10, 10), null, Arrays.asList(1, 2), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         Topology topo = topologyService.getTopologyById("NSFnet");
         Map<String, Request> requests = generationService.createRequestsFromParameters(params);
         for(Request r : requests.values()){
-            amplService.solve(r, topo);
+            amplService.solve(r, ProblemClass.Flex, topo);
         }
     }
 
-    private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg,
+    private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
                                                 Integer numSources, Integer numDestinations, Integer numFailures,
                                                 List<Integer> minMaxFailures, String failureClass, Double failureProb,
                                                 List<Double> minMaxFailureProb, Integer numConnections,
@@ -59,6 +60,7 @@ public class AmplServiceTest {
                 .topologyId(topologyId)
                 .numRequests(numRequests)
                 .algorithm(alg)
+                .problemClass(problemClass)
                 .numSources(numSources)
                 .numDestinations(numDestinations)
                 .numFailures(numFailures)

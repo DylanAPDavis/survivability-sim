@@ -283,6 +283,9 @@ public class GenerationService {
             }
             else if(problemClass.equals(ProblemClass.Flex)){
                 failureSetSize = randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
+                failures = generateFailureSet(topo.getNodes(), topo.getLinks(),
+                        failureSetSize, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(),
+                        sources, destinations, srcDstFailures, rng);
             }
         }
 

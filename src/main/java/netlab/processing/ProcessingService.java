@@ -3,6 +3,7 @@ package netlab.processing;
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ampl.AmplService;
 import netlab.submission.enums.Algorithm;
+import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Request;
 import netlab.submission.request.RequestSet;
 import netlab.topology.elements.SourceDestPair;
@@ -35,21 +36,21 @@ public class ProcessingService {
 
         Topology topo = topoService.getTopologyById(requestSet.getTopologyId());
         for(Request request : requestSet.getRequests().values()){
-            Map<SourceDestPair, List<Path>> paths =  processRequest(request, requestSet.getAlgorithm(), topo,
-                    requestSet.isUseAws(), requestSet.isSdn());
+            Map<SourceDestPair, List<Path>> paths =  processRequest(request, requestSet.getAlgorithm(), requestSet.getProblemClass(),
+                    topo, requestSet.isUseAws(), requestSet.isSdn());
             request.setChosenPaths(paths);
         }
 
         return requestSet;
     }
 
-    public Map<SourceDestPair, List<Path>> processRequest(Request request, Algorithm algorithm, Topology topology,
-                                                          Boolean useAws, Boolean sdn){
+    public Map<SourceDestPair, List<Path>> processRequest(Request request, Algorithm algorithm, ProblemClass problemClass,
+                                                          Topology topology, Boolean useAws, Boolean sdn){
         Map<SourceDestPair, List<Path>> paths = new HashMap<>();
 
         switch(algorithm){
             case ServiceILP:
-                paths = amplService.solve(request, topology);
+                paths = amplService.solve(request, problemClass, topology);
         }
         return paths;
     }
