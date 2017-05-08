@@ -8,6 +8,7 @@ import netlab.submission.enums.ProcessingType;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
 import netlab.topology.services.TopologyService;
+import org.apache.commons.math3.util.Combinations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -57,8 +58,8 @@ public class GenerationService {
 
     private void assignDefaults(SimulationParameters params) {
 
-        if(params.getNumFailures() == null || params.getNumFailures() < 0){
-            params.setNumFailures(0);
+        if(params.getFailureSetSize() == null || params.getFailureSetSize() < 0){
+            params.setFailureSetSize(0);
         }
         if(params.getMinMaxFailures() == null){
             params.setMinMaxFailures(new ArrayList<>());
@@ -219,22 +220,32 @@ public class GenerationService {
 
         Map<SourceDestPair, Integer> pairNumFailsMap = new HashMap<>();
 
+        List<List<Failure>> failureGroups = new ArrayList<>();
+        Map<SourceDestPair, List<List<Failure>>> pairFailureGroupsMap = new HashMap<>();
+
         // Assign random number of cuts between min and max
         // Except: cap out at the number of failures for a pair, so you're not trying to cut more than than the
         // size of the failure set
-        if(problemClass.equals(ProblemClass.Flex) && minMaxFails.size() == 2){
-            numFails = Math.min(failureCollection.getFailures().size(), randomInt(minMaxFails.get(0), minMaxFails.get(1), rng));
+        if(problemClass.equals(ProblemClass.Flex)){
+            if(minMaxFails.size() == 2) {
+                numFails = Math.min(failureCollection.getFailures().size(), randomInt(minMaxFails.get(0), minMaxFails.get(1), rng));
+            }
+            failureGroups = generateFailureGroups(numFails, failureCollection.getFailures(), rng);
         }
         if(problemClass.equals(ProblemClass.Flow)){
             for(SourceDestPair pair : pairs){
-                int failSetSize = failureCollection.getPairFailuresMap().getOrDefault(pair, failureCollection.getFailures()).size();
+                Set<Failure> thisFailureSet = failureCollection.getPairFailuresMap().getOrDefault(pair, failureCollection.getFailures());
                 int thisNumFails = minMaxFails.size() == 2 ?
-                        Math.min(failSetSize, randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
+                        Math.min(thisFailureSet.size(), randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
                 pairNumFailsMap.put(pair, thisNumFails);
+                pairFailureGroupsMap.put(pair, generateFailureGroups(thisNumFails, thisFailureSet, rng));
             }
             //Update number of required cuts for request to be equal to the total min
             numFails = pairNumFailsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
         }
+
+        failureCollection.setFailureGroups(failureGroups);
+        failureCollection.setPairFailureGroupsMap(pairFailureGroupsMap);
 
         return NumFails.builder()
                 .totalNumFails(numFails)
@@ -246,7 +257,7 @@ public class GenerationService {
                                        List<Node> destinations, List<SourceDestPair> sortedPairs,
                                        Topology topo, Random rng){
 
-        Integer numFailures = params.getNumFailures();
+        Integer numFailures = params.getFailureSetSize();
         List<Integer> minMaxFailures = params.getMinMaxFailures();
         FailureClass failureClass = getFailureClass(params.getFailureClass());
 
@@ -255,7 +266,7 @@ public class GenerationService {
         Set<Failure> failures = new HashSet<>();
         Map<SourceDestPair, Set<Failure>> pairFailuresMap = new HashMap<>();
 
-        // Based on ProblemClass and numFailures / minMaxFailures input, generate the number of needed failures
+        // Based on ProblemClass and failureSetSize / minMaxFailures input, generate the number of needed failures
         // If Flex, use the total number of failures
         // Otherwise, use min/max, unless that field isn't set.
         // Create failures
@@ -400,6 +411,28 @@ public class GenerationService {
             failures.add(Failure.builder().node(null).link(link).probability(prob).build());
         }
         return failures;
+    }
+
+    private static List<List<Failure>> generateFailureGroups(Integer k, Set<Failure> failureSet, Random rng){
+        List<List<Failure>> failureGroups = new ArrayList<>();
+        List<Failure> failureList = new ArrayList<>(failureSet);
+        Collections.shuffle(failureList);
+
+        // Find all k-size subsets of this failure set
+        if(failureSet.size() <= k){
+            failureGroups.add(failureList);
+        }
+        else{
+            Combinations combos = new Combinations(failureSet.size(), k);
+            for(int[] comboIndices : combos) {
+                List<Failure> group = new ArrayList<>();
+                for(int comboIndice : comboIndices) {
+                    group.add(failureList.get(comboIndice));
+                }
+                failureGroups.add(group);
+            }
+        }
+        return failureGroups;
     }
 
     private Set<Node> choosePercentageSubsetNodes(Set<Node> options, Double percentage, Random rng){

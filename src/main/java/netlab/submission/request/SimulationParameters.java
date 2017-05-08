@@ -34,7 +34,7 @@ public class SimulationParameters {
     private Integer numDestinations;
 
     // F - Total number of possible failures
-    private Integer numFailures;
+    private Integer failureSetSize;
     // Alternatively, give a random number between values at index 0 and index 1
     private List<Integer> minMaxFailures;
 

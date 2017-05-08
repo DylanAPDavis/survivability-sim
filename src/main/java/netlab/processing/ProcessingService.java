@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ampl.AmplService;
 import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.ProblemClass;
+import netlab.submission.enums.ProcessingType;
 import netlab.submission.request.Request;
 import netlab.submission.request.RequestSet;
 import netlab.topology.elements.Path;
@@ -14,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -33,12 +33,13 @@ public class ProcessingService {
     }
 
     public RequestSet processRequestSet(RequestSet requestSet) {
-
         Topology topo = topoService.getTopologyById(requestSet.getTopologyId());
-        for(Request request : requestSet.getRequests().values()){
-            Map<SourceDestPair, Map<String, Path>> paths =  processRequest(request, requestSet.getAlgorithm(), requestSet.getProblemClass(),
-                    topo, requestSet.isUseAws(), requestSet.isSdn());
-            request.setChosenPaths(paths);
+        if(requestSet.getProcessingType().equals(ProcessingType.Solo)){
+            for(Request request : requestSet.getRequests().values()){
+                Map<SourceDestPair, Map<String, Path>> paths =  processRequest(request, requestSet.getAlgorithm(), requestSet.getProblemClass(),
+                        topo, requestSet.isUseAws(), requestSet.isSdn());
+                request.setChosenPaths(paths);
+            }
         }
 
         return requestSet;

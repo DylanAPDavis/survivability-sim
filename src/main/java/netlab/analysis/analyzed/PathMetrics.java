@@ -5,15 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AnalyzedSet {
+public class PathMetrics {
 
-    private String id;
+    private Boolean survived;
+    private Integer numLinks;
 
-    private Map<String, RequestMetrics> requestMetrics;
 }

@@ -3,6 +3,8 @@ package netlab.processing;
 
 import lombok.NonNull;
 import netlab.TestConfiguration;
+import netlab.analysis.analyzed.AnalyzedSet;
+import netlab.analysis.services.AnalysisService;
 import netlab.processing.ampl.AmplService;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Request;
@@ -21,17 +23,16 @@ import java.util.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
-public class AmplServiceTest {
-
-    @Autowired
-    private TopologyService topologyService;
-
-    @Autowired
-    private AmplService amplService;
+public class ProcessingAndAnalysisTest {
 
     @Autowired
     private GenerationService generationService;
 
+    @Autowired
+    private AnalysisService analysisService;
+
+    @Autowired
+    private ProcessingService processingService;
 
     @Test
     public void solve(){
@@ -41,15 +42,14 @@ public class AmplServiceTest {
                 3, 3, null, Arrays.asList(0, 1), "Both", 1.0, new ArrayList<>(),
                 10, Arrays.asList(0, 0), Arrays.asList(1, 1), null, Arrays.asList(1, 2), "Solo",
                 false, false, 0.0, 0.0, 0.0);
-        Topology topo = topologyService.getTopologyById("NSFnet");
         RequestSet requestSet = generationService.generateRequests(params);
-        for(Request request : requestSet.getRequests().values()){
-            amplService.solve(request, requestSet.getProblemClass(), topo);
-        }
+        processingService.processRequestSet(requestSet);
+        AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
+        System.out.println(analyzedSet);
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                                                Integer numSources, Integer numDestinations, Integer numFailures,
+                                                Integer numSources, Integer numDestinations, Integer fSetSize,
                                                 List<Integer> minMaxFailures, String failureClass, Double failureProb,
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
@@ -64,7 +64,7 @@ public class AmplServiceTest {
                 .problemClass(problemClass)
                 .numSources(numSources)
                 .numDestinations(numDestinations)
-                .numFailures(numFailures)
+                .failureSetSize(fSetSize)
                 .minMaxFailures(minMaxFailures)
                 .failureClass(failureClass)
                 .failureProb(failureProb)

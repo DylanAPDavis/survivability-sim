@@ -18,7 +18,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class RequestSet {
 
-    Map<String, Request> requests;
+    private Map<String, Request> requests;
 
     private String id;
 

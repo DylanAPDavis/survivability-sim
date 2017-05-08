@@ -119,6 +119,8 @@ public class AmplService {
 
         List<Link> sortedLinks = new ArrayList<>();
         List<Node> sortedNodes = new ArrayList<>();
+        Set<String> linkIds = new HashSet<>();
+        Set<String> nodeIds = new HashSet<>();
 
         Map<Node, Link> outgoingLinks = new HashMap<>();
         for(Link link : links){
@@ -129,14 +131,22 @@ public class AmplService {
         // While the next node has an outgoing link
         while(outgoingLinks.containsKey(currLink.getTarget())){
             sortedLinks.add(currLink);
+            linkIds.add(currLink.getId());
+
             sortedNodes.add(currLink.getOrigin());
+            nodeIds.add(currLink.getOrigin().getId());
+
             currLink = outgoingLinks.get(currLink.getTarget());
         }
         sortedLinks.add(currLink);
+        linkIds.add(currLink.getId());
         sortedNodes.add(currLink.getTarget());
+        nodeIds.add(currLink.getTarget().getId());
 
         path.setLinks(sortedLinks);
+        path.setLinkIds(linkIds);
         path.setNodes(sortedNodes);
+        path.setNodeIds(nodeIds);
     }
 
 
@@ -245,21 +255,22 @@ public class AmplService {
         // Failure groups
         com.ampl.Set fg = ampl.getSet("FG");
         Set<Failure> failures = request.getFailures().getFailures();
-        Integer numFails = request.getNumFails().getTotalNumFails();
 
         Object[] failureSet = createFailureSetArray(failures);
         f.setValues(failureSet);
         // Find all k-size subsets of this failure set
-        Map<Tuple, Object[]> failureGroups = generateFailureGroups(numFails, failureSet, new ArrayList<>());
+        Map<Tuple, Object[]> failureGroups = convertFailureGroups(request.getFailures().getFailureGroups(), new ArrayList<>());
         for(Tuple fgTuple : failureGroups.keySet()){
             fg.get(fgTuple.get(0)).setValues(failureGroups.get(fgTuple));
         }
     }
 
+
     // Must be done after the numGroups has been assigned to the model
     private void assignFailureSetsAndGroups(AMPL ampl, List<SourceDestPair> pairList, Object[] pairs, Request request){
         Map<SourceDestPair, Integer> numFailsMap = request.getNumFails().getPairNumFailsMap();
         Map<SourceDestPair, Set<Failure>> failureSetMap = request.getFailures().getPairFailuresMap();
+        Map<SourceDestPair, List<List<Failure>>> failureGroupsMap = request.getFailures().getPairFailureGroupsMap();
 
         // Failure set
         com.ampl.Set f = ampl.getSet("F");
@@ -270,7 +281,6 @@ public class AmplService {
         for(int index = 0; index < pairList.size(); index++){
             SourceDestPair pair = pairList.get(index);
             Set<Failure> failures = failureSetMap != null ? failureSetMap.get(pair) : request.getFailures().getFailures();
-            Integer numFails = numFailsMap.get(pair);
 
             Object[] failureSet = createFailureSetArray(failures);
             f.get(pairs[index]).setValues(failureSet);
@@ -278,14 +288,15 @@ public class AmplService {
             List<Object> tupleArgs = new ArrayList<>();
             tupleArgs.add(pair.getSrc().getId());
             tupleArgs.add(pair.getDst().getId());
-            Map<Tuple, Object[]> failureGroups = generateFailureGroups(numFails, failureSet, tupleArgs);
+            List<List<Failure>> failureGroupList = failureGroupsMap.get(pair);
+            Map<Tuple, Object[]> failureGroups = convertFailureGroups(failureGroupList, tupleArgs);
             for(Tuple fgTriplet : failureGroups.keySet()){
                 fg.get(fgTriplet).setValues(failureGroups.get(fgTriplet));
             }
         }
     }
 
-    private Object[] createFailureSetArray(Set<Failure> failures) {
+    private Object[] createFailureSetArray(Collection<Failure> failures) {
         Object[] failureSet = new Object[failures.size()];
 
         int index = 0;
@@ -297,6 +308,21 @@ public class AmplService {
             index++;
         }
         return failureSet;
+    }
+
+    private Map<Tuple, Object[]> convertFailureGroups(List<List<Failure>> failureGroups, List<Object> tupleArgs){
+        Map<Tuple, Object[]> failureGroupMap = new HashMap<>();
+        for(int index = 0; index < failureGroups.size(); index++){
+            List<Failure> failureGroup = failureGroups.get(index);
+            Object[] failureSet = createFailureSetArray(failureGroup);
+            if(tupleArgs.size() == 2){
+                failureGroupMap.put(new Tuple(tupleArgs.get(0), tupleArgs.get(1), index+1), failureSet);
+            }
+            else{
+                failureGroupMap.put(new Tuple(index+1), failureSet);
+            }
+        }
+        return failureGroupMap;
     }
 
     private static Map<Tuple,Object[]> generateFailureGroups(Integer k, Object[] failureSet, List<Object> tupleArgs) {

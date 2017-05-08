@@ -8,6 +8,7 @@ import netlab.topology.elements.Failure;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,5 +19,7 @@ import java.util.Set;
 public class Failures {
     private Integer failureSetSize;
     private Set<Failure> failures;
+    private List<List<Failure>> failureGroups;
     private Map<SourceDestPair, Set<Failure>> pairFailuresMap;
+    private Map<SourceDestPair, List<List<Failure>>> pairFailureGroupsMap;
 }
