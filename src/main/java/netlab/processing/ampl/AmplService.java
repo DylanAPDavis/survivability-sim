@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.apache.commons.math3.util.Combinations;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,14 +25,10 @@ public class AmplService {
     public Map<SourceDestPair, Map<String, Path>> solve(Request request, ProblemClass problemClass, Topology topology){
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         AMPL ampl = new AMPL();
+        Instant start = Instant.now();
         try {
             ampl = assignValues(request, problemClass, topology);
             ampl.solve();
-            /*Variable numConn = ampl.getVariable("Num_Conn");
-            Map<String, Double> numConnections = numConn.getInstances().stream()
-                    .filter(nc -> nc.value() > 0)
-                    .collect(Collectors.toMap(VariableInstance::name, VariableInstance::value));
-            System.out.println(numConnections);*/
             paths = translateFlowsIntoPaths(ampl.getVariable("L"), request.getPairs(), topology);
         } catch (IOException e) {
             e.printStackTrace();
@@ -39,11 +36,14 @@ public class AmplService {
         finally{
             ampl.close();
         }
+        Long duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
+        System.out.println("Solution took: " + duration + " milliseconds");
         return paths;
     }
 
     private Map<SourceDestPair,Map<String,Path>> translateFlowsIntoPaths(Variable linkFlows, Set<SourceDestPair> pairs, Topology topo) {
-        List<String> flows = linkFlows.getInstances().stream()
+        List<String> flows = linkFlows.getInstances()
+                .stream()
                 .filter(f -> f.value() > 0)
                 .map(VariableInstance::name)
                 .collect(Collectors.toList());

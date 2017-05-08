@@ -43,25 +43,25 @@ set FG {g in GroupIndices} within AllPairs;
 # VARIABLES
 
 # C - connection number (i) from node s to node d
-var C{s in V, d in V, i in I} binary;
+var C{(s,d) in SD, i in I} binary;
 
 # L - Link flow on (u, v) used by Connection (s, d, i)
-var L{s in V, d in V, i in I, u in V, v in V} binary;
+var L{(s,d) in SD, i in I, u in V, v in V} binary;
 
 # FC - Number of failed connections caused by node v / link u, v
 var FC{u in V, v in V} >= 0 integer;
 
 # NC - Node v is in Connection (s,d,i)
-var NC{s in V, d in V, i in I, v in V} binary;
+var NC{(s,d) in SD, i in I, v in V} binary;
 
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {g in GroupIndices} >= 0 integer;
 
 # Number of connections
-var Num_Conn = sum{s in S, d in D, i in I} C[s,d,i];
+var Num_Conn = sum{(s,d) in SD, i in I} C[s,d,i];
 
 # Number of link usages
-var Num_Link_Usages = sum{s in V, d in V, i in I, u in V, v in V} L[s,d,i,u,v];
+var Num_Link_Usages = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
 
 
 # OBJECTIVE
@@ -74,29 +74,32 @@ minimize Objective:
 subject to totalConnectionsNeeded{g in GroupIndices}:
 	Num_Conn >= c_total + FG_Sum[g];
 
-subject to flowOnlyIfConnectionAndLinkExists{s in V, d in V, i in I, u in V, v in V}:
+subject to flowOnlyIfConnectionAndLinkExists{(s,d) in SD, i in I, u in V, v in V}:
 	L[s,d,i,u,v] <= A[u,v] * C[s,d,i];
 
-subject to intermediateFlow{s in V, d in V, i in I, v in V: v != s and v != d}:
+subject to intermediateFlow{(s,d) in SD, i in I, v in V: v != s and v != d}:
 	sum{u in V} L[s,d,i,u,v] - sum{w in V} L[s,d,i,v,w] = 0;
 
-subject to sourceFlow{s in V, d in V, i in I}:
+subject to sourceFlow{(s,d) in SD, i in I}:
 	sum{u in V} L[s,d,i,u,s] - sum{w in V} L[s,d,i,s,w] = -1 * C[s,d,i];
 
-subject to destinationFlow{s in V, d in V, i in I}:
+subject to destinationFlow{(s,d) in SD, i in I}:
 	sum{u in V} L[s,d,i,u,d] - sum{w in V} L[s,d,i,d,w] = C[s,d,i];	
 
-subject to flowOnlyInConnection{s in V, d in V, i in I, u in V, v in V}:
+subject to flowOnlyInConnection{(s,d) in SD, i in I, u in V, v in V}:
 	L[s,d,i,u,v] <= C[s,d,i];
 
-subject to noFlowIntoSource{s in V, d in V, i in I, u in V}:
+subject to noFlowIntoSource{(s,d) in SD, i in I, u in V}:
 	L[s,d,i,u,s] = 0;
 
+subject to noReverseFlowIfForward{(s,d) in SD, i in I, u in V, v in V}:
+	L[s,d,i,u,v] + L[s,d,i,v,u] <= 1;
+
 # Node is in a connection
-subject to nodeInConnection_A{s in V, d in V, i in I, v in V: (s,d) in SD or (d,s) in SD}:
+subject to nodeInConnection_A{(s,d) in SD, i in I, v in V}:
 	NC[s,d,i,v] <= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
 
-subject to nodeInConnection_B{s in V, d in V, i in I, v in V: (s,d) in SD or (d,s) in SD}:
+subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 	NC[s,d,i,v] * card(V)^4 >= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
 
 ## Failure Constraints
