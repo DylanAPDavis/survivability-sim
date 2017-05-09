@@ -4,6 +4,7 @@ package netlab.processing;
 import lombok.NonNull;
 import netlab.TestConfiguration;
 import netlab.analysis.analyzed.AnalyzedSet;
+import netlab.analysis.analyzed.RequestMetrics;
 import netlab.analysis.services.AnalysisService;
 import netlab.processing.ampl.AmplService;
 import netlab.submission.enums.ProblemClass;
@@ -45,6 +46,7 @@ public class ProcessingAndAnalysisTest {
         RequestSet requestSet = generationService.generateRequests(params);
         processingService.processRequestSet(requestSet);
         AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
+        assert(analyzedSet.getRequestMetrics().values().stream().allMatch(RequestMetrics::getRequestIsSurvivable));
         System.out.println(analyzedSet);
     }
 

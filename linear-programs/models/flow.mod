@@ -45,6 +45,8 @@ set GroupIndices{(s,d) in SD} := 1..NumGroups[s,d];
 # FG - Set of all failure groups of size k
 set FG {(s,d) in SD, g in GroupIndices[s,d]} within AllPairs;
 
+param num_fails_allowed >= 0 integer;
+
 
 # VARIABLES
 
@@ -69,7 +71,17 @@ var Num_Conn{(s,d) in SD} = sum{i in I} C[s,d,i];
 # Number of link usages
 var Num_Link_Usages = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
 
-#var maxFg_Sum{(s,d) in SD} = max{g in GroupIndices[s,d]} FG_Sum[s,d,g];
+# Connection i between (s,d) fails
+var Conn_Fails_Pair{(s,d) in SD, i in I} binary;
+
+# Total number of failed connections between (s,d) pair
+var Total_F_Pair{(s,d) in SD} = sum{i in I} Conn_Fails_Pair[s,d,i];
+
+# Total Fails across all pairs
+var Total_F = sum{(s,d) in SD} Total_F_Pair[s,d];
+
+# Total number of Connections
+var Total_C = sum{(s,d) in SD} Num_Conn[s,d];
 
 
 # OBJECTIVE
@@ -79,8 +91,11 @@ minimize Objective:
 
 ## Connection Constraints
 
-subject to totalConnectionsNeeded:
-	sum{s in S, d in D} Num_Conn[s,d] >= c_total;
+subject to totalConnectionsNeeded{if Total_F < num_fails_allowed}:
+	Total_C >= c_total + Total_F;
+
+subject to totalConnectionsNeeded2{if Total_F >= num_fails_allowed}:
+	Total_C >= c_total + num_fails_allowed;
 
 subject to minNumConnectionsNeeded{(s,d) in SD, g in GroupIndices[s,d]}:
 	Num_Conn[s,d] >= c_min_sd[s,d] + FG_Sum[s,d,g];
@@ -133,3 +148,7 @@ subject to numFailedConnectionsNode{(s,d) in SD, v in V: (v,v) in F[s,d]}:
 # Sum up the failures per failure group
 subject to totalFailuresPerGroup{(s,d) in SD, g in GroupIndices[s,d]}:
 	FG_Sum[s,d,g] = sum{u in V, v in V: (u,v) in FG[s,d,g] or (v,u) in FG[s,d,g]} FC[s,d,u,v];
+
+subject to connectionFailedIfAtLeastOneFailure{(s,d) in SD, i in I}:
+	if sum{u in V, v in V: u != v and ((u,v) in F[s,d] or (v,u) in F[s,d])} L[s,d,i,u,v] > 0 or sum{v in V: (v,v) in F[s,d]} NC[s,d,i,v] > 0 then F_Total_Pair[s,d] = 1;
+
