@@ -4,6 +4,8 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
+
 @Component
 @Data
 public class AwsConfig {
@@ -31,4 +33,17 @@ public class AwsConfig {
 
     @Value("${aws_analyzed_bucket}")
     private String analyzedBucket;
+
+    public boolean allFieldsDefined(){
+        for(Field f : this.getClass().getDeclaredFields()){
+            try {
+                if(f.get(this) == null || f.get(this).toString().replace(" ", "").isEmpty()){
+                    return false;
+                }
+            } catch (IllegalAccessException e) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

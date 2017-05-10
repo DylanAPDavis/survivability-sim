@@ -33,23 +33,34 @@ public class S3Interface {
         awsConfig = config;
         log.info(awsConfig.toString());
 
-        // Build up the credentials
-        BasicAWSCredentials awsCreds = new BasicAWSCredentials(awsConfig.getAccessKeyId(), awsConfig.getSecretAccessKey());
-        Regions regions = Regions.fromName(awsConfig.getRegion());
-        AWSSecurityTokenServiceClient client = new AWSSecurityTokenServiceClient(awsCreds);
-        STSAssumeRoleSessionCredentialsProvider provider = new STSAssumeRoleSessionCredentialsProvider
-                .Builder(awsConfig.getRoleArn(), awsConfig.getRoleSessionName())
-                .withStsClient(client)
-                .build();
+        if(awsConfig.allFieldsDefined()){
+            // Build up the credentials
+            BasicAWSCredentials awsCreds = new BasicAWSCredentials(awsConfig.getAccessKeyId(), awsConfig.getSecretAccessKey());
+            Regions regions = Regions.fromName(awsConfig.getRegion());
+            AWSSecurityTokenServiceClient client = new AWSSecurityTokenServiceClient(awsCreds);
+            STSAssumeRoleSessionCredentialsProvider provider = new STSAssumeRoleSessionCredentialsProvider
+                    .Builder(awsConfig.getRoleArn(), awsConfig.getRoleSessionName())
+                    .withStsClient(client)
+                    .build();
 
-        // Build the S3 client
-        s3 = AmazonS3ClientBuilder.standard()
-                .withRegion(regions)
-                .withCredentials(provider)
-                .build();
+            // Build the S3 client
+            s3 = AmazonS3ClientBuilder.standard()
+                    .withRegion(regions)
+                    .withCredentials(provider)
+                    .build();
 
-        // and then the Transfer Manager
-        transferManager = TransferManagerBuilder.standard().withS3Client(s3).build();
+            // and then the Transfer Manager
+            transferManager = TransferManagerBuilder.standard().withS3Client(s3).build();
+        }
+        else{
+            s3 = null;
+            transferManager = null;
+        }
+
+    }
+
+    public boolean allFieldsDefined(){
+        return s3 != null && transferManager != null && awsConfig != null;
     }
 
     public boolean uploadToRaw(File f, String keyName){
@@ -65,7 +76,7 @@ public class S3Interface {
             Upload xfer = transferManager.upload(bucketName, keyName, f);
             xfer.waitForCompletion();
             return true;
-        } catch (AmazonServiceException | InterruptedException e) {
+        } catch (AmazonServiceException | InterruptedException | NullPointerException e) {
             log.error(e.getMessage());
             return false;
         }
@@ -86,13 +97,13 @@ public class S3Interface {
             return f;
             // loop with Transfer.isDone()
             // or block with Transfer.waitForCompletion()
-        } catch (AmazonServiceException | InterruptedException e) {
+        } catch (AmazonServiceException | InterruptedException | NullPointerException e) {
             log.error(e.getMessage());
             return null;
         }
     }
 
     public void shutdown(){
-        transferManager.shutdownNow(true);
+        if(transferManager != null) transferManager.shutdownNow(true);
     }
 }

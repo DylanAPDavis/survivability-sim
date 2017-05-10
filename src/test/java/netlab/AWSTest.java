@@ -16,6 +16,7 @@ import java.io.IOException;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
 public class AWSTest {
+
     @Autowired
     private DynamoInterface dynamoInterface;
 
@@ -24,50 +25,60 @@ public class AWSTest {
 
     @Test
     public void scanDynamoMetaDb() {
-        ScanResult result = dynamoInterface.scanMetaTable();
-        assert(result != null);
-        System.out.println(result.toString());
+        if(dynamoInterface.allFieldsDefined()){
+            ScanResult result = dynamoInterface.scanMetaTable();
+            assert(result != null);
+            System.out.println(result.toString());
+        }
     }
 
     @Test
     public void uploadToRawS3() {
-        File f = new File("test.txt");
-        try {
-            if(!f.exists()){
-                assert(f.createNewFile());
+        if(s3Interface.allFieldsDefined()){
+            File f = new File("test.txt");
+            try {
+                if(!f.exists()){
+                    assert(f.createNewFile());
+                }
+                Boolean success = s3Interface.uploadToRaw(f, "test.txt");
+                assert(success);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            Boolean success = s3Interface.uploadToRaw(f, "test.txt");
-            assert(success);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     @Test
     public void downloadFromRaw() {
-        File f = new File("test2.txt");
-        f = s3Interface.downloadFromRaw(f, "test.txt");
-        assert(f != null);
+        if(s3Interface.allFieldsDefined()){
+            File f = new File("test2.txt");
+            f = s3Interface.downloadFromRaw(f, "test.txt");
+            assert(f != null);
+        }
     }
 
     @Test
     public void uploadToAnalyzedS3() {
-        File f = new File("test.txt");
-        try {
-            if(!f.exists()){
-                assert(f.createNewFile());
+        if(s3Interface.allFieldsDefined()){
+            File f = new File("test.txt");
+            try {
+                if(!f.exists()){
+                    assert(f.createNewFile());
+                }
+                Boolean success = s3Interface.uploadToAnalyzed(f, "test.txt");
+                assert(success);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            Boolean success = s3Interface.uploadToAnalyzed(f, "test.txt");
-            assert(success);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     @Test
     public void downloadFromAnalyzed() {
-        File f = new File("test4.txt");
-        f = s3Interface.downloadFromAnalyzed(f, "test.txt");
-        assert(f != null);
+        if(s3Interface.allFieldsDefined()){
+            File f = new File("test4.txt");
+            f = s3Interface.downloadFromAnalyzed(f, "test.txt");
+            assert(f != null);
+        }
     }
 }

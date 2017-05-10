@@ -16,6 +16,7 @@ import netlab.aws.config.AwsConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 @Controller
@@ -27,30 +28,43 @@ public class DynamoInterface {
     @Autowired
     public DynamoInterface(AwsConfig config){
         awsConfig = config;
-        BasicAWSCredentials awsCreds = new BasicAWSCredentials(awsConfig.getAccessKeyId(), awsConfig.getSecretAccessKey());
-        Regions regions = Regions.fromName(awsConfig.getRegion());
-        AWSSecurityTokenServiceClient client = new AWSSecurityTokenServiceClient(awsCreds);
-        STSAssumeRoleSessionCredentialsProvider provider = new STSAssumeRoleSessionCredentialsProvider
-                .Builder(awsConfig.getRoleArn(), awsConfig.getRoleSessionName())
-                .withStsClient(client)
-                .build();
-        database = AmazonDynamoDBClientBuilder.standard()
-                .withRegion(regions)
-                .withCredentials(provider)
-                .build();
+        if(awsConfig.allFieldsDefined()){
+            BasicAWSCredentials awsCreds = new BasicAWSCredentials(awsConfig.getAccessKeyId(), awsConfig.getSecretAccessKey());
+            Regions regions = Regions.fromName(awsConfig.getRegion());
+            AWSSecurityTokenServiceClient client = new AWSSecurityTokenServiceClient(awsCreds);
+            STSAssumeRoleSessionCredentialsProvider provider = new STSAssumeRoleSessionCredentialsProvider
+                    .Builder(awsConfig.getRoleArn(), awsConfig.getRoleSessionName())
+                    .withStsClient(client)
+                    .build();
+            database = AmazonDynamoDBClientBuilder.standard()
+                    .withRegion(regions)
+                    .withCredentials(provider)
+                    .build();
+        }
+        else{
+            database = null;
+        }
     }
+
+    public boolean allFieldsDefined(){
+        return database != null && awsConfig != null;
+    }
+
 
     public ScanResult scanMetaTable(){
         return scan(awsConfig.getMetaDb());
     }
 
     public ScanResult scan(String tableName){
+        if(database == null){
+            return null;
+        }
         ScanRequest scanRequest = new ScanRequest(tableName);
         return database.scan(scanRequest);
     }
 
     public void shutdown(){
-        database.shutdown();
+        if(database != null) database.shutdown();
     }
 
 }
