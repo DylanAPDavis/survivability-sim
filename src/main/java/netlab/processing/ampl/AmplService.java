@@ -84,7 +84,7 @@ public class AmplService {
         //printPaths(pathMap);
         pathMap = sortPaths(pathMap);
         //System.out.println("-----------------------------");
-        //printPaths(pathMap);
+        printPaths(pathMap);
         return pathMap;
     }
 
