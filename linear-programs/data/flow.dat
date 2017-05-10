@@ -30,7 +30,6 @@ param c_max_sd :=
 	3 14 10
 ;
 
-param num_fails_allowed := 9;
 
 
 set F[1,11] := (5,5) (8,8) (10,9);

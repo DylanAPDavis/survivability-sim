@@ -45,9 +45,6 @@ set GroupIndices{(s,d) in SD} := 1..NumGroups[s,d];
 # FG - Set of all failure groups of size k
 set FG {(s,d) in SD, g in GroupIndices[s,d]} within AllPairs;
 
-param num_fails_allowed >= 0 integer;
-
-
 # VARIABLES
 
 # C - connection number (i) from node s to node d
@@ -73,19 +70,6 @@ var Num_Conn{(s,d) in SD} = sum{i in I} C[s,d,i];
 
 # Number of link usages
 var Num_Link_Usages = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
-
-
-# Connection i between (s,d) fails
-#var Conn_Fails_Pair{(s,d) in SD, i in I} binary;
-
-# Total number of failed connections between (s,d) pair
-#var Total_F_Pair{(s,d) in SD} = sum{i in I} Conn_Fails_Pair[s,d,i];
-
-# Total Fails across all pairs
-#var Total_F = sum{(s,d) in SD} Total_F_Pair[s,d];
-
-# Total number of Connections
-#var Total_C = sum{(s,d) in SD} Num_Conn[s,d];
 
 
 # OBJECTIVE
@@ -152,24 +136,3 @@ subject to numFailsDueToGroup{(s,d) in SD, g in GroupIndices[s,d]}:
 
 
 #-------------------------------------------------------
-
-# Number of failures caused by a link --> Number of connections that include that element
-#subject to numFailedConnectionsLink{(s,d) in SD, u in V, v in V :u != v and ((u,v) in F[s,d] or (v,u) in F[s,d])}:
-#	FC[s,d,u,v] = sum{i in I} L[s,d,i,u,v];
-
-# Number of failures caused by a node
-#subject to numFailedConnectionsNode{(s,d) in SD, v in V: (v,v) in F[s,d]}:
-#	FC[s,d,v,v] = sum{i in I} NC[s,d,i,v];
-
-# Sum up the failures per failure group
-#subject to totalFailuresPerGroup{(s,d) in SD, g in GroupIndices[s,d]}:
-#	FG_Sum[s,d,g] = sum{u in V, v in V: (u,v) in FG[s,d,g] or (v,u) in FG[s,d,g]} FC[s,d,u,v];
-
-#subject to connectionFailedIfAtLeastOneFailure{(s,d) in SD, i in I}:
-#	sum{u in V, v in V: u != v and ((u,v) in F[s,d] or (v,u) in F[s,d])} L[s,d,i,u,v] > 0 or sum{v in V: (v,v) in F[s,d]} NC[s,d,i,v] > 0 ==> Conn_Fails_Pair[s,d,i] = 1 else Conn_Fails_Pair[s,d,i] = 0;
-
-#subject to totalConnectionsNeeded:
-#	Total_F < num_fails_allowed ==> Total_C >= c_total + Total_F;
-
-#subject to totalConnectionsNeeded2:
-#	Total_F >= num_fails_allowed ==> Total_C >= c_total + num_fails_allowed;

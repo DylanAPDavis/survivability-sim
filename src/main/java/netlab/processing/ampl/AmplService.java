@@ -177,9 +177,6 @@ public class AmplService {
         Parameter cTotal = ampl.getParameter("c_total");
         cTotal.set(request.getConnections().getNumConnections());
 
-        Parameter numFailsAllowed = ampl.getParameter("num_fails_allowed");
-        numFailsAllowed.set(request.getNumFails().getTotalNumFails());
-
         assignPairParamsAndSets(ampl, request, problemClass);
 
         return ampl;
