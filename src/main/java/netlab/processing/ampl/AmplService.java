@@ -84,7 +84,7 @@ public class AmplService {
         //printPaths(pathMap);
         pathMap = sortPaths(pathMap);
         //System.out.println("-----------------------------");
-        printPaths(pathMap);
+        //printPaths(pathMap);
         return pathMap;
     }
 
@@ -234,7 +234,7 @@ public class AmplService {
                 c_min_sd[index] = minConnMap.get(pair);
                 c_max_sd[index] = maxConnMap.get(pair);
 
-                Set<Failure> failures = failureSetMap != null ? failureSetMap.get(pair) : request.getFailures().getFailures();
+                Set<Failure> failures = failureSetMap.getOrDefault(pair, request.getFailures().getFailures());
                 Integer numFails = numFailsMap.get(pair);
                 // Calculate the number of totalNumFails-sized combinations of the failure set
                 double divisor = CombinatoricsUtils.factorial(numFails) * CombinatoricsUtils.factorial(failures.size() - numFails);
@@ -283,7 +283,7 @@ public class AmplService {
 
         for(int index = 0; index < pairList.size(); index++){
             SourceDestPair pair = pairList.get(index);
-            Set<Failure> failures = failureSetMap != null ? failureSetMap.get(pair) : request.getFailures().getFailures();
+            Set<Failure> failures = failureSetMap.getOrDefault(pair, request.getFailures().getFailures());
 
             Object[] failureSet = createFailureSetArray(failures);
             f.get(pairs[index]).setValues(failureSet);

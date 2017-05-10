@@ -13,10 +13,7 @@ import netlab.topology.elements.Path;
 import netlab.topology.elements.SourceDestPair;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -50,14 +47,14 @@ public class AnalysisService {
 
         // Check the high-level attributes
         if(problemClass.equals(ProblemClass.Flex)){
-            Set<Failure> failures = failureColl.getFailures();
+            List<List<Failure>> failureGroups = failureColl.getFailureGroups();
 
             for(SourceDestPair pair : pairs){
                 Map<String, Path> pathMap = chosenPaths.get(pair);
                 numPaths += pathMap.values().size();
 
-                Map<String, PathMetrics> pathMetrics = getPathMetrics(pathMap, failures);
-                PathSetMetrics pathSetMetrics = analyzePathMetrics(pathMetrics, 0, numConnections, totalNumFailsAllowed);
+                PathSetMetrics pathSetMetrics = getWorstCasePathSetMetrics(pathMap, failureGroups, 0, numConnections,
+                        totalNumFailsAllowed);
 
                 numLinkUsages += pathSetMetrics.getNumLinkUsages();
                 numFailed += pathSetMetrics.getNumFailed();
@@ -68,7 +65,7 @@ public class AnalysisService {
         else if(problemClass.equals(ProblemClass.Flow)){
             Map<SourceDestPair, Integer> minNumConnectionsMap = connectionColl.getPairMinConnectionsMap();
             Map<SourceDestPair, Integer> maxNumConnectionsMap = connectionColl.getPairMaxConnectionsMap();
-            Map<SourceDestPair, Set<Failure>> failuresMap = failureColl.getPairFailuresMap();
+            Map<SourceDestPair, List<List<Failure>>> failuresMap = failureColl.getPairFailureGroupsMap();
             Map<SourceDestPair, Integer> numFailsAllowedMap = numFailsColl.getPairNumFailsMap();
             for(SourceDestPair pair : pairs){
                 Map<String, Path> pathMap = chosenPaths.get(pair);
@@ -76,12 +73,11 @@ public class AnalysisService {
 
                 Integer minConn = minNumConnectionsMap.get(pair);
                 Integer maxConn = maxNumConnectionsMap.get(pair);
-                Set<Failure> failures = failuresMap.getOrDefault(pair, failureColl.getFailures());
                 Integer numFailsAllowed = numFailsAllowedMap.get(pair);
 
-                Map<String, PathMetrics> pathMetrics = getPathMetrics(pathMap, failures);
-                PathSetMetrics pathSetMetrics = analyzePathMetrics(pathMetrics, minConn, maxConn, numFailsAllowed);
+                List<List<Failure>> failureGroups = failuresMap.get(pair);
 
+                PathSetMetrics pathSetMetrics = getWorstCasePathSetMetrics(pathMap, failureGroups, minConn, maxConn, numFailsAllowed);
                 numLinkUsages += pathSetMetrics.getNumLinkUsages();
                 numFailed += pathSetMetrics.getNumFailed();
                 pathSetMetricsMap.put(pair, pathSetMetrics);
@@ -92,7 +88,7 @@ public class AnalysisService {
             }
         }
 
-        if(numPaths - Math.min(totalNumFailsAllowed, numFailed) < numConnections){
+        if(numPaths - numFailed < numConnections){
             requestIsSurvivable = false;
         }
 
@@ -105,7 +101,28 @@ public class AnalysisService {
                 .build();
     }
 
-    private Map<String, PathMetrics> getPathMetrics(Map<String, Path> pathMap, Set<Failure> failures) {
+    private PathSetMetrics getWorstCasePathSetMetrics(Map<String, Path> pathMap, List<List<Failure>> failureGroups,
+                                                      Integer minConn, Integer maxConn, Integer numFailsAllowed){
+        PathSetMetrics worstPathSetMetrics = null;
+        for(List<Failure> group : failureGroups){
+            PathSetMetrics pathSetMetrics = getMetricsForPathSet(pathMap, group, minConn, maxConn, numFailsAllowed);
+            if(worstPathSetMetrics == null || worstPathSetMetrics.getNumFailed() < pathSetMetrics.getNumFailed()){
+                worstPathSetMetrics = pathSetMetrics;
+            }
+        }
+        if(worstPathSetMetrics == null){
+            worstPathSetMetrics = getMetricsForPathSet(pathMap, new ArrayList<>(), minConn, maxConn, numFailsAllowed);
+        }
+        return worstPathSetMetrics;
+    }
+
+    private PathSetMetrics getMetricsForPathSet(Map<String, Path> pathMap, List<Failure> group, Integer minConn,
+                                                Integer maxConn, Integer numFailsAllowed){
+        Map<String, PathMetrics> pathMetrics = getPathMetrics(pathMap, group);
+        return analyzePathMetrics(pathMetrics, minConn, maxConn, numFailsAllowed);
+    }
+
+    private Map<String, PathMetrics> getPathMetrics(Map<String, Path> pathMap, List<Failure> failures) {
         Map<String, PathMetrics> pathMetricsMap = new HashMap<>();
         for(String pathId : pathMap.keySet()){
             Path path = pathMap.get(pathId);
@@ -117,7 +134,7 @@ public class AnalysisService {
         return pathMetricsMap;
     }
 
-    private Boolean testSurvival(Path path, Set<Failure> failures) {
+    private Boolean testSurvival(Path path, List<Failure> failures) {
         Set<String> nodeIds = path.getNodeIds();
         Set<String> linkIds = path.getLinkIds();
 

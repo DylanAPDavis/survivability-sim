@@ -40,14 +40,21 @@ public class ProcessingAndAnalysisTest {
 
         String problemClass = "Flow";
         SimulationParameters params = makeParameters(2L, "NSFnet", 1, "ServiceILP", problemClass,
-                3, 3, null, Arrays.asList(0, 1), "Both", 1.0, new ArrayList<>(),
-                9, Arrays.asList(0, 0), Arrays.asList(1,1), null, Arrays.asList(1, 2), "Solo",
+                3, 3, null, Arrays.asList(1, 1), "Both", 1.0, new ArrayList<>(),
+                9, Arrays.asList(0, 0), Arrays.asList(1,2), null, Arrays.asList(1, 2), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         RequestSet requestSet = generationService.generateRequests(params);
         processingService.processRequestSet(requestSet);
         AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
         assert(analyzedSet.getRequestMetrics().values().stream().allMatch(RequestMetrics::getRequestIsSurvivable));
-        System.out.println(analyzedSet);
+        assert(analyzedSet.getRequestMetrics().values()
+                .stream()
+                .map(RequestMetrics::getPathSetMetricsMap)
+                .map(Map::values)
+                .flatMap(Collection::stream)
+                .allMatch(psm -> psm.getAtLeastMinConn() && psm.getAtMostMaxConn())
+        );
+        //System.out.println(analyzedSet);
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

@@ -275,7 +275,7 @@ public class GenerationService {
 
         Integer failureSetSize = numFailures != null ? numFailures : 0;
 
-        if(minMaxFailures.size() < 2 || minMaxFailures.get(0).equals(minMaxFailures.get(1))){
+        if(minMaxFailures.size() < 2){
             numFailures = minMaxFailures.size() > 1 ? minMaxFailures.get(1) : numFailures;
             failureSetSize = numFailures;
             failures = generateFailureSet(topo.getNodes(), topo.getLinks(), numFailures, failureClass,
