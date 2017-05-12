@@ -211,7 +211,7 @@ public class AmplService {
             numGroups.set(CombinatoricsUtils.factorial(failures.size()) / divisor);
             assignFailureSetAndGroups(ampl, request);
         }
-        else{
+        if(problemClass.equals(ProblemClass.Flow)){
             DataFrame pairParams = new DataFrame(1, "SD", "c_min_sd", "c_max_sd", "NumGroups");
 
             ArrayList<SourceDestPair> pairList = new ArrayList<>(request.getPairs());
@@ -243,10 +243,65 @@ public class AmplService {
             pairParams.setColumn("NumGroups", numGroups);
             ampl.setData(pairParams, "SD");
 
-            assignFailureSetsAndGroups(ampl, pairList, pairs, request);
+            assignFailureGroups(ampl, pairList, request);
+        }
+        if(problemClass.equals(ProblemClass.Endpoint)){
+            List<Node> sourceList = new ArrayList<>(request.getSources());
+            List<Node> destinationList = new ArrayList<>(request.getDestinations());
+            assignMemberParams(ampl, request, sourceList, true);
+            assignMemberParams(ampl, request, destinationList, false);
+            assignFailureGroups(ampl, sourceList, request, true);
+            assignFailureGroups(ampl, destinationList, request, false);
         }
 
     }
+
+    private void assignMemberParams(AMPL ampl, Request request, List<Node> memberNodes, boolean isSourceSet){
+        String setName = isSourceSet ? "S" : "D";
+        String cMinName = isSourceSet ? "c_min_s" : "c_min_d";
+        String cMaxName = isSourceSet ? "c_max_s" : "c_max_d";
+        String numGroupsName = isSourceSet ? "NumGroups_s" : "NumGroups_d";
+        DataFrame params = isSourceSet ?
+                new DataFrame(1, setName, "c_min_s", "c_max_s", "NumGroups_s") :
+                new DataFrame(1, setName, "c_min_d", "c_max_d", "NumGroups_d");
+        Object[] members = memberNodes.stream().map(Node::getId).toArray();
+
+        double[] cMin = new double[members.length];
+        double[] cMax = new double[members.length];
+        double[] numGroups = new double[members.length];
+
+        Map<Node, Integer> minConnMap = isSourceSet ?
+                request.getConnections().getSrcMinConnectionsMap() :
+                request.getConnections().getDstMinConnectionsMap();
+        Map<Node, Integer> maxConnMap = isSourceSet ?
+                request.getConnections().getSrcMaxConnectionsMap() :
+                request.getConnections().getDstMaxConnectionsMap();
+        Map<Node, Set<Failure>> failureSetMap = isSourceSet ?
+                request.getFailures().getSrcFailuresMap() :
+                request.getFailures().getDstFailuresMap();
+        Map<Node, Integer> numFailsMap = isSourceSet ?
+                request.getNumFailsAllowed().getSrcNumFailsAllowedMap() :
+                request.getNumFailsAllowed().getDstNumFailsAllowedMap();
+
+        for(int index = 0; index < memberNodes.size(); index++){
+            Node node = memberNodes.get(index);
+            cMin[index] = minConnMap.get(node);
+            cMax[index] = maxConnMap.get(node);
+
+            Set<Failure> failures = failureSetMap.getOrDefault(node, request.getFailures().getFailureSet());
+            Integer numFails = numFailsMap.get(node);
+            // Calculate the number of totalNumFailsAllowed-sized combinations of the failure set
+            double divisor = CombinatoricsUtils.factorial(numFails) * CombinatoricsUtils.factorial(failures.size() - numFails);
+            numGroups[index] = CombinatoricsUtils.factorial(failures.size()) / divisor;
+        }
+
+        params.setColumn(setName, members);
+        params.setColumn(cMinName, cMin);
+        params.setColumn(cMaxName, cMax);
+        params.setColumn(numGroupsName, numGroups);
+        ampl.setData(params, setName);
+    }
+
 
     private void assignFailureSetAndGroups(AMPL ampl, Request request){
         // Failure set
@@ -265,25 +320,14 @@ public class AmplService {
         }
     }
 
-
     // Must be done after the numGroups has been assigned to the model
-    private void assignFailureSetsAndGroups(AMPL ampl, List<SourceDestPair> pairList, Object[] pairs, Request request){
-        Map<SourceDestPair, Integer> numFailsMap = request.getNumFailsAllowed().getPairNumFailsAllowedMap();
-        Map<SourceDestPair, Set<Failure>> failureSetMap = request.getFailures().getPairFailuresMap();
+    private void assignFailureGroups(AMPL ampl, List<SourceDestPair> pairList, Request request){
         Map<SourceDestPair, List<List<Failure>>> failureGroupsMap = request.getFailures().getPairFailureGroupsMap();
-
-        // Failure set
-        com.ampl.Set f = ampl.getSet("F");
 
         // Failure groups
         com.ampl.Set fg = ampl.getSet("FG");
 
-        for(int index = 0; index < pairList.size(); index++){
-            SourceDestPair pair = pairList.get(index);
-            Set<Failure> failures = failureSetMap.getOrDefault(pair, request.getFailures().getFailureSet());
-
-            Object[] failureSet = createFailureSetArray(failures);
-            f.get(pairs[index]).setValues(failureSet);
+        for(SourceDestPair pair : pairList){
             // Find all k-size subsets of this failure set
             List<Object> tupleArgs = new ArrayList<>();
             tupleArgs.add(pair.getSrc().getId());
@@ -292,6 +336,23 @@ public class AmplService {
             Map<Tuple, Object[]> failureGroups = convertFailureGroups(failureGroupList, tupleArgs);
             for(Tuple fgTriplet : failureGroups.keySet()){
                 fg.get(fgTriplet).setValues(failureGroups.get(fgTriplet));
+            }
+        }
+    }
+
+    private void assignFailureGroups(AMPL ampl, List<Node> members, Request request, boolean isSourceSet){
+        Map<Node, List<List<Failure>>> failureGroupsMap = isSourceSet ?
+                request.getFailures().getSrcFailureGroupsMap() : request.getFailures().getDstFailureGroupsMap();
+
+        String fgSetName = isSourceSet ? "FG_s" : "FG_d";
+        com.ampl.Set fg = ampl.getSet(fgSetName);
+        for(Node member : members){
+            List<Object> tupleArgs = new ArrayList<>();
+            tupleArgs.add(member);
+            List<List<Failure>> failureGroupList = failureGroupsMap.get(member);
+            Map<Tuple, Object[]> failureGroups = convertFailureGroups(failureGroupList, tupleArgs);
+            for(Tuple fgTuple : failureGroups.keySet()){
+                fg.get(fgTuple).setValues(failureGroups.get(fgTuple));
             }
         }
     }

@@ -40,16 +40,23 @@ param c_min_d{d in D} >= 0 integer;
 param c_max_d{d in D} >= 0 integer;
 
 # F_s - Failure Matrix - Sets of potential failure nodes/links for source s
-set F{v in V : v in S or v in D} within AllPairs;
+#set F_s{s in S} within AllPairs;
+#set F_d{d in D} within AllPairs;
 
 # NumGroups - Number of k-sized failure groups
-param NumGroups{v in V : v in S or v in D};
+param NumGroups_s{s in S};
+
+param NumGroups_d{d in D};
 
 # GroupIndices - Indexing set for all groups of failure elements of size k
-set GroupIndices{v in V : v in S or v in D} := 1..NumGroups[v];
+set GroupIndices_s{s in S} := 1..NumGroups_s[s];
+
+set GroupIndices_d{d in D} := 1..NumGroups_d[d];
 
 # FG - Set of all failure groups of size k
-set FG {v in V, g in GroupIndices[v] : v in S or v in D} within AllPairs;
+set FG_s{s in S, g in GroupIndices_d[d]} within AllPairs;
+
+set FG_d{d in D, g in GroupIndices_d[d]}
 
 
 # VARIABLES
@@ -60,27 +67,24 @@ var C{s in V, d in V, i in I} binary;
 # L - Link flow on (u, v) used by Connection (s, d, i)
 var L{s in V, d in V, i in I, u in V, v in V} binary;
 
-# FC - Number of failed connections caused by node v / link u, v
-var FC{s in V, u in V, v in V} >= 0 integer;
-
 # NC - Node v is in Connection (s,d,i)
 var NC{s in V, d in V, i in I, v in V} binary;
 
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
-var FG_Sum {v in V, g in GroupIndices[v] : v in S or v in D} >= 0 integer;
+var FG_Sum_src {s in S, g in GroupIndices_s[s]} >= 0 integer;
+var FG_Sum_dst {d in D, g in GroupIndices_d[d]} >= 0 integer;
 
 var FG_Conn_src{s in S, d in D, i in I, g in GroupIndices[s]} >= 0 integer;
-
 var FG_Conn_dst{s in S, d in D, i in I, g in GroupIndices[d]} >= 0 integer;	
 
 # Total number of connections per (s,d) pair
 var Num_Conn{s in S, d in D} = sum{i in I} C[s,d,i];
 
 # Number of connections from a source s
-var Num_Conn_s{s in S} = sum{d in D, i in I} C[s,d,i];
+var Num_Conn_src{s in S} = sum{d in D, i in I} C[s,d,i];
 
 # Number of connections to a destination d
-var Num_Conn_d{d in D} = sum{s in S, i in I} C[s,d,i];
+var Num_Conn_dst{d in D} = sum{s in S, i in I} C[s,d,i];
 
 # Number of link usages
 var Num_Link_Usages = sum{s in V, d in V, i in I, u in V, v in V} L[s,d,i,u,v];
@@ -94,22 +98,22 @@ minimize Objective:
 ## Connection Constraints
 
 subject to minNumConnectionsSources:
-	sum{s in S Num_Conn_s[s] >= c_total + sum{s in S} max{g in GroupIndices[s]} FG_Sum[s,g];
+	sum{s in S Num_Conn_s[s] >= c_total + sum{s in S} max{g in GroupIndices_s[s]} FG_Sum_src[s,g];
 
 subject to minNumConnectionsDestinations:
-	sum{d in D Num_Conn_d[d] >= c_total + sum{d in D} max{g in GroupIndices[d]} FG_Sum[d,g];
+	sum{d in D Num_Conn_d[d] >= c_total + sum{d in D} max{g in GroupIndices_d[d]} FG_Sum_dst[d,g];
 
-subject to minNumConnectionsNeededSource{s in S, g in GroupIndices[s]}:
-	Num_Conn_s[s] >= c_min_s[s] + FG_Sum[s,g];
+subject to minNumConnectionsNeededSource{s in S, g in GroupIndices_s[s]}:
+	Num_Conn_src[s] >= c_min_s[s] + FG_Sum_src[s,g];
 
-subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices[s]}:
-	Num_Conn_s[s] <= c_max_s[s] + FG_Sum[s,g];
+subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices_s[s]}:
+	Num_Conn_src[s] <= c_max_s[s] + FG_Sum_src[s,g];
 
-subject to minNumConnectionsNeededDest{d in D, g in GroupIndices[d]}:
-	Num_Conn_d[d] >= c_min_d[d] + FG_Sum[d,g];
+subject to minNumConnectionsNeededDest{d in D, g in GroupIndices_d[d]}:
+	Num_Conn_dst[d] >= c_min_d[d] + FG_Sum_dst[d,g];
 
-subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices[d]}:
-	Num_Conn_d[d] <= c_max_d[d] + FG_Sum[d,g];
+subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices_d[d]}:
+	Num_Conn_dst[d] <= c_max_d[d] + FG_Sum_dst[d,g];
 
 subject to noSelfConnections{(s,d) in SD: s == d}:
 	Num_Conn[s,d] = 0;
@@ -141,23 +145,23 @@ subject to nodeInConnection_B{s in V, d in V, i in I, v in V: (s,d) in SD or (d,
 
 ## Failure Constraints
 
-subject to groupCausesSrcConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices[s]}:
-	FG_Conn_Src[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[s,g] or (v,u) in FG[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[s,g]} NC[s,d,i,v];
+subject to groupCausesSrcConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices_s[s]}:
+	FG_Conn_src[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG_s[s,g] or (v,u) in FG_s[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_s[s,g]} NC[s,d,i,v];
 
-subject to groupCausesSrcConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices[s]}:
-	FG_Conn_Src[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[s,g] or (v,u) in FG[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[s,g]} NC[s,d,i,v];
+subject to groupCausesSrcConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices_s[s]}:
+	FG_Conn_src[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_s[s,g] or (v,u) in FG_s[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_s[s,g]} NC[s,d,i,v];
 
-subject to groupCausesDstConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices[d]}:
-	FG_Conn_Dst[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[d,g] or (v,u) in FG[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[d,g]} NC[s,d,i,v];
+subject to groupCausesDstConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices_d[d]}:
+	FG_Conn_dst[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_d[d,g]} NC[s,d,i,v];
 
-subject to groupCausesDstConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices[d]}:
-	FG_Conn_Dst[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[d,g] or (v,u) in FG[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[d,g]} NC[s,d,i,v];
+subject to groupCausesDstConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices_d[d]}:
+	FG_Conn_dst[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_d[d,g]} NC[s,d,i,v];
 
-
-# Sum up the failureSet per failure group
-subject to totalFailuresPerGroupSrc{s in S, g in GroupIndices[s]}:
-	FG_Sum[s,g] = sum{d in D, i in I} FG_Conn_Src[s,d,i,g];
 
 # Sum up the failureSet per failure group
-subject to totalFailuresPerGroupDst{d in D, g in GroupIndices[d]}:
-	FG_Sum[d,g] = sum{S in S, i in I} FG_Conn_Dst[s,d,i,g];
+subject to totalFailuresPerGroupSrc{s in S, g in GroupIndices_s[s]}:
+	FG_Sum_src[s,g] = sum{d in D, i in I} FG_Conn_src[s,d,i,g];
+
+# Sum up the failureSet per failure group
+subject to totalFailuresPerGroupDst{d in D, g in GroupIndices_d[d]}:
+	FG_Sum_dst[d,g] = sum{S in S, i in I} FG_Conn_dst[s,d,i,g];

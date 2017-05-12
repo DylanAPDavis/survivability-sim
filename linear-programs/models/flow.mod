@@ -34,7 +34,7 @@ param c_min_sd{SD} >= 0 integer;
 param c_max_sd{SD} >= 0 integer;
 
 # F[s,d] - Failure Matrix - Sets of potential failure nodes/links per (s,d) pair
-set F{SD} within AllPairs;
+#set F{SD} within AllPairs;
 
 # NumGroups - Number of k-sized failure groups
 param NumGroups{SD};
