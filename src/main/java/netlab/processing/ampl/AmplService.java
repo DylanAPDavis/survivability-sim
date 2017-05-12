@@ -204,8 +204,8 @@ public class AmplService {
 
         // Assign SD pairs and parameters indexed on those pairs
         if(problemClass.equals(ProblemClass.Flex)){
-            Set<Failure> failures = request.getFailures().getFailures();
-            int numFails = request.getNumFails().getTotalNumFails();
+            Set<Failure> failures = request.getFailures().getFailureSet();
+            int numFails = request.getNumFailsAllowed().getTotalNumFailsAllowed();
             double divisor = CombinatoricsUtils.factorial(numFails) * CombinatoricsUtils.factorial(failures.size() - numFails);
             Parameter numGroups = ampl.getParameter("NumGroups");
             numGroups.set(CombinatoricsUtils.factorial(failures.size()) / divisor);
@@ -223,7 +223,7 @@ public class AmplService {
 
             Map<SourceDestPair, Integer> minConnMap = request.getConnections().getPairMinConnectionsMap();
             Map<SourceDestPair, Integer> maxConnMap = request.getConnections().getPairMaxConnectionsMap();
-            Map<SourceDestPair, Integer> numFailsMap = request.getNumFails().getPairNumFailsMap();
+            Map<SourceDestPair, Integer> numFailsMap = request.getNumFailsAllowed().getPairNumFailsAllowedMap();
             Map<SourceDestPair, Set<Failure>> failureSetMap = request.getFailures().getPairFailuresMap();
             for(int index = 0; index < pairList.size(); index++){
                 SourceDestPair pair = pairList.get(index);
@@ -231,9 +231,9 @@ public class AmplService {
                 c_min_sd[index] = minConnMap.get(pair);
                 c_max_sd[index] = maxConnMap.get(pair);
 
-                Set<Failure> failures = failureSetMap.getOrDefault(pair, request.getFailures().getFailures());
+                Set<Failure> failures = failureSetMap.getOrDefault(pair, request.getFailures().getFailureSet());
                 Integer numFails = numFailsMap.get(pair);
-                // Calculate the number of totalNumFails-sized combinations of the failure set
+                // Calculate the number of totalNumFailsAllowed-sized combinations of the failure set
                 double divisor = CombinatoricsUtils.factorial(numFails) * CombinatoricsUtils.factorial(failures.size() - numFails);
                 numGroups[index] = CombinatoricsUtils.factorial(failures.size()) / divisor;
             }
@@ -254,7 +254,7 @@ public class AmplService {
 
         // Failure groups
         com.ampl.Set fg = ampl.getSet("FG");
-        Set<Failure> failures = request.getFailures().getFailures();
+        Set<Failure> failures = request.getFailures().getFailureSet();
 
         Object[] failureSet = createFailureSetArray(failures);
         f.setValues(failureSet);
@@ -268,7 +268,7 @@ public class AmplService {
 
     // Must be done after the numGroups has been assigned to the model
     private void assignFailureSetsAndGroups(AMPL ampl, List<SourceDestPair> pairList, Object[] pairs, Request request){
-        Map<SourceDestPair, Integer> numFailsMap = request.getNumFails().getPairNumFailsMap();
+        Map<SourceDestPair, Integer> numFailsMap = request.getNumFailsAllowed().getPairNumFailsAllowedMap();
         Map<SourceDestPair, Set<Failure>> failureSetMap = request.getFailures().getPairFailuresMap();
         Map<SourceDestPair, List<List<Failure>>> failureGroupsMap = request.getFailures().getPairFailureGroupsMap();
 
@@ -280,7 +280,7 @@ public class AmplService {
 
         for(int index = 0; index < pairList.size(); index++){
             SourceDestPair pair = pairList.get(index);
-            Set<Failure> failures = failureSetMap.getOrDefault(pair, request.getFailures().getFailures());
+            Set<Failure> failures = failureSetMap.getOrDefault(pair, request.getFailures().getFailureSet());
 
             Object[] failureSet = createFailureSetArray(failures);
             f.get(pairs[index]).setValues(failureSet);

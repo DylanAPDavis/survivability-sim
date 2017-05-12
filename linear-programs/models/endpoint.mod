@@ -69,6 +69,10 @@ var NC{s in V, d in V, i in I, v in V} binary;
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {v in V, g in GroupIndices[v] : v in S or v in D} >= 0 integer;
 
+var FG_Conn_src{s in S, d in D, i in I, g in GroupIndices[s]} >= 0 integer;
+
+var FG_Conn_dst{s in S, d in D, i in I, g in GroupIndices[d]} >= 0 integer;	
+
 # Total number of connections per (s,d) pair
 var Num_Conn{s in S, d in D} = sum{i in I} C[s,d,i];
 
@@ -89,8 +93,11 @@ minimize Objective:
 
 ## Connection Constraints
 
-subject to minNumConnections:
-	sum{s in S, d in D} Num_Conn[s,d] >= c_total;
+subject to minNumConnectionsSources:
+	sum{s in S Num_Conn_s[s] >= c_total + sum{s in S} max{g in GroupIndices[s]} FG_Sum[s,g];
+
+subject to minNumConnectionsDestinations:
+	sum{d in D Num_Conn_d[d] >= c_total + sum{d in D} max{g in GroupIndices[d]} FG_Sum[d,g];
 
 subject to minNumConnectionsNeededSource{s in S, g in GroupIndices[s]}:
 	Num_Conn_s[s] >= c_min_s[s] + FG_Sum[s,g];
@@ -134,26 +141,23 @@ subject to nodeInConnection_B{s in V, d in V, i in I, v in V: (s,d) in SD or (d,
 
 ## Failure Constraints
 
-# Number of failures caused by a link --> Number of connections that include that element
-subject to numFailedConnectionsLinkSource{s in S, u in V, v in V :u != v and ((u,v) in F[s] or (v,u) in F[s])}:
-	FC[s,u,v] = sum{d in D, i in I} L[s,d,i,u,v];
+subject to groupCausesSrcConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices[s]}:
+	FG_Conn_Src[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[s,g] or (v,u) in FG[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[s,g]} NC[s,d,i,v];
 
-# Number of failures caused by a link --> Number of connections that include that element
-subject to numFailedConnectionsLinkDest{d in D, u in V, v in V :u != v and ((u,v) in F[d] or (v,u) in F[d])}:
-	FC[d,u,v] = sum{s in S, i in I} L[s,d,i,u,v];
+subject to groupCausesSrcConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices[s]}:
+	FG_Conn_Src[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[s,g] or (v,u) in FG[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[s,g]} NC[s,d,i,v];
 
-# Number of failures caused by a node
-subject to numFailedConnectionsNodeSource{s in S, v in V: (v,v) in F[s]}:
-	FC[s,v,v] = sum{d in D, i in I} NC[s,d,i,v];
+subject to groupCausesDstConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices[d]}:
+	FG_Conn_Dst[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[d,g] or (v,u) in FG[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[d,g]} NC[s,d,i,v];
 
-# Number of failures caused by a node
-subject to numFailedConnectionsNodeDest{d in D, v in V: (v,v) in F[d]}:
-	FC[d,v,v] = sum{s in S, i in I} NC[s,d,i,v];
+subject to groupCausesDstConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices[d]}:
+	FG_Conn_Dst[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[d,g] or (v,u) in FG[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[d,g]} NC[s,d,i,v];
 
-# Sum up the failures per failure group
-subject to totalFailuresPerGroupSource{s in S, g in GroupIndices[s]}:
-	FG_Sum[s,g] = sum{u in V, v in V: (u,v) in FG[s,g] or (v,u) in FG[s,g]} FC[s,u,v];
 
-# Sum up the failures per failure group
-subject to totalFailuresPerGroupDest{d in D, g in GroupIndices[d]}:
-	FG_Sum[d,g] = sum{u in V, v in V: (u,v) in FG[d,g] or (v,u) in FG[d,g]} FC[d,u,v];
+# Sum up the failureSet per failure group
+subject to totalFailuresPerGroupSrc{s in S, g in GroupIndices[s]}:
+	FG_Sum[s,g] = sum{d in D, i in I} FG_Conn_Src[s,d,i,g];
+
+# Sum up the failureSet per failure group
+subject to totalFailuresPerGroupDst{d in D, g in GroupIndices[d]}:
+	FG_Sum[d,g] = sum{S in S, i in I} FG_Conn_Dst[s,d,i,g];

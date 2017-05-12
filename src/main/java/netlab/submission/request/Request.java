@@ -24,7 +24,7 @@ public class Request {
     private Set<Node> destinations;
 
     private Failures failures;
-    private NumFails numFails;
+    private NumFailsAllowed numFailsAllowed;
     private Connections connections;
 
     private Set<SourceDestPair> pairs;

@@ -33,7 +33,7 @@ public class SimulationParameters {
     @NonNull
     private Integer numDestinations;
 
-    // F - Total number of possible failures
+    // F - Total size of the failure set (shared by all connections)
     private Integer failureSetSize;
     // Alternatively, give a random number between values at index 0 and index 1
     private List<Integer> minMaxFailures;
@@ -51,11 +51,11 @@ public class SimulationParameters {
     private List<Integer> minConnectionsRange;
     private List<Integer> maxConnectionsRange;
 
-    // Number of failures that will occur
-    private Integer numFails;
+    // Number of failureSet that will occur
+    private Integer numFailsAllowed;
 
     // Alternatively, give a random number between values at index 0 and index 1
-    private List<Integer> minMaxFails;
+    private List<Integer> minMaxFailsAllowed;
 
     private String processingType;
 

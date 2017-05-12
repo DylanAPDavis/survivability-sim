@@ -12,7 +12,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NumFails {
-    private Integer totalNumFails;
-    private Map<SourceDestPair, Integer> pairNumFailsMap;
+public class NumFailsAllowed {
+    private Integer totalNumFailsAllowed;
+    private Map<SourceDestPair, Integer> pairNumFailsAllowedMap;
 }

@@ -18,7 +18,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class Failures {
     private Integer failureSetSize;
-    private Set<Failure> failures;
+    private Set<Failure> failureSet;
     private List<List<Failure>> failureGroups;
     private Map<SourceDestPair, Set<Failure>> pairFailuresMap;
     private Map<SourceDestPair, List<List<Failure>>> pairFailureGroupsMap;

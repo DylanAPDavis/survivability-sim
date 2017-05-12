@@ -35,9 +35,9 @@ public class AnalysisService {
         Set<SourceDestPair> pairs = request.getPairs();
         Connections connectionColl = request.getConnections();
         Failures failureColl = request.getFailures();
-        NumFails numFailsColl = request.getNumFails();
+        NumFailsAllowed numFailsAllowedColl = request.getNumFailsAllowed();
         Integer numConnections = connectionColl.getNumConnections();
-        Integer totalNumFailsAllowed = numFailsColl.getTotalNumFails();
+        Integer totalNumFailsAllowed = numFailsAllowedColl.getTotalNumFailsAllowed();
 
         Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap = new HashMap<>();
         Boolean requestIsSurvivable = true;
@@ -66,7 +66,7 @@ public class AnalysisService {
             Map<SourceDestPair, Integer> minNumConnectionsMap = connectionColl.getPairMinConnectionsMap();
             Map<SourceDestPair, Integer> maxNumConnectionsMap = connectionColl.getPairMaxConnectionsMap();
             Map<SourceDestPair, List<List<Failure>>> failuresMap = failureColl.getPairFailureGroupsMap();
-            Map<SourceDestPair, Integer> numFailsAllowedMap = numFailsColl.getPairNumFailsMap();
+            Map<SourceDestPair, Integer> numFailsAllowedMap = numFailsAllowedColl.getPairNumFailsAllowedMap();
             for(SourceDestPair pair : pairs){
                 Map<String, Path> pathMap = chosenPaths.get(pair);
                 numPaths += pathMap.values().size();
