@@ -21,4 +21,8 @@ public class Connections {
     private Map<SourceDestPair, Integer> pairMinConnectionsMap;
     private Map<SourceDestPair, Integer> pairMaxConnectionsMap;
 
+    private Map<Node, Integer> srcMinConnectionsMap;
+    private Map<Node, Integer> dstMinConnectionsMap;
+    private Map<Node, Integer> srcMaxConnectionsMap;
+    private Map<Node, Integer> dstMaxConnectionsMap;
 }

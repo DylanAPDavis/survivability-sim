@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public enum ProblemClass {
     Flex("Flex"),
+    Endpoint("Endpoint"),
     Flow("Flow");
 
     private String code;

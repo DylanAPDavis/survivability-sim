@@ -37,23 +37,19 @@ public class SimulationParameters {
     private Integer failureSetSize;
     // Alternatively, give a random number between values at index 0 and index 1
     private List<Integer> minMaxFailures;
-
     private String failureClass;
-
     // Failure probability - pick one field
     private Double failureProb;
     private List<Double> minMaxFailureProb;
 
     // C - total number of connections
     private Integer numConnections;
-
     // Alternatively, give a random number between values at index 0 and index 1
     private List<Integer> minConnectionsRange;
     private List<Integer> maxConnectionsRange;
 
     // Number of failureSet that will occur
     private Integer numFailsAllowed;
-
     // Alternatively, give a random number between values at index 0 and index 1
     private List<Integer> minMaxFailsAllowed;
 
