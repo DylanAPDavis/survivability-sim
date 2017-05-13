@@ -47,13 +47,6 @@ public class ProcessingAndAnalysisTest {
         processingService.processRequestSet(requestSet);
         AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
         assert(analyzedSet.getRequestMetrics().values().stream().allMatch(RequestMetrics::getRequestIsSurvivable));
-        assert(analyzedSet.getRequestMetrics().values()
-                .stream()
-                .map(RequestMetrics::getPathSetMetricsMap)
-                .map(Map::values)
-                .flatMap(Collection::stream)
-                .allMatch(psm -> psm.getAtLeastMinConn() && psm.getAtMostMaxConn())
-        );
         //System.out.println(analyzedSet);
     }
 

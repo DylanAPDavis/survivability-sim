@@ -4,9 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import netlab.analysis.enums.MemberType;
+import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -20,4 +23,5 @@ public class RequestMetrics {
     private Integer numPaths;
 
     private Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap;
+    private Map<MemberType, Map<Node, Map<SourceDestPair, PathSetMetrics>>> memberPathSetMetricsMap;
 }
