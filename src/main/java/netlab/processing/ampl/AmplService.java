@@ -41,146 +41,6 @@ public class AmplService {
         return paths;
     }
 
-    private Map<SourceDestPair,Map<String,Path>> translateFlowsIntoPaths(Variable linkFlows, Set<SourceDestPair> pairs, Topology topo) {
-        List<String> flows = linkFlows.getInstances()
-                .stream()
-                .filter(f -> f.value() > 0)
-                .map(VariableInstance::name)
-                .collect(Collectors.toList());
-        Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream()
-                .collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
-        Map<String, Link> linkIdMap = topo.getLinkIdMap();
-        Map<String, Node> nodeIdMap = topo.getNodeIdMap();
-        for(String flow : flows){
-            String[] components = flow.substring(2, flow.length()-1).split(",");
-            System.out.println(Arrays.toString(components));
-            String src = components[0].replace("'", "");
-            String dst = components[1].replace("'", "");
-            String pathId = components[2].replace("'", "");
-            String origin = components[3].replace("'", "");
-            String target = components[4].replace("'", "");
-
-            SourceDestPair thisPair = SourceDestPair.builder()
-                    .src(nodeIdMap.get(src))
-                    .dst(nodeIdMap.get(dst))
-                    .build();
-            Link link = linkIdMap.get(origin + "-" + target);
-            Map<String, Path> pairMap = pathMap.get(thisPair);
-            // Path already exists, add to it
-            if(pairMap.containsKey(pathId)){
-                Path thisPath = pairMap.get(pathId);
-                thisPath.getLinks().add(link);
-            }
-            // New path
-            else{
-                List<Link> links = new ArrayList<>();
-                links.add(link);
-                Path newPath = Path.builder()
-                        .links(links)
-                        .build();
-                pairMap.put(pathId, newPath);
-            }
-        }
-        //printPaths(pathMap);
-        pathMap = sortPaths(pathMap);
-        //System.out.println("-----------------------------");
-        //printPaths(pathMap);
-        return pathMap;
-    }
-
-    private void printPaths(Map<SourceDestPair, Map<String, Path>> pairPathMap){
-        for(SourceDestPair pair : pairPathMap.keySet()){
-            System.out.println("Pair: (" + pair.getSrc().getId() + ", " + pair.getDst().getId() + ")");
-            System.out.println("---");
-            Map<String, Path> pathMap = pairPathMap.get(pair);
-            for(String pathId : pathMap.keySet()){
-                String pathString = pathId + ": ";
-                for(Link link : pathMap.get(pathId).getLinks()){
-                    pathString += "(" + link.getOrigin().getId() + ", " + link.getTarget().getId() + ") ";
-                }
-                System.out.println(pathString);
-            }
-            System.out.println("~~~~~~~");
-        }
-    }
-
-    private Map<SourceDestPair, Map<String, Path>> sortPaths(Map<SourceDestPair, Map<String, Path>> pathMap) {
-        for(SourceDestPair pair : pathMap.keySet()){
-            Map<String, Path> mapForPair = pathMap.get(pair);
-            for(Path path : mapForPair.values()){
-                sortPath(path, pair);
-            }
-        }
-        return pathMap;
-    }
-
-    private void sortPath(Path path, SourceDestPair pair) {
-        List<Link> links = path.getLinks();
-
-        List<Link> sortedLinks = new ArrayList<>();
-        List<Node> sortedNodes = new ArrayList<>();
-        Set<String> linkIds = new HashSet<>();
-        Set<String> nodeIds = new HashSet<>();
-
-        Map<Node, Link> outgoingLinks = new HashMap<>();
-        for(Link link : links){
-            outgoingLinks.put(link.getOrigin(), link);
-        }
-        Link currLink = outgoingLinks.get(pair.getSrc());
-
-        // While the next node has an outgoing link
-        while(outgoingLinks.containsKey(currLink.getTarget())){
-            sortedLinks.add(currLink);
-            linkIds.add(currLink.getId());
-
-            sortedNodes.add(currLink.getOrigin());
-            nodeIds.add(currLink.getOrigin().getId());
-
-            currLink = outgoingLinks.get(currLink.getTarget());
-        }
-        sortedLinks.add(currLink);
-        linkIds.add(currLink.getId());
-        sortedNodes.add(currLink.getTarget());
-        nodeIds.add(currLink.getTarget().getId());
-
-        path.setLinks(sortedLinks);
-        path.setLinkIds(linkIds);
-        path.setNodes(sortedNodes);
-        path.setNodeIds(nodeIds);
-    }
-
-
-    private AMPL assignValues(Request request, ProblemClass problemClass, Topology topology) throws IOException{
-        AMPL ampl = new AMPL();
-        ampl.setOption("solver", "gurobi");
-        if(problemClass.equals(ProblemClass.Flex)){
-            ampl.read(modelDirectory + "/flex.mod");
-        }
-        else{
-            ampl.read(modelDirectory + "/flow.mod");
-        }
-
-        // Assign nodes, links, sources, and destinations
-        assignTopoValues(ampl, topology);
-        Object[] sources = request.getSources().stream().map(Node::getId).toArray();
-        Object[] destinations = request.getDestinations().stream().map(Node::getId).toArray();
-        com.ampl.Set s = ampl.getSet("S");
-        s.setValues(sources);
-        com.ampl.Set d = ampl.getSet("D");
-        d.setValues(destinations);
-
-        // Assign the maximum number of connections possible between a pair
-        Parameter iMax = ampl.getParameter("I_max");
-        iMax.set(10);
-
-        // Assign the number of connections from S to D
-        Parameter cTotal = ampl.getParameter("c_total");
-        cTotal.set(request.getConnections().getNumConnections());
-
-        assignPairParamsAndSets(ampl, request, problemClass);
-
-        return ampl;
-     }
 
     private void assignTopoValues(AMPL ampl, Topology topology) {
         com.ampl.Set v = ampl.getSet("V");
@@ -199,6 +59,43 @@ public class AmplService {
         a.setValues(links, linkExists);
     }
 
+
+    private AMPL assignValues(Request request, ProblemClass problemClass, Topology topology) throws IOException{
+        AMPL ampl = new AMPL();
+        ampl.setOption("solver", "gurobi");
+        if(problemClass.equals(ProblemClass.Flex)){
+            ampl.read(modelDirectory + "/flex.mod");
+        }
+        if(problemClass.equals(ProblemClass.Endpoint)){
+            ampl.read(modelDirectory + "/endpoint.mod");
+        }
+        if(problemClass.equals(ProblemClass.Flow)){
+            ampl.read(modelDirectory + "/flow.mod");
+        }
+
+        // Assign nodes, links, sources, and destinations
+        assignTopoValues(ampl, topology);
+        Object[] sources = request.getSources().stream().map(Node::getId).toArray();
+        Object[] destinations = request.getDestinations().stream().map(Node::getId).toArray();
+        if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.Flow)){
+            com.ampl.Set s = ampl.getSet("S");
+            s.setValues(sources);
+            com.ampl.Set d = ampl.getSet("D");
+            d.setValues(destinations);
+        }
+
+        // Assign the maximum number of connections possible between a pair
+        Parameter iMax = ampl.getParameter("I_max");
+        iMax.set(10);
+
+        // Assign the number of connections from S to D
+        Parameter cTotal = ampl.getParameter("c_total");
+        cTotal.set(request.getConnections().getNumConnections());
+
+        assignPairParamsAndSets(ampl, request, problemClass);
+
+        return ampl;
+    }
 
     private void assignPairParamsAndSets(AMPL ampl, Request request, ProblemClass problemClass){
 
@@ -347,10 +244,8 @@ public class AmplService {
         String fgSetName = isSourceSet ? "FG_s" : "FG_d";
         com.ampl.Set fg = ampl.getSet(fgSetName);
         for(Node member : members){
-            List<Object> tupleArgs = new ArrayList<>();
-            tupleArgs.add(member);
             List<List<Failure>> failureGroupList = failureGroupsMap.get(member);
-            Map<Tuple, Object[]> failureGroups = convertFailureGroups(failureGroupList, tupleArgs);
+            Map<Tuple, Object[]> failureGroups = convertFailureGroups(failureGroupList, Collections.singletonList(member.getId()));
             for(Tuple fgTuple : failureGroups.keySet()){
                 fg.get(fgTuple).setValues(failureGroups.get(fgTuple));
             }
@@ -379,6 +274,9 @@ public class AmplService {
             if(tupleArgs.size() == 2){
                 failureGroupMap.put(new Tuple(tupleArgs.get(0), tupleArgs.get(1), index+1), failureSet);
             }
+            else if (tupleArgs.size() == 1){
+                failureGroupMap.put(new Tuple(tupleArgs.get(0), index+1), failureSet);
+            }
             else{
                 failureGroupMap.put(new Tuple(index+1), failureSet);
             }
@@ -386,35 +284,115 @@ public class AmplService {
         return failureGroupMap;
     }
 
-    private static Map<Tuple,Object[]> generateFailureGroups(Integer k, Object[] failureSet, List<Object> tupleArgs) {
-        Map<Tuple, Object[]> groups = new HashMap<>();
-        // Find all k-size subsets of this failure set
-        Integer groupCounter = 1;
-        if(failureSet.length <= k){
-            if(tupleArgs.size() > 1) {
-                groups.put(new Tuple(tupleArgs.get(0), tupleArgs.get(1), groupCounter), failureSet);
+
+    // AMPL output -> Java translation
+
+    private Map<SourceDestPair,Map<String,Path>> translateFlowsIntoPaths(Variable linkFlows, Set<SourceDestPair> pairs, Topology topo) {
+        List<String> flows = linkFlows.getInstances()
+                .stream()
+                .filter(f -> f.value() > 0)
+                .map(VariableInstance::name)
+                .collect(Collectors.toList());
+        Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream()
+                .collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Map<String, Node> nodeIdMap = topo.getNodeIdMap();
+        for(String flow : flows){
+            String[] components = flow.substring(2, flow.length()-1).split(",");
+            System.out.println(Arrays.toString(components));
+            String src = components[0].replace("'", "");
+            String dst = components[1].replace("'", "");
+            String pathId = components[2].replace("'", "");
+            String origin = components[3].replace("'", "");
+            String target = components[4].replace("'", "");
+
+            SourceDestPair thisPair = SourceDestPair.builder()
+                    .src(nodeIdMap.get(src))
+                    .dst(nodeIdMap.get(dst))
+                    .build();
+            Link link = linkIdMap.get(origin + "-" + target);
+            Map<String, Path> pairMap = pathMap.get(thisPair);
+            // Path already exists, add to it
+            if(pairMap.containsKey(pathId)){
+                Path thisPath = pairMap.get(pathId);
+                thisPath.getLinks().add(link);
             }
+            // New path
             else{
-                groups.put(new Tuple(groupCounter), failureSet);
+                List<Link> links = new ArrayList<>();
+                links.add(link);
+                Path newPath = Path.builder()
+                        .links(links)
+                        .build();
+                pairMap.put(pathId, newPath);
             }
         }
-        else{
-            Combinations combos = new Combinations(failureSet.length, k);
-            for (int[] comboIndices : combos) {
-                Object[] group = new Object[k];
-                for (int index = 0; index < comboIndices.length; index++) {
-                    group[index] = failureSet[comboIndices[index]];
-                }
-                if(tupleArgs.size() > 1) {
-                    groups.put(new Tuple(tupleArgs.get(0), tupleArgs.get(1), groupCounter), group);
-                }
-                else{
-                    groups.put(new Tuple(groupCounter), group);
-                }
-                groupCounter++;
+        //printPaths(pathMap);
+        pathMap = sortPaths(pathMap);
+        //System.out.println("-----------------------------");
+        //printPaths(pathMap);
+        return pathMap;
+    }
+
+    private Map<SourceDestPair, Map<String, Path>> sortPaths(Map<SourceDestPair, Map<String, Path>> pathMap) {
+        for(SourceDestPair pair : pathMap.keySet()){
+            Map<String, Path> mapForPair = pathMap.get(pair);
+            for(Path path : mapForPair.values()){
+                sortPath(path, pair);
             }
         }
-        return groups;
+        return pathMap;
+    }
+
+    private void sortPath(Path path, SourceDestPair pair) {
+        List<Link> links = path.getLinks();
+
+        List<Link> sortedLinks = new ArrayList<>();
+        List<Node> sortedNodes = new ArrayList<>();
+        Set<String> linkIds = new HashSet<>();
+        Set<String> nodeIds = new HashSet<>();
+
+        Map<Node, Link> outgoingLinks = new HashMap<>();
+        for(Link link : links){
+            outgoingLinks.put(link.getOrigin(), link);
+        }
+        Link currLink = outgoingLinks.get(pair.getSrc());
+
+        // While the next node has an outgoing link
+        while(outgoingLinks.containsKey(currLink.getTarget())){
+            sortedLinks.add(currLink);
+            linkIds.add(currLink.getId());
+
+            sortedNodes.add(currLink.getOrigin());
+            nodeIds.add(currLink.getOrigin().getId());
+
+            currLink = outgoingLinks.get(currLink.getTarget());
+        }
+        sortedLinks.add(currLink);
+        linkIds.add(currLink.getId());
+        sortedNodes.add(currLink.getTarget());
+        nodeIds.add(currLink.getTarget().getId());
+
+        path.setLinks(sortedLinks);
+        path.setLinkIds(linkIds);
+        path.setNodes(sortedNodes);
+        path.setNodeIds(nodeIds);
+    }
+
+    private void printPaths(Map<SourceDestPair, Map<String, Path>> pairPathMap){
+        for(SourceDestPair pair : pairPathMap.keySet()){
+            System.out.println("Pair: (" + pair.getSrc().getId() + ", " + pair.getDst().getId() + ")");
+            System.out.println("---");
+            Map<String, Path> pathMap = pairPathMap.get(pair);
+            for(String pathId : pathMap.keySet()){
+                String pathString = pathId + ": ";
+                for(Link link : pathMap.get(pathId).getLinks()){
+                    pathString += "(" + link.getOrigin().getId() + ", " + link.getTarget().getId() + ") ";
+                }
+                System.out.println(pathString);
+            }
+            System.out.println("~~~~~~~");
+        }
     }
 
 

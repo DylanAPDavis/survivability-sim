@@ -54,9 +54,9 @@ set GroupIndices_s{s in S} := 1..NumGroups_s[s];
 set GroupIndices_d{d in D} := 1..NumGroups_d[d];
 
 # FG - Set of all failure groups of size k
-set FG_s{s in S, g in GroupIndices_d[d]} within AllPairs;
+set FG_s{s in S, g in GroupIndices_s[s]} within AllPairs;
 
-set FG_d{d in D, g in GroupIndices_d[d]}
+set FG_d{d in D, g in GroupIndices_d[d]} within AllPairs;
 
 
 # VARIABLES
@@ -74,8 +74,8 @@ var NC{s in V, d in V, i in I, v in V} binary;
 var FG_Sum_src {s in S, g in GroupIndices_s[s]} >= 0 integer;
 var FG_Sum_dst {d in D, g in GroupIndices_d[d]} >= 0 integer;
 
-var FG_Conn_src{s in S, d in D, i in I, g in GroupIndices[s]} >= 0 integer;
-var FG_Conn_dst{s in S, d in D, i in I, g in GroupIndices[d]} >= 0 integer;	
+var FG_Conn_src{s in S, d in D, i in I, g in GroupIndices_s[s]} >= 0 integer;
+var FG_Conn_dst{s in S, d in D, i in I, g in GroupIndices_d[d]} >= 0 integer;	
 
 # Total number of connections per (s,d) pair
 var Num_Conn{s in S, d in D} = sum{i in I} C[s,d,i];
@@ -98,10 +98,10 @@ minimize Objective:
 ## Connection Constraints
 
 subject to minNumConnectionsSources:
-	sum{s in S Num_Conn_s[s] >= c_total + sum{s in S} max{g in GroupIndices_s[s]} FG_Sum_src[s,g];
+	sum{s in S} Num_Conn_src[s] >= c_total + sum{s in S} max{g in GroupIndices_s[s]} FG_Sum_src[s,g];
 
 subject to minNumConnectionsDestinations:
-	sum{d in D Num_Conn_d[d] >= c_total + sum{d in D} max{g in GroupIndices_d[d]} FG_Sum_dst[d,g];
+	sum{d in D} Num_Conn_dst[d] >= c_total + sum{d in D} max{g in GroupIndices_d[d]} FG_Sum_dst[d,g];
 
 subject to minNumConnectionsNeededSource{s in S, g in GroupIndices_s[s]}:
 	Num_Conn_src[s] >= c_min_s[s] + FG_Sum_src[s,g];
@@ -164,4 +164,4 @@ subject to totalFailuresPerGroupSrc{s in S, g in GroupIndices_s[s]}:
 
 # Sum up the failureSet per failure group
 subject to totalFailuresPerGroupDst{d in D, g in GroupIndices_d[d]}:
-	FG_Sum_dst[d,g] = sum{S in S, i in I} FG_Conn_dst[s,d,i,g];
+	FG_Sum_dst[d,g] = sum{s in S, i in I} FG_Conn_dst[s,d,i,g];

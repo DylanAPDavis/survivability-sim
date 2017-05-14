@@ -137,8 +137,10 @@ public class GenerationService {
         Comparator<SourceDestPair> byDst = Comparator.comparing(p -> p.getDst().getId());
         sortedPairs.sort(bySrc.thenComparing(byDst));
 
-        List<Node> sortedSources = sortedPairs.stream().map(SourceDestPair::getSrc).collect(Collectors.toList());
-        List<Node> sortedDests = sortedPairs.stream().map(SourceDestPair::getDst).collect(Collectors.toList());
+        List<Node> sortedSources = new ArrayList<>(sources);
+        sortedSources.sort(Comparator.comparing(Node::getId));
+        List<Node> sortedDests = new ArrayList<>(destinations);
+        sortedDests.sort(Comparator.comparing(Node::getId));
 
         Failures failureCollection = assignFailureSets(params, sortedSources, sortedDests, sortedPairs, topo, rng);
 
