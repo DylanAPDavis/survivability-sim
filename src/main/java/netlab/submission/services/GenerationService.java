@@ -160,6 +160,7 @@ public class GenerationService {
                 .failures(failureCollection)
                 .numFailsAllowed(numFailsAllowedCollection)
                 .pairs(pairs)
+                .runningTime(0L)
                 .build();
     }
 

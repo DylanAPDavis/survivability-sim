@@ -22,13 +22,15 @@ public class AmplService {
 
     private String modelDirectory = "linear-programs/models";
 
-    public Map<SourceDestPair, Map<String, Path>> solve(Request request, ProblemClass problemClass, Topology topology){
+    public Request solve(Request request, ProblemClass problemClass, Topology topology){
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         AMPL ampl = new AMPL();
-        Instant start = Instant.now();
+        Long duration = 0L;
         try {
             ampl = assignValues(request, problemClass, topology);
+            Instant start = Instant.now();
             ampl.solve();
+            duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
             paths = translateFlowsIntoPaths(ampl.getVariable("L"), request.getPairs(), topology);
         } catch (IOException e) {
             e.printStackTrace();
@@ -36,9 +38,10 @@ public class AmplService {
         finally{
             ampl.close();
         }
-        Long duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
         System.out.println("Solution took: " + duration + " milliseconds");
-        return paths;
+        request.setChosenPaths(paths);
+        request.setRunningTime(duration);
+        return request;
     }
 
 

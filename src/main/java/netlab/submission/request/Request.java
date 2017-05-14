@@ -30,4 +30,6 @@ public class Request {
     private Set<SourceDestPair> pairs;
 
     private Map<SourceDestPair, Map<String, Path>> chosenPaths;
+
+    private Long runningTime;
 }
