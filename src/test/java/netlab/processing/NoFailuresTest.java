@@ -32,117 +32,174 @@ public class NoFailuresTest {
     private ProcessingService processingService;
 
     @Test
-    public void oneSourceOneDest(){
+    public void oneSrcOneDstOneC(){
         // 1 S, 1 D, 0 F, 1 C, 0 NF
-        RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                1, 1, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 1, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs1, 1, true);
-        // Endpoint
-        RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                1, 1, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 1, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs2, 1, true);
-        // Flow
-        RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                1, 1, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 1, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs3, 1, true);
-        analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
+        solveAndAnalyze(1, 1, 1);
     }
 
-    public void oneSourceOneDestTwoC(){
+    @Test
+    public void oneSrcOneDstTwoC(){
         // 1 S, 1 D, 0 F, 2 C, 0 NF
-        RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                1, 1, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs1, 2, true);
-        // Endpoint
-        RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                1, 1, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs2, 2, true);
-        // Flow
-        RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                1, 1, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs3, 2, true);
-        analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
+        solveAndAnalyze(1, 1, 2);
     }
 
     @Test
-    public void oneSourceTwoDestOneC() {
+    public void oneSrcTwoDstOneC() {
         // 1 S, 2 D, 0 F, 1 C, 0 NF
-        RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                1, 2, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 1, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs1, 1, true);
-        // Endpoint
-        RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                1, 2, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 1, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs2, 1, true);
-        // Flow
-        RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                1, 2, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 1, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs3, 1, true);
-        analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
+        solveAndAnalyze(1, 2, 1);
     }
 
     @Test
-    public void oneSourceTwoDestTwoC() {
+    public void oneSrcTwoDstTwoC() {
         // 1 S, 2 D, 0 F, 2 C, 0 NF
-        RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                1, 2, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs1, 2, true);
-        // Endpoint
-        RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                1, 2, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs2, 2, true);
-        // Flow
-        RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                1, 2, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs3, 2, true);
-        analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
+        solveAndAnalyze(1, 2, 2);
     }
 
     @Test
-    public void oneSrcTwoDestThreeC(){
-
+    public void oneSrcTwoDstThreeC(){
         // 1 S, 2 D, 0 F, 3 C, 0 NF
+        solveAndAnalyze(1, 2, 3);
+    }
+
+    @Test
+    public void oneSrcThreeDestOneC(){
+        solveAndAnalyze(1, 3, 1);
+    }
+
+    @Test
+    public void oneSrcThreeDestTwoC(){
+        solveAndAnalyze(1, 3, 2);
+    }
+
+    @Test
+    public void oneSrcThreeDestThreeC(){
+        solveAndAnalyze(1, 3, 3);
+    }
+
+    @Test
+    public void twoSrcOneDestOneC(){
+        solveAndAnalyze(2, 1, 1);
+    }
+
+    @Test
+    public void twoSrcOneDestTwoC(){
+        solveAndAnalyze(2, 1, 2);
+    }
+
+    @Test
+    public void twoSrcTwoDestOneC(){
+        solveAndAnalyze(2, 2, 1);
+    }
+
+    @Test
+    public void twoSrcTwoDestTwoC(){
+        solveAndAnalyze(2, 2, 2);
+    }
+
+    @Test
+    public void twoSrcTwoDestThreeC(){
+        solveAndAnalyze(2, 2, 2);
+    }
+
+    @Test
+    public void threeSrcOneDestOneC(){
+        solveAndAnalyze(3, 1, 1);
+    }
+
+    @Test
+    public void threeSrcOneDestTwoC(){
+        solveAndAnalyze(3, 1, 2);
+    }
+
+    @Test
+    public void threeSrcOneDestThreeC(){
+        solveAndAnalyze(3, 1, 3);
+    }
+
+    @Test
+    public void threeSrcTwoDestOneC(){
+        solveAndAnalyze(3, 2, 1);
+    }
+
+    @Test
+    public void threeSrcTwoDestTwoC(){
+        solveAndAnalyze(3, 2, 2);
+    }
+
+    @Test
+    public void threeSrcTwoDestThreeC(){
+        solveAndAnalyze(3, 2, 3);
+    }
+
+    @Test
+    public void threeSrcThreeDestOneC(){
+        solveAndAnalyze(3, 3, 1);
+    }
+
+    @Test
+    public void threeSrcThreeDestTwoC(){
+        solveAndAnalyze(3, 3, 2);
+    }
+
+    @Test
+    public void threeSrcThreeDestThreeC(){
+        solveAndAnalyze(3, 3, 3);
+    }
+
+    @Test
+    public void threeSrcThreeDestOneCOneSrcAlsoDest(){
+        solveAndAnalyzeSrcDestOverlap(3, 3, 3, .33);
+    }
+
+    @Test
+    public void threeSrcThreeDestOneCTwoSrcAlsoDest(){
+        solveAndAnalyzeSrcDestOverlap(3, 3, 3, .66);
+    }
+
+    @Test
+    public void threeSrcThreeDestOneCThreeSrcAlsoDest(){
+        solveAndAnalyzeSrcDestOverlap(3, 3, 3, 1.0);
+    }
+
+    private void solveAndAnalyzeSrcDestOverlap(Integer numSources, Integer numDestinations, Integer numConnections, Double percentSrcAlsoDest){
         RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                1, 2, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 3, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs1, 3, true);
+                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
+                false, false, percentSrcAlsoDest, 0.0, 0.0);
+        analyze(rs1, numConnections, true);
         // Endpoint
         RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                1, 2, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 3, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
-                false, false, 0.0, 0.0, 0.0);
-        analyze(rs2, 3, true);
+                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
+                false, false, percentSrcAlsoDest, 0.0, 0.0);
+        analyze(rs2, numConnections, true);
         // Flow
         RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                1, 2, 0, new ArrayList<>(), "Both", 1.0,
-                new ArrayList<>(), 3, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
+                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
+                false, false, percentSrcAlsoDest, 0.0, 0.0);
+        analyze(rs3, numConnections, true);
+        analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
+    }
+
+    private void solveAndAnalyze(Integer numSources, Integer numDestinations, Integer numConnections){
+        RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
+                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
-        analyze(rs3, 3, true);
+        analyze(rs1, numConnections, true);
+        // Endpoint
+        RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
+                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
+                false, false, 0.0, 0.0, 0.0);
+        analyze(rs2, numConnections, true);
+        // Flow
+        RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
+                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
+                false, false, 0.0, 0.0, 0.0);
+        analyze(rs3, numConnections, true);
         analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
     }
 
@@ -161,6 +218,11 @@ public class NoFailuresTest {
         AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
         assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getRequestIsSurvivable() == survivable));
         assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getNumPaths() == numExpectedPaths));
+        assert(requestSet.getRequests().values().stream()
+                .allMatch(r ->
+                        r.getChosenPaths().keySet().stream()
+                                .filter(pair -> pair.getSrc().equals(pair.getDst()))
+                                .allMatch(p -> r.getChosenPaths().get(p).values().size() == 0)));
     }
 
     private RequestSet solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
