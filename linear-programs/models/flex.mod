@@ -22,7 +22,7 @@ set S;
 set D;
 
 # SD - Source/Dest pairs
-set SD within {S cross D} default {s in S, d in D};
+set SD within {S cross D} default {s in S, d in D: s != d};
 
 # c_total - Total number of connections needed after k failures
 param c_total >= 0 integer;
@@ -74,6 +74,9 @@ minimize Objective:
 subject to totalConnectionsNeeded{g in GroupIndices}:
 	Num_Conn >= c_total + FG_Sum[g];
 
+subject to noLoopConnections{(s,d) in SD, i in I: s == d}:
+	C[s,d,i] = 0;
+
 subject to flowOnlyIfConnectionAndLinkExists{(s,d) in SD, i in I, u in V, v in V}:
 	L[s,d,i,u,v] <= A[u,v] * C[s,d,i];
 
@@ -106,11 +109,11 @@ subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 
 # Number of failures caused by a link --> Number of connections that include that element
 subject to numFailedConnectionsLink{u in V, v in V :u != v and ((u,v) in F or (v,u) in F)}:
-	FC[u,v] = sum{s in S, d in D, i in I} L[s,d,i,u,v];
+	FC[u,v] = sum{(s,d) in SD, i in I} L[s,d,i,u,v];
 
 # Number of failures caused by a node
 subject to numFailedConnectionsNode{v in V: (v,v) in F}:
-	FC[v,v] = sum{s in S, d in D, i in I} NC[s,d,i,v];
+	FC[v,v] = sum{(s,d) in SD, i in I} NC[s,d,i,v];
 
 # Sum up the failures per failure group
 subject to totalFailuresPerGroup{g in GroupIndices}:

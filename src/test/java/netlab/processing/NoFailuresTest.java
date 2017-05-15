@@ -147,6 +147,36 @@ public class NoFailuresTest {
     }
 
     @Test
+    public void fourteenSrcOneDestOneC(){
+        solveAndAnalyze(14, 1, 1);
+    }
+
+    @Test
+    public void fourteenSrcOneDestFourteenC(){
+        solveAndAnalyze(14, 1, 14);
+    }
+
+    @Test
+    public void oneSrcFourteenDestOneC(){
+        solveAndAnalyze(1, 14, 1);
+    }
+
+    @Test
+    public void oneSrcFourteenDestFourteenC(){
+        solveAndAnalyze(1, 14, 14);
+    }
+
+    @Test
+    public void fourteenSrcFourteenDestOneC(){
+        solveAndAnalyze(14, 14, 1);
+    }
+
+    @Test
+    public void fourteenSrcFourteenDestFourteenC(){
+        solveAndAnalyze(14, 14, 14);
+    }
+
+    @Test
     public void threeSrcThreeDestOneCOneSrcAlsoDest(){
         solveAndAnalyzeSrcDestOverlap(3, 3, 3, .33);
     }

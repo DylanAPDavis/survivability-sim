@@ -22,7 +22,7 @@ set S;
 set D;
 
 # SD - Source/Dest pairs
-set SD within {S cross D} default {s in S, d in D};
+set SD within {S cross D} default {s in S, d in D: s != d};
 
 # c_total - Total number of connections needed after k failures
 param c_total >= 0 integer;
