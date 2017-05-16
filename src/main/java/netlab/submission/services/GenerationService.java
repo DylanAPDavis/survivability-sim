@@ -55,6 +55,311 @@ public class GenerationService {
                 .build();
     }
 
+    public RequestSet generateSetFromRequest(RequestParameters requestParameters) {
+        assignDefaults(requestParameters);
+        Map<String, Request> requests = new HashMap<>();
+        Request request = createRequestFromRequestParameters(requestParameters);
+        if(request != null) {
+            requests.put(request.getId(), request);
+        }
+        String status = requests.isEmpty() ? "Submission failed. Could not generate request." : "Processing";
+        String setId = UUID.randomUUID().toString();
+        return RequestSet.builder()
+                .requests(requests)
+                .status(status)
+                .id(setId)
+                .seed(-1L)
+                .problemClass(getProblemClass(requestParameters.getProblemClass()))
+                .algorithm(getAlgorithm(requestParameters.getAlgorithm()))
+                .processingType(ProcessingType.Solo)
+                .failureClass(FailureClass.Both)
+                .percentSrcAlsoDest(-1.0)
+                .percentDestFail(-1.0)
+                .sdn(requestParameters.getSdn())
+                .useAws(requestParameters.getUseAws())
+                .topologyId(requestParameters.getTopologyId())
+                .build();
+    }
+
+    private Request createRequestFromRequestParameters(RequestParameters params) {
+        Topology topo = topologyService.getTopologyById(params.getTopologyId());
+        if(topo == null){
+            return null;
+        }
+        Map<String, Node> nodeIdMap = topo.getNodeIdMap();
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Set<Node> sources = params.getSources().stream().filter(nodeIdMap::containsKey).map(nodeIdMap::get).collect(Collectors.toSet());
+        Set<Node> destinations = params.getDestinations().stream().filter(nodeIdMap::containsKey).map(nodeIdMap::get).collect(Collectors.toSet());
+        if(sources.size() != params.getSources().size() || destinations.size() != params.getDestinations().size()){
+            return null;
+        }
+        Set<SourceDestPair> pairs = createPairs(sources, destinations);
+
+        Connections conns = makeConnectionsFromRequestParams(params, pairs, sources, destinations);
+        NumFailsAllowed nfa = makeNumFailsAllowedFromRequestParams(params, pairs, sources, destinations);
+        Failures fails = makeFailuresFromRequestParams(params, pairs, sources, destinations, nodeIdMap, linkIdMap,
+                nfa.getTotalNumFailsAllowed(), nfa.getPairNumFailsAllowedMap(), nfa.getSrcNumFailsAllowedMap(),
+                nfa.getDstNumFailsAllowedMap());
+
+        return Request.builder()
+                .id(UUID.randomUUID().toString())
+                .sources(sources)
+                .destinations(destinations)
+                .pairs(pairs)
+                .connections(conns)
+                .failures(fails)
+                .numFailsAllowed(nfa)
+                .chosenPaths(null)
+                .runningTimeMillis(0L)
+                .build();
+    }
+
+    private NumFailsAllowed makeNumFailsAllowedFromRequestParams(RequestParameters params, Set<SourceDestPair> pairs,
+                                                                 Set<Node> sources, Set<Node> destinations) {
+        // Map for pairs
+        Map<SourceDestPair, Integer> pairNumFailsMap = makePairIntegerMap(pairs, params.getPairNumFailsAllowedMap(), 0);
+
+        // Map for sources
+        Map<Node, Integer> srcNumFailsMap = makeNodeIntegerMap(sources, params.getSourceNumFailsAllowedMap(), 0);
+
+        // Map for destinations
+        Map<Node, Integer> dstNumFailsMap = makeNodeIntegerMap(destinations, params.getDestNumFailsAllowedMap(), 0);
+
+        return NumFailsAllowed.builder()
+                .totalNumFailsAllowed(params.getNumFailsAllowed())
+                .pairNumFailsAllowedMap(pairNumFailsMap)
+                .srcNumFailsAllowedMap(srcNumFailsMap)
+                .dstNumFailsAllowedMap(dstNumFailsMap)
+                .build();
+    }
+
+    private Failures makeFailuresFromRequestParams(RequestParameters params, Set<SourceDestPair> pairs,
+                                                   Set<Node> sources, Set<Node> destinations,
+                                                   Map<String, Node> nodeIdMap, Map<String, Link> linkIdMap,
+                                                   Integer numFailsAllowed, Map<SourceDestPair, Integer> pairNumFailsAllowed,
+                                                   Map<Node, Integer> srcNumFailsAllowed, Map<Node, Integer> dstNumFailsAllowed){
+
+        // Failures for the whole request
+        Set<Failure> failures = makeFailureSet(params.getFailures(), nodeIdMap, linkIdMap);
+        List<List<Failure>> failureGroups = generateFailureGroups(numFailsAllowed, failures);
+
+        // Failure for pairs
+        Map<SourceDestPair, Set<Failure>> pairFailuresMap = makePairFailuresMap(pairs, params.getPairFailureMap(), nodeIdMap, linkIdMap);
+        Map<SourceDestPair, List<List<Failure>>> pairFailureGroupsMap = pairFailuresMap.keySet().stream()
+                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(pairNumFailsAllowed.get(p), pairFailuresMap.get(p))));
+
+        // Failures for sources
+        Map<Node, Set<Failure>> srcFailuresMap = makeNodeFailuresMap(sources, params.getSourceFailureMap(), nodeIdMap, linkIdMap);
+        Map<Node, List<List<Failure>>> srcFailureGroupsMap = srcFailuresMap.keySet().stream()
+                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(srcNumFailsAllowed.get(p), srcFailuresMap.get(p))));
+
+        // Failures for destinations
+        Map<Node, Set<Failure>> dstFailuresMap = makeNodeFailuresMap(destinations, params.getSourceFailureMap(), nodeIdMap, linkIdMap);
+        Map<Node, List<List<Failure>>> dstFailureGroupsMap = dstFailuresMap.keySet().stream()
+                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(dstNumFailsAllowed.get(p), dstFailuresMap.get(p))));
+
+        long failureSetSize = failures.size() + pairFailuresMap.values().stream().mapToLong(Collection::size).sum();
+        failureSetSize += srcFailuresMap.values().stream().mapToLong(Collection::size).sum();
+        failureSetSize += dstFailureGroupsMap.values().stream().mapToLong(Collection::size).sum();
+        return Failures.builder()
+                .failureSet(failures)
+                .failureSetSize((int)failureSetSize)
+                .failureGroups(failureGroups)
+                .pairFailuresMap(pairFailuresMap)
+                .pairFailureGroupsMap(pairFailureGroupsMap)
+                .srcFailuresMap(srcFailuresMap)
+                .srcFailureGroupsMap(srcFailureGroupsMap)
+                .dstFailuresMap(dstFailuresMap)
+                .dstFailureGroupsMap(dstFailureGroupsMap)
+                .build();
+    }
+
+    private Map<Node,Set<Failure>> makeNodeFailuresMap(Set<Node> members, Map<String, Set<String>> memberFailureMap,
+                                                       Map<String, Node> nodeIdMap, Map<String, Link> linkIdMap) {
+        Map<Node, Set<Failure>> failureMap = members.stream().collect(Collectors.toMap(p -> p, p -> new HashSet<>()));
+        for(String memberString : memberFailureMap.keySet()){
+            Node member = Node.builder().id(memberString).build();
+            failureMap.put(member, makeFailureSet(memberFailureMap.get(memberString), nodeIdMap, linkIdMap));
+        }
+        return failureMap;
+    }
+
+    private Map<SourceDestPair,Set<Failure>> makePairFailuresMap(Set<SourceDestPair> pairs, Map<List<String>, Set<String>> pairFailureMap,
+                                                                 Map<String, Node> nodeIdMap, Map<String, Link> linkIdMap) {
+        Map<SourceDestPair, Set<Failure>> failureMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashSet<>()));
+        for(List<String> pairList : pairFailureMap.keySet()){
+            SourceDestPair pair = SourceDestPair.builder()
+                    .src(Node.builder().id(pairList.get(0)).build())
+                    .dst(Node.builder().id(pairList.get(1)).build())
+                    .build();
+            failureMap.put(pair, makeFailureSet(pairFailureMap.get(pairList), nodeIdMap, linkIdMap));
+        }
+        return failureMap;
+    }
+
+    private Set<Failure> makeFailureSet(Set<String> failureStrings, Map<String, Node> nodeIdMap,
+                                        Map<String, Link> linkIdMap){
+        Set<Failure> failures = new HashSet<>();
+        for(String failString : failureStrings){
+            if(nodeIdMap.containsKey(failString)){
+                failures.add(Failure.builder().node(nodeIdMap.get(failString)).build());
+            }
+            else if(linkIdMap.containsKey(failString)){
+                failures.add(Failure.builder().link(linkIdMap.get(failString)).build());
+            }
+        }
+        return failures;
+    }
+
+    private Connections makeConnectionsFromRequestParams(RequestParameters params, Set<SourceDestPair> pairs,
+                                                         Set<Node> sources, Set<Node> destinations){
+
+        // Map for pairs
+        Map<SourceDestPair, Integer> pairMinConnectionsMap = params.getPairNumConnectionsMap().size() > 0 ?
+                makePairIntegerMap(pairs, params.getPairNumConnectionsMap(), 0) :
+                makePairIntegerMap(pairs, params.getPairMinNumConnectionsMap(), 0);
+        Map<SourceDestPair, Integer> pairMaxConnectionsMap = params.getPairNumConnectionsMap().size() > 0 ?
+                makePairIntegerMap(pairs, params.getPairNumConnectionsMap(), params.getNumConnections()) :
+                makePairIntegerMap(pairs, params.getPairMaxNumConnectionsMap(), params.getNumConnections());
+
+        // Map for sources
+        Map<Node, Integer> srcMinConnectionsMap = params.getSourceNumConnectionsMap().size() > 0 ?
+                makeNodeIntegerMap(sources, params.getSourceNumConnectionsMap(), 0) :
+                makeNodeIntegerMap(sources, params.getSourceMinNumConnectionsMap(), 0);
+        Map<Node, Integer> srcMaxConnectionsMap = params.getSourceNumConnectionsMap().size() > 0 ?
+                makeNodeIntegerMap(sources, params.getSourceNumConnectionsMap(), params.getNumConnections()) :
+                makeNodeIntegerMap(sources, params.getSourceMaxNumConnectionsMap(), params.getNumConnections());
+
+        // Map for destinations
+        Map<Node, Integer> dstMinConnectionsMap = params.getDestNumConnectionsMap().size() > 0 ?
+                makeNodeIntegerMap(destinations, params.getDestNumConnectionsMap(), 0) :
+                makeNodeIntegerMap(destinations, params.getDestMinNumConnectionsMap(), 0);
+        Map<Node, Integer> dstMaxConnectionsMap = params.getDestNumConnectionsMap().size() > 0 ?
+                makeNodeIntegerMap(destinations, params.getDestNumConnectionsMap(), params.getNumConnections()) :
+                makeNodeIntegerMap(destinations, params.getDestMaxNumConnectionsMap(), params.getNumConnections());
+
+        return Connections.builder()
+                .numConnections(params.getNumConnections())
+                .pairMinConnectionsMap(pairMinConnectionsMap)
+                .pairMaxConnectionsMap(pairMaxConnectionsMap)
+                .srcMinConnectionsMap(srcMinConnectionsMap)
+                .srcMaxConnectionsMap(srcMaxConnectionsMap)
+                .dstMinConnectionsMap(dstMinConnectionsMap)
+                .dstMaxConnectionsMap(dstMaxConnectionsMap)
+                .build();
+    }
+
+    private Map<Node, Integer> makeNodeIntegerMap(Set<Node> members, Map<String, Integer> memberConnMap, Integer defaultValue){
+        Map<Node, Integer> memberMap = members.stream().collect(Collectors.toMap(m -> m, m -> defaultValue));
+        for(String nodeName : memberConnMap.keySet()){
+            Node node = Node.builder().id(nodeName).build();
+            memberMap.put(node, memberConnMap.get(nodeName));
+        }
+        return memberMap;
+    }
+
+    private Map<SourceDestPair, Integer> makePairIntegerMap(Set<SourceDestPair> pairs, Map<List<String>, Integer> pairConnMap,
+                                                            Integer defaultValue){
+        Map<SourceDestPair, Integer> pairMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> defaultValue));
+        for(List<String> pairList : pairConnMap.keySet()){
+            SourceDestPair pair = SourceDestPair.builder()
+                    .src(Node.builder().id(pairList.get(0)).build())
+                    .dst(Node.builder().id(pairList.get(1)).build())
+                    .build();
+            pairMap.put(pair, pairConnMap.get(pairList));
+        }
+        return pairMap;
+    }
+
+
+    private void assignDefaults(RequestParameters params) {
+        // F - Total size of the failure set (shared by all connections)
+        if(params.getFailures() == null){
+            params.setFailures(new HashSet<>());
+        }
+        if(params.getPairFailureMap() == null){
+            params.setPairFailureMap(new HashMap<>());
+        }
+        if(params.getSourceFailureMap() == null){
+            params.setSourceFailureMap(new HashMap<>());
+        }
+        if(params.getDestFailureMap() == null){
+            params.setDestFailureMap(new HashMap<>());
+        }
+
+        // Failure probability - pick one field
+        if(params.getFailureProbabilityMap() == null){
+            params.setFailureProbabilityMap(new HashMap<>());
+        }
+        if(params.getPairFailureProbabilityMap() == null){
+            params.setPairFailureProbabilityMap(new HashMap<>());
+        }
+        if(params.getSourceFailureProbabilityMap() == null){
+            params.setSourceFailureProbabilityMap(new HashMap<>());
+        }
+        if(params.getDestFailureProbabilityMap() == null){
+            params.setDestFailureProbabilityMap(new HashMap<>());
+        }
+
+        // C - total number of connections
+        if(params.getNumConnections() == null || params.getNumConnections() < 0){
+            params.setNumConnections(0);
+        }
+
+        // Pairs
+        if(params.getPairNumConnectionsMap() == null){
+            params.setPairNumConnectionsMap(new HashMap<>());
+        }
+        if(params.getPairMinNumConnectionsMap() == null){
+            params.setPairMinNumConnectionsMap(new HashMap<>());
+        }
+        if(params.getPairMaxNumConnectionsMap() == null){
+            params.setPairMaxNumConnectionsMap(new HashMap<>());
+        }
+
+        // Source
+        if(params.getSourceNumConnectionsMap() == null){
+            params.setSourceNumConnectionsMap(new HashMap<>());
+        }
+        if(params.getSourceMinNumConnectionsMap() == null){
+            params.setSourceMinNumConnectionsMap(new HashMap<>());
+        }
+        if(params.getSourceMaxNumConnectionsMap() == null){
+            params.setSourceMaxNumConnectionsMap(new HashMap<>());
+        }
+
+        // Dest
+        if(params.getDestNumConnectionsMap() == null){
+            params.setDestNumConnectionsMap(new HashMap<>());
+        }
+        if(params.getDestMinNumConnectionsMap() == null){
+            params.setDestMinNumConnectionsMap(new HashMap<>());
+        }
+        if(params.getDestMaxNumConnectionsMap() == null){
+            params.setDestMaxNumConnectionsMap(new HashMap<>());
+        }
+
+        // Number of failureSet that will occur
+        if(params.getNumFailsAllowed() == null | params.getNumFailsAllowed() < 0){
+            params.setNumFailsAllowed(0);
+        }
+        if(params.getPairNumFailsAllowedMap() == null){
+            params.setPairNumFailsAllowedMap(new HashMap<>());
+        }
+        if(params.getSourceNumFailsAllowedMap() == null){
+            params.setSourceNumFailsAllowedMap(new HashMap<>());
+        }
+        if(params.getDestNumFailsAllowedMap() == null){
+            params.setDestNumFailsAllowedMap(new HashMap<>());
+        }
+
+        if(params.getSdn() == null){
+            params.setSdn(false);
+        }
+        if(params.getUseAws() == null){
+            params.setUseAws(false);
+        }
+    }
 
     private void assignDefaults(SimulationParameters params) {
 
@@ -160,7 +465,7 @@ public class GenerationService {
                 .failures(failureCollection)
                 .numFailsAllowed(numFailsAllowedCollection)
                 .pairs(pairs)
-                .runningTime(0L)
+                .runningTimeMillis(0L)
                 .build();
     }
 
@@ -203,9 +508,9 @@ public class GenerationService {
             }
             if(problemClass.equals(ProblemClass.Endpoint)){
                 srcMinConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> randomInt(minForMinConn, maxForMinConn, rng)));
-                srcMaxConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> randomInt(minForMinConn, maxForMinConn, rng)));
+                srcMaxConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> randomInt(minForMaxConn, maxForMaxConn, rng)));
                 dstMinConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> randomInt(minForMinConn, maxForMinConn, rng)));
-                dstMaxConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> randomInt(minForMinConn, maxForMinConn, rng)));
+                dstMaxConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> randomInt(minForMaxConn, maxForMaxConn, rng)));
 
                 if(numConnections == 0){
                     numConnections = Math.max(
@@ -263,7 +568,7 @@ public class GenerationService {
             if(minMaxFails.size() == 2) {
                 numFails = Math.min(failureCollection.getFailureSet().size(), randomInt(minMaxFails.get(0), minMaxFails.get(1), rng));
             }
-            failureGroups = generateFailureGroups(numFails, failureCollection.getFailureSet(), rng);
+            failureGroups = generateFailureGroups(numFails, failureCollection.getFailureSet());
         }
         if(problemClass.equals(ProblemClass.Flow)){
             for(SourceDestPair pair : pairs){
@@ -271,7 +576,7 @@ public class GenerationService {
                 int thisNumFails = minMaxFails.size() == 2 ?
                         Math.min(thisFailureSet.size(), randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
                 pairNumFailsMap.put(pair, thisNumFails);
-                pairFailureGroupsMap.put(pair, generateFailureGroups(thisNumFails, thisFailureSet, rng));
+                pairFailureGroupsMap.put(pair, generateFailureGroups(thisNumFails, thisFailureSet));
             }
             //Update number of required cuts for request to be equal to the total min
             numFails = pairNumFailsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
@@ -306,7 +611,7 @@ public class GenerationService {
         int thisNumFails = minMaxFails.size() == 2 ?
                 Math.min(failureSet.size(), randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
         numFailsMap.put(member, thisNumFails);
-        failureGroupsMap.put(member, generateFailureGroups(thisNumFails, failureSet, rng));
+        failureGroupsMap.put(member, generateFailureGroups(thisNumFails, failureSet));
     }
 
     private Failures assignFailureSets(SimulationParameters params, List<Node> sources,
@@ -496,7 +801,7 @@ public class GenerationService {
         return failures;
     }
 
-    private static List<List<Failure>> generateFailureGroups(Integer k, Set<Failure> failureSet, Random rng){
+    private static List<List<Failure>> generateFailureGroups(Integer k, Set<Failure> failureSet){
         List<List<Failure>> failureGroups = new ArrayList<>();
         List<Failure> failureList = new ArrayList<>(failureSet);
         Collections.shuffle(failureList);
@@ -564,4 +869,5 @@ public class GenerationService {
     private ProblemClass getProblemClass(String problemClass) {
         return ProblemClass.get(problemClass).orElse(ProblemClass.Flex);
     }
+
 }

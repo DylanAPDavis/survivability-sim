@@ -5,6 +5,7 @@ import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.services.AnalysisService;
 import netlab.processing.ProcessingService;
 import netlab.storage.StorageService;
+import netlab.submission.request.RequestParameters;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
@@ -32,7 +33,7 @@ public class SubmissionController {
 
     private StorageService storageService;
 
-    @RequestMapping(value = "/resv/connection/add", method = RequestMethod.POST)
+    @RequestMapping(value = "/submit_set", method = RequestMethod.POST)
     @ResponseBody
     public String submitRequestSet(SimulationParameters simulationParameters){
         RequestSet requestSet = generationService.generateRequests(simulationParameters);
@@ -44,6 +45,20 @@ public class SubmissionController {
         storageService.storeRequestSet(requestSet);
 
         // Return the request set ID
+        return requestSet.getId();
+    }
+
+    @RequestMapping(value = "/submit", method = RequestMethod.POST)
+    @ResponseBody
+    public String submitRequestSet(RequestParameters requestParameters){
+        RequestSet requestSet = generationService.generateSetFromRequest(requestParameters);
+
+        if(requestSet.getRequests().keySet().size() > 0){
+            requestSet = processingService.processRequestSet(requestSet);
+        }
+
+        storageService.storeRequestSet(requestSet);
+
         return requestSet.getId();
     }
 }

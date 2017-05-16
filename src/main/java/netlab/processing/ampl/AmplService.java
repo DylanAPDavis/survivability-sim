@@ -40,7 +40,7 @@ public class AmplService {
         }
         System.out.println("Solution took: " + duration + " milliseconds");
         request.setChosenPaths(paths);
-        request.setRunningTime(duration);
+        request.setRunningTimeMillis(duration);
         return request;
     }
 
