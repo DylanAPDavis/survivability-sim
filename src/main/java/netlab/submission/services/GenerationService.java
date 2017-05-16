@@ -340,7 +340,7 @@ public class GenerationService {
         }
 
         // Number of failureSet that will occur
-        if(params.getNumFailsAllowed() == null | params.getNumFailsAllowed() < 0){
+        if(params.getNumFailsAllowed() == null || params.getNumFailsAllowed() < 0){
             params.setNumFailsAllowed(0);
         }
         if(params.getPairNumFailsAllowedMap() == null){
