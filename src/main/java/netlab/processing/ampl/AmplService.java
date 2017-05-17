@@ -26,13 +26,15 @@ public class AmplService {
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         Environment env = new Environment(System.getProperty("user.dir") + "/linear-programs/ampl/");
         AMPL ampl = new AMPL(env);
+        ampl.setIntOption("omit_zero_rows", 1);
         Long duration = 0L;
         try {
             ampl = assignValues(request, problemClass, topology, ampl);
             Instant start = Instant.now();
             ampl.solve();
             duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
-            paths = translateFlowsIntoPaths(ampl.getVariable("L"), request.getPairs(), topology);
+            DataFrame flows = ampl.getData("L");
+            paths = translateFlowsIntoPaths(flows, request.getPairs(), topology);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -290,24 +292,22 @@ public class AmplService {
 
     // AMPL output -> Java translation
 
-    private Map<SourceDestPair,Map<String,Path>> translateFlowsIntoPaths(Variable linkFlows, Set<SourceDestPair> pairs, Topology topo) {
-        List<String> flows = linkFlows.getInstances()
-                .stream()
-                .filter(f -> f.value() > 0)
-                .map(VariableInstance::name)
-                .collect(Collectors.toList());
+    private Map<SourceDestPair,Map<String,Path>> translateFlowsIntoPaths(DataFrame linkFlows, Set<SourceDestPair> pairs, Topology topo) {
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream()
                 .collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
         Map<String, Link> linkIdMap = topo.getLinkIdMap();
         Map<String, Node> nodeIdMap = topo.getNodeIdMap();
-        for(String flow : flows){
-            String[] components = flow.substring(2, flow.length()-1).split(",");
-            System.out.println(Arrays.toString(components));
-            String src = components[0].replace("'", "");
-            String dst = components[1].replace("'", "");
-            String pathId = components[2].replace("'", "");
-            String origin = components[3].replace("'", "");
-            String target = components[4].replace("'", "");
+        String[] sources = linkFlows.getColumnAsStrings("index0");
+        String[] destinations = linkFlows.getColumnAsStrings("index1");
+        double[] pathIds = linkFlows.getColumnAsDoubles("index2");
+        String[] origins = linkFlows.getColumnAsStrings("index3");
+        String[] targets = linkFlows.getColumnAsStrings("index4");
+        for(int index = 0; index < sources.length; index++){
+            String src = sources[index];
+            String dst = destinations[index];
+            String pathId = Double.toString(pathIds[index]);
+            String origin = origins[index];
+            String target = targets[index];
 
             SourceDestPair thisPair = SourceDestPair.builder()
                     .src(nodeIdMap.get(src))
