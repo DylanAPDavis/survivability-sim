@@ -24,10 +24,11 @@ public class AmplService {
 
     public Request solve(Request request, ProblemClass problemClass, Topology topology){
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
-        AMPL ampl = new AMPL();
+        Environment env = new Environment(System.getProperty("user.dir") + "/linear-programs/ampl/");
+        AMPL ampl = new AMPL(env);
         Long duration = 0L;
         try {
-            ampl = assignValues(request, problemClass, topology);
+            ampl = assignValues(request, problemClass, topology, ampl);
             Instant start = Instant.now();
             ampl.solve();
             duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
@@ -63,8 +64,7 @@ public class AmplService {
     }
 
 
-    private AMPL assignValues(Request request, ProblemClass problemClass, Topology topology) throws IOException{
-        AMPL ampl = new AMPL();
+    private AMPL assignValues(Request request, ProblemClass problemClass, Topology topology, AMPL ampl) throws IOException{
         ampl.setOption("solver", "gurobi");
         if(problemClass.equals(ProblemClass.Flex)){
             ampl.read(modelDirectory + "/flex.mod");
