@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -11,26 +12,21 @@ import java.util.Map;
 @AllArgsConstructor
 public class SimulationParameters {
 
-    @NonNull
     private Long seed;
 
-    @NonNull
     private String topologyId;
 
-    @NonNull
-    private Integer numRequests;
-
-    @NonNull
     private String problemClass;
 
-    @NonNull
+    private String objective;
+
     private String algorithm;
 
+    private Integer numRequests;
+
     // S
-    @NonNull
     private Integer numSources;
     // D
-    @NonNull
     private Integer numDestinations;
 
     // F - Total size of the failure set (shared by all connections)

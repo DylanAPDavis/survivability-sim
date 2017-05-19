@@ -26,7 +26,7 @@ import java.util.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
-public class MinMaxConnsTest {
+public class FlowAndEndpointTest {
 
     @Autowired
     private GenerationService generationService;

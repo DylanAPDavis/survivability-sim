@@ -12,21 +12,18 @@ import java.util.Set;
 @AllArgsConstructor
 public class RequestParameters {
 
-    @NonNull
     private String topologyId;
 
-    @NonNull
-    private String problemClass;
-
-    @NonNull
-    private String algorithm;
-
     // S
-    @NonNull
     private Set<String> sources;
     // D
-    @NonNull
     private Set<String> destinations;
+
+    private String problemClass;
+
+    private String objective;
+
+    private String algorithm;
 
     // F - Total size of the failure set (shared by all connections)
     private Set<String> failures;

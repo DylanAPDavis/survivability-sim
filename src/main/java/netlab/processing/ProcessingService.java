@@ -3,6 +3,7 @@ package netlab.processing;
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ampl.AmplService;
 import netlab.submission.enums.Algorithm;
+import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.enums.ProcessingType;
 import netlab.submission.request.Request;
@@ -36,7 +37,7 @@ public class ProcessingService {
         Topology topo = topoService.getTopologyById(requestSet.getTopologyId());
         if(requestSet.getProcessingType().equals(ProcessingType.Solo)){
             for(Request request : requestSet.getRequests().values()){
-                processRequest(request, requestSet.getAlgorithm(), requestSet.getProblemClass(),
+                processRequest(request, requestSet.getAlgorithm(), requestSet.getProblemClass(), requestSet.getObjective(),
                         topo, requestSet.isUseAws(), requestSet.isSdn());
             }
         }
@@ -44,11 +45,11 @@ public class ProcessingService {
         return requestSet;
     }
 
-    private void processRequest(Request request, Algorithm algorithm, ProblemClass problemClass,
-                                                                 Topology topology, Boolean useAws, Boolean sdn){
+    private void processRequest(Request request, Algorithm algorithm, ProblemClass problemClass, Objective objective,
+                                Topology topology, Boolean useAws, Boolean sdn){
         switch(algorithm){
             case ServiceILP:
-                amplService.solve(request, problemClass, topology);
+                amplService.solve(request, problemClass, objective, topology);
         }
     }
 }

@@ -1,10 +1,7 @@
 package netlab.submission.services;
 
 import lombok.extern.slf4j.Slf4j;
-import netlab.submission.enums.Algorithm;
-import netlab.submission.enums.FailureClass;
-import netlab.submission.enums.ProblemClass;
-import netlab.submission.enums.ProcessingType;
+import netlab.submission.enums.*;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
 import netlab.topology.services.TopologyService;
@@ -45,6 +42,7 @@ public class GenerationService {
                 .problemClass(getProblemClass(params.getProblemClass()))
                 .algorithm(getAlgorithm(params.getAlgorithm()))
                 .processingType(getProcessingType(params.getProcessingType()))
+                .objective(getObjective(params.getObjective()))
                 .failureClass(getFailureClass(params.getFailureClass()))
                 .percentSrcAlsoDest(params.getPercentSrcAlsoDest())
                 .percentSrcFail(params.getPercentSrcFail())
@@ -71,6 +69,7 @@ public class GenerationService {
                 .seed(-1L)
                 .problemClass(getProblemClass(requestParameters.getProblemClass()))
                 .algorithm(getAlgorithm(requestParameters.getAlgorithm()))
+                .objective(getObjective(requestParameters.getObjective()))
                 .processingType(ProcessingType.Solo)
                 .failureClass(FailureClass.Both)
                 .percentSrcAlsoDest(-1.0)
@@ -80,6 +79,7 @@ public class GenerationService {
                 .topologyId(requestParameters.getTopologyId())
                 .build();
     }
+
 
     private Request createRequestFromRequestParameters(RequestParameters params) {
         Topology topo = topologyService.getTopologyById(params.getTopologyId());
@@ -273,6 +273,26 @@ public class GenerationService {
 
 
     private void assignDefaults(RequestParameters params) {
+        if(params.getTopologyId() == null){
+            params.setTopologyId("NSFnet");
+        }
+        if(params.getSources() == null){
+            params.setSources(new HashSet<>());
+        }
+        if(params.getDestinations() == null){
+            params.setDestinations(new HashSet<>());
+        }
+        if(params.getProblemClass() == null){
+            params.setProblemClass("Flow");
+        }
+        if(params.getObjective() == null){
+            params.setObjective("NumLinksUsed");
+        }
+        if(params.getAlgorithm() == null){
+            params.setAlgorithm("ServiceILP");
+        }
+
+
         // F - Total size of the failure set (shared by all connections)
         if(params.getFailures() == null){
             params.setFailures(new HashSet<>());
@@ -362,6 +382,31 @@ public class GenerationService {
     }
 
     private void assignDefaults(SimulationParameters params) {
+        if(params.getSeed() == null){
+            Random rng = new Random();
+            params.setSeed(rng.nextLong());
+        }
+        if(params.getTopologyId() == null){
+            params.setTopologyId("NSFnet");
+        }
+        if(params.getNumSources() == null){
+            params.setNumSources(0);
+        }
+        if(params.getNumDestinations() == null){
+            params.setNumDestinations(0);
+        }
+        if(params.getProblemClass() == null){
+            params.setProblemClass("Flow");
+        }
+        if(params.getObjective() == null){
+            params.setObjective("NumLinksUsed");
+        }
+        if(params.getAlgorithm() == null){
+            params.setObjective("ServiceILP");
+        }
+        if(params.getNumRequests() == null || params.getNumRequests() < 0){
+            params.setNumRequests(0);
+        }
 
         if(params.getFailureSetSize() == null || params.getFailureSetSize() < 0){
             params.setFailureSetSize(0);
@@ -868,6 +913,10 @@ public class GenerationService {
 
     private ProblemClass getProblemClass(String problemClass) {
         return ProblemClass.get(problemClass).orElse(ProblemClass.Flex);
+    }
+
+    private Objective getObjective(String objective) {
+        return Objective.get(objective).orElse(Objective.LinksUsed);
     }
 
 }

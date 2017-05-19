@@ -68,19 +68,25 @@ var FG_Sum {(s,d) in SD, g in GroupIndices[s,d]} >= 0 integer;
 # Number of connections
 var Num_Conn{(s,d) in SD} = sum{i in I} C[s,d,i];
 
+# Number of connections total
+var Num_Conns_Total = sum{(s,d) in SD} Num_Conn[s,d];
+
 # Number of link usages
-var Num_Link_Usages = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
+var Num_Links_Used = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
 
 
 # OBJECTIVE
 
-minimize Objective:
-	Num_Link_Usages;
+minimize LinksUsed:
+	Num_Links_Used;
+
+minimize Connections:
+	Num_Conns_Total;
 
 ## Connection Constraints
 
 subject to totalNumConnections:
-	sum{(s,d) in SD} Num_Conn[s,d] >= c_total + sum{(s,d) in SD} max{g in GroupIndices[s,d]} FG_Sum[s,d,g];
+	Num_Conns_Total >= c_total + sum{(s,d) in SD} max{g in GroupIndices[s,d]} FG_Sum[s,d,g];
 
 subject to minNumConnectionsNeeded{(s,d) in SD, g in GroupIndices[s,d]}:
 	Num_Conn[s,d] >= c_min_sd[s,d] + FG_Sum[s,d,g];
@@ -108,6 +114,12 @@ subject to flowOnlyInConnection{(s,d) in SD, i in I, u in V, v in V}:
 
 subject to noFlowIntoSource{(s,d) in SD, i in I, u in V}:
 	L[s,d,i,u,s] = 0;
+
+subject to oneFlowFromSrc{(s,d) in SD, i in I}:
+	sum{v in V} L[s,d,i,s,v] <= 1;
+
+subject to oneFlowIntoDest{(s,d) in SD, i in I}:
+	sum{u in V} L[s,d,i,u,d] <= 1;
 
 subject to noReverseFlowIfForward{(s,d) in SD, i in I, u in V, v in V}:
 	L[s,d,i,u,v] + L[s,d,i,v,u] <= 1;

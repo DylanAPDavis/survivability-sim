@@ -193,19 +193,19 @@ public class NoFailuresTest {
 
     private void solveAndAnalyzeSrcDestOverlap(Integer numSources, Integer numDestinations, Integer numConnections, Double percentSrcAlsoDest){
         RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, 0.0, 0.0);
         analyze(rs1, numConnections, true);
         // Endpoint
         RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, 0.0, 0.0);
         analyze(rs2, numConnections, true);
         // Flow
         RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, 0.0, 0.0);
         analyze(rs3, numConnections, true);
@@ -213,20 +213,21 @@ public class NoFailuresTest {
     }
 
     private void solveAndAnalyze(Integer numSources, Integer numDestinations, Integer numConnections){
+        // Flex
         RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         analyze(rs1, numConnections, true);
         // Endpoint
         RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinksUsed",numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         analyze(rs2, numConnections, true);
         // Flow
         RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         analyze(rs3, numConnections, true);
@@ -256,7 +257,7 @@ public class NoFailuresTest {
     }
 
     private RequestSet solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                             Integer numSources, Integer numDestinations, Integer fSetSize,
+                             String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
                              List<Integer> minMaxFailures, String failureClass, Double failureProb,
                              List<Double> minMaxFailureProb, Integer numConnections,
                              List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
@@ -264,7 +265,7 @@ public class NoFailuresTest {
                              Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
                              double percentDstFail){
 
-        SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, numSources, numDestinations,
+        SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         RequestSet requestSet = generationService.generateRequests(params);
@@ -273,7 +274,7 @@ public class NoFailuresTest {
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                                                Integer numSources, Integer numDestinations, Integer fSetSize,
+                                                String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
                                                 List<Integer> minMaxFailures, String failureClass, Double failureProb,
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
@@ -286,6 +287,7 @@ public class NoFailuresTest {
                 .numRequests(numRequests)
                 .algorithm(alg)
                 .problemClass(problemClass)
+                .objective(objective)
                 .numSources(numSources)
                 .numDestinations(numDestinations)
                 .failureSetSize(fSetSize)

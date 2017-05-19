@@ -86,14 +86,20 @@ var Num_Conn_src{s in S} = sum{d in D, i in I: s != d} C[s,d,i];
 # Number of connections to a destination d
 var Num_Conn_dst{d in D} = sum{s in S, i in I: s != d} C[s,d,i];
 
+# Number of connections total
+var Num_Conns_Total = sum{(s,d) in SD} Num_Conn[s,d];
+
 # Number of link usages
-var Num_Link_Usages = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
+var Num_Links_Used = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
 
 
 # OBJECTIVE
 
-minimize Objective:
-	Num_Link_Usages;
+minimize LinksUsed:
+	Num_Links_Used;
+
+minimize Connections:
+	Num_Conns_Total;
 
 ## Connection Constraints
 
@@ -118,6 +124,12 @@ subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices_d[d]}:
 
 subject to noSelfConnections{(s,d) in SD: s == d}:
 	Num_Conn[s,d] = 0;
+
+subject to oneFlowFromNodeInConn{(s,d) in SD, i in I, u in V}:
+	sum{v in V} L[s,d,i,u,v] <= 1;
+
+subject to oneFlowIntoNodeInConn{(s,d) in SD, i in I, v in V}:
+	sum{u in V} L[s,d,i,u,v] <= 1;
 
 subject to flowOnlyIfConnectionAndLinkExists{(s,d) in SD, i in I, u in V, v in V}:
 	L[s,d,i,u,v] <= A[u,v] * C[s,d,i];

@@ -1,7 +1,9 @@
 package netlab.processing.ampl;
 
+
 import com.ampl.*;
 import lombok.extern.slf4j.Slf4j;
+import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
@@ -22,7 +24,7 @@ public class AmplService {
 
     private String modelDirectory = "linear-programs/models";
 
-    public Request solve(Request request, ProblemClass problemClass, Topology topology){
+    public Request solve(Request request, ProblemClass problemClass, Objective objective, Topology topology){
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         Environment env = new Environment(System.getProperty("user.dir") + "/linear-programs/ampl/");
         AMPL ampl = new AMPL(env);
@@ -31,6 +33,7 @@ public class AmplService {
         try {
             ampl = assignValues(request, problemClass, topology, ampl);
             Instant start = Instant.now();
+            ampl.eval("objective " + objective.getCode()  + ";");
             ampl.solve();
             duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
             DataFrame flows = ampl.getData("L");

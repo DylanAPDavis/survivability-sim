@@ -5,10 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import netlab.submission.enums.Algorithm;
-import netlab.submission.enums.FailureClass;
-import netlab.submission.enums.ProblemClass;
-import netlab.submission.enums.ProcessingType;
+import netlab.submission.enums.*;
 
 import java.util.Map;
 
@@ -35,6 +32,8 @@ public class RequestSet {
     private Algorithm algorithm;
 
     private ProblemClass problemClass;
+
+    private Objective objective;
 
     private Double percentSrcAlsoDest;
 
