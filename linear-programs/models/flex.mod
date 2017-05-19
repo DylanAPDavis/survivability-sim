@@ -15,6 +15,9 @@ set I := 1..I_max;
 # Physical Links - 1 if Link exists between u and v
 param A{u in V, v in V} binary default 0;
 
+# Link cost
+param Weight{u in V, v in V} integer default 0;
+
 # S - Sources
 set S;	
 
@@ -64,6 +67,9 @@ var Num_Conns_Total = sum{(s,d) in SD, i in I} C[s,d,i];
 var Num_Links_Used = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
 
 
+var Total_Weight = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
+
+
 # OBJECTIVE
 
 minimize LinksUsed:
@@ -71,6 +77,9 @@ minimize LinksUsed:
 
 minimize Connections:
 	Num_Conns_Total;
+
+minimize LinkCost:
+	Total_Weight;
 
 ## Connection Constraints
 

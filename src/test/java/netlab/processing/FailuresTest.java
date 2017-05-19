@@ -62,19 +62,19 @@ public class FailuresTest {
                                                Double percentSrcAlsoDest, Double percentSrcFail,
                                                Double percentDstFail, Boolean survivable){
         RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
+                "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         analyze(rs1, numConnections, survivable);
         // Endpoint
         RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
+                "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         analyze(rs2, numConnections, survivable);
         // Flow
         RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
+                "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         analyze(rs3, numConnections, survivable);
@@ -105,7 +105,7 @@ public class FailuresTest {
     }
 
     private RequestSet solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                             Integer numSources, Integer numDestinations, Integer fSetSize,
+                             String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
                              List<Integer> minMaxFailures, String failureClass, Double failureProb,
                              List<Double> minMaxFailureProb, Integer numConnections,
                              List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
@@ -113,7 +113,7 @@ public class FailuresTest {
                              Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
                              double percentDstFail){
 
-        SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, numSources, numDestinations,
+        SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         RequestSet requestSet = generationService.generateRequests(params);
@@ -122,7 +122,7 @@ public class FailuresTest {
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                                                Integer numSources, Integer numDestinations, Integer fSetSize,
+                                                String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
                                                 List<Integer> minMaxFailures, String failureClass, Double failureProb,
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
@@ -135,6 +135,7 @@ public class FailuresTest {
                 .numRequests(numRequests)
                 .algorithm(alg)
                 .problemClass(problemClass)
+                .objective(objective)
                 .numSources(numSources)
                 .numDestinations(numDestinations)
                 .failureSetSize(fSetSize)

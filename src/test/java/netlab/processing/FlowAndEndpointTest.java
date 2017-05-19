@@ -686,6 +686,7 @@ public class FlowAndEndpointTest {
                 .topologyId("NSFnet")
                 .problemClass("Flow")
                 .algorithm("ServiceILP")
+                .objective("LinksUsed")
                 .sources(sources)
                 .destinations(destinations)
                 .pairMinNumConnectionsMap(pairMinNumConnections)
@@ -705,6 +706,7 @@ public class FlowAndEndpointTest {
                 .topologyId("NSFnet")
                 .problemClass("Endpoint")
                 .algorithm("ServiceILP")
+                .objective("LinksUsed")
                 .sources(sources)
                 .destinations(destinations)
                 .sourceMinNumConnectionsMap(srcMinNumConnections)
@@ -720,7 +722,7 @@ public class FlowAndEndpointTest {
 
     private RequestSet createSet(String problemClass, int numSources, int numDestinations, int numConns, List<Integer> minConns,
                                 List<Integer> maxConns, double percentSrcAlsoDest){
-        return solve(1L, "NSFnet", 1, "ServiceILP", problemClass, numSources, numDestinations, 0,
+        return solve(1L, "NSFnet", 1, "ServiceILP", problemClass, "LinksUsed", numSources, numDestinations, 0,
                 new ArrayList<>(), "Both", 0.0, new ArrayList<>(), numConns, minConns, maxConns,
                 0, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, 0.0, 0.0);
 
@@ -754,7 +756,7 @@ public class FlowAndEndpointTest {
 
 
     private RequestSet solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                             Integer numSources, Integer numDestinations, Integer fSetSize,
+                             String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
                              List<Integer> minMaxFailures, String failureClass, Double failureProb,
                              List<Double> minMaxFailureProb, Integer numConnections,
                              List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
@@ -762,7 +764,7 @@ public class FlowAndEndpointTest {
                              Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
                              double percentDstFail){
 
-        SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, numSources, numDestinations,
+        SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         RequestSet requestSet = generationService.generateRequests(params);
@@ -771,7 +773,7 @@ public class FlowAndEndpointTest {
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                                                Integer numSources, Integer numDestinations, Integer fSetSize,
+                                                String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
                                                 List<Integer> minMaxFailures, String failureClass, Double failureProb,
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
@@ -784,6 +786,7 @@ public class FlowAndEndpointTest {
                 .numRequests(numRequests)
                 .algorithm(alg)
                 .problemClass(problemClass)
+                .objective(objective)
                 .numSources(numSources)
                 .numDestinations(numDestinations)
                 .failureSetSize(fSetSize)

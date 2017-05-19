@@ -39,4 +39,11 @@ public class Link {
         this.id = origin.getId() + "-" + target.getId();
         this.weight = 1L;
     }
+
+    public Link(Node origin, Node target, Long weight){
+        this.origin = origin;
+        this.target = target;
+        this.id = origin.getId() + "-" + target.getId();
+        this.weight = weight;
+    }
 }

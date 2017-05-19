@@ -286,7 +286,7 @@ public class GenerationService {
             params.setProblemClass("Flow");
         }
         if(params.getObjective() == null){
-            params.setObjective("NumLinksUsed");
+            params.setObjective("LinkCost");
         }
         if(params.getAlgorithm() == null){
             params.setAlgorithm("ServiceILP");
@@ -399,7 +399,7 @@ public class GenerationService {
             params.setProblemClass("Flow");
         }
         if(params.getObjective() == null){
-            params.setObjective("NumLinksUsed");
+            params.setObjective("LinkCost");
         }
         if(params.getAlgorithm() == null){
             params.setObjective("ServiceILP");

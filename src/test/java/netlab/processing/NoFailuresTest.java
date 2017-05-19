@@ -193,19 +193,19 @@ public class NoFailuresTest {
 
     private void solveAndAnalyzeSrcDestOverlap(Integer numSources, Integer numDestinations, Integer numConnections, Double percentSrcAlsoDest){
         RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinkCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, 0.0, 0.0);
         analyze(rs1, numConnections, true);
         // Endpoint
         RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinkCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, 0.0, 0.0);
         analyze(rs2, numConnections, true);
         // Flow
         RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinkCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, 0.0, 0.0);
         analyze(rs3, numConnections, true);
@@ -215,19 +215,19 @@ public class NoFailuresTest {
     private void solveAndAnalyze(Integer numSources, Integer numDestinations, Integer numConnections){
         // Flex
         RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
-                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinkCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         analyze(rs1, numConnections, true);
         // Endpoint
         RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                "LinksUsed",numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinkCost",numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         analyze(rs2, numConnections, true);
         // Flow
         RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
-                "LinksUsed", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
+                "LinkCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         analyze(rs3, numConnections, true);

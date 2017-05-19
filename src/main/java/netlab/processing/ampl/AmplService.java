@@ -54,18 +54,25 @@ public class AmplService {
     private void assignTopoValues(AMPL ampl, Topology topology) {
         com.ampl.Set v = ampl.getSet("V");
         Parameter a = ampl.getParameter("A");
+        Parameter weight = ampl.getParameter("Weight");
 
         Object[] nodes = topology.getNodeIdMap().keySet().toArray();
         v.setValues(nodes);
 
+        Set<Link> linkSet = topology.getLinks();
         // Generate the adjacency matrix
-        Object[] links = topology.getLinks()
-                .stream()
-                .map(l -> new Tuple(l.getOrigin().getId(), l.getTarget().getId()))
-                .toArray();
-        double[] linkExists = new double[links.length];
-        Arrays.fill(linkExists, 1);
+        Object[] links = new Object[linkSet.size()];
+        double[] linkExists = new double[linkSet.size()];
+        double[] linkWeights = new double[linkSet.size()];
+        int index = 0;
+        for(Link link : topology.getLinks()){
+            links[index] = new Tuple(link.getOrigin().getId(), link.getTarget().getId());
+            linkExists[index] = 1;
+            linkWeights[index] = link.getWeight();
+            index++;
+        }
         a.setValues(links, linkExists);
+        weight.setValues(links, linkWeights);
     }
 
 
