@@ -42,42 +42,45 @@ public class FailuresTest {
 
     @Test
     public void oneSrcOneDstOneFailOneConnOneNFA(){
-        solveAndAnalyzeSrcDestOverlap(1, 1, 1, 1, 1, "Node", 0.0, 0.0, 0.0, true);
+        solveAndAnalyzeSrcDestOverlap(1, 1, 1, 1, 1,
+                "Node", 0.0, 0.0, 0.0, true, true, 1);
     }
 
     @Test
     public void oneSrcOneDst14FailOneConnOneNFA(){
         // Only can get 12
-        solveAndAnalyzeSrcDestOverlap(1, 1, 1, 14, 1, "Node", 0.0, 0.0, 0.0, true);
+        solveAndAnalyzeSrcDestOverlap(1, 1, 1, 14, 1,
+                "Node", 0.0, 0.0, 0.0, true, true, 2);
     }
 
     @Test
     public void oneSrcOneDst14FailOneConnOneNFASrcFails(){
         // Only can get 12
-        solveAndAnalyzeSrcDestOverlap(1, 1, 1, 14, 1, "Node", 0.0, 1.0, 0.0, true);
+        solveAndAnalyzeSrcDestOverlap(1, 1, 1, 14, 1,
+                "Node", 0.0, 1.0, 0.0, false, false, 0);
     }
 
     private void solveAndAnalyzeSrcDestOverlap(Integer numSources, Integer numDestinations, Integer numConnections,
                                                Integer fSize, Integer nfa, String failureClass,
                                                Double percentSrcAlsoDest, Double percentSrcFail,
-                                               Double percentDstFail, Boolean survivable){
+                                               Double percentDstFail, Boolean survivable, Boolean feasible, Integer numPaths){
         RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        analyze(rs1, numConnections, survivable);
+        analyze(rs1, numPaths, survivable, feasible);
         // Endpoint
         RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        analyze(rs2, numConnections, survivable);
+        analyze(rs2, numPaths, survivable, feasible);
         // Flow
         RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        analyze(rs3, numConnections, survivable);
+        analyze(rs3, numPaths, survivable, feasible);
         analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
     }
 
@@ -93,7 +96,7 @@ public class FailuresTest {
         }
     }
 
-    private void analyze(RequestSet requestSet, int numExpectedPaths, boolean survivable){
+    private void analyze(RequestSet requestSet, int numExpectedPaths, boolean survivable, boolean feasible){
         AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
         assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getRequestIsSurvivable() == survivable));
         assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getNumPaths() == numExpectedPaths));
@@ -101,7 +104,10 @@ public class FailuresTest {
                 .allMatch(r ->
                         r.getChosenPaths().keySet().stream()
                                 .filter(pair -> pair.getSrc().equals(pair.getDst()))
-                                .allMatch(p -> r.getChosenPaths().get(p).values().size() == 0)));
+                                .allMatch(p -> r.getChosenPaths().get(p).values().size() == 0)
+                        && r.getIsFeasible() == feasible
+                )
+        );
     }
 
     private RequestSet solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

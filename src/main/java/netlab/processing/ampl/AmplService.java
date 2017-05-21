@@ -32,9 +32,15 @@ public class AmplService {
         Long duration = 0L;
         try {
             ampl = assignValues(request, problemClass, topology, ampl);
-            Instant start = Instant.now();
             ampl.eval("objective " + objective.getCode()  + ";");
+            Instant start = Instant.now();
             ampl.solve();
+            duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
+            com.ampl.Objective obj = ampl.getObjective(objective.getCode());
+            String result = obj.result();
+            if(result.toLowerCase().contains("solved")){
+                request.setIsFeasible(true);
+            }
             duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
             DataFrame flows = ampl.getData("L");
             paths = translateFlowsIntoPaths(flows, request.getPairs(), topology);

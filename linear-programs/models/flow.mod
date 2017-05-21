@@ -68,6 +68,9 @@ var FG_Conn {(s,d) in SD, i in I, g in GroupIndices[s,d]} binary;
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {(s,d) in SD, g in GroupIndices[s,d]} >= 0 integer;
 
+# FG_Sum_Max - Maximum number of failed connections for a (s,d) pair across a failure group
+var FG_Sum_Max{(s,d) in SD} >= 0 integer;
+
 # Number of connections
 var Num_Conn{(s,d) in SD} = sum{i in I} C[s,d,i];
 
@@ -77,7 +80,7 @@ var Num_Conns_Total = sum{(s,d) in SD} Num_Conn[s,d];
 # Number of link usages
 var Num_Links_Used = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
 
-
+# Total weight of all used links
 var Total_Weight = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
 
 
@@ -89,19 +92,19 @@ minimize LinksUsed:
 minimize Connections:
 	Num_Conns_Total;
 
-minimize LinkCost:
+minimize TotalCost:
 	Total_Weight;
 
 ## Connection Constraints
 
 subject to totalNumConnections:
-	Num_Conns_Total >= c_total + sum{(s,d) in SD} max{g in GroupIndices[s,d]} FG_Sum[s,d,g];
+	Num_Conns_Total >= c_total + sum{(s,d) in SD} FG_Sum_Max[s,d];
 
-subject to minNumConnectionsNeeded{(s,d) in SD, g in GroupIndices[s,d]}:
-	Num_Conn[s,d] >= c_min_sd[s,d] + FG_Sum[s,d,g];
+subject to minNumConnectionsNeeded{(s,d) in SD}:
+	Num_Conn[s,d] >= c_min_sd[s,d] + FG_Sum_Max[s,d];
 
-subject to maxNumConnectionsNeeded{(s,d) in SD, g in GroupIndices[s,d]}:
-	Num_Conn[s,d] <= c_max_sd[s,d] + FG_Sum[s,d,g];
+subject to maxNumConnectionsNeeded{(s,d) in SD}:
+	Num_Conn[s,d] <= c_max_sd[s,d] + FG_Sum_Max[s,d];
 
 subject to noSelfConnections{(s,d) in SD: s == d}:
 	Num_Conn[s,d] = 0;
@@ -124,11 +127,11 @@ subject to flowOnlyInConnection{(s,d) in SD, i in I, u in V, v in V}:
 subject to noFlowIntoSource{(s,d) in SD, i in I, u in V}:
 	L[s,d,i,u,s] = 0;
 
-subject to oneFlowFromSrc{(s,d) in SD, i in I}:
-	sum{v in V} L[s,d,i,s,v] <= 1;
+subject to oneFlowFromNodeInConn{(s,d) in SD, i in I, u in V}:
+	sum{v in V} L[s,d,i,u,v] <= 1;
 
-subject to oneFlowIntoDest{(s,d) in SD, i in I}:
-	sum{u in V} L[s,d,i,u,d] <= 1;
+subject to oneFlowIntoNodeInConn{(s,d) in SD, i in I, v in V}:
+	sum{u in V} L[s,d,i,u,v] <= 1;
 
 subject to noReverseFlowIfForward{(s,d) in SD, i in I, u in V, v in V}:
 	L[s,d,i,u,v] + L[s,d,i,v,u] <= 1;
@@ -154,6 +157,9 @@ subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices[
 # Sum up the number of failed connections due to FG[s,d,g]
 subject to numFailsDueToGroup{(s,d) in SD, g in GroupIndices[s,d]}:
 	FG_Sum[s,d,g] = sum{i in I} FG_Conn[s,d,i,g];
+
+subject to maxFailuresFromGroup{(s,d) in SD, g in GroupIndices[s,d]}:
+	FG_Sum_Max[s,d] >= FG_Sum[s,d,g];
 
 
 #-------------------------------------------------------

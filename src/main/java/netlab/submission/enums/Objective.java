@@ -9,7 +9,7 @@ import java.util.Optional;
 public enum Objective {
     LinksUsed("LinksUsed"),
     Connections("Connections"),
-    LinkCost("LinkCost");
+    TotalCost("TotalCost");
 
     private String code;
 

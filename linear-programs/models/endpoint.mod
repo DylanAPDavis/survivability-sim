@@ -77,8 +77,13 @@ var NC{(s,d) in SD, i in I, v in V} binary;
 var FG_Sum_src {s in S, g in GroupIndices_s[s]} >= 0 integer;
 var FG_Sum_dst {d in D, g in GroupIndices_d[d]} >= 0 integer;
 
+# Connection i between (s,d) fails due to group g
 var FG_Conn_src{(s,d) in SD, i in I, g in GroupIndices_s[s]} >= 0 integer;
 var FG_Conn_dst{(s,d) in SD, i in I, g in GroupIndices_d[d]} >= 0 integer;	
+
+# FG_Sum_Max - Maximum number of failed connections for a source or dest across a failure group
+var FG_Sum_Max_src{s in S} >= 0 integer;
+var FG_Sum_Max_dst{d in D} >= 0 integer;
 
 # Total number of connections per (s,d) pair
 var Num_Conn{(s,d) in SD} = sum{i in I} C[s,d,i];
@@ -97,6 +102,7 @@ var Num_Links_Used = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
 
 var Total_Weight = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
 
+
 # OBJECTIVE
 
 minimize LinksUsed:
@@ -105,29 +111,29 @@ minimize LinksUsed:
 minimize Connections:
 	Num_Conns_Total;
 
-minimize LinkCost:
+minimize TotalCost:
 	Total_Weight;
 
 ## Connection Constraints
 
 
 subject to minNumConnectionsSources:
-	sum{s in S} Num_Conn_src[s] >= c_total + sum{s in S} max{g in GroupIndices_s[s]} FG_Sum_src[s,g];
+	sum{s in S} Num_Conn_src[s] >= c_total + sum{s in S}  FG_Sum_Max_src[s];
 
 subject to minNumConnectionsDestinations:
-	sum{d in D} Num_Conn_dst[d] >= c_total + sum{d in D} max{g in GroupIndices_d[d]} FG_Sum_dst[d,g];
+	sum{d in D} Num_Conn_dst[d] >= c_total + sum{d in D} FG_Sum_Max_dst[d];
 
-subject to minNumConnectionsNeededSource{s in S, g in GroupIndices_s[s]}:
-	Num_Conn_src[s] >= c_min_s[s] + FG_Sum_src[s,g];
+subject to minNumConnectionsNeededSource{s in S}:
+	Num_Conn_src[s] >= c_min_s[s] + FG_Sum_Max_src[s];
 
-subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices_s[s]}:
-	Num_Conn_src[s] <= c_max_s[s] + FG_Sum_src[s,g];
+subject to maxNumConnectionsNeededSource{s in S}:
+	Num_Conn_src[s] <= c_max_s[s] + FG_Sum_Max_src[s];
 
-subject to minNumConnectionsNeededDest{d in D, g in GroupIndices_d[d]}:
-	Num_Conn_dst[d] >= c_min_d[d] + FG_Sum_dst[d,g];
+subject to minNumConnectionsNeededDest{d in D}:
+	Num_Conn_dst[d] >= c_min_d[d] + FG_Sum_Max_dst[d];
 
-subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices_d[d]}:
-	Num_Conn_dst[d] <= c_max_d[d] + FG_Sum_dst[d,g];
+subject to maxNumConnectionsNeededDest{d in D}:
+	Num_Conn_dst[d] <= c_max_d[d] + FG_Sum_Max_dst[d];
 
 subject to noSelfConnections{(s,d) in SD: s == d}:
 	Num_Conn[s,d] = 0;
@@ -185,3 +191,9 @@ subject to totalFailuresPerGroupSrc{s in S, g in GroupIndices_s[s]}:
 # Sum up the failureSet per failure group
 subject to totalFailuresPerGroupDst{d in D, g in GroupIndices_d[d]}:
 	FG_Sum_dst[d,g] = sum{s in S, i in I: s != d} FG_Conn_dst[s,d,i,g];
+
+subject to maxFailuresFromGroupSrc{s in S, g in GroupIndices_s[s]}:
+	FG_Sum_Max_src[s] >= FG_Sum_src[s,g];
+
+subject to maxFailuresFromGroupDst{d in D, g in GroupIndices_d[d]}:
+	FG_Sum_Max_dst[d] >= FG_Sum_dst[d,g];

@@ -78,8 +78,9 @@ minimize LinksUsed:
 minimize Connections:
 	Num_Conns_Total;
 
-minimize LinkCost:
+minimize TotalCost:
 	Total_Weight;
+
 
 ## Connection Constraints
 
@@ -107,11 +108,11 @@ subject to flowOnlyInConnection{(s,d) in SD, i in I, u in V, v in V}:
 subject to noFlowIntoSource{(s,d) in SD, i in I, u in V}:
 	L[s,d,i,u,s] = 0;
 
-subject to oneFlowFromSrc{(s,d) in SD, i in I}:
-	sum{v in V} L[s,d,i,s,v] <= 1;
+subject to oneFlowFromNodeInConn{(s,d) in SD, i in I, u in V}:
+	sum{v in V} L[s,d,i,u,v] <= 1;
 
-subject to oneFlowIntoDest{(s,d) in SD, i in I}:
-	sum{u in V} L[s,d,i,u,d] <= 1;
+subject to oneFlowIntoNodeInConn{(s,d) in SD, i in I, v in V}:
+	sum{u in V} L[s,d,i,u,v] <= 1;
 
 subject to noReverseFlowIfForward{(s,d) in SD, i in I, u in V, v in V}:
 	L[s,d,i,u,v] + L[s,d,i,v,u] <= 1;
