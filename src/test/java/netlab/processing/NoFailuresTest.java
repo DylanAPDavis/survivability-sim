@@ -148,17 +148,17 @@ public class NoFailuresTest {
 
     @Test
     public void fourteenSrcOneDestOneC(){
-        solveAndAnalyze(14, 1, 1);
+        solveAndAnalyzeSrcDestOverlap(14, 1, 1, .071);
     }
 
     @Test
     public void fourteenSrcOneDestFourteenC(){
-        solveAndAnalyze(14, 1, 14);
+        solveAndAnalyzeSrcDestOverlap(14, 1, 14, .071);
     }
 
     @Test
     public void oneSrcFourteenDestOneC(){
-        solveAndAnalyze(1, 14, 1);
+        solveAndAnalyzeSrcDestOverlap(1, 14, 1, 1.0);
     }
 
     @Test
@@ -168,12 +168,12 @@ public class NoFailuresTest {
 
     @Test
     public void fourteenSrcFourteenDestOneC(){
-        solveAndAnalyze(14, 14, 1);
+        solveAndAnalyzeSrcDestOverlap(14, 14, 1, 1.0);
     }
 
     @Test
     public void fourteenSrcFourteenDestFourteenC(){
-        solveAndAnalyze(14, 14, 14);
+        solveAndAnalyzeSrcDestOverlap(14, 14, 14, 1.0);
     }
 
     @Test
