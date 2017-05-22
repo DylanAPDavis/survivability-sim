@@ -28,20 +28,19 @@ public class AmplService {
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         Environment env = new Environment(System.getProperty("user.dir") + "/linear-programs/ampl/");
         AMPL ampl = new AMPL(env);
-        Long duration = 0L;
+        double duration = 0.0;
         try {
-            ampl.setIntOption("omit_zero_rows", 1);
-            ampl = assignValues(request, problemClass, topology, ampl);
-            ampl.eval("objective " + objective.getCode()  + ";");
-            Instant start = Instant.now();
+            ampl = assignValues(request, problemClass, objective, topology, ampl);
+            long startTime = System.nanoTime();
             ampl.solve();
-            duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
+            long endTime = System.nanoTime();
+            duration = (endTime - startTime)/1e6;
+            System.out.println("Solution took: " + duration + " milliseconds");
             com.ampl.Objective obj = ampl.getObjective(objective.getCode());
             String result = obj.result();
             if(result.toLowerCase().contains("solved")){
                 request.setIsFeasible(true);
             }
-            duration = Instant.now().minusMillis(start.toEpochMilli()).toEpochMilli();
             DataFrame flows = ampl.getData("L");
             paths = translateFlowsIntoPaths(flows, request.getPairs(), topology);
         } catch (IOException e) {
@@ -50,7 +49,6 @@ public class AmplService {
         finally{
             ampl.close();
         }
-        System.out.println("Solution took: " + duration + " milliseconds");
         request.setChosenPaths(paths);
         request.setRunningTimeMillis(duration);
         return request;
@@ -82,8 +80,7 @@ public class AmplService {
     }
 
 
-    private AMPL assignValues(Request request, ProblemClass problemClass, Topology topology, AMPL ampl) throws IOException{
-        ampl.setOption("solver", "gurobi");
+    private AMPL assignValues(Request request, ProblemClass problemClass, Objective objective, Topology topology, AMPL ampl) throws IOException{
         if(problemClass.equals(ProblemClass.Flex)){
             ampl.read(modelDirectory + "/flex.mod");
         }
@@ -93,6 +90,11 @@ public class AmplService {
         if(problemClass.equals(ProblemClass.Flow)){
             ampl.read(modelDirectory + "/flow.mod");
         }
+
+        ampl.eval("objective " + objective.getCode()  + ";");
+        ampl.setIntOption("omit_zero_rows", 1);
+        ampl.setOption("solver", "gurobi");
+        //ampl.eval("option gurobi_options 'presparsify 1' 'presolve 0';");
 
         // Assign nodes, links, sources, and destinations
         assignTopoValues(ampl, topology);
@@ -114,6 +116,10 @@ public class AmplService {
         cTotal.set(request.getConnections().getNumConnections());
 
         assignPairParamsAndSets(ampl, request, problemClass);
+
+        ampl.setIntOption("times", 1);
+        ampl.setIntOption("gentimes", 1);
+        ampl.setIntOption("show_stats", 1);
 
         return ampl;
     }

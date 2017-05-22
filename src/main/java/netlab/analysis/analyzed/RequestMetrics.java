@@ -18,6 +18,7 @@ import java.util.Set;
 public class RequestMetrics {
 
     private Boolean requestIsSurvivable;
+    private Boolean isFeasible;
     private Integer numLinkUsages;
     private Integer numFailed;
     private Integer numPaths;

@@ -95,6 +95,7 @@ public class AnalysisService {
 
         return RequestMetrics.builder()
                 .requestIsSurvivable(requestIsSurvivable)
+                .isFeasible(request.getIsFeasible())
                 .numLinkUsages(numLinkUsages)
                 .numFailed(numFailed)
                 .numPaths(numPaths)
@@ -107,11 +108,12 @@ public class AnalysisService {
         Integer maxSum = 0;
         for(MemberType memberType : memberPathSetMetricsMap.keySet()){
             Map<Node, Map<SourceDestPair, PathSetMetrics>> memberMetricsMap = memberPathSetMetricsMap.get(memberType);
+            Integer memberSum = 0;
             for(Node node : memberMetricsMap.keySet()){
                 Map<SourceDestPair, PathSetMetrics> metricsMap = memberMetricsMap.get(node);
-                Integer sum = metricsMap.values().stream().mapToInt(PathSetMetrics::getNumFailed).sum();
-                maxSum = maxSum < sum ? sum : maxSum;
+                memberSum +=  metricsMap.values().stream().mapToInt(PathSetMetrics::getNumFailed).sum();
             }
+            maxSum = maxSum < memberSum ? memberSum : maxSum;
         }
         return maxSum;
     }

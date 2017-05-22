@@ -104,22 +104,23 @@ public class FailuresTest {
 
     @Test
     public void manyFailureRequests(){
-        RequestSet rs1 = solve(2L, "NSFnet", 25, "ServiceILP", "Flex",
+        RequestSet rs1 = solve(2L, "NSFnet", 10, "ServiceILP", "Flex",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
                 false, false, .50, 0.0, 0.0);
         analyze(rs1, 5, true, true);
-        RequestSet rs2 = solve(2L, "NSFnet", 25, "ServiceILP", "Endpoint",
+        RequestSet rs2 = solve(2L, "NSFnet", 10, "ServiceILP", "Endpoint",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
                 false, false, .50, 0.0, 0.0);
         analyze(rs2, 5, true, true);
-        RequestSet rs3 = solve(2L, "NSFnet", 25, "ServiceILP", "Flow",
+        RequestSet rs3 = solve(2L, "NSFnet", 10, "ServiceILP", "Flow",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
                 false, false, .50, 0.0, 0.0);
         analyze(rs3, 5, true, true);
     }
+
 
     private void solveAndAnalyzeSrcDestOverlap(Integer numSources, Integer numDestinations, Integer numConnections,
                                                Integer fSize, Integer nfa, String failureClass,
@@ -143,18 +144,6 @@ public class FailuresTest {
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         analyze(rs3, numPaths, survivable, feasible);
         //analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
-    }
-
-
-    private void analyzeMultiSet(List<RequestSet> requestSets) {
-        RequestSet rs1 = requestSets.get(0);
-        Map<SourceDestPair, Map<String, Path>> chosenPaths1 = rs1.getRequests().values().iterator().next().getChosenPaths();
-        Integer numLinkUsages1 = chosenPaths1.values().stream().map(Map::values).flatMap(Collection::stream).map(p -> p.getLinks().size()).reduce(0, (p1, p2) -> p1 + p2);
-        for(RequestSet rs : requestSets){
-            Map<SourceDestPair, Map<String, Path>> chosenPaths = rs.getRequests().values().iterator().next().getChosenPaths();
-            Integer numLinkUsages = chosenPaths.values().stream().map(Map::values).flatMap(Collection::stream).map(p -> p.getLinks().size()).reduce(0, (p1, p2) -> p1 + p2);
-            assert(Objects.equals(numLinkUsages, numLinkUsages1));
-        }
     }
 
     private void analyze(RequestSet requestSet, int numExpectedPaths, boolean survivable, boolean feasible){
@@ -223,4 +212,6 @@ public class FailuresTest {
                 .percentDestFail(percentDstFail)
                 .build();
     }
+
+
 }
