@@ -28,9 +28,9 @@ public class AmplService {
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         Environment env = new Environment(System.getProperty("user.dir") + "/linear-programs/ampl/");
         AMPL ampl = new AMPL(env);
-        ampl.setIntOption("omit_zero_rows", 1);
         Long duration = 0L;
         try {
+            ampl.setIntOption("omit_zero_rows", 1);
             ampl = assignValues(request, problemClass, topology, ampl);
             ampl.eval("objective " + objective.getCode()  + ";");
             Instant start = Instant.now();
@@ -207,7 +207,7 @@ public class AmplService {
             cMax[index] = maxConnMap.get(node);
 
             Set<Failure> failures = failureSetMap.getOrDefault(node, request.getFailures().getFailureSet());
-            Integer numFails = numFailsMap.get(node);
+            Integer numFails = numFailsMap.getOrDefault(node, request.getNumFailsAllowed().getTotalNumFailsAllowed());
             // Calculate the number of totalNumFailsAllowed-sized combinations of the failure set
             double divisor = CombinatoricsUtils.factorial(numFails) * CombinatoricsUtils.factorial(failures.size() - numFails);
             numGroups[index] = CombinatoricsUtils.factorial(failures.size()) / divisor;
@@ -265,7 +265,7 @@ public class AmplService {
         String fgSetName = isSourceSet ? "FG_s" : "FG_d";
         com.ampl.Set fg = ampl.getSet(fgSetName);
         for(Node member : members){
-            List<List<Failure>> failureGroupList = failureGroupsMap.get(member);
+            List<List<Failure>> failureGroupList = failureGroupsMap.getOrDefault(member, request.getFailures().getFailureGroups());
             Map<Tuple, Object[]> failureGroups = convertFailureGroups(failureGroupList, Collections.singletonList(member.getId()));
             for(Tuple fgTuple : failureGroups.keySet()){
                 fg.get(fgTuple).setValues(failureGroups.get(fgTuple));
@@ -376,16 +376,19 @@ public class AmplService {
             outgoingLinks.put(link.getOrigin(), link);
         }
         Link currLink = outgoingLinks.get(pair.getSrc());
+        sortedNodes.add(currLink.getOrigin());
+        nodeIds.add(currLink.getOrigin().getId());
 
         // While the next node has an outgoing link
         while(outgoingLinks.containsKey(currLink.getTarget())){
             sortedLinks.add(currLink);
             linkIds.add(currLink.getId());
 
+            currLink = outgoingLinks.get(currLink.getTarget());
+
             sortedNodes.add(currLink.getOrigin());
             nodeIds.add(currLink.getOrigin().getId());
 
-            currLink = outgoingLinks.get(currLink.getTarget());
         }
         sortedLinks.add(currLink);
         linkIds.add(currLink.getId());

@@ -448,14 +448,26 @@ public class GenerationService {
         if(params.getUseAws() == null){
             params.setUseAws(false);
         }
+
         if(params.getPercentSrcAlsoDest() == null || params.getPercentSrcAlsoDest() < 0.0){
             params.setPercentSrcAlsoDest(0.0);
         }
+        else if(params.getPercentSrcAlsoDest() > 1.0){
+            params.setPercentSrcAlsoDest(1.0);
+        }
+
         if(params.getPercentSrcFail() == null || params.getPercentSrcFail() < 0.0){
             params.setPercentSrcFail(0.0);
         }
+        else if(params.getPercentSrcFail() > 1.0){
+            params.setPercentSrcFail(1.0);
+        }
+
         if(params.getPercentDestFail() == null || params.getPercentDestFail() < 0.0){
             params.setPercentDestFail(0.0);
+        }
+        else if(params.getPercentDestFail() > 1.0){
+            params.setPercentDestFail(1.0);
         }
     }
 
@@ -618,7 +630,7 @@ public class GenerationService {
             failureGroups = generateFailureGroups(numFails, failureCollection.getFailureSet());
         }
         if(problemClass.equals(ProblemClass.Flow)){
-            for(SourceDestPair pair : pairs){
+            for (SourceDestPair pair : pairs) {
                 Set<Failure> thisFailureSet = failureCollection.getPairFailuresMap().getOrDefault(pair, failureCollection.getFailureSet());
                 int thisNumFails = minMaxFails.size() == 2 ?
                         Math.min(thisFailureSet.size(), randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
@@ -627,6 +639,7 @@ public class GenerationService {
             }
             //Update number of required cuts for request to be equal to the total min
             numFails = pairNumFailsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
+
         }
         if(problemClass.equals(ProblemClass.Endpoint)){
             for(Node source : sources){
@@ -686,7 +699,6 @@ public class GenerationService {
         Integer failureSetSize = numFailures != null ? numFailures : 0;
 
         if(minMaxFailures.size() < 2){
-            numFailures = minMaxFailures.size() > 1 ? minMaxFailures.get(1) : numFailures;
             failureSetSize = numFailures;
             failures = generateFailureSet(topo.getNodes(), topo.getLinks(), numFailures, failureClass,
                     params.getFailureProb(), params.getMinMaxFailureProb(), sources, destinations, srcDstFailures, rng);
@@ -772,7 +784,7 @@ public class GenerationService {
         }
         // If you still haven't picked enough yet
         if(chosenNodes.size() < numDestinations){
-            remainingNodes.removeAll(chosenNodes);
+            remainingNodes.removeAll(sources);
             Set<Node> remainingChoices = chooseRandomSubsetNodes(remainingNodes, numDestinations-chosenNodes.size(), rng);
             chosenNodes.addAll(remainingChoices);
         }

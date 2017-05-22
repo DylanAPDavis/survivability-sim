@@ -107,8 +107,11 @@ public class AnalysisService {
         Integer maxSum = 0;
         for(MemberType memberType : memberPathSetMetricsMap.keySet()){
             Map<Node, Map<SourceDestPair, PathSetMetrics>> memberMetricsMap = memberPathSetMetricsMap.get(memberType);
-            Integer sum = memberMetricsMap.values().stream().map(Map::values).flatMap(Collection::stream).map(PathSetMetrics::getNumFailed).reduce(0, (met1, met2) -> met1 + met2);
-            maxSum = maxSum < sum ? sum : maxSum;
+            for(Node node : memberMetricsMap.keySet()){
+                Map<SourceDestPair, PathSetMetrics> metricsMap = memberMetricsMap.get(node);
+                Integer sum = metricsMap.values().stream().mapToInt(PathSetMetrics::getNumFailed).sum();
+                maxSum = maxSum < sum ? sum : maxSum;
+            }
         }
         return maxSum;
     }

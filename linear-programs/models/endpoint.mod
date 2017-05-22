@@ -118,10 +118,10 @@ minimize TotalCost:
 
 
 subject to minNumConnectionsSources:
-	sum{s in S} Num_Conn_src[s] >= c_total + sum{s in S}  FG_Sum_Max_src[s];
+	sum{s1 in S} Num_Conn_src[s1] >= c_total + sum{s in S} FG_Sum_Max_src[s];
 
 subject to minNumConnectionsDestinations:
-	sum{d in D} Num_Conn_dst[d] >= c_total + sum{d in D} FG_Sum_Max_dst[d];
+	sum{d1 in D} Num_Conn_dst[d1] >= c_total +  sum{d in D} FG_Sum_Max_dst[d];
 
 subject to minNumConnectionsNeededSource{s in S}:
 	Num_Conn_src[s] >= c_min_s[s] + FG_Sum_Max_src[s];
