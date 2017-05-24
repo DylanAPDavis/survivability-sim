@@ -42,10 +42,6 @@ param c_min_d{d in D} >= 0 integer;
 # c_max - Maxmimum number of connections to d in D that need to survive
 param c_max_d{d in D} >= 0 integer;
 
-# F_s - Failure Matrix - Sets of potential failure nodes/links for source s
-#set F_s{s in S} within AllPairs;
-#set F_d{d in D} within AllPairs;
-
 # NumGroups - Number of k-sized failure groups
 param NumGroups_s{s in S};
 

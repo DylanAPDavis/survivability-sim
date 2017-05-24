@@ -10,10 +10,10 @@ import netlab.topology.elements.*;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.springframework.stereotype.Service;
 
-import org.apache.commons.math3.util.Combinations;
-
 import java.io.IOException;
-import java.time.Instant;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -94,34 +94,136 @@ public class AmplService {
         ampl.eval("objective " + objective.getCode()  + ";");
         ampl.setIntOption("omit_zero_rows", 1);
         ampl.setOption("solver", "gurobi");
-        //ampl.eval("option gurobi_options 'presparsify 1' 'presolve 0';");
 
-        // Assign nodes, links, sources, and destinations
-        assignTopoValues(ampl, topology);
-        Object[] sources = request.getSources().stream().map(Node::getId).toArray();
-        Object[] destinations = request.getDestinations().stream().map(Node::getId).toArray();
-        if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.Flow)){
-            com.ampl.Set s = ampl.getSet("S");
-            s.setValues(sources);
-            com.ampl.Set d = ampl.getSet("D");
-            d.setValues(destinations);
+        List<String> dataLines = createDataLines(request, topology, problemClass);
+        java.nio.file.Path file = Paths.get(request.getId() + ".dat");
+        try {
+            // Create the empty file with default permissions, etc.
+            Files.createFile(file);
+        } catch (FileAlreadyExistsException x) {
+            System.err.format("file named %s" +
+                    " already exists%n", file);
+        } catch (IOException x) {
+            // Some other sort of failure, such as permissions.
+            System.err.format("createFile error: %s%n", x);
         }
+        Files.write(file, dataLines);
+        ampl.readData(request.getId() + ".dat");
 
-        // Assign the maximum number of connections possible between a pair
-        Parameter iMax = ampl.getParameter("I_max");
-        iMax.set(10);
-
-        // Assign the number of connections from S to D
-        Parameter cTotal = ampl.getParameter("c_total");
-        cTotal.set(request.getConnections().getNumConnections());
-
-        assignPairParamsAndSets(ampl, request, problemClass);
-
+        Files.delete(file);
         ampl.setIntOption("times", 1);
         ampl.setIntOption("gentimes", 1);
         ampl.setIntOption("show_stats", 1);
 
         return ampl;
+    }
+
+    private List<String> createDataLines(Request request, Topology topology, ProblemClass problemClass) {
+        List<String> dataLines = new ArrayList<>();
+        // Topology
+        String v = "set V := ";
+        List<Node> nodes = new ArrayList<>(topology.getNodes());
+        for(int vIndex = 0; vIndex < nodes.size(); vIndex++){
+            Node node = nodes.get(vIndex);
+            v += vIndex < nodes.size() - 1 ?  " '" + node.getId() + "'," : " '" + node.getId() + "';";
+        }
+        dataLines.add(v);
+        String a = "param A: ";
+        String weight = "param Weight: ";
+        Map<Node, Set<Link>> nodeLinkMap = topology.getNodeLinkMap();
+        String linkIndex = nodes.stream().map(n -> "'" + n.getId() + "'").reduce(" ", (n1, n2) -> n1 + " " + n2);
+        a += linkIndex + " :=";
+        weight += linkIndex + " :=";
+        for(Node node : nodes){
+            String linkLine = " '" + node.getId() + "'";
+            String weightLine = " '" + node.getId() + "'";
+            Set<Link> linksForNode = nodeLinkMap.get(node);
+            Map<Node, Link> linkExists = new HashMap<>();
+            for(Link link : linksForNode){
+                linkExists.put(link.getTarget(), link);
+            }
+            for(Node otherNode : nodes){
+                if(linkExists.containsKey(otherNode)){
+                    Link connectingLink = linkExists.get(otherNode);
+                    linkLine += " 1";
+                    weightLine += " " + connectingLink.getWeight();
+                }
+                else{
+                    linkLine += " 0";
+                    weightLine += " 0";
+                }
+            }
+            a += linkLine;
+            weight += weightLine;
+        }
+        a += ";";
+        weight += ";";
+        dataLines.add(a);
+        dataLines.add(weight);
+
+
+        //S
+        String s = "set S := ";
+        for(Node source : request.getSources()){
+            s += " '" + source.getId() + "'";
+        }
+        s += ";";
+        dataLines.add(s);
+
+        //D
+        String d = "set D := ";
+        for(Node dest : request.getSources()){
+            d += " '" + dest.getId() + "'";
+        }
+        d += ";";
+        dataLines.add(d);
+
+        String iMax = "param I_max := 10;";
+        dataLines.add(iMax);
+
+        String cTotal = "param c_total := " + request.getConnections().getNumConnections() + ";";
+        dataLines.add(cTotal);
+
+        // Pair params
+        String cMin = "param c_min_sd := ";
+        String cMax = "param c_max_sd := ";
+        String numGroups = "param NumGroups := ";
+        Map<SourceDestPair, Integer> pairMinMap = request.getConnections().getPairMinConnectionsMap();
+        Map<SourceDestPair, Integer> pairMaxMap = request.getConnections().getPairMaxConnectionsMap();
+        Map<SourceDestPair, List<List<Failure>>> pairFailGroupsMap = request.getFailures().getPairFailureGroupsMap();
+        List<String> fgLines = new ArrayList<>();
+        for(SourceDestPair pair : pairMinMap.keySet()){
+            if(!pair.getSrc().equals(pair.getDst())) {
+                Integer min = pairMinMap.get(pair);
+                Integer max = pairMaxMap.get(pair);
+                List<List<Failure>> failureGroups = pairFailGroupsMap.get(pair);
+                cMin += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + min;
+                cMax += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + max;
+                numGroups += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + failureGroups.size();
+                for (int groupIndex = 0; groupIndex < failureGroups.size(); groupIndex++) {
+                    String fg = "set FG['" + pair.getSrc().getId() + "','" + pair.getDst().getId() + "'," + (groupIndex + 1) + "] :=";
+                    List<Failure> group = failureGroups.get(groupIndex);
+                    for (Failure fail : group) {
+                        String failString = fail.getLink() != null ? "('" + fail.getLink().getOrigin().getId() + "','" + fail.getLink().getTarget() + "')"
+                                : "('" + fail.getNode().getId() + "','" + fail.getNode().getId() + "')";
+                        fg += " " + failString;
+                    }
+                    fg += ";";
+                    fgLines.add(fg);
+                }
+            }
+        }
+        cMin += ";";
+        cMax += ";";
+        numGroups += ";";
+        dataLines.add(cMin);
+        dataLines.add(cMax);
+        dataLines.add(numGroups);
+        dataLines.addAll(fgLines);
+
+
+
+        return dataLines;
     }
 
     private void assignPairParamsAndSets(AMPL ampl, Request request, ProblemClass problemClass){
@@ -238,9 +340,9 @@ public class AmplService {
         Object[] failureSet = createFailureSetArray(failures);
         f.setValues(failureSet);
         // Find all k-size subsets of this failure set
-        Map<Tuple, Object[]> failureGroups = convertFailureGroups(request.getFailures().getFailureGroups(), new ArrayList<>());
-        for(Tuple fgTuple : failureGroups.keySet()){
-            fg.get(fgTuple.get(0)).setValues(failureGroups.get(fgTuple));
+        Map<Object[], Object[]>  failureGroups = convertFailureGroups(request.getFailures().getFailureGroups(), new ArrayList<>());
+        for(Object[] fgTuple : failureGroups.keySet()){
+            fg.get(fgTuple).setValues(failureGroups.get(fgTuple));
         }
     }
 
@@ -250,18 +352,28 @@ public class AmplService {
 
         // Failure groups
         com.ampl.Set fg = ampl.getSet("FG");
+        //Collection<SetInstance> fgSets = fg.getInstances();
+        //ampl.eval("data;");
+        //DataFrame fg = new DataFrame(3, "S", "D", "GroupIndices", "FG");
 
+        // set FG[1,11,1] := (5,5);
+        // set FG['Boulder','Pittsburgh',3.0] := ('Champaign','Champaign') ;
         for(SourceDestPair pair : pairList){
             // Find all k-size subsets of this failure set
             List<Object> tupleArgs = new ArrayList<>();
             tupleArgs.add(pair.getSrc().getId());
             tupleArgs.add(pair.getDst().getId());
             List<List<Failure>> failureGroupList = failureGroupsMap.get(pair);
-            Map<Tuple, Object[]> failureGroups = convertFailureGroups(failureGroupList, tupleArgs);
-            for(Tuple fgTriplet : failureGroups.keySet()){
-                fg.get(fgTriplet).setValues(failureGroups.get(fgTriplet));
+            Map<Object[], Object[]>  failureGroups = convertFailureGroups(failureGroupList, tupleArgs);
+            for(Object[] tuple : failureGroups.keySet()){
+                Object[]group = failureGroups.get(tuple);
+                //fg.addRow(tuple[0], tuple[1], tuple[2], groupTuples[0]);
+                fg.get(tuple).setValues(group);
+                //System.out.println(fgFrame);
+                //fg.get(fgTriplet.get(0), fgTriplet.get(1), fgTriplet.get(2)).setValues(failureGroups.get(fgTriplet));
             }
         }
+        //ampl.setData(fg);
     }
 
     private void assignFailureGroups(AMPL ampl, List<Node> members, Request request, boolean isSourceSet){
@@ -272,41 +384,40 @@ public class AmplService {
         com.ampl.Set fg = ampl.getSet(fgSetName);
         for(Node member : members){
             List<List<Failure>> failureGroupList = failureGroupsMap.getOrDefault(member, request.getFailures().getFailureGroups());
-            Map<Tuple, Object[]> failureGroups = convertFailureGroups(failureGroupList, Collections.singletonList(member.getId()));
-            for(Tuple fgTuple : failureGroups.keySet()){
-                fg.get(fgTuple).setValues(failureGroups.get(fgTuple));
+            List<Object> tupleArgs = new ArrayList<>();
+            tupleArgs.add(member.getId());
+            Map<Object[], Object[]>  failureGroups = convertFailureGroups(failureGroupList, tupleArgs);
+            for(Object[] fgTuple : failureGroups.keySet()){
+                Object[] group = failureGroups.get(fgTuple);
+                fg.get(fgTuple).setValues(group);
             }
         }
     }
 
     private Object[] createFailureSetArray(Collection<Failure> failures) {
-        Object[] failureSet = new Object[failures.size()];
+        Object[] failureSet = new Object[failures.size() * 2];
 
         int index = 0;
         for(Failure failure: failures){
-            Tuple id = failure.getLink() != null ?
-                    new Tuple(failure.getLink().getOrigin().getId(), failure.getLink().getTarget().getId()):
-                    new Tuple(failure.getNode().getId(), failure.getNode().getId());
-            failureSet[index] = id;
+            Object[] failureTuple = failure.getLink() != null ?
+                    new Object[]{failure.getLink().getOrigin().getId(), failure.getLink().getTarget().getId()}:
+                    new Object[]{failure.getNode().getId(), failure.getNode().getId()};
+            failureSet[index] = failureTuple[0];
+            index++;
+            failureSet[index] = failureTuple[1];
             index++;
         }
         return failureSet;
     }
 
-    private Map<Tuple, Object[]> convertFailureGroups(List<List<Failure>> failureGroups, List<Object> tupleArgs){
-        Map<Tuple, Object[]> failureGroupMap = new HashMap<>();
+    private Map<Object[], Object[]> convertFailureGroups(List<List<Failure>> failureGroups, List<Object> tupleArgs){
+        Map<Object[], Object[]> failureGroupMap = new HashMap<>();
         for(int index = 0; index < failureGroups.size(); index++){
             List<Failure> failureGroup = failureGroups.get(index);
             Object[] failureSet = createFailureSetArray(failureGroup);
-            if(tupleArgs.size() == 2){
-                failureGroupMap.put(new Tuple(tupleArgs.get(0), tupleArgs.get(1), index+1), failureSet);
-            }
-            else if (tupleArgs.size() == 1){
-                failureGroupMap.put(new Tuple(tupleArgs.get(0), index+1), failureSet);
-            }
-            else{
-                failureGroupMap.put(new Tuple(index+1), failureSet);
-            }
+            tupleArgs.add(index+1);
+            failureGroupMap.put(tupleArgs.toArray(), failureSet);
+            tupleArgs.remove(tupleArgs.size()-1);
         }
         return failureGroupMap;
     }
