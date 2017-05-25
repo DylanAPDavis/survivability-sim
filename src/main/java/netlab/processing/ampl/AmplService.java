@@ -228,7 +228,7 @@ public class AmplService {
             }
             List<Failure> group = failureGroups.get(groupIndex);
             for (Failure fail : group) {
-                String failString = fail.getLink() != null ? "('" + fail.getLink().getOrigin().getId() + "','" + fail.getLink().getTarget() + "')"
+                String failString = fail.getLink() != null ? "('" + fail.getLink().getOrigin().getId() + "','" + fail.getLink().getTarget().getId() + "')"
                         : "('" + fail.getNode().getId() + "','" + fail.getNode().getId() + "')";
                 fg += " " + failString;
             }

@@ -155,7 +155,7 @@ public class GenerationService {
                 .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(srcNumFailsAllowed.get(p), srcFailuresMap.get(p))));
 
         // Failures for destinations
-        Map<Node, Set<Failure>> dstFailuresMap = makeNodeFailuresMap(destinations, params.getSourceFailureMap(), nodeIdMap, linkIdMap);
+        Map<Node, Set<Failure>> dstFailuresMap = makeNodeFailuresMap(destinations, params.getDestFailureMap(), nodeIdMap, linkIdMap);
         Map<Node, List<List<Failure>>> dstFailureGroupsMap = dstFailuresMap.keySet().stream()
                 .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(dstNumFailsAllowed.get(p), dstFailuresMap.get(p))));
 

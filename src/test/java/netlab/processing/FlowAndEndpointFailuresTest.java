@@ -53,6 +53,32 @@ public class FlowAndEndpointFailuresTest {
         analyze(ers, 10, true, true);
     }
 
+    @Test
+    public void endpointVariedSrcNFAMaxOneC(){
+        Set<String> sources = new HashSet<>(Arrays.asList("Boulder", "Houston"));
+        Set<String> destinations = new HashSet<>(Arrays.asList("Lincoln", "Salt Lake City"));
+        Map<String, Integer> srcMinNumConnections = sources.stream().collect(Collectors.toMap(s -> s, s -> 0));
+        Map<String, Integer> srcMaxNumConnections = sources.stream().collect(Collectors.toMap(s -> s, s -> 3));
+        Map<String, Integer> dstMinNumConnections = destinations.stream().collect(Collectors.toMap(d -> d, d -> 0));
+        Map<String, Integer> dstMaxNumConnections = destinations.stream().collect(Collectors.toMap(d -> d, d -> 3));
+
+        List<String> sourceFailures = Arrays.asList("Champaign", "Houston-San Diego", "Houston-Boulder", "Lincoln-Boulder");
+        Map<String, Set<String>> srcFailureMap = sources.stream()
+                .collect(Collectors.toMap(s -> s, s -> pickFailureNodes(Collections.singletonList(s), sourceFailures)));
+        Map<String, Integer> srcNFAMap = new HashMap<>();
+        srcNFAMap.put("Boulder", 2);
+        srcNFAMap.put("Houston", 3);
+        List<String> destinationFailures = Arrays.asList("San Diego-Houston", "Boulder-Houston", "Boulder-Lincoln");
+        Map<String, Set<String>> dstFailureMap = destinations.stream()
+                .collect(Collectors.toMap(d -> d, d -> pickFailureNodes(Collections.singletonList(d), destinationFailures)));
+        Map<String, Integer> dstNFAMap = new HashMap<>();
+        dstNFAMap.put("Lincoln", 1);
+        dstNFAMap.put("Salt Lake City", 1);
+        RequestSet ers = createSetWithEndpoints(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
+                dstMinNumConnections, dstMaxNumConnections, 5, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
+        analyze(ers, 7, true, true);
+    }
+
     //@Test
     public void endpointTwoNFAMaxOneC(){
         Set<String> sources = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
@@ -170,7 +196,7 @@ public class FlowAndEndpointFailuresTest {
         return rs;
     }
 
-    private Set<String> pickFailureNodes(List<String> exclusionList, Set<String> candidates) {
+    private Set<String> pickFailureNodes(List<String> exclusionList, Collection<String> candidates) {
         Set<String> copy = new HashSet<>(candidates);
         copy.removeAll(exclusionList);
         return copy;
