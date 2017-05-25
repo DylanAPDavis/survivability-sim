@@ -31,7 +31,7 @@ set SD within {S cross D} default {s in S, d in D: s != d};
 param c_total >= 0 integer;
 
 # F
-set F within AllPairs;
+#set F within AllPairs;
 
 # NumGroups - Number of k-sized failure groups
 param NumGroups;
@@ -127,13 +127,13 @@ subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 ## Failure Constraints
 
 # Number of failures caused by a link --> Number of connections that include that element
-subject to numFailedConnectionsLink{u in V, v in V :u != v and ((u,v) in F or (v,u) in F)}:
-	FC[u,v] = sum{(s,d) in SD, i in I} L[s,d,i,u,v];
+#subject to numFailedConnectionsLink{u in V, v in V :u != v and ((u,v) in F or (v,u) in F)}:
+#	FC[u,v] = sum{(s,d) in SD, i in I} L[s,d,i,u,v];
 
 # Number of failures caused by a node
-subject to numFailedConnectionsNode{v in V: (v,v) in F}:
-	FC[v,v] = sum{(s,d) in SD, i in I} NC[s,d,i,v];
+#subject to numFailedConnectionsNode{v in V: (v,v) in F}:
+#	FC[v,v] = sum{(s,d) in SD, i in I} NC[s,d,i,v];
 
 # Sum up the failures per failure group
 subject to totalFailuresPerGroup{g in GroupIndices}:
-	FG_Sum[g] = sum{u in V, v in V: (u,v) in FG[g] or (v,u) in FG[g]} FC[u,v];
+	FG_Sum[g] = sum{(s,d) in SD, i in I, u in V, v in V: u != v and (u,v) in FG[g] or (v,u) in FG[g]} L[s,d,i,u,v] + sum{(s,d) in SD, i in I, v in V: (v,v) in FG[g]} NC[s,d,i,v];

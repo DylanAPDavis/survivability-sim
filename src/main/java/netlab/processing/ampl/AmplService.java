@@ -130,13 +130,6 @@ public class AmplService {
         List<String> flexLines = new ArrayList<>();
         List<List<Failure>> failureGroups = request.getFailures().getFailureGroups();
         String numGroups = "param NumGroups := " + failureGroups.size() + ";";
-        String failureSet = "set F := ";
-        for(Failure fail : request.getFailures().getFailureSet()){
-            failureSet += fail.getLink() != null ? "('" + fail.getLink().getOrigin().getId() + "','" + fail.getLink().getTarget() + "')"
-                    : "('" + fail.getNode().getId() + "','" + fail.getNode().getId() + "')";
-        }
-        failureSet += ";";
-        flexLines.add(failureSet);
         flexLines.add(numGroups);
         flexLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flex, null, null, false));
         return flexLines;

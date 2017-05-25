@@ -57,14 +57,14 @@ public class FailuresTest {
     public void oneSrcOneDst14FailOneConnThreeNFA(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(1, 1, 1, 12, 3,
-                "Node", 0.0, 0.0, 0.0, true, true, 3);
+                "Node", 0.0, 0.0, 0.0, false, false, 0);
     }
 
     @Test
     public void oneSrcOneDst14FailThreeConnThreeNFA(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(1, 1, 3, 12, 3,
-                "Node", 0.0, 0.0, 0.0, true, true, 9);
+                "Node", 0.0, 0.0, 0.0, false, false, 0);
     }
 
     @Test
