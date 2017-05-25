@@ -30,6 +30,8 @@ set SD within {S cross D} default {s in S, d in D: s != d};
 # c_total - Total number of connections needed after k failures
 param c_total >= 0 integer;
 
+# F
+set F within AllPairs;
 
 # NumGroups - Number of k-sized failure groups
 param NumGroups;

@@ -53,7 +53,7 @@ public class FlowAndEndpointFailuresTest {
         analyze(ers, 10, true, true);
     }
 
-    @Test
+    //@Test
     public void endpointTwoNFAMaxOneC(){
         Set<String> sources = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
                 "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
@@ -72,8 +72,8 @@ public class FlowAndEndpointFailuresTest {
         Map<String, Integer> dstNFAMap = destinations.stream()
                 .collect(Collectors.toMap(d -> d, d -> 2));
         RequestSet ers = createSetWithEndpoints(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
-                dstMinNumConnections, dstMaxNumConnections, 5, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
-        analyze(ers, 10, true, true);
+                dstMinNumConnections, dstMaxNumConnections, 1, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
+        analyze(ers, 3, true, true);
     }
 
 

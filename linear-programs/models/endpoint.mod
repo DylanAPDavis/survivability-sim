@@ -42,6 +42,7 @@ param c_min_d{d in D} >= 0 integer;
 # c_max - Maxmimum number of connections to d in D that need to survive
 param c_max_d{d in D} >= 0 integer;
 
+
 # NumGroups - Number of k-sized failure groups
 param NumGroups_s{s in S};
 
