@@ -30,9 +30,6 @@ set SD within {S cross D} default {s in S, d in D: s != d};
 # c_total - Total number of connections needed after k failures
 param c_total >= 0 integer;
 
-# F
-#set F within AllPairs;
-
 # NumGroups - Number of k-sized failure groups
 param NumGroups;
 
@@ -51,14 +48,14 @@ var C{(s,d) in SD, i in I} binary;
 # L - Link flow on (u, v) used by Connection (s, d, i)
 var L{(s,d) in SD, i in I, u in V, v in V} binary;
 
-# FC - Number of failed connections caused by node v / link u, v
-var FC{u in V, v in V} >= 0 integer;
-
 # NC - Node v is in Connection (s,d,i)
 var NC{(s,d) in SD, i in I, v in V} binary;
 
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {g in GroupIndices} >= 0 integer;
+
+# Connection (s,d,i) fails because of a member of FG[g]
+var FG_Conn{(s,d) in SD, i in I, g in GroupIndices} binary;
 
 # Number of connections
 var Num_Conns_Total = sum{(s,d) in SD, i in I} C[s,d,i];
@@ -127,13 +124,12 @@ subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 ## Failure Constraints
 
 # Number of failures caused by a link --> Number of connections that include that element
-#subject to numFailedConnectionsLink{u in V, v in V :u != v and ((u,v) in F or (v,u) in F)}:
-#	FC[u,v] = sum{(s,d) in SD, i in I} L[s,d,i,u,v];
+subject to groupCausesConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices}:
+	FG_Conn[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
 
-# Number of failures caused by a node
-#subject to numFailedConnectionsNode{v in V: (v,v) in F}:
-#	FC[v,v] = sum{(s,d) in SD, i in I} NC[s,d,i,v];
+subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices}:
+	FG_Conn[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
 
-# Sum up the failures per failure group
-subject to totalFailuresPerGroup{g in GroupIndices}:
-	FG_Sum[g] = sum{(s,d) in SD, i in I, u in V, v in V: u != v and (u,v) in FG[g] or (v,u) in FG[g]} L[s,d,i,u,v] + sum{(s,d) in SD, i in I, v in V: (v,v) in FG[g]} NC[s,d,i,v];
+# Sum up the number of failed connections due to FG[s,d,g]
+subject to numFailsDueToGroup{g in GroupIndices}:
+	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn[s,d,i,g];
