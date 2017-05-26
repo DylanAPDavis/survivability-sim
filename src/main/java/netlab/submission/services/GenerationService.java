@@ -805,7 +805,6 @@ public class GenerationService {
         }
         if(!prioritySet.isEmpty()){
             chosenNodes.addAll(chooseRandomSubsetNodes(prioritySet, numFailures, rng));
-            prioritySet.removeAll(chosenNodes);
         }
         // If we still haven't gotten enough failureSet, make some more
         if(chosenNodes.size() < numFailures){
@@ -840,10 +839,12 @@ public class GenerationService {
 
     private List<Double> generateProbabilities(Double probability, List<Double> minMaxFailureProb, Integer numFailures, Random rng) {
         if(probability > 0){
-            return DoubleStream.iterate(probability, p -> p).limit(numFailures).boxed().collect(Collectors.toList());
+            return DoubleStream.iterate(probability, p -> p).limit(numFailures).boxed().map(p -> Math.min(1.0, p)).collect(Collectors.toList());
         }
         else{
-            return rng.doubles(numFailures, minMaxFailureProb.get(0), minMaxFailureProb.get(1) + 0.1).boxed().collect(Collectors.toList());
+            double minProb = minMaxFailureProb.size() > 1 ? minMaxFailureProb.get(0) : 1.0;
+            double maxProb = minMaxFailureProb.size() > 1 ? minMaxFailureProb.get(1) : 1.0;
+            return rng.doubles(numFailures, minProb, maxProb + 0.1).boxed().map(p -> Math.min(1.0, p)).collect(Collectors.toList());
         }
     }
 
@@ -888,7 +889,7 @@ public class GenerationService {
     }
 
     private int numFromPercentage(int numOptions, double percentage){
-        return (int) Math.round(percentage * numOptions);
+        return (int) Math.ceil(percentage * numOptions);
     }
 
 
