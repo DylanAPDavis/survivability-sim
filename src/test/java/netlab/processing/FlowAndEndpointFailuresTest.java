@@ -301,7 +301,23 @@ public class FlowAndEndpointFailuresTest {
         Integer nfa = 1;
         RequestSet ers = createSetWithEndpointsSharedF(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, failures, nfa);
-        analyze(ers, 10, true, true);
+        analyze(ers, 6, true, true);
+    }
+
+    @Test
+    public void flowSharedFOneNFAMaxOneC(){
+        Set<String> sources = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Set<String> destinations = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Set<List<String>> pairs = createPairs(sources, destinations);
+        Map<List<String>, Integer> pairMinNumConnections = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
+        Map<List<String>, Integer> pairMaxNumConnections = pairs.stream().collect(Collectors.toMap(p -> p, p -> 1));
+        Set<String> failures = topoService.getTopologyById("NSFnet").getLinkIdMap().keySet();
+        Integer nfa = 1;
+        RequestSet ers = createSetWithPairsSharedF(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
+                5, failures, nfa);
+        analyze(ers, 6, true, true);
     }
 
 
@@ -349,6 +365,28 @@ public class FlowAndEndpointFailuresTest {
                 .numConnections(numConnections)
                 .pairFailureMap(pairFailureMap)
                 .pairNumFailsAllowedMap(pairNumFailsAllowedMap)
+                .build();
+        RequestSet rs = generationService.generateFromRequestParams(params);
+        processingService.processRequestSet(rs);
+        return rs;
+    }
+
+    private RequestSet createSetWithPairsSharedF(Set<String> sources, Set<String> destinations,
+                                                 Map<List<String>, Integer> pairMinNumConnections,
+                                                 Map<List<String>, Integer> pairMaxNumConnections, Integer numConnections,
+                                                 Set<String> failures, Integer nfa) {
+        RequestParameters params = RequestParameters.builder()
+                .topologyId("NSFnet")
+                .problemClass("FlowSharedF")
+                .algorithm("ServiceILP")
+                .objective("LinksUsed")
+                .sources(sources)
+                .destinations(destinations)
+                .pairMinNumConnectionsMap(pairMinNumConnections)
+                .pairMaxNumConnectionsMap(pairMaxNumConnections)
+                .numConnections(numConnections)
+                .failures(failures)
+                .numFailsAllowed(nfa)
                 .build();
         RequestSet rs = generationService.generateFromRequestParams(params);
         processingService.processRequestSet(rs);

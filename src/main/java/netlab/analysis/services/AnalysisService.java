@@ -46,7 +46,7 @@ public class AnalysisService {
         Integer numPaths = 0;
 
         // Check the high-level attributes
-        if(problemClass.equals(ProblemClass.Flex)){
+        if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.FlowSharedF)){
             List<List<Failure>> failureGroups = failureColl.getFailureGroups();
             // Must analyze paths based on total paths - choose just one failure group for everybody
             pathSetMetricsMap = analyzeAllPaths(chosenPaths, pairs, failureGroups);
