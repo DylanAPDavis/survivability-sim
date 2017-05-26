@@ -2,12 +2,8 @@ package netlab.processing;
 
 import netlab.TestConfiguration;
 import netlab.analysis.analyzed.AnalyzedSet;
-import netlab.analysis.analyzed.PathSetMetrics;
 import netlab.analysis.analyzed.RequestMetrics;
-import netlab.analysis.enums.MemberType;
 import netlab.analysis.services.AnalysisService;
-import netlab.submission.controller.SubmissionController;
-import netlab.submission.request.Request;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
@@ -15,7 +11,6 @@ import netlab.submission.services.GenerationService;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.Path;
 import netlab.topology.elements.SourceDestPair;
-import org.assertj.core.util.Sets;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -693,7 +688,7 @@ public class FlowAndEndpointTest {
                 .pairMaxNumConnectionsMap(pairMaxNumConnections)
                 .numConnections(numConnections)
                 .build();
-        RequestSet rs = generationService.generateSetFromRequest(params);
+        RequestSet rs = generationService.generateFromRequestParams(params);
         processingService.processRequestSet(rs);
         return rs;
     }
@@ -715,7 +710,7 @@ public class FlowAndEndpointTest {
                 .destMaxNumConnectionsMap(dstMaxNumConnections)
                 .numConnections(numConnections)
                 .build();
-        RequestSet rs = generationService.generateSetFromRequest(params);
+        RequestSet rs = generationService.generateFromRequestParams(params);
         processingService.processRequestSet(rs);
         return rs;
     }
@@ -767,7 +762,7 @@ public class FlowAndEndpointTest {
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        RequestSet requestSet = generationService.generateRequests(params);
+        RequestSet requestSet = generationService.generateFromSimParams(params);
         processingService.processRequestSet(requestSet);
         return requestSet;
     }

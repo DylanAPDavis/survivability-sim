@@ -2,14 +2,10 @@ package netlab.processing;
 
 import netlab.TestConfiguration;
 import netlab.analysis.analyzed.AnalyzedSet;
-import netlab.analysis.analyzed.RequestMetrics;
 import netlab.analysis.services.AnalysisService;
-import netlab.submission.request.RequestParameters;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
-import netlab.topology.elements.Path;
-import netlab.topology.elements.SourceDestPair;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -172,7 +168,7 @@ public class FailuresTest {
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        RequestSet requestSet = generationService.generateRequests(params);
+        RequestSet requestSet = generationService.generateFromSimParams(params);
         processingService.processRequestSet(requestSet);
         return requestSet;
     }

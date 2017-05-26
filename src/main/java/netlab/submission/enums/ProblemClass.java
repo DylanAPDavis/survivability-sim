@@ -9,7 +9,9 @@ import java.util.Optional;
 public enum ProblemClass {
     Flex("Flex"),
     Endpoint("Endpoint"),
-    Flow("Flow");
+    Flow("Flow"),
+    EndpointSharedF("EndpointSharedF"),
+    FlowSharedF("FlowSharedF");
 
     private String code;
 

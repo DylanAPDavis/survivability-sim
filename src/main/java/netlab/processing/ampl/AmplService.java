@@ -64,6 +64,12 @@ public class AmplService {
         if(problemClass.equals(ProblemClass.Flow)){
             ampl.read(modelDirectory + "/flow.mod");
         }
+        if(problemClass.equals(ProblemClass.EndpointSharedF)){
+            ampl.read(modelDirectory + "/endpointSharedF.mod");
+        }
+        if(problemClass.equals(ProblemClass.FlowSharedF)){
+            ampl.read(modelDirectory + "/flowSharedF.mod");
+        }
 
         ampl.eval("objective " + objective.getCode()  + ";");
         ampl.setIntOption("omit_zero_rows", 1);
@@ -116,11 +122,11 @@ public class AmplService {
         if(problemClass.equals(ProblemClass.Flex)){
             dataLines.addAll(createFlexParamsLines(request));
         }
-        if(problemClass.equals(ProblemClass.Endpoint)){
-            dataLines.addAll(createEndpointParamsLines(request));
+        if(problemClass.equals(ProblemClass.Endpoint) || problemClass.equals(ProblemClass.EndpointSharedF)){
+            dataLines.addAll(createEndpointParamsLines(request, problemClass));
         }
-        if(problemClass.equals(ProblemClass.Flow)){
-            dataLines.addAll(createPairParamsLines(request));
+        if(problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF)){
+            dataLines.addAll(createPairParamsLines(request, problemClass));
         }
 
         return dataLines;
@@ -135,25 +141,37 @@ public class AmplService {
         return flexLines;
     }
 
-    private List<String> createEndpointParamsLines(Request request){
+    private List<String> createEndpointParamsLines(Request request, ProblemClass problemClass){
         List<String> endpointLines = new ArrayList<>();
         Map<Node, Integer> srcMinMap = request.getConnections().getSrcMinConnectionsMap();
         Map<Node, Integer> srcMaxMap = request.getConnections().getSrcMaxConnectionsMap();
         Map<Node, Integer> dstMinMap = request.getConnections().getDstMinConnectionsMap();
         Map<Node, Integer> dstMaxMap = request.getConnections().getDstMaxConnectionsMap();
+
         Map<Node, List<List<Failure>>> srcFailGroupsMap = request.getFailures().getSrcFailureGroupsMap();
         Map<Node, List<List<Failure>>> dstFailGroupsMap = request.getFailures().getDstFailureGroupsMap();
+        List<List<Failure>> requestFailureGroups = request.getFailures().getFailureGroups();
+
         Set<Node> sources = request.getSources();
         Set<Node> destinations = request.getDestinations();
-        endpointLines.addAll(createParamsForMemberGroup(sources, srcMinMap, srcMaxMap, srcFailGroupsMap, true));
-        endpointLines.addAll(createParamsForMemberGroup(destinations, dstMinMap, dstMaxMap, dstFailGroupsMap, false));
+
+        boolean printFailsGroupPerMember = problemClass.equals(ProblemClass.Endpoint);
+        endpointLines.addAll(createParamsForMemberGroup(sources, srcMinMap, srcMaxMap, srcFailGroupsMap, true, printFailsGroupPerMember));
+        endpointLines.addAll(createParamsForMemberGroup(destinations, dstMinMap, dstMaxMap, dstFailGroupsMap, false, printFailsGroupPerMember));
+        // If you're solving the EndpointSharedF problem, just print one FG set and one NumGroups param
+        if(!printFailsGroupPerMember){
+            String numGroups = "param NumGroups := " + requestFailureGroups.size() + ";";
+            List<String> fgLines = createFailureGroupLines(requestFailureGroups, ProblemClass.EndpointSharedF, null, null, false);
+            endpointLines.add(numGroups);
+            endpointLines.addAll(fgLines);
+        }
         return endpointLines;
     }
 
     private Collection<? extends String> createParamsForMemberGroup(Set<Node> members, Map<Node, Integer> memberMinMap,
                                                                     Map<Node, Integer> memberMaxMap,
                                                                     Map<Node, List<List<Failure>>> memberFailGroupsMap,
-                                                                    boolean areSources) {
+                                                                    boolean areSources, boolean printFailsGroupPerMember) {
         List<String> memberLines = new ArrayList<>();
         String cMin = "param c_min_" + (areSources ? "s" : "d") + " := ";
         String cMax = "param c_max_" + (areSources ? "s" : "d") + " := ";
@@ -162,23 +180,28 @@ public class AmplService {
         for(Node member : members){
             Integer min = memberMinMap.get(member);
             Integer max = memberMaxMap.get(member);
-            List<List<Failure>> failureGroups = memberFailGroupsMap.get(member);
             cMin += " '" + member.getId() + "' " + min;
             cMax += " '" + member.getId() + "' " + max;
-            numGroups += " '" + member.getId() + "' " + failureGroups.size();
-            fgLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Endpoint, null, member, areSources));
+            if(printFailsGroupPerMember) {
+                List<List<Failure>> failureGroups = memberFailGroupsMap.get(member);
+                numGroups += " '" + member.getId() + "' " + failureGroups.size();
+                fgLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Endpoint, null, member, areSources));
+            }
         }
         cMin += ";";
         cMax += ";";
         numGroups += ";";
         memberLines.add(cMin);
         memberLines.add(cMax);
-        memberLines.add(numGroups);
-        memberLines.addAll(fgLines);
+        // Only add NumGroups param and FG[member, i] if you're solving the regular Endpoint problem
+        if(printFailsGroupPerMember) {
+            memberLines.add(numGroups);
+            memberLines.addAll(fgLines);
+        }
         return memberLines;
     }
 
-    private List<String> createPairParamsLines(Request request){
+    private List<String> createPairParamsLines(Request request, ProblemClass problemClass){
         List<String> pairLines = new ArrayList<>();
         String cMin = "param c_min_sd := ";
         String cMax = "param c_max_sd := ";
@@ -187,6 +210,11 @@ public class AmplService {
         Map<SourceDestPair, Integer> pairMaxMap = request.getConnections().getPairMaxConnectionsMap();
         Map<SourceDestPair, List<List<Failure>>> pairFailGroupsMap = request.getFailures().getPairFailureGroupsMap();
         List<String> fgLines = new ArrayList<>();
+        if(problemClass.equals(ProblemClass.FlowSharedF)){
+            List<List<Failure>> requestFailureGroups = request.getFailures().getFailureGroups();
+            numGroups += requestFailureGroups.size();
+            fgLines = createFailureGroupLines(requestFailureGroups, ProblemClass.FlowSharedF, null, null, false);
+        }
         for(SourceDestPair pair : pairMinMap.keySet()){
             if(!pair.getSrc().equals(pair.getDst())) {
                 Integer min = pairMinMap.get(pair);
@@ -194,8 +222,10 @@ public class AmplService {
                 List<List<Failure>> failureGroups = pairFailGroupsMap.get(pair);
                 cMin += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + min;
                 cMax += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + max;
-                numGroups += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + failureGroups.size();
-                fgLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flow, pair, null, false));
+                if(problemClass.equals(ProblemClass.Flow)) {
+                    numGroups += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + failureGroups.size();
+                    fgLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flow, pair, null, false));
+                }
             }
         }
         cMin += ";";
@@ -212,7 +242,7 @@ public class AmplService {
         List<String> fgLines = new ArrayList<>();
         for (int groupIndex = 0; groupIndex < failureGroups.size(); groupIndex++) {
             String fg = "";
-            if(problemClass.equals(ProblemClass.Flex)){
+            if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.FlowSharedF)){
                 fg = "set FG[" + (groupIndex + 1) + "] :=";
             }
             if(problemClass.equals(ProblemClass.Endpoint)){

@@ -8,6 +8,7 @@ import netlab.submission.request.RequestParameters;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
+import netlab.topology.services.TopologyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,9 @@ public class FlowAndEndpointFailuresTest {
 
     @Autowired
     private ProcessingService processingService;
+
+    @Autowired
+    private TopologyService topoService;
 
 
     @Test
@@ -283,6 +287,27 @@ public class FlowAndEndpointFailuresTest {
         analyze(ers, 10, true, true);
     }
 
+    @Test
+    public void endpointSharedFOneNFAMaxOneC(){
+        Set<String> sources = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Set<String> destinations = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Map<String, Integer> srcMinNumConnections = sources.stream().collect(Collectors.toMap(s -> s, s -> 0));
+        Map<String, Integer> srcMaxNumConnections = sources.stream().collect(Collectors.toMap(s -> s, s -> 1));
+        Map<String, Integer> dstMinNumConnections = destinations.stream().collect(Collectors.toMap(d -> d, d -> 0));
+        Map<String, Integer> dstMaxNumConnections = destinations.stream().collect(Collectors.toMap(d -> d, d -> 1));
+        Set<String> failures = topoService.getTopologyById("NSFnet").getLinkIdMap().keySet();
+        Integer nfa = 1;
+        RequestSet ers = createSetWithEndpointsSharedF(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
+                dstMinNumConnections, dstMaxNumConnections, 5, failures, nfa);
+        analyze(ers, 10, true, true);
+    }
+
+
+
+    // Helper methods
+
     private Set<List<String>> createPairs(Set<String> sources, Set<String> destinations){
         Set<List<String>> pairSet = new HashSet<>();
         for(String source : sources){
@@ -325,7 +350,7 @@ public class FlowAndEndpointFailuresTest {
                 .pairFailureMap(pairFailureMap)
                 .pairNumFailsAllowedMap(pairNumFailsAllowedMap)
                 .build();
-        RequestSet rs = generationService.generateSetFromRequest(params);
+        RequestSet rs = generationService.generateFromRequestParams(params);
         processingService.processRequestSet(rs);
         return rs;
     }
@@ -353,7 +378,30 @@ public class FlowAndEndpointFailuresTest {
                 .destFailureMap(dstFailureMap)
                 .destNumFailsAllowedMap(dstNumFailsAllowedMap)
                 .build();
-        RequestSet rs = generationService.generateSetFromRequest(params);
+        RequestSet rs = generationService.generateFromRequestParams(params);
+        processingService.processRequestSet(rs);
+        return rs;
+    }
+
+    private RequestSet createSetWithEndpointsSharedF(Set<String> sources, Set<String> destinations, Map<String, Integer> srcMinNumConnections,
+                                                     Map<String, Integer> srcMaxNumConnections, Map<String, Integer> dstMinNumConnections,
+                                                     Map<String, Integer> dstMaxNumConnections, Integer numConnections, Set<String> failures, Integer nfa) {
+        RequestParameters params = RequestParameters.builder()
+                .topologyId("NSFnet")
+                .problemClass("EndpointSharedF")
+                .algorithm("ServiceILP")
+                .objective("LinksUsed")
+                .sources(sources)
+                .destinations(destinations)
+                .sourceMinNumConnectionsMap(srcMinNumConnections)
+                .sourceMaxNumConnectionsMap(srcMaxNumConnections)
+                .destMinNumConnectionsMap(dstMinNumConnections)
+                .destMaxNumConnectionsMap(dstMaxNumConnections)
+                .numConnections(numConnections)
+                .failures(failures)
+                .numFailsAllowed(nfa)
+                .build();
+        RequestSet rs = generationService.generateFromRequestParams(params);
         processingService.processRequestSet(rs);
         return rs;
     }
@@ -385,7 +433,7 @@ public class FlowAndEndpointFailuresTest {
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        RequestSet requestSet = generationService.generateRequests(params);
+        RequestSet requestSet = generationService.generateFromSimParams(params);
         processingService.processRequestSet(requestSet);
         return requestSet;
     }

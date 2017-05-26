@@ -2,7 +2,6 @@ package netlab.processing;
 
 import netlab.TestConfiguration;
 import netlab.analysis.analyzed.AnalyzedSet;
-import netlab.analysis.analyzed.RequestMetrics;
 import netlab.analysis.services.AnalysisService;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
@@ -268,7 +267,7 @@ public class NoFailuresTest {
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        RequestSet requestSet = generationService.generateRequests(params);
+        RequestSet requestSet = generationService.generateFromSimParams(params);
         processingService.processRequestSet(requestSet);
         return requestSet;
     }

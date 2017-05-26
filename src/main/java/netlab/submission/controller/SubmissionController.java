@@ -1,8 +1,6 @@
 package netlab.submission.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import netlab.analysis.analyzed.AnalyzedSet;
-import netlab.analysis.services.AnalysisService;
 import netlab.processing.ProcessingService;
 import netlab.storage.StorageService;
 import netlab.submission.request.RequestParameters;
@@ -36,7 +34,7 @@ public class SubmissionController {
     @RequestMapping(value = "/submit_set", method = RequestMethod.POST)
     @ResponseBody
     public String submitRequestSet(SimulationParameters simulationParameters){
-        RequestSet requestSet = generationService.generateRequests(simulationParameters);
+        RequestSet requestSet = generationService.generateFromSimParams(simulationParameters);
         // Find solutions for the request set, as long as at least one request has been generated
         if(requestSet.getRequests().keySet().size() > 0){
             requestSet = processingService.processRequestSet(requestSet);
@@ -51,7 +49,7 @@ public class SubmissionController {
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
     @ResponseBody
     public String submitRequestSet(RequestParameters requestParameters){
-        RequestSet requestSet = generationService.generateSetFromRequest(requestParameters);
+        RequestSet requestSet = generationService.generateFromRequestParams(requestParameters);
 
         if(requestSet.getRequests().keySet().size() > 0){
             requestSet = processingService.processRequestSet(requestSet);
