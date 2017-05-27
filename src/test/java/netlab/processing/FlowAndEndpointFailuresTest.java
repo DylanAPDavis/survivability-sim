@@ -59,6 +59,27 @@ public class FlowAndEndpointFailuresTest {
     }
 
     @Test
+    public void endpointOneNFAMaxOneCAllLinksFail(){
+        Set<String> sources = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Set<String> destinations = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Map<String, Integer> srcMinNumConnections = sources.stream().collect(Collectors.toMap(s -> s, s -> 0));
+        Map<String, Integer> srcMaxNumConnections = sources.stream().collect(Collectors.toMap(s -> s, s -> 1));
+        Map<String, Integer> dstMinNumConnections = destinations.stream().collect(Collectors.toMap(d -> d, d -> 0));
+        Map<String, Integer> dstMaxNumConnections = destinations.stream().collect(Collectors.toMap(d -> d, d -> 1));
+        Set<String> failures = topoService.getTopologyById("NSFnet").getLinkIdMap().keySet();
+        Integer nfa = 1;
+        Map<String, Set<String>> srcFailureMap = sources.stream().collect(Collectors.toMap(s -> s, s -> failures));
+        Map<String, Integer> srcNFAMap = sources.stream().collect(Collectors.toMap(s -> s, s -> nfa));
+        Map<String, Set<String>> dstFailureMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> failures));
+        Map<String, Integer> dstNFAMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> nfa));
+        RequestSet ers = createSetWithEndpoints(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
+                dstMinNumConnections, dstMaxNumConnections, 5, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
+        analyze(ers, 10, true, true);
+    }
+
+    @Test
     public void endpointVariedSrcNFAMaxThreeC(){
         Set<String> sources = new HashSet<>(Arrays.asList("Boulder", "Houston"));
         Set<String> destinations = new HashSet<>(Arrays.asList("Lincoln", "Salt Lake City"));
@@ -288,7 +309,31 @@ public class FlowAndEndpointFailuresTest {
     }
 
     @Test
-    public void endpointSharedFOneNFAMaxOneC(){
+    public void generatedEndpointSharedFOneNFAMaxOneCAllLinksFail(){
+        List<Integer> minConns = Arrays.asList(0,0);
+        List<Integer> maxConns = Arrays.asList(2,3);
+        Integer numFails = 42;
+        Integer nfa = 1;
+        String failureClass = "Link";
+        RequestSet ers = createSetWithGenService("EndpointSharedF", 14, 14, 5,
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
+        analyze(ers, 6, true, true);
+    }
+
+    @Test
+    public void generatedEndpointSharedFTwoNFAMaxOneCAllLinksFail(){
+        List<Integer> minConns = Arrays.asList(0,0);
+        List<Integer> maxConns = Arrays.asList(2,3);
+        Integer numFails = 42;
+        Integer nfa = 2;
+        String failureClass = "Link";
+        RequestSet ers = createSetWithGenService("EndpointSharedF", 14, 14, 5,
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
+        analyze(ers, 7, true, true);
+    }
+
+    @Test
+    public void endpointSharedFOneNFAMaxOneCAllLinksFail(){
         Set<String> sources = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
                 "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
         Set<String> destinations = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
@@ -302,6 +347,24 @@ public class FlowAndEndpointFailuresTest {
         RequestSet ers = createSetWithEndpointsSharedF(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, failures, nfa);
         analyze(ers, 6, true, true);
+    }
+
+
+    @Test
+    public void endpointSharedFTwoNFAMaxOneCAllLinksFail(){
+        Set<String> sources = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Set<String> destinations = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Map<String, Integer> srcMinNumConnections = sources.stream().collect(Collectors.toMap(s -> s, s -> 0));
+        Map<String, Integer> srcMaxNumConnections = sources.stream().collect(Collectors.toMap(s -> s, s -> 1));
+        Map<String, Integer> dstMinNumConnections = destinations.stream().collect(Collectors.toMap(d -> d, d -> 0));
+        Map<String, Integer> dstMaxNumConnections = destinations.stream().collect(Collectors.toMap(d -> d, d -> 1));
+        Set<String> failures = topoService.getTopologyById("NSFnet").getLinkIdMap().keySet();
+        Integer nfa = 2;
+        RequestSet ers = createSetWithEndpointsSharedF(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
+                dstMinNumConnections, dstMaxNumConnections, 5, failures, nfa);
+        analyze(ers, 7, true, true);
     }
 
     @Test
@@ -318,6 +381,46 @@ public class FlowAndEndpointFailuresTest {
         RequestSet ers = createSetWithPairsSharedF(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
                 5, failures, nfa);
         analyze(ers, 6, true, true);
+    }
+
+    @Test
+    public void flowSharedFTwoNFAMaxOneC(){
+        Set<String> sources = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Set<String> destinations = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",
+                "Salt Lake City", "Lincoln", "Champaign", "Ann Arbor", "Pittsburgh", "Atlanta", "College Park", "Ithaca", "Princeton"));
+        Set<List<String>> pairs = createPairs(sources, destinations);
+        Map<List<String>, Integer> pairMinNumConnections = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
+        Map<List<String>, Integer> pairMaxNumConnections = pairs.stream().collect(Collectors.toMap(p -> p, p -> 1));
+        Set<String> failures = topoService.getTopologyById("NSFnet").getLinkIdMap().keySet();
+        Integer nfa = 2;
+        RequestSet ers = createSetWithPairsSharedF(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
+                5, failures, nfa);
+        analyze(ers, 7, true, true);
+    }
+
+    @Test
+    public void generatedFlowSharedFOneNFAMaxOneCAllLinksFail(){
+        List<Integer> minConns = Arrays.asList(0,0);
+        List<Integer> maxConns = Arrays.asList(2,3);
+        Integer numFails = 42;
+        Integer nfa = 1;
+        String failureClass = "Link";
+        RequestSet ers = createSetWithGenService("FlowSharedF", 14, 14, 5,
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
+        analyze(ers, 6, true, true);
+    }
+
+    @Test
+    public void generatedFlowSharedFTwoNFAMaxOneCAllLinksFail(){
+        List<Integer> minConns = Arrays.asList(0,0);
+        List<Integer> maxConns = Arrays.asList(2,3);
+        Integer numFails = 42;
+        Integer nfa = 2;
+        String failureClass = "Link";
+        RequestSet ers = createSetWithGenService("FlowSharedF", 14, 14, 5,
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
+        analyze(ers, 7, true, true);
     }
 
 
@@ -459,18 +562,27 @@ public class FlowAndEndpointFailuresTest {
 
     }
 
+
+    private RequestSet createSetWithGenService(String problemClass, int numSources, int numDestinations, int numConns,
+                                               List<Integer> minConns, List<Integer> maxConns, Integer numFails,
+                                               Integer nfa, String failureClass, double percentSrcAlsoDest, double percentSrcFail, double percentDstFail) {
+        return createSetAndSolve(1L, "NSFnet", 1, "ServiceILP", problemClass, "LinksUsed", numSources, numDestinations, numFails,
+                new ArrayList<>(), failureClass, 0.0, new ArrayList<>(), numConns, minConns, maxConns,
+                nfa, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+    }
+
     private RequestSet createSetAndSolve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
                              String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
                              List<Integer> minMaxFailures, String failureClass, Double failureProb,
                              List<Double> minMaxFailureProb, Integer numConnections,
                              List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
-                             Integer numFails, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
+                             Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
                              Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
                              double percentDstFail){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
-                numFails, minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         RequestSet requestSet = generationService.generateFromSimParams(params);
         processingService.processRequestSet(requestSet);
         return requestSet;

@@ -25,10 +25,13 @@ public class FailureGenerationService {
 
     private EnumGenerationService enumGenerationService;
 
+    private TopologyService topologyService;
+
     @Autowired
-    public FailureGenerationService(SelectionService selectionService, EnumGenerationService enumGenerationService) {
+    public FailureGenerationService(SelectionService selectionService, EnumGenerationService enumGenerationService, TopologyService topologyService) {
         this.selectionService = selectionService;
         this.enumGenerationService = enumGenerationService;
+        this.topologyService = topologyService;
     }
 
     public Failures makeFailuresFromRequestParams(RequestParameters params, Set<SourceDestPair> pairs,
@@ -39,25 +42,25 @@ public class FailureGenerationService {
 
         // Failures for the whole request
         Set<Failure> failures = makeFailureSet(params.getFailures(), params.getFailureProbabilityMap(), nodeIdMap, linkIdMap);
-        List<List<Failure>> failureGroups = generateFailureGroups(numFailsAllowed, failures);
+        List<List<Failure>> failureGroups = generateFailureGroups(numFailsAllowed, filterFailureSet(failures, linkIdMap));
 
         // Failure for pairs
         Map<SourceDestPair, Set<Failure>> pairFailuresMap = makePairFailuresMap(pairs, params.getPairFailureMap(),
                 params.getPairFailureProbabilityMap(), nodeIdMap, linkIdMap);
         Map<SourceDestPair, List<List<Failure>>> pairFailureGroupsMap = pairFailuresMap.keySet().stream()
-                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(pairNumFailsAllowed.get(p), pairFailuresMap.get(p))));
+                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(pairNumFailsAllowed.get(p), filterFailureSet(pairFailuresMap.get(p), linkIdMap))));
 
         // Failures for sources
         Map<Node, Set<Failure>> srcFailuresMap = makeNodeFailuresMap(sources, params.getSourceFailureMap(),
                 params.getSourceFailureProbabilityMap(), nodeIdMap, linkIdMap);
         Map<Node, List<List<Failure>>> srcFailureGroupsMap = srcFailuresMap.keySet().stream()
-                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(srcNumFailsAllowed.get(p), srcFailuresMap.get(p))));
+                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(srcNumFailsAllowed.get(p), filterFailureSet(srcFailuresMap.get(p), linkIdMap))));
 
         // Failures for destinations
         Map<Node, Set<Failure>> dstFailuresMap = makeNodeFailuresMap(destinations, params.getDestFailureMap(),
                 params.getDestFailureProbabilityMap(), nodeIdMap, linkIdMap);
         Map<Node, List<List<Failure>>> dstFailureGroupsMap = dstFailuresMap.keySet().stream()
-                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(dstNumFailsAllowed.get(p), dstFailuresMap.get(p))));
+                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(dstNumFailsAllowed.get(p), filterFailureSet(dstFailuresMap.get(p), linkIdMap))));
 
         long failureSetSize = failures.size() + pairFailuresMap.values().stream().mapToLong(Collection::size).sum();
         failureSetSize += srcFailuresMap.values().stream().mapToLong(Collection::size).sum();
@@ -73,6 +76,33 @@ public class FailureGenerationService {
                 .dstFailuresMap(dstFailuresMap)
                 .dstFailureGroupsMap(dstFailureGroupsMap)
                 .build();
+    }
+
+    private Set<Failure> filterFailureSet(Set<Failure> failures, Map<String, Link> linkIdMap) {
+        Set<Failure> filteredFailures = new HashSet<>();
+        Map<String, Failure> linkIdToFailMap = failures.stream().filter(f -> f.getLink() != null).collect(Collectors.toMap(f -> f.getLink().getId(), f -> f));
+        for(Failure failure: failures){
+            if(failure.getLink() != null){
+                Link thisLink = failure.getLink();
+                String[] splitId = thisLink.getId().split("-");
+                String revId = "";
+                if(splitId.length > 2){
+                    revId = splitId[1] + "-" + splitId[0] + "-" + splitId[2];
+                }
+                else{
+                    revId = splitId[1] + "-" + splitId[0];
+                }
+                //String revId = thisLink.getTarget().getId() + "-" + thisLink.getOrigin().getId();
+                Failure revFailure = linkIdToFailMap.get(revId);
+                if(revFailure == null || !filteredFailures.contains(revFailure)){
+                    filteredFailures.add(failure);
+                }
+            }
+            else{
+                filteredFailures.add(failure);
+            }
+        }
+        return filteredFailures;
     }
 
     private Map<Node,Set<Failure>> makeNodeFailuresMap(Set<Node> members, Map<String, Set<String>> memberFailureMap,
@@ -150,6 +180,8 @@ public class FailureGenerationService {
         Map<Node, Integer> dstNumFailsMap = new HashMap<>();
         Map<Node, List<List<Failure>>> dstFailureGroupsMap = new HashMap<>();
 
+        Topology topo = topologyService.getTopologyById(params.getTopologyId());
+
         // Assign random number of cuts between min and max
         // Except: cap out at the number of failureSet for a pair, so you're not trying to cut more than than the
         // size of the failure set
@@ -157,7 +189,7 @@ public class FailureGenerationService {
             if(minMaxFails.size() == 2) {
                 numFails = Math.min(failureCollection.getFailureSet().size(), selectionService.randomInt(minMaxFails.get(0), minMaxFails.get(1), rng));
             }
-            failureGroups = generateFailureGroups(numFails, failureCollection.getFailureSet());
+            failureGroups = generateFailureGroups(numFails, filterFailureSet(failureCollection.getFailureSet(), topo.getLinkIdMap()));
         }
         if(problemClass.equals(ProblemClass.Flow)){
             for (SourceDestPair pair : pairs) {
@@ -165,7 +197,7 @@ public class FailureGenerationService {
                 int thisNumFails = minMaxFails.size() == 2 ?
                         Math.min(thisFailureSet.size(), selectionService.randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
                 pairNumFailsMap.put(pair, thisNumFails);
-                pairFailureGroupsMap.put(pair, generateFailureGroups(thisNumFails, thisFailureSet));
+                pairFailureGroupsMap.put(pair, generateFailureGroups(thisNumFails, filterFailureSet(thisFailureSet, topo.getLinkIdMap())));
             }
             //Update number of required cuts for request to be equal to the total min
             numFails = pairNumFailsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
@@ -174,11 +206,11 @@ public class FailureGenerationService {
         if(problemClass.equals(ProblemClass.Endpoint)){
             for(Node source : sources){
                 Set<Failure> failureSet = failureCollection.getSrcFailuresMap().getOrDefault(source, failureCollection.getFailureSet());
-                populateNumFailsAndFailureGroupMap(failureSet, source, minMaxFails, numFails, srcNumFailsMap, srcFailureGroupsMap, rng);
+                populateNumFailsAndFailureGroupMap(filterFailureSet(failureSet, topo.getLinkIdMap()), source, minMaxFails, numFails, srcNumFailsMap, srcFailureGroupsMap, rng);
             }
             for(Node dest : destinations){
                 Set<Failure> failureSet = failureCollection.getDstFailuresMap().getOrDefault(dest, failureCollection.getFailureSet());
-                populateNumFailsAndFailureGroupMap(failureSet, dest, minMaxFails, numFails, dstNumFailsMap, dstFailureGroupsMap, rng);
+                populateNumFailsAndFailureGroupMap(filterFailureSet(failureSet, topo.getLinkIdMap()), dest, minMaxFails, numFails, dstNumFailsMap, dstFailureGroupsMap, rng);
             }
         }
 
@@ -356,6 +388,7 @@ public class FailureGenerationService {
 
     private static List<List<Failure>> generateFailureGroups(Integer k, Set<Failure> failureSet){
         List<List<Failure>> failureGroups = new ArrayList<>();
+        // Filter out forward/reverse edges
         List<Failure> failureList = new ArrayList<>(failureSet);
         Collections.shuffle(failureList);
 

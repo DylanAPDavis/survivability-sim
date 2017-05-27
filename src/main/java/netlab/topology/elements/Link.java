@@ -22,14 +22,14 @@ public class Link {
     public Link(Node origin, Node target, Integer linkNum){
         this.origin = origin;
         this.target = target;
-        this.id = origin.getId() + "-" + target.getId() + "__" + linkNum;
+        this.id = origin.getId() + "-" + target.getId() + "-" + linkNum;
         this.weight = 1L;
     }
 
     public Link(Node origin, Node target, Long weight, Integer linkNum){
         this.origin = origin;
         this.target = target;
-        this.id = origin.getId() + "-" + target.getId() + "__" + linkNum;
+        this.id = origin.getId() + "-" + target.getId() + "-" + linkNum;
         this.weight = weight;
     }
 

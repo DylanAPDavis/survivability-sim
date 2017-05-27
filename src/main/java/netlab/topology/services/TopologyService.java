@@ -98,4 +98,5 @@ public class TopologyService {
         links.add(new Link(ithaca, collegePark, 300L));
         return new Topology("NSFnet", nodes, links);
     }
+
 }
