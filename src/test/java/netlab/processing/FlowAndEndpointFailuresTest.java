@@ -9,6 +9,7 @@ import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
 import netlab.topology.services.TopologyService;
+import netlab.visualization.VisualizationService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class FlowAndEndpointFailuresTest {
 
     @Autowired
     private TopologyService topoService;
+
+    @Autowired
+    private VisualizationService visualizationService;
 
 
     @Test
@@ -129,6 +133,7 @@ public class FlowAndEndpointFailuresTest {
         RequestSet ers = createSetWithEndpoints(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
         analyze(ers, 7, true, true);
+        visualizationService.visualize(ers);
     }
 
     @Test
@@ -208,6 +213,7 @@ public class FlowAndEndpointFailuresTest {
         RequestSet ers = createSetWithPairs(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
                 5, pairFailureMap, pairNFAMap);
         analyze(ers, 5, true, true);
+        visualizationService.visualize(ers);
     }
 
     @Test

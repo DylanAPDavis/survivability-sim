@@ -1,0 +1,215 @@
+<html>
+<head>
+  <title>GRAPHS!</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sigma.js/1.2.0/sigma.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sigma.js/1.2.0/plugins/sigma.renderers.edgeLabels.min.js"></script>
+  <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+
+  <style>
+    #graph-container {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 20%;
+    }
+    #results {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 80%;
+      right: 0;
+      border-top: 1px;
+      border-style: solid;
+      border-color: #cccccc;
+    }
+    h2 {
+      color: black;
+    }
+    a {
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+<div id="container">
+  <div id="graph-container"></div>
+</div>
+<div id="results"></div>
+
+<script>
+var s,
+    g = {};
+g.nodes=[{id:"Palo Alto",label:"Palo Alto",x:0,y:170,size:1,color:"#666"},{id:"San Diego",label:"San Diego",x:27,y:220,size:1,color:"#666"},{id:"Seattle",label:"Seattle",x:25,y:78,size:1,color:"#666"},{id:"Salt Lake City",label:"Salt Lake City",x:74,y:158,size:1,color:"#666"},{id:"Boulder",label:"Boulder",x:120,y:172,size:1,color:"#666"},{id:"Lincoln",label:"Lincoln",x:174,y:163,size:1,color:"#666"},{id:"Champaign",label:"Champaign",x:235,y:170,size:1,color:"#666"},{id:"Houston",label:"Houston",x:186,y:264,size:1,color:"#666"},{id:"Atlanta",label:"Atlanta",x:279,y:230,size:1,color:"#666"},{id:"Pittsburgh",label:"Pittsburgh",x:297,y:157,size:1,color:"#666"},{id:"Ann Arbor",label:"Ann Arbor",x:262,y:148,size:1,color:"#666"},{id:"Ithaca",label:"Ithaca",x:318,y:131,size:1,color:"#666"},{id:"Princeton",label:"Princeton",x:334,y:152,size:1,color:"#666"},{id:"College Park",label:"College Park",x:319,y:166,size:1,color:"#666"}];
+g.edges = [{id:"Palo Alto-San Diego",label:"",source:"Palo Alto",target:"San Diego",size:1,color:"#ccc",type:"curve",count:1},{id:"San Diego-Seattle",label:"",source:"San Diego",target:"Seattle",size:1,color:"#ccc",type:"line",count:1},{id:"Palo Alto-Seattle",label:"",source:"Palo Alto",target:"Seattle",size:1,color:"#ccc",type:"line",count:1},{id:"Palo Alto-Salt Lake City",label:"",source:"Palo Alto",target:"Salt Lake City",size:1,color:"#ccc",type:"line",count:1},{id:"Boulder-Salt Lake City",label:"",source:"Boulder",target:"Salt Lake City",size:1,color:"#ccc",type:"line",count:1},{id:"Boulder-Lincoln",label:"",source:"Boulder",target:"Lincoln",size:1,color:"#ccc",type:"line",count:1},{id:"Champaign-Lincoln",label:"",source:"Champaign",target:"Lincoln",size:1,color:"#ccc",type:"line",count:1},{id:"Champaign-Seattle",label:"",source:"Champaign",target:"Seattle",size:1,color:"#ccc",type:"line",count:1},{id:"Boulder-Houston",label:"",source:"Boulder",target:"Houston",size:1,color:"#ccc",type:"line",count:1},{id:"Houston-San Diego",label:"",source:"Houston",target:"San Diego",size:1,color:"#ccc",type:"line",count:1},{id:"Atlanta-Houston",label:"",source:"Houston",target:"Atlanta",size:1,color:"#ccc",type:"line",count:1},{id:"Champaign-Pittsburgh",label:"",source:"Champaign",target:"Pittsburgh",size:1,color:"#ccc",type:"line",count:1},{id:"Ann Arbor-Salt Lake City",label:"",source:"Salt Lake City",target:"Ann Arbor",size:1,color:"#ccc",type:"curve",count:1},{id:"Ann Arbor-Princeton",label:"",source:"Princeton",target:"Ann Arbor",size:1,color:"#ccc",type:"curve",count:1},{id:"Atlanta-Pittsburgh",label:"",source:"Atlanta",target:"Pittsburgh",size:1,color:"#ccc",type:"line",count:1},{id:"Ithaca-Pittsburgh",label:"",source:"Ithaca",target:"Pittsburgh",size:1,color:"#ccc",type:"line",count:1},{id:"College Park-Ithaca",label:"",source:"Ithaca",target:"College Park",size:1,color:"#ccc",type:"line",count:1},{id:"College Park-Houston",label:"",source:"Houston",target:"College Park",size:1,color:"#ccc",type:"line",count:1},{id:"College Park-Princeton",label:"",source:"Princeton",target:"College Park",size:1,color:"#ccc",type:"line",count:1},{id:"Pittsburgh-Princeton",label:"",source:"Princeton",target:"Pittsburgh",size:1,color:"#ccc",type:"line",count:1},{id:"Ann Arbor-Ithaca",label:"",source:"Ann Arbor",target:"Ithaca",size:1,color:"#ccc",type:"line",count:1}];;
+// Instantiate sigma:
+s = new sigma({
+  graph: g,
+  renderer: {
+    container: document.getElementById('graph-container'),
+    type: 'canvas'
+  },
+  settings: {
+    sideMargin: 20,
+  }
+});
+// Example object, will get overwritten by java code
+var data = [
+  {
+    "source": "Houston",
+    "destination": "Ithaca",
+    "paths": [
+      {
+        javaConnectionId: 1,
+        steps: [
+          "Houston",
+          "Atlanta",
+          "Pittsburgh",
+          "Ithaca"
+        ],
+      },
+      {
+        javaConnectionId: 2,
+        steps: [
+          "Houston",
+          "Atlanta",
+          "Pittsburgh",
+          "Princeton",
+          "College Park",
+          "Ithaca"
+        ]
+      }
+    ]
+  },
+  {
+    "source": "Boulder",
+    "destination": "Princeton",
+    "paths": [
+      {
+        javaConnectionId: 1,
+        steps: [
+          "Boulder",
+          "Lincoln",
+          "Champaign",
+          "Pittsburgh",
+          "Princeton"
+        ]
+      }
+    ]
+  }
+];
+/* JAVA Put the data here! */
+let colors = ['#CC0000', '#0000CD', '#00CD00', '#FFA500', '#8E388E', '#1E90FF', '#00F5FF', '#808000', '#800000', '#FF00FF', '#00FFFF', '#800080'];
+let getColor = () => {
+  return colors.shift();
+}
+let connection = 1;
+let getConnectionId = () => {
+  return connection++;
+}
+let renderPair = (path, pairId, globalConnectionId, color) => {
+  for(let l=1; l< path.length; l++) {
+    console.log(`Adding ${`selected${pairId}.${globalConnectionId}.${l}`}: ${path[l-1]} to ${path[l]} with color ${color}`);
+    s.graph.addEdge({
+        id: `selected${pairId}.${globalConnectionId}.${l}`,
+        label: '',
+        source: path[l-1],
+        target: path[l],
+        size: 1,
+        color: color,
+        type: 'line',
+        count: 1
+      });
+      addConnectionLabel(path[l-1], path[l], globalConnectionId);
+  }
+  s.refresh();
+}
+let removePair = (path, pairId, globalConnectionId) => {
+  for(let l=1; l< path.length; l++) {
+    console.log(`Removing ${`selected${pairId}.${globalConnectionId}.${l}`}`);
+    s.graph.dropEdge(`selected${pairId}.${globalConnectionId}.${l}`);
+    removeConnectionLabel(path[l-1], path[l], globalConnectionId);
+  }
+  s.refresh();
+}
+let findEdge = (node1, node2) => {
+  if(node1 < node2) {
+    return s.graph.edges(`${node1}-${node2}`);
+  } else {
+    return s.graph.edges(`${node2}-${node1}`);
+  }
+}
+let addConnectionLabel = (source, destination, connectionId) => {
+  let edge = findEdge(source, destination);
+  if(edge.connectionIds == undefined) {
+    edge.connectionIds = [connectionId];
+  } else {
+    edge.connectionIds.push(connectionId);
+  }
+  edge.label = edge.connectionIds.join(', ');
+}
+let removeConnectionLabel = (source, destination, connectionId) => {
+  let edge = findEdge(source, destination);
+  if(connectionId == null) {
+    edge.label = '';
+    edge.connectionIds = [];
+  } else {
+    edge.connectionIds = edge.connectionIds.filter((item) => item != connectionId);
+    edge.label = edge.connectionIds.join(', ');
+  }
+}
+let renderDefault = () => {
+  data.forEach((pair, pairId) => {
+    pair.paths.forEach((path, pathId) => {
+      if(path.color == undefined) {
+        path.color = getColor();
+      }
+      if(path.globalConnectionId == undefined) {
+        path.globalConnectionId = getConnectionId();
+      }
+      renderPair(path.steps, pairId, path.globalConnectionId, path.color);
+    });
+  });
+}
+let removeAll = () => {
+  let allEdges = s.graph.edges().filter((item) => item.id.startsWith("selected"));
+  allEdges.forEach((edge) => {
+    s.graph.dropEdge(edge.id);
+    removeConnectionLabel(edge.source, edge.target, null);
+  });
+  s.refresh();
+}
+renderDefault();
+let results = $('#results');
+data.forEach((pair, pairId) => {
+  let heading = $(`<a href="#"><h2>${pair.source} to ${pair.destination}</h2></a>`);
+  $(heading).hover(()=>{
+    removeAll();
+    pair.paths.forEach((path, pathId) => {
+      renderPair(path.steps, pairId, path.globalConnectionId, path.color);
+    });
+  }, ()=>{
+    removeAll();
+    renderDefault();
+  });
+  let listConnections = $('<ul/>');
+  pair.paths.forEach((path, pathId) => {
+    let connection = $(`<a href="#" style="color: ${path.color}"><li>Connection ${path.globalConnectionId} - [Java: ${path.javaConnectionId}]</li></a>`);
+    listConnections.append(connection);
+    $(connection).hover(()=>{
+      removeAll();
+      renderPair(path.steps, pairId, path.globalConnectionId, path.color);
+    }, ()=>{
+      removePair(path.steps, pairId, path.globalConnectionId);
+      renderDefault();
+    });
+  });
+  results.append(heading);
+    results.append(listConnections);
+});
+</script>
+</body>
+</html>
