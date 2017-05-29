@@ -144,7 +144,7 @@ public class FailuresTest {
 
     private void analyze(RequestSet requestSet, int numExpectedPaths, boolean survivable, boolean feasible){
         AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
-        assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getRequestIsSurvivable() == survivable));
+        assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getIsSurvivable() == survivable));
         //assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getNumPaths() == numExpectedPaths));
         assert(requestSet.getRequests().values().stream()
                 .allMatch(r ->

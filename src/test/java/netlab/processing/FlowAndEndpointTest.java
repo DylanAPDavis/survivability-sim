@@ -738,7 +738,7 @@ public class FlowAndEndpointTest {
     private void analyze(RequestSet requestSet, int numExpectedPaths, boolean survivable){
         AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
         for(RequestMetrics rm : analyzedSet.getRequestMetrics().values()){
-            assert(rm.getRequestIsSurvivable() == survivable);
+            assert(rm.getIsSurvivable() == survivable);
             assert(rm.getNumPaths() == numExpectedPaths);
         }
         assert(requestSet.getRequests().values().stream()

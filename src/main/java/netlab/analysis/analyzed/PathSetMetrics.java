@@ -14,8 +14,6 @@ import java.util.Map;
 public class PathSetMetrics {
 
     private Map<String, PathMetrics> pathMetricsMap;
-    private Boolean atLeastMinConn;
-    private Boolean atMostMaxConn;
     private Integer numFailed;
     private Integer numLinkUsages;
     private Integer numPaths;

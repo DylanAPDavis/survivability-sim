@@ -7,7 +7,6 @@ import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
-import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -34,8 +33,8 @@ public class AmplService {
             long startTime = System.nanoTime();
             ampl.solve();
             long endTime = System.nanoTime();
-            duration = (endTime - startTime)/1e6;
-            System.out.println("Solution took: " + duration + " milliseconds");
+            duration = (endTime - startTime)/1e9;
+            System.out.println("Solution took: " + duration + " seconds");
             com.ampl.Objective obj = ampl.getObjective(objective.getCode());
             String result = obj.result();
             if(result.toLowerCase().contains("solved")){
@@ -50,7 +49,7 @@ public class AmplService {
             ampl.close();
         }
         request.setChosenPaths(paths);
-        request.setRunningTimeMillis(duration);
+        request.setRunningTimeSeconds(duration);
         return request;
     }
 

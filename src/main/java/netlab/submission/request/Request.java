@@ -31,7 +31,7 @@ public class Request {
 
     private Map<SourceDestPair, Map<String, Path>> chosenPaths;
 
-    private double runningTimeMillis;
+    private double runningTimeSeconds;
 
     private Boolean isFeasible;
 }

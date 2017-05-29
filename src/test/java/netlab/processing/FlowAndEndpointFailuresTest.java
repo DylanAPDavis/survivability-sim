@@ -59,7 +59,7 @@ public class FlowAndEndpointFailuresTest {
                 .collect(Collectors.toMap(d -> d, d -> 1));
         RequestSet ers = createSetWithEndpoints(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
-        analyze(ers, 10, true, true);
+        analyze(ers, Arrays.asList(10), true, true);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class FlowAndEndpointFailuresTest {
         Map<String, Integer> dstNFAMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> nfa));
         RequestSet ers = createSetWithEndpoints(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
-        analyze(ers, 10, true, true);
+        analyze(ers, Arrays.asList(10), true, true);
     }
 
     @Test
@@ -106,7 +106,7 @@ public class FlowAndEndpointFailuresTest {
         dstNFAMap.put("Salt Lake City", 1);
         RequestSet ers = createSetWithEndpoints(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
-        analyze(ers, 7, true, true);
+        analyze(ers, Arrays.asList(7), true, true);
     }
 
     @Test
@@ -132,8 +132,7 @@ public class FlowAndEndpointFailuresTest {
         dstNFAMap.put("Salt Lake City", 3);
         RequestSet ers = createSetWithEndpoints(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
-        analyze(ers, 7, true, true);
-        visualizationService.visualize(ers);
+        analyze(ers, Arrays.asList(7), true, true);
     }
 
     @Test
@@ -172,7 +171,7 @@ public class FlowAndEndpointFailuresTest {
         dstNFAMap.put("Salt Lake City", 3);
         RequestSet ers = createSetWithEndpoints(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, srcFailureMap, srcNFAMap, dstFailureMap, dstNFAMap);
-        analyze(ers, 7, true, true);
+        analyze(ers, Arrays.asList(7), true, true);
     }
 
     @Test
@@ -182,8 +181,10 @@ public class FlowAndEndpointFailuresTest {
         List<Integer> minMaxFails = Arrays.asList(5, 6);
         List<Integer> minMaxFailsAllowed = Arrays.asList(1,2);
         RequestSet ers = createSetWithGenService("Endpoint", 10, 10, 5,
-                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .0, .0);
-        analyze(ers, 16, true, true);
+                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .60, .0, .0);
+        analyze(ers, Arrays.asList(14,15), true, true);
+
+        visualizationService.visualize(ers);
     }
 
     @Test
@@ -194,7 +195,7 @@ public class FlowAndEndpointFailuresTest {
         List<Integer> minMaxFailsAllowed = Arrays.asList(0, 1);
         RequestSet ers = createSetWithGenService("Endpoint", 10, 10, 10,
                 minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .10, .20);
-        analyze(ers, 10, true, true);
+        analyze(ers, Arrays.asList(10), true, true);
     }
 
     @Test
@@ -212,7 +213,7 @@ public class FlowAndEndpointFailuresTest {
                 .collect(Collectors.toMap(p -> p, p -> 1));
         RequestSet ers = createSetWithPairs(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
                 5, pairFailureMap, pairNFAMap);
-        analyze(ers, 5, true, true);
+        analyze(ers, Arrays.asList(5), true, true);
         visualizationService.visualize(ers);
     }
 
@@ -251,7 +252,7 @@ public class FlowAndEndpointFailuresTest {
 
         RequestSet ers = createSetWithPairs(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
                 5, pairFailureMap, pairNFAMap);
-        analyze(ers, 0, false, false);
+        analyze(ers, Arrays.asList(0), false, false);
     }
 
     @Test
@@ -289,7 +290,7 @@ public class FlowAndEndpointFailuresTest {
 
         RequestSet ers = createSetWithPairs(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
                 5, pairFailureMap, pairNFAMap);
-        analyze(ers, 6, true, true);
+        analyze(ers, Arrays.asList(6), true, true);
     }
 
     @Test
@@ -300,7 +301,7 @@ public class FlowAndEndpointFailuresTest {
         List<Integer> minMaxFailsAllowed = Arrays.asList(1,2);
         RequestSet ers = createSetWithGenService("Flow", 10, 10, 5,
                 minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .0, .0);
-        analyze(ers, 41, true, true);
+        analyze(ers, Arrays.asList(41), true, true);
     }
 
     @Test
@@ -311,7 +312,7 @@ public class FlowAndEndpointFailuresTest {
         List<Integer> minMaxFailsAllowed = Arrays.asList(0, 1);
         RequestSet ers = createSetWithGenService("Flow", 10, 10, 10,
                 minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .10, .20);
-        analyze(ers, 10, true, true);
+        analyze(ers, Arrays.asList(10), true, true);
     }
 
     @Test
@@ -323,7 +324,7 @@ public class FlowAndEndpointFailuresTest {
         String failureClass = "Link";
         RequestSet ers = createSetWithGenService("EndpointSharedF", 14, 14, 5,
                 minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
-        analyze(ers, 6, true, true);
+        analyze(ers, Arrays.asList(6), true, true);
     }
 
     @Test
@@ -335,7 +336,7 @@ public class FlowAndEndpointFailuresTest {
         String failureClass = "Link";
         RequestSet ers = createSetWithGenService("EndpointSharedF", 14, 14, 5,
                 minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
-        analyze(ers, 7, true, true);
+        analyze(ers, Arrays.asList(7), true, true);
     }
 
     @Test
@@ -352,7 +353,7 @@ public class FlowAndEndpointFailuresTest {
         Integer nfa = 1;
         RequestSet ers = createSetWithEndpointsSharedF(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, failures, nfa);
-        analyze(ers, 6, true, true);
+        analyze(ers, Arrays.asList(6), true, true);
     }
 
 
@@ -370,7 +371,7 @@ public class FlowAndEndpointFailuresTest {
         Integer nfa = 2;
         RequestSet ers = createSetWithEndpointsSharedF(sources, destinations, srcMinNumConnections, srcMaxNumConnections,
                 dstMinNumConnections, dstMaxNumConnections, 5, failures, nfa);
-        analyze(ers, 7, true, true);
+        analyze(ers, Arrays.asList(7), true, true);
     }
 
     @Test
@@ -386,7 +387,7 @@ public class FlowAndEndpointFailuresTest {
         Integer nfa = 1;
         RequestSet ers = createSetWithPairsSharedF(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
                 5, failures, nfa);
-        analyze(ers, 6, true, true);
+        analyze(ers, Arrays.asList(6), true, true);
     }
 
     @Test
@@ -402,7 +403,7 @@ public class FlowAndEndpointFailuresTest {
         Integer nfa = 2;
         RequestSet ers = createSetWithPairsSharedF(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
                 5, failures, nfa);
-        analyze(ers, 7, true, true);
+        analyze(ers, Arrays.asList(7), true, true);
     }
 
     @Test
@@ -414,7 +415,7 @@ public class FlowAndEndpointFailuresTest {
         String failureClass = "Link";
         RequestSet ers = createSetWithGenService("FlowSharedF", 14, 14, 5,
                 minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
-        analyze(ers, 6, true, true);
+        analyze(ers, Arrays.asList(6), true, true);
     }
 
     @Test
@@ -426,7 +427,7 @@ public class FlowAndEndpointFailuresTest {
         String failureClass = "Link";
         RequestSet ers = createSetWithGenService("FlowSharedF", 14, 14, 5,
                 minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
-        analyze(ers, 7, true, true);
+        analyze(ers, Arrays.asList(7), true, true);
     }
 
 
@@ -443,11 +444,11 @@ public class FlowAndEndpointFailuresTest {
         return pairSet;
     }
 
-    private void analyze(RequestSet requestSet, int numExpectedPaths, boolean survivable, boolean feasible){
+    private void analyze(RequestSet requestSet, List<Integer> numExpectedPaths, boolean survivable, boolean feasible){
         AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
         for(RequestMetrics rm : analyzedSet.getRequestMetrics().values()){
-            assert(rm.getRequestIsSurvivable() == survivable);
-            assert(rm.getNumPaths() == numExpectedPaths);
+            assert(rm.getIsSurvivable() == survivable);
+            assert(numExpectedPaths.contains(rm.getNumPaths()));
             assert(rm.getIsFeasible() == feasible);
         }
         assert(requestSet.getRequests().values().stream()

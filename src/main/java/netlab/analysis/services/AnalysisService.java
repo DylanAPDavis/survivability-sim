@@ -26,7 +26,7 @@ public class AnalysisService {
             RequestMetrics requestMetrics = generateMetrics(request, requestSet.getProblemClass());
             requestMetricsMap.put(requestId, requestMetrics);
         }
-        return AnalyzedSet.builder().id(requestSet.getId()).requestMetrics(requestMetricsMap).build();
+        return AnalyzedSet.builder().requestSetId(requestSet.getId()).requestMetrics(requestMetricsMap).build();
     }
 
     private RequestMetrics generateMetrics(Request request, ProblemClass problemClass) {
@@ -94,10 +94,10 @@ public class AnalysisService {
         }
 
         return RequestMetrics.builder()
-                .requestIsSurvivable(requestIsSurvivable)
+                .isSurvivable(requestIsSurvivable)
                 .isFeasible(request.getIsFeasible())
-                .numLinkUsages(numLinkUsages)
-                .numFailed(numFailed)
+                .numLinksUsed(numLinkUsages)
+                .numDisconnectedPaths(numFailed)
                 .numPaths(numPaths)
                 .pathSetMetricsMap(pathSetMetricsMap)
                 .memberPathSetMetricsMap(memberPathSetMetricsMap)

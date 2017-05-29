@@ -125,7 +125,7 @@ public class GenerationService {
                 .numFailsAllowed(nfa)
                 .chosenPaths(null)
                 .isFeasible(false)
-                .runningTimeMillis(0L)
+                .runningTimeSeconds(0L)
                 .build();
     }
 
@@ -218,7 +218,7 @@ public class GenerationService {
                 .failures(failureCollection)
                 .numFailsAllowed(numFailsAllowedCollection)
                 .pairs(pairs)
-                .runningTimeMillis(0L)
+                .runningTimeSeconds(0L)
                 .isFeasible(false)
                 .build();
     }
