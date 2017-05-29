@@ -1,10 +1,7 @@
 package netlab.analysis.services;
 
 import lombok.extern.slf4j.Slf4j;
-import netlab.analysis.analyzed.AnalyzedSet;
-import netlab.analysis.analyzed.PathMetrics;
-import netlab.analysis.analyzed.PathSetMetrics;
-import netlab.analysis.analyzed.RequestMetrics;
+import netlab.analysis.analyzed.*;
 import netlab.analysis.enums.MemberType;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.*;
@@ -44,22 +41,30 @@ public class AnalysisService {
         Integer numLinkUsages = 0;
         Integer numFailed = 0;
         Integer numPaths = 0;
+        Long totalPathCost = 0L;
 
         // Check the high-level attributes
         if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.FlowSharedF)){
             List<List<Failure>> failureGroups = failureColl.getFailureGroups();
+            Map<Node, List<List<Failure>>> srcFailureGroupsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> failureGroups));
+            Map<Node, List<List<Failure>>> dstFailureGroupsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> failureGroups));
+
             // Must analyze paths based on total paths - choose just one failure group for everybody
             pathSetMetricsMap = analyzeAllPaths(chosenPaths, pairs, failureGroups);
             for(PathSetMetrics psm : pathSetMetricsMap.values()){
                 numLinkUsages += psm.getNumLinkUsages();
                 numFailed += psm.getNumFailed();
                 numPaths += psm.getNumPaths();
+                totalPathCost += psm.getTotalLinkCost();
             }
+            memberPathSetMetricsMap = analyzeAllPathsForEndpoints(chosenPaths, sources, destinations, pairs, srcFailureGroupsMap, dstFailureGroupsMap);
         }
         // Check the flow-level attributes
         if(problemClass.equals(ProblemClass.Flow)){
             Map<SourceDestPair, Integer> minNumConnectionsMap = connectionColl.getPairMinConnectionsMap();
             Map<SourceDestPair, List<List<Failure>>> failuresMap = failureColl.getPairFailureGroupsMap();
+            Map<Node, List<List<Failure>>> srcFailureGroupsMap = new HashMap<>();
+            Map<Node, List<List<Failure>>> dstFailureGroupsMap = new HashMap<>();
             // Must analyze number of paths based on pairs
             for(SourceDestPair pair : pairs){
                 Map<String, Path> pathMap = chosenPaths.get(pair);
@@ -68,16 +73,22 @@ public class AnalysisService {
                 Integer minConn = minNumConnectionsMap.get(pair);
 
                 List<List<Failure>> failureGroups = failuresMap.get(pair);
+                srcFailureGroupsMap.putIfAbsent(pair.getSrc(), new ArrayList<>());
+                srcFailureGroupsMap.get(pair.getSrc()).addAll(failureGroups);
+                dstFailureGroupsMap.putIfAbsent(pair.getDst(), new ArrayList<>());
+                dstFailureGroupsMap.get(pair.getDst()).addAll(failureGroups);
 
                 PathSetMetrics pathSetMetrics = getWorstCasePathSetMetrics(pathMap, failureGroups);
                 numLinkUsages += pathSetMetrics.getNumLinkUsages();
                 numFailed += pathSetMetrics.getNumFailed();
+                totalPathCost += pathSetMetrics.getTotalLinkCost();
                 pathSetMetricsMap.put(pair, pathSetMetrics);
 
                 if(pathMap.values().size() - pathSetMetrics.getNumFailed() < minConn){
                     requestIsSurvivable = false;
                 }
             }
+            memberPathSetMetricsMap = analyzeAllPathsForEndpoints(chosenPaths, sources, destinations, pairs, srcFailureGroupsMap, dstFailureGroupsMap);
         }
         if(problemClass.equals(ProblemClass.Endpoint)){
             Map<Node, List<List<Failure>>> srcFailureGroupsMap = failureColl.getSrcFailureGroupsMap();
@@ -85,22 +96,117 @@ public class AnalysisService {
             memberPathSetMetricsMap = analyzeAllPathsForEndpoints(chosenPaths, sources, destinations, pairs, srcFailureGroupsMap, dstFailureGroupMap);
             List<Path> paths = chosenPaths.values().stream().map(Map::values).flatMap(Collection::stream).collect(Collectors.toList());
             numPaths = paths.size();
-            numLinkUsages = paths.stream().map(p -> p.getLinks().size()).reduce(0, (pLength1, pLength2) -> pLength1 + pLength2);
+            numLinkUsages = paths.stream().mapToInt(p -> p.getLinks().size()).sum();
+            totalPathCost += paths.stream().map(Path::getLinks).flatMap(Collection::stream).mapToLong(Link::getWeight).sum();
             numFailed = determineMaxNumFailedAcrossMemberTypes(memberPathSetMetricsMap);
+
+            // Get metrics for pairs
+            for(SourceDestPair pair : pairs){
+                List<List<Failure>> failureGroups = srcFailureGroupsMap.get(pair.getSrc());
+                failureGroups.addAll(dstFailureGroupMap.get(pair.getDst()));
+                PathSetMetrics psm =  getWorstCasePathSetMetrics(chosenPaths.get(pair), failureGroups);
+                pathSetMetricsMap.put(pair, psm);
+            }
         }
 
         if(numPaths - numFailed < numConnections){
             requestIsSurvivable = false;
         }
 
+        Double avgPathLength = numPaths > 0 ? numLinkUsages / numPaths * 1.0 : 0.0;
+        Double avgPathCost = numPaths > 0 ? totalPathCost / numPaths * 1.0 : 0.0;
+        Averages pairAverages = getAveragesForPairs(pairs, pathSetMetricsMap);
+        Averages srcAverages = getAveragesForMember(sources, memberPathSetMetricsMap, true);
+        Averages dstAverages = getAveragesForMember(destinations, memberPathSetMetricsMap, false);
         return RequestMetrics.builder()
+                .requestId(request.getId())
                 .isSurvivable(requestIsSurvivable)
                 .isFeasible(request.getIsFeasible())
+                .runningTimeSeconds(request.getRunningTimeSeconds())
                 .numLinksUsed(numLinkUsages)
-                .numDisconnectedPaths(numFailed)
+                .costLinksUsed(totalPathCost)
                 .numPaths(numPaths)
+                .numDisconnectedPaths(numFailed)
+                .numIntactPaths(numPaths - numFailed)
+                .avgPathLength(avgPathLength)
+                .avgPathCost(avgPathCost)
+                .averagesPerPair(pairAverages)
+                .averagesPerSrc(srcAverages)
+                .averagesPerDst(dstAverages)
                 .pathSetMetricsMap(pathSetMetricsMap)
                 .memberPathSetMetricsMap(memberPathSetMetricsMap)
+                .build();
+    }
+
+    private Averages getAveragesForMember(Set<Node> members,
+                                          Map<MemberType, Map<Node, Map<SourceDestPair, PathSetMetrics>>> memberPathSetMetricsMap,
+                                          boolean isSource) {
+        Double totalPaths = 0.0;
+        Double totalPathLength = 0.0;
+        Double totalPathCost = 0.0;
+        Double totalDisconnectedPaths = 0.0;
+        Integer numChosen = 0;
+        Map<Node, Map<SourceDestPair, PathSetMetrics>> memberMap = isSource ? memberPathSetMetricsMap.get(MemberType.Source) : memberPathSetMetricsMap.get(MemberType.Destination);
+        for(Node member: members){
+            boolean isUsed = false;
+            for(SourceDestPair pair : memberMap.get(member).keySet()) {
+                PathSetMetrics psm = memberMap.get(member).get(pair);
+                totalPaths += psm.getNumPaths();
+                totalPathLength += psm.getNumLinkUsages();
+                totalPathCost += psm.getTotalLinkCost();
+                totalDisconnectedPaths += psm.getNumFailed();
+                if(psm.getChosen()){
+                    isUsed = true;
+                }
+            }
+            if(isUsed){
+                numChosen++;
+            }
+        }
+        return Averages.builder()
+                .avgPaths(totalPaths / members.size())
+                .avgPathLength(totalPathLength / members.size())
+                .avgPathCost(totalPathCost / members.size())
+                .avgDisconnectedPaths(totalDisconnectedPaths / members.size())
+                .avgPathsPerChosen(totalPaths / numChosen)
+                .avgPathLengthPerChosen(totalPathLength / numChosen)
+                .avgPathCostPerChosen(totalPathCost / numChosen)
+                .avgDisconnectedPathsPerChosen(totalDisconnectedPaths / members.size())
+                .forPair(false)
+                .forSource(isSource)
+                .forDest(!isSource)
+                .build();
+    }
+
+    private Averages getAveragesForPairs(Set<SourceDestPair> pairs, Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap){
+
+        Double totalPaths = 0.0;
+        Double totalPathLength = 0.0;
+        Double totalPathCost = 0.0;
+        Double totalDisconnectedPaths = 0.0;
+        Integer numChosen = 0;
+        for(SourceDestPair pair: pairs){
+            PathSetMetrics psm = pathSetMetricsMap.get(pair);
+            totalPaths += psm.getNumPaths();
+            totalPathLength += psm.getNumLinkUsages();
+            totalPathCost += psm.getTotalLinkCost();
+            totalDisconnectedPaths += psm.getNumFailed();
+            if(psm.getChosen()){
+                numChosen++;
+            }
+        }
+        return Averages.builder()
+                .avgPaths(totalPaths / pairs.size())
+                .avgPathLength(totalPathLength / pairs.size())
+                .avgPathCost(totalPathCost / pairs.size())
+                .avgDisconnectedPaths(totalDisconnectedPaths / pairs.size())
+                .avgPathsPerChosen(numChosen > 0 ? totalPaths / numChosen : 0)
+                .avgPathLengthPerChosen(numChosen > 0 ? totalPathLength / numChosen : 0)
+                .avgPathCostPerChosen(numChosen > 0 ? totalPathCost / numChosen : 0)
+                .avgDisconnectedPathsPerChosen(numChosen > 0 ?  totalDisconnectedPaths / pairs.size() : 0)
+                .forPair(true)
+                .forSource(false)
+                .forDest(false)
                 .build();
     }
 
@@ -218,8 +324,9 @@ public class AnalysisService {
         for(String pathId : pathMap.keySet()){
             Path path = pathMap.get(pathId);
             Integer numLinks = path.getLinks().size();
+            Long totalCost = path.getLinks().stream().mapToLong(Link::getWeight).sum();
             Boolean survived = testSurvival(path, failures);
-            PathMetrics metrics = PathMetrics.builder().numLinks(numLinks).survived(survived).build();
+            PathMetrics metrics = PathMetrics.builder().numLinks(numLinks).survived(survived).cost(totalCost).build();
             pathMetricsMap.put(pathId, metrics);
         }
         return pathMetricsMap;
@@ -253,13 +360,17 @@ public class AnalysisService {
         Integer numLinkUsages = 0;
         Integer numFailed = 0;
         Integer numPaths = 0;
+        Long totalCost = 0L;
+        Boolean chosen = false;
         if(!pathMetricsMap.isEmpty()) {
+            chosen = true;
             for (PathMetrics pathMetrics : pathMetricsMap.values()) {
                 numLinkUsages += pathMetrics.getNumLinks();
                 if (!pathMetrics.getSurvived()) {
                     numFailed++;
                 }
                 numPaths++;
+                totalCost += pathMetrics.getCost();
             }
         }
 
@@ -268,6 +379,8 @@ public class AnalysisService {
                 .numLinkUsages(numLinkUsages)
                 .numFailed(numFailed)
                 .numPaths(numPaths)
+                .totalLinkCost(totalCost)
+                .chosen(chosen)
                 .build();
     }
 

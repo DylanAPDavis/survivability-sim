@@ -13,5 +13,6 @@ public class PathMetrics {
 
     private Boolean survived;
     private Integer numLinks;
+    private Long cost;
 
 }

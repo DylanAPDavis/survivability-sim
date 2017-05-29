@@ -17,4 +17,6 @@ public class PathSetMetrics {
     private Integer numFailed;
     private Integer numLinkUsages;
     private Integer numPaths;
+    private Long totalLinkCost;
+    private Boolean chosen;
 }

@@ -17,29 +17,21 @@ import java.util.Set;
 @AllArgsConstructor
 public class RequestMetrics {
 
-    private Long requestId;
+    private String requestId;
     private Boolean isSurvivable;
     private Boolean isFeasible;
     private Double runningTimeSeconds;
     private Integer numLinksUsed;
-    private Integer costLinksUsed;
+    private Long costLinksUsed;
     private Integer numPaths;
     private Integer numDisconnectedPaths;
     private Integer numIntactPaths;
     private Double avgPathLength;
     private Double avgPathCost;
-    private Double avgPathsPerPair;
-    private Double avgPathsPerSrc;
-    private Double avgPathsPerDst;
-    private Double avgDisconnectedPathsPerPair;
-    private Double avgDisconnectedPathsPerSrc;
-    private Double avgDisconnectedPathsPerDst;
-    private Double avgPathsPerPairChosen;
-    private Double avgPathsPerSrcChosen;
-    private Double avgPathsPerDstChosen;
-    private Double avgDisconnectedPathsPerPairChosen;
-    private Double avgDisconnectedPathsPerSrcChosen;
-    private Double avgDisconnectedPathsPerDstChosen;
+
+    private Averages averagesPerPair;
+    private Averages averagesPerSrc;
+    private Averages averagesPerDst;
 
     private Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap;
     private Map<MemberType, Map<Node, Map<SourceDestPair, PathSetMetrics>>> memberPathSetMetricsMap;

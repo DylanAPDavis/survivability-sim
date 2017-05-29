@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import netlab.submission.enums.Algorithm;
+import netlab.submission.enums.ProblemClass;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.Path;
 import netlab.topology.elements.SourceDestPair;
