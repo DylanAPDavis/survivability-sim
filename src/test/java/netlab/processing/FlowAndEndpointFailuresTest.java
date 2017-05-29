@@ -182,9 +182,7 @@ public class FlowAndEndpointFailuresTest {
         List<Integer> minMaxFailsAllowed = Arrays.asList(1,2);
         RequestSet ers = createSetWithGenService("Endpoint", 10, 10, 5,
                 minConns, maxConns, minMaxFails, minMaxFailsAllowed, .60, .0, .0);
-        analyze(ers, Arrays.asList(14,15), true, true);
-
-        visualizationService.visualize(ers);
+        analyze(ers, Arrays.asList(14,15, 16), true, true);
     }
 
     @Test
@@ -214,7 +212,6 @@ public class FlowAndEndpointFailuresTest {
         RequestSet ers = createSetWithPairs(sources, destinations, pairMinNumConnections, pairMaxNumConnections,
                 5, pairFailureMap, pairNFAMap);
         analyze(ers, Arrays.asList(5), true, true);
-        visualizationService.visualize(ers);
     }
 
     @Test
