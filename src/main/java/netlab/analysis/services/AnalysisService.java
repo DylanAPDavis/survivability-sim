@@ -23,7 +23,129 @@ public class AnalysisService {
             RequestMetrics requestMetrics = generateMetrics(request, requestSet.getProblemClass());
             requestMetricsMap.put(requestId, requestMetrics);
         }
-        return AnalyzedSet.builder().requestSetId(requestSet.getId()).requestMetrics(requestMetricsMap).build();
+        return generateAnalyzedSet(requestSet, requestMetricsMap);
+    }
+
+    private AnalyzedSet generateAnalyzedSet(RequestSet requestSet, Map<String, RequestMetrics> requestMetricsMap) {
+
+        Collection<RequestMetrics> metricsCollection = requestMetricsMap.values();
+        Double totalRunningTime = 0.0;
+        Double totalRunningTimeForFeasible = 0.0;
+        Integer numFeasible = 0;
+        Integer numRequests = metricsCollection.size();
+        Integer numSurvivable = 0;
+        Integer numSurvivableAndFeasible = 0;
+        Integer totalLinksUsed = 0;
+        Long totalCostLinksUsed = 0L;
+        Integer totalNumPaths = 0;
+        Integer totalDisconnectedPaths = 0;
+        Integer totalIntactPaths = 0;
+        Double totalAvgPathLength = 0.0;
+        Double totalAvgPathCost = 0.0;
+        Set<Averages> pairAverages = new HashSet<>();
+        Set<Averages> srcAverages = new HashSet<>();
+        Set<Averages> dstAverages = new HashSet<>();
+        for(RequestMetrics metrics : metricsCollection){
+            totalRunningTime += metrics.getRunningTimeSeconds();
+            numSurvivable += metrics.getIsSurvivable() ? 1 : 0;
+            if(metrics.getIsFeasible()){
+                numSurvivableAndFeasible += metrics.getIsSurvivable() ? 1 : 0;
+                totalRunningTimeForFeasible += metrics.getRunningTimeSeconds();
+                numFeasible++;
+                totalLinksUsed += metrics.getNumLinksUsed();
+                totalCostLinksUsed += metrics.getCostLinksUsed();
+                totalNumPaths += metrics.getNumPaths();
+                totalDisconnectedPaths += metrics.getNumDisconnectedPaths();
+                totalIntactPaths += metrics.getNumIntactPaths();
+                totalAvgPathLength += metrics.getAvgPathLength();
+                totalAvgPathCost += metrics.getAvgPathCost();
+                pairAverages.add(metrics.getAveragesPerPair());
+                srcAverages.add(metrics.getAveragesPerSrc());
+                dstAverages.add(metrics.getAveragesPerDst());
+            }
+        }
+        Averages avgPairAverages = averageSetOfAverages(pairAverages);
+        Averages avgSrcAverages = averageSetOfAverages(srcAverages);
+        Averages avgDstAverages = averageSetOfAverages(dstAverages);
+
+        return AnalyzedSet.builder()
+                .requestSetId(requestSet.getId())
+                .seed(requestSet.getSeed())
+                .problemClass(requestSet.getProblemClass())
+                .algorithm(requestSet.getAlgorithm())
+                .requestMetrics(requestMetricsMap)
+                .numRequests(numRequests)
+                .totalRunningTimeSeconds(totalRunningTime)
+                .totalRunningTimeSecondsForFeasible(totalRunningTimeForFeasible)
+                .avgRunningTimeSeconds(numRequests > 0 ? totalRunningTime / numRequests : 0)
+                .avgRunningTimeSecondsForFeasible(numFeasible > 0 ? totalRunningTimeForFeasible / numFeasible : 0)
+                .totalSurvivable(numSurvivable)
+                .percentSurvivable(numRequests > 0 ? 1.0 * numSurvivable / numRequests : 0)
+                .percentSurvivableForFeasible(numFeasible > 0 ? 1.0 * numSurvivableAndFeasible / numFeasible : 0)
+                .totalFeasible(numFeasible)
+                .percentFeasible(numRequests > 0 ? 1.0 * numFeasible / numRequests : 0)
+                .totalFeasibleAndSurvivable(numSurvivableAndFeasible)
+                .totalLinksUsed(totalLinksUsed)
+                .avgLinksUsedForFeasible(numFeasible > 0 ? 1.0 * totalLinksUsed / numFeasible : 0)
+                .totalCostLinksUsed(totalCostLinksUsed)
+                .avgCostLinksUsedForFeasible(numFeasible > 0 ? 1.0 * totalCostLinksUsed / numFeasible : 0)
+                .totalNumPaths(totalNumPaths)
+                .avgNumPathsForFeasible(numFeasible > 0 ? 1.0 * totalNumPaths / numFeasible : 0)
+                .totalDisconnectedPaths(totalDisconnectedPaths)
+                .avgDisconnectedPathsForFeasible(numFeasible > 0 ? 1.0 * totalDisconnectedPaths / numFeasible : 0)
+                .totalIntactPaths(totalIntactPaths)
+                .avgIntactPathsForFeasible(numFeasible > 0 ? 1.0 * totalIntactPaths / numFeasible : 0)
+                .avgAvgPathLength(numFeasible > 0 ? totalAvgPathLength / numFeasible : 0)
+                .avgAvgPathCost(numFeasible > 0 ? totalAvgPathCost / numFeasible : 0)
+                .avgAveragesPerPair(avgPairAverages)
+                .avgAveragesPerSrc(avgSrcAverages)
+                .avgAveragesPerDst(avgDstAverages)
+                .build();
+    }
+
+    private Averages averageSetOfAverages(Set<Averages> averagesSet) {
+
+        Integer numAverages = averagesSet.size();
+        Double totalAvgPaths = 0.0;
+        Double totalAvgPathsPerChosen = 0.0;
+        Double totalAvgPathLength = 0.0;
+        Double totalAvgPathLengthPerChosen = 0.0;
+        Double totalAvgPathCost = 0.0;
+        Double totalAvgPathCostPerChosen = 0.0;
+        Double totalAvgDisconnectedPaths = 0.0;
+        Double totalAvgDisconnectedPathsPerChosen = 0.0;
+        Boolean forPair = false;
+        Boolean forSource = false;
+        Boolean forDest = false;
+        for(Averages averages : averagesSet){
+            totalAvgPaths += averages.getAvgPaths();
+            totalAvgPathsPerChosen += averages.getAvgPathsPerChosen();
+            totalAvgPathLength += averages.getAvgPathLength();
+            totalAvgPathLengthPerChosen += averages.getAvgPathLengthPerChosen();
+            totalAvgPathCost += averages.getAvgPathCost();
+            totalAvgPathCostPerChosen += averages.getAvgPathCostPerChosen();
+            totalAvgDisconnectedPaths += averages.getAvgDisconnectedPaths();
+            totalAvgDisconnectedPathsPerChosen += averages.getAvgDisconnectedPathsPerChosen();
+            forPair = averages.getForPair();
+            forSource = averages.getForSource();
+            forDest = averages.getForDest();
+        }
+
+        numAverages = numAverages == 0 ? 1 : numAverages;
+
+        return Averages.builder()
+                .forPair(forPair)
+                .forSource(forSource)
+                .forDest(forDest)
+                .avgPaths(totalAvgPaths / numAverages)
+                .avgPathsPerChosen(totalAvgPathsPerChosen / numAverages)
+                .avgPathLength(totalAvgPathLength / numAverages)
+                .avgPathLengthPerChosen(totalAvgPathLengthPerChosen / numAverages)
+                .avgPathCost(totalAvgPathCost / numAverages)
+                .avgPathCostPerChosen(totalAvgPathCostPerChosen / numAverages)
+                .avgDisconnectedPaths(totalAvgDisconnectedPaths / numAverages)
+                .avgDisconnectedPathsPerChosen(totalAvgDisconnectedPathsPerChosen / numAverages)
+                .build();
     }
 
     private RequestMetrics generateMetrics(Request request, ProblemClass problemClass) {
