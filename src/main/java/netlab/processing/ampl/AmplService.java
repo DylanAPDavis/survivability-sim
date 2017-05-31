@@ -91,9 +91,9 @@ public class AmplService {
 
         Files.delete(file);
 
-        ampl.setIntOption("times", 1);
-        ampl.setIntOption("gentimes", 1);
-        ampl.setIntOption("show_stats", 1);
+        //ampl.setIntOption("times", 1);
+        //ampl.setIntOption("gentimes", 1);
+        //ampl.setIntOption("show_stats", 1);
 
         return ampl;
     }
