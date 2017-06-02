@@ -53,6 +53,98 @@ public class AnalysisTest {
     }
 
     @Test
+    public void allFeasibleFlowSharedFFailures(){
+        Integer numFails = 10;
+        Integer nfa = 1;
+        List<Integer> minConns = Arrays.asList(1, 1);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        RequestSet rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 1.0);
+        assert(as.getPercentSurvivableForFeasible() == 1.0);
+    }
+
+    @Test
+    public void allFeasibleEndpointSharedFFailures(){
+        Integer numFails = 10;
+        Integer nfa = 1;
+        List<Integer> minConns = Arrays.asList(1, 1);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        RequestSet rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 1.0);
+        assert(as.getPercentSurvivableForFeasible() == 1.0);
+    }
+
+    @Test
+    public void allFeasibleFlowFailures(){
+        List<Integer> minConns = Arrays.asList(1, 1);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        Integer numFails = 10;
+        Integer nfa = 1;
+        RequestSet rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 1.0);
+        assert(as.getPercentSurvivableForFeasible() == 1.0);
+    }
+
+    @Test
+    public void allFeasibleEndpointFailures(){
+        List<Integer> minConns = Arrays.asList(1, 1);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        Integer numFails = 10;
+        Integer nfa = 1;
+        RequestSet rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 1.0);
+        assert(as.getPercentSurvivableForFeasible() == 1.0);
+    }
+
+    // < 100% feasible
+    @Test
+    public void ninetyPercentFeasibleFlexFailures(){
+        List<Integer> minConns = new ArrayList<>();
+        List<Integer> maxConns = new ArrayList<>();
+        Integer numFails = 10;
+        Integer nfa = 3;
+        RequestSet rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 0.9);
+        assert(as.getPercentSurvivableForFeasible() == 1.0);
+    }
+
+    @Test
+    public void ninetyPercentFeasibleFlowSharedFFailures(){
+        Integer numFails = 24;
+        Integer nfa = 2;
+        List<Integer> minConns = Arrays.asList(0, 1);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        RequestSet rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 0.9);
+        assert(as.getPercentSurvivableForFeasible() == 1.0);
+    }
+
+    @Test
+    public void ninetyPercentFeasibleEndpointSharedFFailures(){
+        Integer numFails = 24;
+        Integer nfa = 2;
+        List<Integer> minConns = Arrays.asList(0, 1);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        RequestSet rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 0.9);
+        assert(as.getPercentSurvivableForFeasible() == 1.0);
+    }
+
+    @Test
     public void halfFeasibleFlowFailures(){
         List<Integer> minConns = Arrays.asList(1, 1);
         List<Integer> maxConns = Arrays.asList(2,3);
@@ -63,6 +155,85 @@ public class AnalysisTest {
         AnalyzedSet as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.5);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
+    }
+
+    @Test
+    public void eightyPercentFeasibleEndpointFailures(){
+        Integer numFails = 5;
+        Integer nfa = 3;
+        List<Integer> minConns = Arrays.asList(2, 2);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        RequestSet rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 0.8);
+        assert(as.getPercentSurvivableForFeasible() == 1.0);
+    }
+
+    // All infeasible
+    @Test
+    public void infeasibleFlexFailures(){
+        List<Integer> minConns = new ArrayList<>();
+        List<Integer> maxConns = new ArrayList<>();
+        Integer numFails = 14;
+        Integer nfa = 14;
+        RequestSet rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Node", 0.0, 1.0, 1.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 0.0);
+        assert(as.getPercentSurvivableForFeasible() == 0.0);
+    }
+
+    @Test
+    public void infeasibleFlowSharedFFailures(){
+        Integer numFails = 14;
+        Integer nfa = 14;
+        List<Integer> minConns = Arrays.asList(0, 1);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        RequestSet rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 0.0);
+        assert(as.getPercentSurvivableForFeasible() == 0.0);
+    }
+
+    @Test
+    public void infeasibleEndpointSharedFFailures(){
+        Integer numFails = 14;
+        Integer nfa = 14;
+        List<Integer> minConns = Arrays.asList(0, 1);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        RequestSet rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 0.0);
+        assert(as.getPercentSurvivableForFeasible() == 0.0);
+    }
+
+    @Test
+    public void infeasibleFlowFailures(){
+        List<Integer> minConns = Arrays.asList(1, 1);
+        List<Integer> maxConns = Arrays.asList(2,3);
+        Integer numFails = 14;
+        Integer nfa = 14;
+        RequestSet rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Both", 0.0, 1.0, 1.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 0.0);
+        assert(as.getPercentSurvivableForFeasible() == 0.0);
+    }
+
+    @Test
+    public void infeasibleEndpointFailures(){
+        Integer numFails = 14;
+        Integer nfa = 14;
+        List<Integer> minConns = Arrays.asList(2, 2);
+        List<Integer> maxConns = Arrays.asList(4, 4);
+        RequestSet rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
+                maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        assert(as.getPercentFeasible() == 0.0);
+        assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
 
     private RequestSet createSetWithGenService(String problemClass, int numSources, int numDestinations, int numConns,
