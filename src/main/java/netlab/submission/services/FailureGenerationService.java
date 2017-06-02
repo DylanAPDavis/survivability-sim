@@ -42,25 +42,25 @@ public class FailureGenerationService {
 
         // Failures for the whole request
         Set<Failure> failures = makeFailureSet(params.getFailures(), params.getFailureProbabilityMap(), nodeIdMap, linkIdMap);
-        List<List<Failure>> failureGroups = generateFailureGroups(numFailsAllowed, filterFailureSet(failures, linkIdMap));
+        List<List<Failure>> failureGroups = generateFailureGroups(numFailsAllowed, failures);
 
         // Failure for pairs
         Map<SourceDestPair, Set<Failure>> pairFailuresMap = makePairFailuresMap(pairs, params.getPairFailureMap(),
                 params.getPairFailureProbabilityMap(), nodeIdMap, linkIdMap);
         Map<SourceDestPair, List<List<Failure>>> pairFailureGroupsMap = pairFailuresMap.keySet().stream()
-                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(pairNumFailsAllowed.get(p), filterFailureSet(pairFailuresMap.get(p), linkIdMap))));
+                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(pairNumFailsAllowed.get(p), pairFailuresMap.get(p))));
 
         // Failures for sources
         Map<Node, Set<Failure>> srcFailuresMap = makeNodeFailuresMap(sources, params.getSourceFailureMap(),
                 params.getSourceFailureProbabilityMap(), nodeIdMap, linkIdMap);
         Map<Node, List<List<Failure>>> srcFailureGroupsMap = srcFailuresMap.keySet().stream()
-                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(srcNumFailsAllowed.get(p), filterFailureSet(srcFailuresMap.get(p), linkIdMap))));
+                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(srcNumFailsAllowed.get(p), srcFailuresMap.get(p))));
 
         // Failures for destinations
         Map<Node, Set<Failure>> dstFailuresMap = makeNodeFailuresMap(destinations, params.getDestFailureMap(),
                 params.getDestFailureProbabilityMap(), nodeIdMap, linkIdMap);
         Map<Node, List<List<Failure>>> dstFailureGroupsMap = dstFailuresMap.keySet().stream()
-                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(dstNumFailsAllowed.get(p), filterFailureSet(dstFailuresMap.get(p), linkIdMap))));
+                .collect(Collectors.toMap(p -> p, p -> generateFailureGroups(dstNumFailsAllowed.get(p), dstFailuresMap.get(p))));
 
         long failureSetSize = failures.size() + pairFailuresMap.values().stream().mapToLong(Collection::size).sum();
         failureSetSize += srcFailuresMap.values().stream().mapToLong(Collection::size).sum();
@@ -78,32 +78,30 @@ public class FailureGenerationService {
                 .build();
     }
 
-    private Set<Failure> filterFailureSet(Set<Failure> failures, Map<String, Link> linkIdMap) {
-        Set<Failure> filteredFailures = new HashSet<>();
-        Map<String, Failure> linkIdToFailMap = failures.stream().filter(f -> f.getLink() != null).collect(Collectors.toMap(f -> f.getLink().getId(), f -> f));
-        for(Failure failure: failures){
-            if(failure.getLink() != null){
-                Link thisLink = failure.getLink();
-                String[] splitId = thisLink.getId().split("-");
-                String revId = "";
-                if(splitId.length > 2){
-                    revId = splitId[1] + "-" + splitId[0] + "-" + splitId[2];
-                }
-                else{
-                    revId = splitId[1] + "-" + splitId[0];
-                }
-                //String revId = thisLink.getTarget().getId() + "-" + thisLink.getOrigin().getId();
-                Failure revFailure = linkIdToFailMap.get(revId);
-                if(revFailure == null || !filteredFailures.contains(revFailure)){
-                    filteredFailures.add(failure);
+    private Set<Link> filterLinks(Set<Link> links, Map<String, Link> linkIdMap){
+        Set<Link> filteredLinks = new HashSet<>();
+        for(Link link : links){
+            String[] splitId = link.getId().split("-");
+            String revId = "";
+            if(splitId.length > 2){
+                revId = splitId[1] + "-" + splitId[0] + "-" + splitId[2];
+            }
+            else{
+                revId = splitId[1] + "-" + splitId[0];
+            }
+            if(linkIdMap.containsKey(revId)){
+                Link revLink = linkIdMap.get(revId);
+                if(!filteredLinks.contains(revLink)){
+                    filteredLinks.add(link);
                 }
             }
             else{
-                filteredFailures.add(failure);
+                filteredLinks.add(link);
             }
         }
-        return filteredFailures;
+        return filteredLinks;
     }
+
 
     private Map<Node,Set<Failure>> makeNodeFailuresMap(Set<Node> members, Map<String, Set<String>> memberFailureMap,
                                                        Map<String, Map<String, Double>> memberFailureProbabilityMap, Map<String, Node> nodeIdMap, Map<String, Link> linkIdMap) {
@@ -189,7 +187,7 @@ public class FailureGenerationService {
             if(minMaxFails.size() == 2) {
                 numFails = Math.min(failureCollection.getFailureSet().size(), selectionService.randomInt(minMaxFails.get(0), minMaxFails.get(1), rng));
             }
-            failureGroups = generateFailureGroups(numFails, filterFailureSet(failureCollection.getFailureSet(), topo.getLinkIdMap()));
+            failureGroups = generateFailureGroups(numFails, failureCollection.getFailureSet());
         }
         if(problemClass.equals(ProblemClass.Flow)){
             for (SourceDestPair pair : pairs) {
@@ -197,7 +195,7 @@ public class FailureGenerationService {
                 int thisNumFails = minMaxFails.size() == 2 ?
                         Math.min(thisFailureSet.size(), selectionService.randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
                 pairNumFailsMap.put(pair, thisNumFails);
-                pairFailureGroupsMap.put(pair, generateFailureGroups(thisNumFails, filterFailureSet(thisFailureSet, topo.getLinkIdMap())));
+                pairFailureGroupsMap.put(pair, generateFailureGroups(thisNumFails, thisFailureSet));
             }
             //Update number of required cuts for request to be equal to the total min
             numFails = pairNumFailsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
@@ -206,11 +204,11 @@ public class FailureGenerationService {
         if(problemClass.equals(ProblemClass.Endpoint)){
             for(Node source : sources){
                 Set<Failure> failureSet = failureCollection.getSrcFailuresMap().getOrDefault(source, failureCollection.getFailureSet());
-                populateNumFailsAndFailureGroupMap(filterFailureSet(failureSet, topo.getLinkIdMap()), source, minMaxFails, numFails, srcNumFailsMap, srcFailureGroupsMap, rng);
+                populateNumFailsAndFailureGroupMap(failureSet, source, minMaxFails, numFails, srcNumFailsMap, srcFailureGroupsMap, rng);
             }
             for(Node dest : destinations){
                 Set<Failure> failureSet = failureCollection.getDstFailuresMap().getOrDefault(dest, failureCollection.getFailureSet());
-                populateNumFailsAndFailureGroupMap(filterFailureSet(failureSet, topo.getLinkIdMap()), dest, minMaxFails, numFails, dstNumFailsMap, dstFailureGroupsMap, rng);
+                populateNumFailsAndFailureGroupMap(failureSet, dest, minMaxFails, numFails, dstNumFailsMap, dstFailureGroupsMap, rng);
             }
         }
 
@@ -260,16 +258,20 @@ public class FailureGenerationService {
 
         Integer failureSetSize = numFailures != null ? numFailures : 0;
 
+        // Filter out reverse links - prevents user from selecting both (o,t) and (t,o) to fail, when both will
+        // fail implicitly
+        Set<Link> filteredLinks = filterLinks(topo.getLinks(), topo.getLinkIdMap());
+
         if(minMaxFailures.size() < 2){
             failureSetSize = numFailures;
-            failures = generateFailureSet(topo.getNodes(), topo.getLinks(), numFailures, failureClass,
+            failures = generateFailureSet(topo.getNodes(), filteredLinks, numFailures, failureClass,
                     params.getFailureProb(), params.getMinMaxFailureProb(), sources, destinations, srcDstFailures, rng);
         }
         else{
             if(problemClass.equals(ProblemClass.Flow)){
                 for(SourceDestPair pair : sortedPairs){
                     Integer randomNumFailures = selectionService.randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
-                    Set<Failure> failureSet = generateFailureSet(topo.getNodes(), topo.getLinks(),
+                    Set<Failure> failureSet = generateFailureSet(topo.getNodes(), filteredLinks,
                             randomNumFailures, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(),
                             sources, destinations, srcDstFailures, rng);
                     pairFailuresMap.put(pair, failureSet);
@@ -288,7 +290,7 @@ public class FailureGenerationService {
             }
             else if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.FlowSharedF) || problemClass.equals(ProblemClass.EndpointSharedF)){
                 failureSetSize = selectionService.randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
-                failures = generateFailureSet(topo.getNodes(), topo.getLinks(),
+                failures = generateFailureSet(topo.getNodes(), filteredLinks,
                         failureSetSize, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(),
                         sources, destinations, srcDstFailures, rng);
             }
@@ -308,7 +310,10 @@ public class FailureGenerationService {
                                        Set<Node> srcDstFailures, Map<Node, Set<Failure>> failuresMap, Integer failureSetSize,
                                        Node member){
         Integer randomNumFailures = selectionService.randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
-        Set<Failure> failureSet = generateFailureSet(topo.getNodes(), topo.getLinks(),
+        // Filter out reverse links - prevents user from selecting both (o,t) and (t,o) to fail, when both will
+        // fail implicitly
+        Set<Link> filteredLinks = filterLinks(topo.getLinks(), topo.getLinkIdMap());
+        Set<Failure> failureSet = generateFailureSet(topo.getNodes(), filteredLinks,
                 randomNumFailures, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(),
                 sources, destinations, srcDstFailures, rng);
         failuresMap.put(member, failureSet);
@@ -388,7 +393,6 @@ public class FailureGenerationService {
 
     private static List<List<Failure>> generateFailureGroups(Integer k, Set<Failure> failureSet){
         List<List<Failure>> failureGroups = new ArrayList<>();
-        // Filter out forward/reverse edges
         List<Failure> failureList = new ArrayList<>(failureSet);
         Collections.shuffle(failureList);
 

@@ -419,7 +419,7 @@ public class FlowAndEndpointFailuresTest {
     public void generatedFlowSharedFTwoNFAMaxOneCAllLinksFail(){
         List<Integer> minConns = Arrays.asList(0,0);
         List<Integer> maxConns = Arrays.asList(2,3);
-        Integer numFails = 42;
+        Integer numFails = 21;
         Integer nfa = 2;
         String failureClass = "Link";
         RequestSet ers = createSetWithGenService("FlowSharedF", 14, 14, 5,
