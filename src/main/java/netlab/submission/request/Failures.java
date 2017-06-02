@@ -8,6 +8,7 @@ import netlab.topology.elements.Failure;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +17,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Failures {
+public class Failures implements Serializable {
     private Integer failureSetSize;
 
     private Set<Failure> failureSet;

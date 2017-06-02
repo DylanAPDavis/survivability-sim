@@ -7,13 +7,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import netlab.submission.enums.*;
 
+import java.io.Serializable;
 import java.util.Map;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequestSet {
+public class RequestSet implements Serializable {
 
     private Map<String, Request> requests;
 

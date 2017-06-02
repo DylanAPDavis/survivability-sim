@@ -1,4 +1,4 @@
-package netlab.aws.config;
+package netlab.storage.aws.config;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;

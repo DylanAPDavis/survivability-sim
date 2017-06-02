@@ -2,8 +2,8 @@ package netlab;
 
 
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
-import netlab.aws.dynamo.DynamoInterface;
-import netlab.aws.s3.S3Interface;
+import netlab.storage.aws.dynamo.DynamoInterface;
+import netlab.storage.aws.s3.S3Interface;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -7,13 +7,14 @@ import lombok.NoArgsConstructor;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
+import java.io.Serializable;
 import java.util.Map;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NumFailsAllowed {
+public class NumFailsAllowed implements Serializable {
     private Integer totalNumFailsAllowed;
     private Map<SourceDestPair, Integer> pairNumFailsAllowedMap;
 

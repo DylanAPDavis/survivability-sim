@@ -8,13 +8,14 @@ import lombok.NoArgsConstructor;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
+import java.io.Serializable;
 import java.util.Map;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Connections {
+public class Connections implements Serializable {
 
     private Integer numConnections;
 

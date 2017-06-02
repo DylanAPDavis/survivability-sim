@@ -76,11 +76,13 @@ public class GenerationService {
         }
         String status = requests.isEmpty() ? "Submission failed. Could not generate request." : "Processing";
         String setId = UUID.randomUUID().toString();
+        Random rng = new Random();
+        Long seed = ((long) (rng.nextDouble() * (1000L)));
         return RequestSet.builder()
                 .requests(requests)
                 .status(status)
                 .id(setId)
-                .seed(-1L)
+                .seed(seed)
                 .problemClass(enumGenerationService.getProblemClass(requestParameters.getProblemClass()))
                 .algorithm(enumGenerationService.getAlgorithm(requestParameters.getAlgorithm()))
                 .objective(enumGenerationService.getObjective(requestParameters.getObjective()))

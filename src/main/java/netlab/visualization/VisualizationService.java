@@ -25,7 +25,7 @@ public class VisualizationService {
                 String htmlString = FileUtils.readFileToString(htmlTemplateFile);
                 String data = requestSetToJson(request);
                 htmlString = htmlString.replace("/* JAVA Put the data here! */", data);
-                File newHtmlFile = new File("visual_" + requestId+ ".html");
+                File newHtmlFile = new File(System.getProperty("user.dir") + "/results/visuals/" + requestId+ ".html");
                 FileUtils.writeStringToFile(newHtmlFile, htmlString);
             }
         } catch(Exception ex) {

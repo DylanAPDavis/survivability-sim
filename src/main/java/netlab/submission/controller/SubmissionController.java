@@ -40,7 +40,7 @@ public class SubmissionController {
             requestSet = processingService.processRequestSet(requestSet);
         }
         // Store the request set
-        storageService.storeRequestSet(requestSet);
+        storageService.storeRequestSet(requestSet, requestSet.isUseAws());
 
         // Return the request set ID
         return requestSet.getId();
@@ -55,7 +55,7 @@ public class SubmissionController {
             requestSet = processingService.processRequestSet(requestSet);
         }
 
-        storageService.storeRequestSet(requestSet);
+        storageService.storeRequestSet(requestSet, requestSet.isUseAws());
 
         return requestSet.getId();
     }

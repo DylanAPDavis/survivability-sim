@@ -4,6 +4,7 @@ import netlab.TestConfiguration;
 import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.analyzed.RequestMetrics;
 import netlab.analysis.services.AnalysisService;
+import netlab.storage.StorageService;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
@@ -31,6 +32,9 @@ public class FlowAndEndpointTest {
 
     @Autowired
     private ProcessingService processingService;
+
+    @Autowired
+    private StorageService storageService;
 
 
     @Test
@@ -176,6 +180,9 @@ public class FlowAndEndpointTest {
         RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 2, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
+        /*assert(storageService.storeRequestSet(r2, true));
+        RequestSet loadedR2 = storageService.retrieveRequestSet(r2.getId(), true);
+        assert(loadedR2 != null);*/
     }
 
     @Test

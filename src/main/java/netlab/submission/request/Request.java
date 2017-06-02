@@ -10,6 +10,7 @@ import netlab.topology.elements.Node;
 import netlab.topology.elements.Path;
 import netlab.topology.elements.SourceDestPair;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +19,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Request {
+public class Request implements Serializable {
 
     private String id;
 
