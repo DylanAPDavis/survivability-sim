@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class AnalysisService {
+
+
     public AnalyzedSet analyzeRequestSet(RequestSet requestSet) {
 
         Map<String, Request> requestMap = requestSet.getRequests();

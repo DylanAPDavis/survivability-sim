@@ -1,4 +1,4 @@
-package netlab.storage;
+package netlab.storage.services;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.AnalyzedSet;
@@ -29,13 +29,6 @@ public class StorageService {
     }
 
     public boolean storeRequestSet(RequestSet requestSet, boolean useAws) {
-        /*List<String> nameComponents = new ArrayList<>();
-        nameComponents.add(requestSet.getProblemClass().getCode());
-        nameComponents.add(requestSet.getAlgorithm().getCode());
-        nameComponents.add(requestSet.getObjective().getCode());
-        nameComponents.add(requestSet.getFailureClass().getCode());
-        nameComponents.add(Long.toString(requestSet.getSeed()));
-        nameComponents.add(requestSet.getId());*/
         File outputFile = createFile(requestSet.getId(), "raw");
         if(useAws){
             writeLocal(requestSet, outputFile);
@@ -58,8 +51,27 @@ public class StorageService {
         return rs;
     }
 
-    public void storeAnalyzedSet(AnalyzedSet analyzedSet){
+    public boolean storeAnalyzedSet(AnalyzedSet analyzedSet, boolean useAws){
+        File outputFile = createFile(analyzedSet.getRequestSetId(), "analyzed");
+        if(useAws){
+            writeLocal(analyzedSet, outputFile);
+            return s3Interface.uploadToAnalyzed(outputFile, analyzedSet.getRequestSetId());
+        }
+        else {
+            return writeLocal(analyzedSet, outputFile);
+        }
+    }
 
+    public AnalyzedSet retrieveAnalyzedSet(String requestSetId, boolean useAws){
+        AnalyzedSet as = null;
+        File f = new File(System.getProperty("user.dir") + "/results/analyzed/" + requestSetId);
+        if(useAws){
+            f = s3Interface.downloadFromAnalyzed(f, requestSetId);
+        }
+        if(f != null && f.exists()){
+            as = readAnalyzedSetLocal(f);
+        }
+        return as;
     }
 
 

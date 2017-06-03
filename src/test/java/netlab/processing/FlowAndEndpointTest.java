@@ -4,7 +4,7 @@ import netlab.TestConfiguration;
 import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.analyzed.RequestMetrics;
 import netlab.analysis.services.AnalysisService;
-import netlab.storage.StorageService;
+import netlab.storage.services.StorageService;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;

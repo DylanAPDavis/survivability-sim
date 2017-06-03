@@ -8,6 +8,7 @@ import netlab.analysis.enums.MemberType;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,7 +16,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequestMetrics {
+public class RequestMetrics implements Serializable {
 
     private String requestId;
     private Boolean isSurvivable;

@@ -2,7 +2,7 @@ package netlab.submission.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ProcessingService;
-import netlab.storage.StorageService;
+import netlab.storage.services.StorageService;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
@@ -42,6 +42,9 @@ public class SubmissionController {
         // Store the request set
         storageService.storeRequestSet(requestSet, requestSet.isUseAws());
 
+        // Store the request ID and sim params in Dynamo DB
+        //TODO: Store the request ID and sim params in Dynamo DB
+
         // Return the request set ID
         return requestSet.getId();
     }
@@ -56,6 +59,9 @@ public class SubmissionController {
         }
 
         storageService.storeRequestSet(requestSet, requestSet.isUseAws());
+
+        // Store the request ID and request params in Dynamo DB
+        //TODO: Store the request ID and request params in Dynamo DB
 
         return requestSet.getId();
     }

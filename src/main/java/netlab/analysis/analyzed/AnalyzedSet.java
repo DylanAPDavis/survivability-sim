@@ -7,13 +7,14 @@ import lombok.NoArgsConstructor;
 import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.ProblemClass;
 
+import java.io.Serializable;
 import java.util.Map;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AnalyzedSet {
+public class AnalyzedSet implements Serializable {
 
     private String requestSetId;
     private Long seed;
