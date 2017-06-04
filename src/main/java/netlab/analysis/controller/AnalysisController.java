@@ -44,21 +44,16 @@ public class AnalysisController {
         return analyzedSet;
     }
 
-
-    @RequestMapping(value = "/analyze/retrieve/sim", method= RequestMethod.POST)
+    @RequestMapping(value = "/analyze/averages", method = RequestMethod.POST)
     @ResponseBody
-    public Set<AnalyzedSet> getAnalyzedSets(SimulationParameters params){
+    public AnalyzedSet averageAnalyzedSets(SimulationParameters params){
 
-        // TODO: Retrieve the matching analyzed sets
-        return new HashSet<>();
+        //TODO: Implement this
+        AnalyzedSet averageAnalyzedSet = analysisService.averageAnalyzedSetsGivenParams(params);
+
+        return averageAnalyzedSet;
     }
 
-    @RequestMapping(value = "analyze/retrieve/req", method= RequestMethod.POST)
-    @ResponseBody
-    public Set<AnalyzedSet> getAnalyzedSets(RequestParameters params){
-        // TODO: Retrieve the matching analyzed sets
-        return new HashSet<>();
-    }
 
 
 }

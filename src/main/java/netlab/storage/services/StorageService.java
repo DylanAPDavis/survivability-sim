@@ -6,6 +6,7 @@ import netlab.processing.ProcessingService;
 import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
 import netlab.submission.request.RequestSet;
+import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -74,6 +76,21 @@ public class StorageService {
         return as;
     }
 
+    public boolean putSimulationParameters(SimulationParameters params){
+        return dynamoInterface.put(params);
+    }
+
+    public List<AnalyzedSet> getAnalyzedSets(SimulationParameters params){
+        List<String> requestSetIds = dynamoInterface.getRequestSetIds(params);
+        List<AnalyzedSet> sets = new ArrayList<>();
+        for(String id : requestSetIds){
+            AnalyzedSet set = retrieveAnalyzedSet(id, params.getUseAws());
+            if(set != null){
+                sets.add(set);
+            }
+        }
+        return sets;
+    }
 
     // Private subfunctions
 

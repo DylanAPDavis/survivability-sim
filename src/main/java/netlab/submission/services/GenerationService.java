@@ -48,6 +48,7 @@ public class GenerationService {
             status = "Submission failed. Could not generate requests.";
         }
         String setId = UUID.randomUUID().toString();
+        params.setRequestSetId(setId);
         return RequestSet.builder()
                 .requests(requests)
                 .status(status)

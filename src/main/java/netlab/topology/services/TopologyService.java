@@ -15,7 +15,7 @@ public class TopologyService {
     Map<String, Topology> topologyIdMap;
 
     public Topology getTopologyById(String id){
-        return topologyIdMap.getOrDefault(id, null);
+        return topologyIdMap.getOrDefault(id, topologyIdMap.get("NSFnet"));
     }
 
     public TopologyService(){

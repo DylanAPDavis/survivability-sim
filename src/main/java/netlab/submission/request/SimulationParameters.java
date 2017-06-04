@@ -1,5 +1,7 @@
 package netlab.submission.request;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import lombok.*;
 
 import java.util.List;
@@ -10,7 +12,11 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@DynamoDBTable(tableName="TestsMeta")
 public class SimulationParameters {
+
+    @DynamoDBHashKey(attributeName="requestSetId")
+    private String requestSetId;
 
     private Long seed;
 

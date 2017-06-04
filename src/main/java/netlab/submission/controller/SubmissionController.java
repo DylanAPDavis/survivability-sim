@@ -43,7 +43,7 @@ public class SubmissionController {
         storageService.storeRequestSet(requestSet, requestSet.isUseAws());
 
         // Store the request ID and sim params in Dynamo DB
-        //TODO: Store the request ID and sim params in Dynamo DB
+        storageService.putSimulationParameters(simulationParameters);
 
         // Return the request set ID
         return requestSet.getId();
@@ -59,9 +59,6 @@ public class SubmissionController {
         }
 
         storageService.storeRequestSet(requestSet, requestSet.isUseAws());
-
-        // Store the request ID and request params in Dynamo DB
-        //TODO: Store the request ID and request params in Dynamo DB
 
         return requestSet.getId();
     }
