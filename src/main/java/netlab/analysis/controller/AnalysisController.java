@@ -1,6 +1,7 @@
 package netlab.analysis.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.analyzed.AggregateAnalyzedSet;
 import netlab.analysis.analyzed.AnalysisParameters;
 import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.services.AnalysisService;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -44,14 +46,12 @@ public class AnalysisController {
         return analyzedSet;
     }
 
-    @RequestMapping(value = "/analyze/averages", method = RequestMethod.POST)
+    @RequestMapping(value = "/analyze/aggregate", method = RequestMethod.POST)
     @ResponseBody
-    public AnalyzedSet averageAnalyzedSets(SimulationParameters params){
+    public AggregateAnalyzedSet aggregateAnalyzedSets(SimulationParameters params){
 
-        //TODO: Implement this
-        AnalyzedSet averageAnalyzedSet = analysisService.averageAnalyzedSetsGivenParams(params);
-
-        return averageAnalyzedSet;
+        List<AnalyzedSet> analyzedSets = storageService.getAnalyzedSets(params);
+        return analysisService.aggregateAnalyzedSetsGivenParams(analyzedSets);
     }
 
 
