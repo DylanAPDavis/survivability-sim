@@ -7,9 +7,9 @@ import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
-import org.hibernate.validator.resourceloading.AggregateResourceBundleLocator;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -663,34 +663,79 @@ public class AnalysisService {
         return aggregateAverages;
     }
 
-    private AggregateAnalyzedSet calculateConfidenceIntervals(AggregateAnalyzedSet aggregateAnalyzedSet, List<AnalyzedSet> analyzedSets) {
+    private AggregateAnalyzedSet calculateConfidenceIntervals(AggregateAnalyzedSet agAnSet, List<AnalyzedSet> analyzedSets) {
 
         //TODO: Calculate the confidence intervals
+        AnalyzedSet.class.getDeclaredField().get
 
-        aggregateAnalyzedSet.setTotalRunningTimeSecondsConfInterval();
-        aggregateAnalyzedSet.setTotalRunningTimeSecondsForFeasibleConfInterval();
-        aggregateAnalyzedSet.setAvgRunningTimeSecondsConfInterval();
-        aggregateAnalyzedSet.setAvgRunningTimeSecondsForFeasibleConfInterval();
-        aggregateAnalyzedSet.setTotalSurvivableConfInterval();
-        aggregateAnalyzedSet.setPercentSurvivableConfInterval();
-        aggregateAnalyzedSet.setPercentSurvivableForFeasibleConfInterval();
-        aggregateAnalyzedSet.setTotalFeasibleConfInterval();
-        aggregateAnalyzedSet.setPercentFeasibleConfInterval();
-        aggregateAnalyzedSet.setTotalFeasibleAndSurvivableConfInterval();
-        aggregateAnalyzedSet.setTotalLinksUsedConfInterval();
-        aggregateAnalyzedSet.setAvgLinksUsedForFeasibleConfInterval();
-        aggregateAnalyzedSet.setTotalCostLinksUsedConfInterval();
-        aggregateAnalyzedSet.setAvgCostLinksUsedForFeasibleConfInterval();
-        aggregateAnalyzedSet.setTotalNumPathsConfInterval();
-        aggregateAnalyzedSet.setAvgNumPathsForFeasibleConfInterval();
-        aggregateAnalyzedSet.setTotalDisconnectedPathsConfInterval();
-        aggregateAnalyzedSet.setAvgDisconnectedPathsForFeasibleConfInterval();
-        aggregateAnalyzedSet.setTotalIntactPathsConfInterval();
-        aggregateAnalyzedSet.setAvgIntactPathsForFeasibleConfInterval();
-        aggregateAnalyzedSet.setAvgAvgPathLengthConfInterval();
-        aggregateAnalyzedSet.setAvgAvgPathCostConfInterval();
-        aggregateAnalyzedSet.setAvgAveragesPerPair();
-        aggregateAnalyzedSet.setAvgAveragesPerSrc();
-        aggregateAnalyzedSet.setAvgAveragesPerDst();
+        agAnSet.setTotalRunningTimeSecondsConfInterval(calcConfInterval(agAnSet.getTotalRunningTimeSeconds(), analyzedSets, "totalRunningTimeSeconds"));
+        agAnSet.setTotalRunningTimeSecondsForFeasibleConfInterval(calcConfInterval(agAnSet.getTotalRunningTimeSecondsForFeasible(), analyzedSets, "totalRunningTimeSecondsForFeasible"));
+        agAnSet.setAvgRunningTimeSecondsConfInterval(calcConfInterval(agAnSet.getAvgRunningTimeSeconds(), analyzedSets, "avgRunningTimeSeconds"));
+        agAnSet.setAvgRunningTimeSecondsForFeasibleConfInterval(calcConfInterval(agAnSet.getAvgRunningTimeSecondsForFeasible(), analyzedSets, "avgRunningTimeSecondsForFeasible"));
+        agAnSet.setTotalSurvivableConfInterval(calcConfInterval(agAnSet.getTotalSurvivable(), analyzedSets, "totalSurvivable"));
+        agAnSet.setPercentSurvivableConfInterval(calcConfInterval(agAnSet.getPercentSurvivable(), analyzedSets, "percentSurvivable"));
+        agAnSet.setPercentSurvivableForFeasibleConfInterval(calcConfInterval(agAnSet.getPercentSurvivableForFeasible(), analyzedSets, "percentSurvivableForFeasible"));
+        agAnSet.setTotalFeasibleConfInterval(calcConfInterval(agAnSet.getTotalFeasible(), analyzedSets, "totalFeasible"));
+        agAnSet.setPercentFeasibleConfInterval(calcConfInterval(agAnSet.getPercentFeasible(), analyzedSets, "percentFeasible"));
+        agAnSet.setTotalFeasibleAndSurvivableConfInterval(calcConfInterval(agAnSet.getTotalFeasibleAndSurvivable(), analyzedSets, "totalFeasibleAndSurvivable"));
+        agAnSet.setTotalLinksUsedConfInterval(calcConfInterval(agAnSet.getTotalLinksUsed(), analyzedSets, "totalLinksUsed"));
+        agAnSet.setAvgLinksUsedForFeasibleConfInterval(calcConfInterval(agAnSet.getAvgLinksUsedForFeasible(), analyzedSets, "avgLinksUsedForFeasible"));
+        agAnSet.setTotalCostLinksUsedConfInterval(calcConfInterval(agAnSet.getTotalCostLinksUsed(), analyzedSets, "totalCostLinksUsed"));
+        agAnSet.setAvgCostLinksUsedForFeasibleConfInterval(calcConfInterval(agAnSet.getAvgCostLinksUsedForFeasible(), analyzedSets, "avgCostLinksUsedForFeasible"));
+        agAnSet.setTotalNumPathsConfInterval(calcConfInterval(agAnSet.getTotalNumPaths(), analyzedSets, "totalNumPaths"));
+        agAnSet.setAvgNumPathsForFeasibleConfInterval(calcConfInterval(agAnSet.getAvgNumPathsForFeasible(), analyzedSets, "avgNumPathsForFeasible"));
+        agAnSet.setTotalDisconnectedPathsConfInterval(calcConfInterval(agAnSet.getTotalDisconnectedPaths(), analyzedSets, "totalDisconnectedPaths"));
+        agAnSet.setAvgDisconnectedPathsForFeasibleConfInterval(calcConfInterval(agAnSet.getAvgDisconnectedPathsForFeasible(), analyzedSets, "avgDisconnectedPathsForFeasible"));
+        agAnSet.setTotalIntactPathsConfInterval(calcConfInterval(agAnSet.getTotalIntactPaths(), analyzedSets, "totalIntactPaths"));
+        agAnSet.setAvgIntactPathsForFeasibleConfInterval(calcConfInterval(agAnSet.getAvgIntactPathsForFeasible(), analyzedSets, "avgIntactPathsForFeasible"));
+        agAnSet.setAvgAvgPathLengthConfInterval(calcConfInterval(agAnSet.getAvgAvgPathLength(), analyzedSets, "avgAvgPathLength"));
+        agAnSet.setAvgAvgPathCostConfInterval(calcConfInterval(agAnSet.getAvgAvgPathCost(), analyzedSets, "avgAvgPathCost"));
+        agAnSet.setAvgAveragesPerPair(addConfIntervalsToAverages(agAnSet.getAvgAveragesPerPair(), analyzedSets));
+        agAnSet.setAvgAveragesPerSrc(addConfIntervalsToAverages(agAnSet.getAvgAveragesPerSrc(), analyzedSets));
+        agAnSet.setAvgAveragesPerDst(addConfIntervalsToAverages(agAnSet.getAvgAveragesPerDst(), analyzedSets));
+        return agAnSet;
+    }
+
+    private AggregateAverages addConfIntervalsToAverages(AggregateAverages agAverages, List<AnalyzedSet> analyzedSets){
+        //agAverages currently holds the mean value for each of its parameters
+        // we want to get the non-mean value for each field in the matching Averages object in each AnalyzedSet
+
+    }
+
+    private List<Double> calcConfInterval(Double metricMean, List<AnalyzedSet> analyzedSets, String fieldName) {
+        // calculate standard deviation
+        /*
+        double squaredDifferenceSum = 0.0;
+        for (int num : givenNumbers) {
+            squaredDifferenceSum += (num - mean) * (num - mean);
+        }
+        double variance = squaredDifferenceSum / givenNumbers.length;
+        double standardDeviation = Math.sqrt(variance);
+
+        // value for 95% confidence interval, source: https://en.wikipedia.org/wiki/Confidence_interval#Basic_Steps
+        double confidenceLevel = 1.96;
+        double temp = confidenceLevel * standardDeviation / Math.sqrt(givenNumbers.length);
+        return new double[]{mean - temp, mean + temp};*/
+        List<Double> confInterval = new ArrayList<>();
+        try {
+            Field metricField = AnalyzedSet.class.getDeclaredField(fieldName);
+            Double squaredDifferenceSum = 0.0;
+            for(AnalyzedSet as : analyzedSets){
+                try {
+                    Double metricValue = metricField.getDouble(as);
+                    squaredDifferenceSum += (metricValue - metricMean) * (metricValue - metricMean);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+            Double variance = squaredDifferenceSum / analyzedSets.size();
+            Double stdDev = Math.sqrt(variance);
+            Double confDist = 1.96 * stdDev / Math.sqrt(analyzedSets.size());
+            confInterval.add(metricMean - confDist);
+            confInterval.add(metricMean + confDist);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        return confInterval;
     }
 }
