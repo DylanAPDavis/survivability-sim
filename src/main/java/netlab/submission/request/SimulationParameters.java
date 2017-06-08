@@ -4,9 +4,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import lombok.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @Builder
@@ -19,6 +17,10 @@ public class SimulationParameters {
     private String requestSetId;
 
     private Long seed;
+
+    private Calendar submittedDate;
+
+    private Boolean completed;
 
     private String topologyId;
 

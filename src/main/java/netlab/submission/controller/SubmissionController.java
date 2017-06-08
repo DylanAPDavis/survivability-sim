@@ -36,14 +36,20 @@ public class SubmissionController {
     public String submitRequestSet(SimulationParameters simulationParameters){
         RequestSet requestSet = generationService.generateFromSimParams(simulationParameters);
         // Find solutions for the request set, as long as at least one request has been generated
-        if(requestSet.getRequests().keySet().size() > 0){
-            requestSet = processingService.processRequestSet(requestSet);
-        }
-        // Store the request set
-        storageService.storeRequestSet(requestSet, requestSet.isUseAws());
+        if(requestSet.getRequests().keySet().size() > 0) {
+            // Store the request ID and sim params in Dynamo DB
+            storageService.putSimulationParameters(simulationParameters);
 
-        // Store the request ID and sim params in Dynamo DB
-        storageService.putSimulationParameters(simulationParameters);
+            // Process request set
+            requestSet = processingService.processRequestSet(requestSet);
+            simulationParameters.setCompleted(true);
+
+            // Store the request set
+            storageService.storeRequestSet(requestSet, requestSet.isUseAws());
+
+            // Store the request ID and sim params in Dynamo DB
+            storageService.putSimulationParameters(simulationParameters);
+        }
 
         // Return the request set ID
         return requestSet.getId();

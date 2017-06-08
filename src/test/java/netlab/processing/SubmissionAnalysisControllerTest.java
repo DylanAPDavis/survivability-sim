@@ -34,28 +34,24 @@ public class SubmissionAnalysisControllerTest {
 
     @Test
     public void submitTest1(){
-        SimulationParameters params = makeParameters(1L, "NSFnet", 5, "ServiceILP",
+        SimulationParameters params = makeParameters(1L, false, "NSFnet", 5, "ServiceILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, 0.0,
                 0.0, 0.0);
         String requestSetId = submissionController.submitRequestSet(params);
         AnalysisParameters analysisParameters = AnalysisParameters.builder().requestSetId(requestSetId).useAws(true).build();
-        analysisController.analyzeRequestSet(analysisParameters);
-        // Submit and analyze a new one
-        requestSetId = submissionController.submitRequestSet(params);
-        analysisParameters = AnalysisParameters.builder().requestSetId(requestSetId).useAws(true).build();
         analysisController.analyzeRequestSet(analysisParameters);
 
         // Get all the analyzed sets back from AWS
         params = SimulationParameters.builder().useAws(true).objective("TotalCost").build();
         List<AnalyzedSet> analyzedSets = storageController.getAnalyzedSets(params);
-        assert(analyzedSets.size()>=2);
+        assert(analyzedSets.size()>=1);
     }
 
     @Test
     public void submitTest2(){
-        SimulationParameters params = makeParameters(2L, "NSFnet", 5, "ServiceILP",
+        SimulationParameters params = makeParameters(2L, false, "NSFnet", 5, "ServiceILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, 0.0,
@@ -63,13 +59,14 @@ public class SubmissionAnalysisControllerTest {
         String requestSetId = submissionController.submitRequestSet(params);
         AnalysisParameters analysisParameters = AnalysisParameters.builder().requestSetId(requestSetId).useAws(true).build();
         analysisController.analyzeRequestSet(analysisParameters);
+        params = SimulationParameters.builder().useAws(true).objective("TotalCost").build();
         List<AnalyzedSet> analyzedSets = storageController.getAnalyzedSets(params);
         assert(analyzedSets.size()>=1);
     }
 
     @Test
     public void aggregateTest(){
-        SimulationParameters params = makeParameters(null, "NSFnet", 5, "ServiceILP",
+        SimulationParameters params = makeParameters(null, true, "NSFnet", 5, "ServiceILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, 0.0,
@@ -79,7 +76,7 @@ public class SubmissionAnalysisControllerTest {
     }
 
 
-    private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
+    private SimulationParameters makeParameters(Long seed, Boolean completed, String topologyId, Integer numRequests, String alg, String problemClass,
                                                 String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
                                                 List<Integer> minMaxFailures, String failureClass, Double failureProb,
                                                 List<Double> minMaxFailureProb, Integer numConnections,
@@ -89,6 +86,7 @@ public class SubmissionAnalysisControllerTest {
                                                 double percentDstFail){
         return SimulationParameters.builder()
                 .seed(seed)
+                .completed(completed)
                 .topologyId(topologyId)
                 .numRequests(numRequests)
                 .algorithm(alg)

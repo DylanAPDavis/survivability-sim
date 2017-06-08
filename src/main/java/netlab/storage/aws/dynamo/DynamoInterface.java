@@ -87,6 +87,7 @@ public class DynamoInterface {
         Map<String, AttributeValue> eav = new HashMap<>();
         if(params.getRequestSetId() != null) {eav.put("requestSetId", new AttributeValue().withS(params.getRequestSetId()));}
         if(params.getSeed() != null) {eav.put("seed", new AttributeValue().withN(Long.toString(params.getSeed())));}
+        if(params.getCompleted() != null) {eav.put("completed", new AttributeValue().withN(String.valueOf(params.getCompleted() ? 1 : 0)));}
         if(params.getTopologyId() != null) {eav.put("topologyId", new AttributeValue().withS(params.getTopologyId()));}
         if(params.getProblemClass() != null) {eav.put("problemClass", new AttributeValue().withS(params.getProblemClass()));}
         if(params.getObjective() != null) {eav.put("objective", new AttributeValue().withS(params.getObjective()));}
