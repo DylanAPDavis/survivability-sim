@@ -89,8 +89,76 @@ public class AggregateAnalyzedSet implements Serializable {
     private Double avgAvgPathCost;
     private List<Double> avgAvgPathCostConfInterval;
 
-    private AggregateAverages avgAveragesPerPair;
-    private AggregateAverages avgAveragesPerSrc;
-    private AggregateAverages avgAveragesPerDst;
+    private Double pairAvgPaths;
+    private List<Double> pairAvgPathsConfInterval;
+
+    private Double pairAvgPathLength;
+    private List<Double> pairAvgPathLengthConfInterval;
+
+    private Double pairAvgPathCost;
+    private List<Double> pairAvgPathCostConfInterval;
+
+    private Double pairAvgDisconnectedPaths;
+    private List<Double> pairAvgDisconnectedPathsConfInterval;
+
+    private Double pairAvgPathsPerChosen;
+    private List<Double> pairAvgPathsPerChosenConfInterval;
+
+    private Double pairAvgPathLengthPerChosen;
+    private List<Double> pairAvgPathLengthPerChosenConfInterval;
+
+    private Double pairAvgPathCostPerChosen;
+    private List<Double> pairAvgPathCostPerChosenConfInterval;
+
+    private Double pairAvgDisconnectedPathsPerChosen;
+    private List<Double> pairAvgDisconnectedPathsPerChosenConfInterval;
+
+    private Double srcAvgPaths;
+    private List<Double> srcAvgPathsConfInterval;
+
+    private Double srcAvgPathLength;
+    private List<Double> srcAvgPathLengthConfInterval;
+
+    private Double srcAvgPathCost;
+    private List<Double> srcAvgPathCostConfInterval;
+
+    private Double srcAvgDisconnectedPaths;
+    private List<Double> srcAvgDisconnectedPathsConfInterval;
+
+    private Double srcAvgPathsPerChosen;
+    private List<Double> srcAvgPathsPerChosenConfInterval;
+
+    private Double srcAvgPathLengthPerChosen;
+    private List<Double> srcAvgPathLengthPerChosenConfInterval;
+
+    private Double srcAvgPathCostPerChosen;
+    private List<Double> srcAvgPathCostPerChosenConfInterval;
+
+    private Double srcAvgDisconnectedPathsPerChosen;
+    private List<Double> srcAvgDisconnectedPathsPerChosenConfInterval;
+
+    private Double dstAvgPaths;
+    private List<Double> dstAvgPathsConfInterval;
+
+    private Double dstAvgPathLength;
+    private List<Double> dstAvgPathLengthConfInterval;
+
+    private Double dstAvgPathCost;
+    private List<Double> dstAvgPathCostConfInterval;
+
+    private Double dstAvgDisconnectedPaths;
+    private List<Double> dstAvgDisconnectedPathsConfInterval;
+
+    private Double dstAvgPathsPerChosen;
+    private List<Double> dstAvgPathsPerChosenConfInterval;
+
+    private Double dstAvgPathLengthPerChosen;
+    private List<Double> dstAvgPathLengthPerChosenConfInterval;
+
+    private Double dstAvgPathCostPerChosen;
+    private List<Double> dstAvgPathCostPerChosenConfInterval;
+
+    private Double dstAvgDisconnectedPathsPerChosen;
+    private List<Double> dstAvgDisconnectedPathsPerChosenConfInterval;
 
 }

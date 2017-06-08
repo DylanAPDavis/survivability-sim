@@ -101,9 +101,30 @@ public class AnalysisService {
                 .avgIntactPathsForFeasible(numFeasible > 0 ? 1.0 * totalIntactPaths / numFeasible : 0)
                 .avgAvgPathLength(numFeasible > 0 ? totalAvgPathLength / numFeasible : 0)
                 .avgAvgPathCost(numFeasible > 0 ? totalAvgPathCost / numFeasible : 0)
-                .avgAveragesPerPair(avgPairAverages)
-                .avgAveragesPerSrc(avgSrcAverages)
-                .avgAveragesPerDst(avgDstAverages)
+                .pairAvgPaths(avgPairAverages.getAvgPaths())
+                .pairAvgPathLength(avgPairAverages.getAvgPathLength())
+                .pairAvgPathCost(avgPairAverages.getAvgPathCost())
+                .pairAvgDisconnectedPaths(avgPairAverages.getAvgDisconnectedPaths())
+                .pairAvgPathsPerChosen(avgPairAverages.getAvgPathsPerChosen())
+                .pairAvgPathLengthPerChosen(avgPairAverages.getAvgPathLengthPerChosen())
+                .pairAvgPathCostPerChosen(avgPairAverages.getAvgPathCostPerChosen())
+                .pairAvgDisconnectedPathsPerChosen(avgPairAverages.getAvgDisconnectedPathsPerChosen())
+                .srcAvgPaths(avgSrcAverages.getAvgPaths())
+                .srcAvgPathLength(avgSrcAverages.getAvgPathLength())
+                .srcAvgPathCost(avgSrcAverages.getAvgPathCost())
+                .srcAvgDisconnectedPaths(avgSrcAverages.getAvgDisconnectedPaths())
+                .srcAvgPathsPerChosen(avgSrcAverages.getAvgPathsPerChosen())
+                .srcAvgPathLengthPerChosen(avgSrcAverages.getAvgPathLengthPerChosen())
+                .srcAvgPathCostPerChosen(avgSrcAverages.getAvgPathCostPerChosen())
+                .srcAvgDisconnectedPathsPerChosen(avgSrcAverages.getAvgDisconnectedPathsPerChosen())
+                .dstAvgPaths(avgDstAverages.getAvgPaths())
+                .dstAvgPathLength(avgDstAverages.getAvgPathLength())
+                .dstAvgPathCost(avgDstAverages.getAvgPathCost())
+                .dstAvgDisconnectedPaths(avgDstAverages.getAvgDisconnectedPaths())
+                .dstAvgPathsPerChosen(avgDstAverages.getAvgPathsPerChosen())
+                .dstAvgPathLengthPerChosen(avgDstAverages.getAvgPathLengthPerChosen())
+                .dstAvgPathCostPerChosen(avgDstAverages.getAvgPathCostPerChosen())
+                .dstAvgDisconnectedPathsPerChosen(avgDstAverages.getAvgDisconnectedPathsPerChosen())
                 .build();
     }
 
@@ -544,37 +565,80 @@ public class AnalysisService {
         Double avgIntactPathsForFeasible = 0.0;
         Double avgAvgPathLength = 0.0;
         Double avgAvgPathCost = 0.0;
-        AggregateAverages pairAverages = makeInitialAggregateAverages(true, false);
-        AggregateAverages sourceAverages = makeInitialAggregateAverages(false, true);
-        AggregateAverages destAverages = makeInitialAggregateAverages(false, false);
+        Double pairAvgPaths = 0.0;
+        Double pairAvgPathLength = 0.0;
+        Double pairAvgPathCost = 0.0;
+        Double pairAvgDisconnectedPaths = 0.0;
+        Double pairAvgPathsPerChosen = 0.0;
+        Double pairAvgPathLengthPerChosen = 0.0;
+        Double pairAvgPathCostPerChosen = 0.0;
+        Double pairAvgDisconnectedPathsPerChosen = 0.0;
+        Double srcAvgPaths = 0.0;
+        Double srcAvgPathLength = 0.0;
+        Double srcAvgPathCost = 0.0;
+        Double srcAvgDisconnectedPaths = 0.0;
+        Double srcAvgPathsPerChosen = 0.0;
+        Double srcAvgPathLengthPerChosen = 0.0;
+        Double srcAvgPathCostPerChosen = 0.0;
+        Double srcAvgDisconnectedPathsPerChosen = 0.0;
+        Double dstAvgPaths = 0.0;
+        Double dstAvgPathLength = 0.0;
+        Double dstAvgPathCost = 0.0;
+        Double dstAvgDisconnectedPaths = 0.0;
+        Double dstAvgPathsPerChosen = 0.0;
+        Double dstAvgPathLengthPerChosen = 0.0;
+        Double dstAvgPathCostPerChosen = 0.0;
+        Double dstAvgDisconnectedPathsPerChosen = 0.0;
+
         for(AnalyzedSet analyzedSet : analyzedSets){
             requestSetIds.add(analyzedSet.getRequestSetId());
             seeds.add(analyzedSet.getSeed());
             totalRunningTime += analyzedSet.getTotalRunningTimeSeconds();
-            totalRunningTimeSecondsForFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            avgRunningTimeSeconds += analyzedSet.getTotalRunningTimeSeconds();
-            avgRunningTimeSecondsForFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            totalSurvivable += analyzedSet.getTotalRunningTimeSeconds();
-            percentSurvivable += analyzedSet.getTotalRunningTimeSeconds();
-            percentSurvivableForFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            totalFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            percentFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            totalFeasibleAndSurvivable += analyzedSet.getTotalRunningTimeSeconds();
-            totalLinksUsed += analyzedSet.getTotalRunningTimeSeconds();
-            avgLinksUsedForFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            totalCostLinksUsed += analyzedSet.getTotalRunningTimeSeconds();
-            avgCostLinksUsedForFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            totalNumPaths += analyzedSet.getTotalRunningTimeSeconds();
-            avgNumPathsForFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            totalDisconnectedPaths += analyzedSet.getTotalRunningTimeSeconds();
-            avgDisconnectedPathsForFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            totalIntactPaths += analyzedSet.getTotalRunningTimeSeconds();
-            avgIntactPathsForFeasible += analyzedSet.getTotalRunningTimeSeconds();
-            avgAvgPathLength += analyzedSet.getTotalRunningTimeSeconds();
-            avgAvgPathCost += analyzedSet.getTotalRunningTimeSeconds();
-            pairAverages = addToAggregateAverages(pairAverages, analyzedSet.getAvgAveragesPerPair());
-            sourceAverages = addToAggregateAverages(sourceAverages, analyzedSet.getAvgAveragesPerSrc());
-            destAverages = addToAggregateAverages(destAverages, analyzedSet.getAvgAveragesPerDst());
+            totalRunningTimeSecondsForFeasible += analyzedSet.getTotalRunningTimeSecondsForFeasible();
+            avgRunningTimeSeconds += analyzedSet.getAvgRunningTimeSeconds();
+            avgRunningTimeSecondsForFeasible += analyzedSet.getAvgRunningTimeSecondsForFeasible();
+            totalSurvivable += analyzedSet.getTotalSurvivable();
+            percentSurvivable += analyzedSet.getPercentSurvivable();
+            percentSurvivableForFeasible += analyzedSet.getPercentSurvivableForFeasible();
+            totalFeasible += analyzedSet.getTotalFeasible();
+            percentFeasible += analyzedSet.getPercentFeasible();
+            totalFeasibleAndSurvivable += analyzedSet.getTotalFeasibleAndSurvivable();
+            totalLinksUsed += analyzedSet.getTotalLinksUsed();
+            avgLinksUsedForFeasible += analyzedSet.getAvgLinksUsedForFeasible();
+            totalCostLinksUsed += analyzedSet.getTotalCostLinksUsed();
+            avgCostLinksUsedForFeasible += analyzedSet.getAvgCostLinksUsedForFeasible();
+            totalNumPaths += analyzedSet.getTotalNumPaths();
+            avgNumPathsForFeasible += analyzedSet.getAvgNumPathsForFeasible();
+            totalDisconnectedPaths += analyzedSet.getTotalDisconnectedPaths();
+            avgDisconnectedPathsForFeasible += analyzedSet.getAvgDisconnectedPathsForFeasible();
+            totalIntactPaths += analyzedSet.getTotalIntactPaths();
+            avgIntactPathsForFeasible += analyzedSet.getAvgIntactPathsForFeasible();
+            avgAvgPathLength += analyzedSet.getAvgAvgPathLength();
+            avgAvgPathCost += analyzedSet.getAvgAvgPathCost();
+            pairAvgPaths += analyzedSet.getPairAvgPaths();
+            pairAvgPathLength = analyzedSet.getPairAvgPathLength();
+            pairAvgPathCost = analyzedSet.getPairAvgPathCost();
+            pairAvgDisconnectedPaths = analyzedSet.getPairAvgDisconnectedPaths();
+            pairAvgPathsPerChosen = analyzedSet.getPairAvgPathsPerChosen();
+            pairAvgPathLengthPerChosen = analyzedSet.getPairAvgPathLengthPerChosen();
+            pairAvgPathCostPerChosen = analyzedSet.getPairAvgPathCostPerChosen();
+            pairAvgDisconnectedPathsPerChosen = analyzedSet.getPairAvgDisconnectedPathsPerChosen();
+            srcAvgPaths = analyzedSet.getSrcAvgPaths();
+            srcAvgPathLength = analyzedSet.getSrcAvgPathLength();
+            srcAvgPathCost = analyzedSet.getSrcAvgPathCost();
+            srcAvgDisconnectedPaths = analyzedSet.getSrcAvgDisconnectedPaths();
+            srcAvgPathsPerChosen = analyzedSet.getSrcAvgPathsPerChosen();
+            srcAvgPathLengthPerChosen = analyzedSet.getSrcAvgPathLengthPerChosen();
+            srcAvgPathCostPerChosen = analyzedSet.getSrcAvgPathCostPerChosen();
+            srcAvgDisconnectedPathsPerChosen = analyzedSet.getSrcAvgDisconnectedPathsPerChosen();
+            dstAvgPaths = analyzedSet.getDstAvgPaths();
+            dstAvgPathLength = analyzedSet.getDstAvgPathLength();
+            dstAvgPathCost = analyzedSet.getDstAvgPathCost();
+            dstAvgDisconnectedPaths = analyzedSet.getDstAvgDisconnectedPaths();
+            dstAvgPathsPerChosen = analyzedSet.getDstAvgPathsPerChosen();
+            dstAvgPathLengthPerChosen = analyzedSet.getDstAvgPathLengthPerChosen();
+            dstAvgPathCostPerChosen = analyzedSet.getDstAvgPathCostPerChosen();
+            dstAvgDisconnectedPathsPerChosen = analyzedSet.getDstAvgDisconnectedPathsPerChosen();
         }
 
         Integer numSets = analyzedSets.size();
@@ -606,68 +670,38 @@ public class AnalysisService {
                 .avgIntactPathsForFeasible(avgIntactPathsForFeasible/numSets)
                 .avgAvgPathLength(avgAvgPathLength/numSets)
                 .avgAvgPathCost(avgAvgPathCost/numSets)
-                .avgAveragesPerPair(avgAggregateAverages(pairAverages, numSets))
-                .avgAveragesPerSrc(avgAggregateAverages(sourceAverages, numSets))
-                .avgAveragesPerDst(avgAggregateAverages(destAverages, numSets))
+                .pairAvgPaths(pairAvgPaths/numSets)
+                .pairAvgPathLength(pairAvgPathLength/numSets)
+                .pairAvgPathCost(pairAvgPathCost/numSets)
+                .pairAvgDisconnectedPaths(pairAvgDisconnectedPaths/numSets)
+                .pairAvgPathsPerChosen(pairAvgPathsPerChosen/numSets)
+                .pairAvgPathLengthPerChosen(pairAvgPathLengthPerChosen/numSets)
+                .pairAvgPathCostPerChosen(pairAvgPathCostPerChosen/numSets)
+                .pairAvgDisconnectedPathsPerChosen(pairAvgDisconnectedPathsPerChosen/numSets)
+                .srcAvgPaths(srcAvgPaths/numSets)
+                .srcAvgPathLength(srcAvgPathLength/numSets)
+                .srcAvgPathCost(srcAvgPathCost/numSets)
+                .srcAvgDisconnectedPaths(srcAvgDisconnectedPaths/numSets)
+                .srcAvgPathsPerChosen(srcAvgPathsPerChosen/numSets)
+                .srcAvgPathLengthPerChosen(srcAvgPathLengthPerChosen/numSets)
+                .srcAvgPathCostPerChosen(srcAvgPathCostPerChosen/numSets)
+                .srcAvgDisconnectedPathsPerChosen(srcAvgDisconnectedPathsPerChosen/numSets)
+                .dstAvgPaths(dstAvgPaths/numSets)
+                .dstAvgPathLength(dstAvgPathLength/numSets)
+                .dstAvgPathCost(dstAvgPathCost/numSets)
+                .dstAvgDisconnectedPaths(dstAvgDisconnectedPaths/numSets)
+                .dstAvgPathsPerChosen(dstAvgPathsPerChosen/numSets)
+                .dstAvgPathLengthPerChosen(dstAvgPathLengthPerChosen/numSets)
+                .dstAvgPathCostPerChosen(dstAvgPathCostPerChosen/numSets)
+                .dstAvgDisconnectedPathsPerChosen(dstAvgDisconnectedPathsPerChosen/numSets)
                 .build();
 
         return calculateConfidenceIntervals(aggregateAnalyzedSet, analyzedSets);
     }
 
-    private AggregateAverages makeInitialAggregateAverages(boolean isPair, boolean isSource) {
-
-        return AggregateAverages.builder()
-                .forSource(isSource)
-                .forDest(!isSource)
-                .forPair(isPair)
-                .avgPaths(0.0)
-                .avgPathsConfInterval(new ArrayList<>())
-                .avgPathLength(0.0)
-                .avgPathLengthConfInterval(new ArrayList<>())
-                .avgPathCost(0.0)
-                .avgPathCostConfInterval(new ArrayList<>())
-                .avgDisconnectedPaths(0.0)
-                .avgDisconnectedPathsConfInterval(new ArrayList<>())
-                .avgPathsPerChosen(0.0)
-                .avgPathsPerChosenConfInterval(new ArrayList<>())
-                .avgPathLengthPerChosen(0.0)
-                .avgPathLengthPerChosenConfInterval(new ArrayList<>())
-                .avgPathCostPerChosen(0.0)
-                .avgPathCostPerChosenConfInterval(new ArrayList<>())
-                .avgDisconnectedPathsPerChosen(0.0)
-                .avgDisconnectedPathsPerChosenConfInterval(new ArrayList<>())
-                .build();
-    }
-
-    private AggregateAverages addToAggregateAverages(AggregateAverages aggregateAverages, Averages averages){
-        aggregateAverages.setAvgDisconnectedPaths(aggregateAverages.getAvgDisconnectedPaths() + averages.getAvgDisconnectedPaths());
-        aggregateAverages.setAvgDisconnectedPathsPerChosen(aggregateAverages.getAvgDisconnectedPathsPerChosen() + averages.getAvgDisconnectedPathsPerChosen());
-        aggregateAverages.setAvgPaths(aggregateAverages.getAvgPaths() + averages.getAvgPaths());
-        aggregateAverages.setAvgPathsPerChosen(aggregateAverages.getAvgPathsPerChosen() + averages.getAvgPathsPerChosen());
-        aggregateAverages.setAvgPathCost(aggregateAverages.getAvgPathCost() + averages.getAvgPathCost());
-        aggregateAverages.setAvgPathCostPerChosen(aggregateAverages.getAvgPathCostPerChosen() + averages.getAvgPathCostPerChosen());
-        aggregateAverages.setAvgPathLength(aggregateAverages.getAvgPathLength() + averages.getAvgPathLength());
-        aggregateAverages.setAvgPathLengthPerChosen(aggregateAverages.getAvgPathLengthPerChosen() + averages.getAvgPathLengthPerChosen());
-        return aggregateAverages;
-    }
-
-    private AggregateAverages avgAggregateAverages(AggregateAverages aggregateAverages, Integer numSets){
-        aggregateAverages.setAvgDisconnectedPaths(aggregateAverages.getAvgDisconnectedPaths() / numSets);
-        aggregateAverages.setAvgDisconnectedPathsPerChosen(aggregateAverages.getAvgDisconnectedPathsPerChosen() / numSets);
-        aggregateAverages.setAvgPaths(aggregateAverages.getAvgPaths() / numSets);
-        aggregateAverages.setAvgPathsPerChosen(aggregateAverages.getAvgPathsPerChosen() / numSets);
-        aggregateAverages.setAvgPathCost(aggregateAverages.getAvgPathCost() / numSets);
-        aggregateAverages.setAvgPathCostPerChosen(aggregateAverages.getAvgPathCostPerChosen() / numSets);
-        aggregateAverages.setAvgPathLength(aggregateAverages.getAvgPathLength() / numSets);
-        aggregateAverages.setAvgPathLengthPerChosen(aggregateAverages.getAvgPathLengthPerChosen() / numSets);
-        return aggregateAverages;
-    }
-
     private AggregateAnalyzedSet calculateConfidenceIntervals(AggregateAnalyzedSet agAnSet, List<AnalyzedSet> analyzedSets) {
 
         //TODO: Calculate the confidence intervals
-        AnalyzedSet.class.getDeclaredField().get
-
         agAnSet.setTotalRunningTimeSecondsConfInterval(calcConfInterval(agAnSet.getTotalRunningTimeSeconds(), analyzedSets, "totalRunningTimeSeconds"));
         agAnSet.setTotalRunningTimeSecondsForFeasibleConfInterval(calcConfInterval(agAnSet.getTotalRunningTimeSecondsForFeasible(), analyzedSets, "totalRunningTimeSecondsForFeasible"));
         agAnSet.setAvgRunningTimeSecondsConfInterval(calcConfInterval(agAnSet.getAvgRunningTimeSeconds(), analyzedSets, "avgRunningTimeSeconds"));
@@ -690,17 +724,36 @@ public class AnalysisService {
         agAnSet.setAvgIntactPathsForFeasibleConfInterval(calcConfInterval(agAnSet.getAvgIntactPathsForFeasible(), analyzedSets, "avgIntactPathsForFeasible"));
         agAnSet.setAvgAvgPathLengthConfInterval(calcConfInterval(agAnSet.getAvgAvgPathLength(), analyzedSets, "avgAvgPathLength"));
         agAnSet.setAvgAvgPathCostConfInterval(calcConfInterval(agAnSet.getAvgAvgPathCost(), analyzedSets, "avgAvgPathCost"));
-        agAnSet.setAvgAveragesPerPair(addConfIntervalsToAverages(agAnSet.getAvgAveragesPerPair(), analyzedSets));
-        agAnSet.setAvgAveragesPerSrc(addConfIntervalsToAverages(agAnSet.getAvgAveragesPerSrc(), analyzedSets));
-        agAnSet.setAvgAveragesPerDst(addConfIntervalsToAverages(agAnSet.getAvgAveragesPerDst(), analyzedSets));
+
+        agAnSet.setPairAvgPathsConfInterval(calcConfInterval(agAnSet.getPairAvgPaths(), analyzedSets, "pairAvgPaths"));
+        agAnSet.setPairAvgPathLengthConfInterval(calcConfInterval(agAnSet.getPairAvgPathLength(), analyzedSets, "pairAvgPathLength"));
+        agAnSet.setPairAvgPathCostConfInterval(calcConfInterval(agAnSet.getPairAvgPathCost(), analyzedSets, "pairAvgPathCost"));
+        agAnSet.setPairAvgDisconnectedPathsConfInterval(calcConfInterval(agAnSet.getPairAvgDisconnectedPaths(), analyzedSets, "pairAvgDisconnectedPaths"));
+        agAnSet.setPairAvgPathsPerChosenConfInterval(calcConfInterval(agAnSet.getPairAvgPathsPerChosen(), analyzedSets, "pairAvgPathsPerChosen"));
+        agAnSet.setPairAvgPathLengthPerChosenConfInterval(calcConfInterval(agAnSet.getPairAvgPathLengthPerChosen(), analyzedSets, "pairAvgPathLengthPerChosen"));
+        agAnSet.setPairAvgPathCostPerChosenConfInterval(calcConfInterval(agAnSet.getPairAvgPathCostPerChosen(), analyzedSets, "pairAvgPathCostPerChosen"));
+        agAnSet.setPairAvgDisconnectedPathsPerChosenConfInterval(calcConfInterval(agAnSet.getPairAvgDisconnectedPathsPerChosen(), analyzedSets, "pairAvgDisconnectedPathsPerChosen"));
+
+        agAnSet.setSrcAvgPathsConfInterval(calcConfInterval(agAnSet.getSrcAvgPaths(), analyzedSets, "srcAvgPaths"));
+        agAnSet.setSrcAvgPathLengthConfInterval(calcConfInterval(agAnSet.getSrcAvgPathLength(), analyzedSets, "srcAvgPathLength"));
+        agAnSet.setSrcAvgPathCostConfInterval(calcConfInterval(agAnSet.getSrcAvgPathCost(), analyzedSets, "srcAvgPathCost"));
+        agAnSet.setSrcAvgDisconnectedPathsConfInterval(calcConfInterval(agAnSet.getSrcAvgDisconnectedPaths(), analyzedSets, "srcAvgDisconnectedPaths"));
+        agAnSet.setSrcAvgPathsPerChosenConfInterval(calcConfInterval(agAnSet.getSrcAvgPathsPerChosen(), analyzedSets, "srcAvgPathsPerChosen"));
+        agAnSet.setSrcAvgPathLengthPerChosenConfInterval(calcConfInterval(agAnSet.getSrcAvgPathLengthPerChosen(), analyzedSets, "srcAvgPathLengthPerChosen"));
+        agAnSet.setSrcAvgPathCostPerChosenConfInterval(calcConfInterval(agAnSet.getSrcAvgPathCostPerChosen(), analyzedSets, "srcAvgPathCostPerChosen"));
+        agAnSet.setSrcAvgDisconnectedPathsPerChosenConfInterval(calcConfInterval(agAnSet.getSrcAvgDisconnectedPathsPerChosen(), analyzedSets, "srcAvgDisconnectedPathsPerChosen"));
+
+        agAnSet.setDstAvgPathsConfInterval(calcConfInterval(agAnSet.getDstAvgPaths(), analyzedSets, "dstAvgPaths"));
+        agAnSet.setDstAvgPathLengthConfInterval(calcConfInterval(agAnSet.getDstAvgPathLength(), analyzedSets, "dstAvgPathLength"));
+        agAnSet.setDstAvgPathCostConfInterval(calcConfInterval(agAnSet.getDstAvgPathCost(), analyzedSets, "dstAvgPathCost"));
+        agAnSet.setDstAvgDisconnectedPathsConfInterval(calcConfInterval(agAnSet.getDstAvgDisconnectedPaths(), analyzedSets, "dstAvgDisconnectedPaths"));
+        agAnSet.setDstAvgPathsPerChosenConfInterval(calcConfInterval(agAnSet.getDstAvgPathsPerChosen(), analyzedSets, "dstAvgPathsPerChosen"));
+        agAnSet.setDstAvgPathLengthPerChosenConfInterval(calcConfInterval(agAnSet.getDstAvgPathLengthPerChosen(), analyzedSets, "dstAvgPathLengthPerChosen"));
+        agAnSet.setDstAvgPathCostPerChosenConfInterval(calcConfInterval(agAnSet.getDstAvgPathCostPerChosen(), analyzedSets, "dstAvgPathCostPerChosen"));
+        agAnSet.setDstAvgDisconnectedPathsPerChosenConfInterval(calcConfInterval(agAnSet.getDstAvgDisconnectedPathsPerChosen(), analyzedSets, "dstAvgDisconnectedPathsPerChosen"));
         return agAnSet;
     }
 
-    private AggregateAverages addConfIntervalsToAverages(AggregateAverages agAverages, List<AnalyzedSet> analyzedSets){
-        //agAverages currently holds the mean value for each of its parameters
-        // we want to get the non-mean value for each field in the matching Averages object in each AnalyzedSet
-
-    }
 
     private List<Double> calcConfInterval(Double metricMean, List<AnalyzedSet> analyzedSets, String fieldName) {
         // calculate standard deviation

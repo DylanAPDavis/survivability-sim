@@ -57,8 +57,32 @@ public class AnalyzedSet implements Serializable {
     private Double avgAvgPathLength;
     private Double avgAvgPathCost;
 
-    private Averages avgAveragesPerPair;
-    private Averages avgAveragesPerSrc;
-    private Averages avgAveragesPerDst;
+    private Double pairAvgPaths;
+    private Double pairAvgPathLength;
+    private Double pairAvgPathCost;
+    private Double pairAvgDisconnectedPaths;
+    private Double pairAvgPathsPerChosen;
+    private Double pairAvgPathLengthPerChosen;
+    private Double pairAvgPathCostPerChosen;
+    private Double pairAvgDisconnectedPathsPerChosen;
+
+    private Double srcAvgPaths;
+    private Double srcAvgPathLength;
+    private Double srcAvgPathCost;
+    private Double srcAvgDisconnectedPaths;
+    private Double srcAvgPathsPerChosen;
+    private Double srcAvgPathLengthPerChosen;
+    private Double srcAvgPathCostPerChosen;
+    private Double srcAvgDisconnectedPathsPerChosen;
+
+    private Double dstAvgPaths;
+    private Double dstAvgPathLength;
+    private Double dstAvgPathCost;
+    private Double dstAvgDisconnectedPaths;
+    private Double dstAvgPathsPerChosen;
+    private Double dstAvgPathLengthPerChosen;
+    private Double dstAvgPathCostPerChosen;
+    private Double dstAvgDisconnectedPathsPerChosen;
+    
 
 }
