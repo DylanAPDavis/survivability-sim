@@ -9,7 +9,10 @@ import netlab.submission.request.*;
 import netlab.topology.elements.*;
 import org.springframework.stereotype.Service;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -756,39 +759,21 @@ public class AnalysisService {
 
 
     private List<Double> calcConfInterval(Double metricMean, List<AnalyzedSet> analyzedSets, String fieldName) {
-        // calculate standard deviation
-        /*
-        double squaredDifferenceSum = 0.0;
-        for (int num : givenNumbers) {
-            squaredDifferenceSum += (num - mean) * (num - mean);
-        }
-        double variance = squaredDifferenceSum / givenNumbers.length;
-        double standardDeviation = Math.sqrt(variance);
-
-        // value for 95% confidence interval, source: https://en.wikipedia.org/wiki/Confidence_interval#Basic_Steps
-        double confidenceLevel = 1.96;
-        double temp = confidenceLevel * standardDeviation / Math.sqrt(givenNumbers.length);
-        return new double[]{mean - temp, mean + temp};*/
         List<Double> confInterval = new ArrayList<>();
-        try {
-            Field metricField = AnalyzedSet.class.getDeclaredField(fieldName);
-            Double squaredDifferenceSum = 0.0;
-            for(AnalyzedSet as : analyzedSets){
-                try {
-                    Double metricValue = metricField.getDouble(as);
-                    squaredDifferenceSum += (metricValue - metricMean) * (metricValue - metricMean);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+        Double squaredDifferenceSum = 0.0;
+        for(AnalyzedSet as : analyzedSets){
+            try {
+                Double metricValue = Double.valueOf(new PropertyDescriptor(fieldName, AnalyzedSet.class).getReadMethod().invoke(as).toString());
+                squaredDifferenceSum += (metricValue - metricMean) * (metricValue - metricMean);
+            } catch (IllegalAccessException | InvocationTargetException | IntrospectionException e) {
+                e.printStackTrace();
             }
-            Double variance = squaredDifferenceSum / analyzedSets.size();
-            Double stdDev = Math.sqrt(variance);
-            Double confDist = 1.96 * stdDev / Math.sqrt(analyzedSets.size());
-            confInterval.add(metricMean - confDist);
-            confInterval.add(metricMean + confDist);
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
         }
+        Double variance = squaredDifferenceSum / analyzedSets.size();
+        Double stdDev = Math.sqrt(variance);
+        Double confDist = 1.96 * stdDev / Math.sqrt(analyzedSets.size());
+        confInterval.add(metricMean - confDist);
+        confInterval.add(metricMean + confDist);
         return confInterval;
     }
 }
