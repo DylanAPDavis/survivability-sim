@@ -31,7 +31,7 @@ public class SubmissionController {
 
     private StorageService storageService;
 
-    @RequestMapping(value = "/submit_set", method = RequestMethod.POST)
+    @RequestMapping(value = "/submit_sim", method = RequestMethod.POST)
     @ResponseBody
     public String submitRequestSet(SimulationParameters simulationParameters){
         RequestSet requestSet = generationService.generateFromSimParams(simulationParameters);

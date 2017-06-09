@@ -32,7 +32,7 @@ public class AWSTest {
         }
     }
 
-    @Test
+    //@Test
     public void uploadToRawS3() {
         if(s3Interface.allFieldsDefined()){
             File f = new File("test.txt");
@@ -48,7 +48,7 @@ public class AWSTest {
         }
     }
 
-    @Test
+    //@Test
     public void downloadFromRaw() {
         if(s3Interface.allFieldsDefined()){
             File f = new File("test2.txt");
@@ -57,7 +57,7 @@ public class AWSTest {
         }
     }
 
-    @Test
+    //@Test
     public void uploadToAnalyzedS3() {
         if(s3Interface.allFieldsDefined()){
             File f = new File("test.txt");
@@ -73,7 +73,7 @@ public class AWSTest {
         }
     }
 
-    @Test
+    //@Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
             File f = new File("test4.txt");

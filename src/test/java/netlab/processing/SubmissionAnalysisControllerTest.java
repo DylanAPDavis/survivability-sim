@@ -32,7 +32,7 @@ public class SubmissionAnalysisControllerTest {
     StorageController storageController;
 
 
-    @Test
+    //@Test
     public void submitTest1(){
         SimulationParameters params = makeParameters(1L, false, "NSFnet", 5, "ServiceILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
@@ -49,7 +49,7 @@ public class SubmissionAnalysisControllerTest {
         assert(analyzedSets.size()>=1);
     }
 
-    @Test
+    //@Test
     public void submitTest2(){
         SimulationParameters params = makeParameters(2L, false, "NSFnet", 5, "ServiceILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
@@ -64,7 +64,7 @@ public class SubmissionAnalysisControllerTest {
         assert(analyzedSets.size()>=1);
     }
 
-    @Test
+    //@Test
     public void aggregateTest(){
         SimulationParameters params = makeParameters(null, true, "NSFnet", 5, "ServiceILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
