@@ -1,29 +1,54 @@
 from launch import launch_simulator, kill
-from submit_request import submit
-import sys, time
+import sys, ast
 
 default_len = 24
-len_with_port = default_len + 1
+
+
+def build_param_dict(args):
+    return {
+        "seed": ast.literal_eval(args[0]),
+        "topologyId": args[1],
+        "numRequests": ast.literal_eval(args[2]),
+        "algorithm": args[3],
+        "problemClass": args[4],
+        "objective": args[5],
+        "numSources": ast.literal_eval(args[6]),
+        "numDestinations": ast.literal_eval(args[7]),
+        "failureSetSize": ast.literal_eval(args[8]),
+        "minMaxFailures": ast.literal_eval(args[9]),
+        "failureClass": args[10],
+        "failureProb": ast.literal_eval(args[11]),
+        "minMaxFailureProb": ast.literal_eval(args[12]),
+        "numConnections": ast.literal_eval(args[13]),
+        "minConnectionsRange": ast.literal_eval(args[14]),
+        "maxConnectionsRange": ast.literal_eval(args[15]),
+        "numFailsAllowed": ast.literal_eval(args[16]),
+        "minMaxFailsAllowed": ast.literal_eval(args[17]),
+        "processingType": args[18],
+        "sdn": ast.literal_eval(args[19]),
+        "useAws": ast.literal_eval(args[20]),
+        "percentSrcAlsoDest": ast.literal_eval(args[21]),
+        "percentSrcFail": ast.literal_eval(args[22]),
+        "percentDestFail": ast.literal_eval(args[23])
+    }
 
 
 def run_sim(args):
     num_args = len(args)
-    if num_args != default_len and num_args != len_with_port:
+    if num_args != default_len:
         print(sys.argv)
         print_usage_message()
         sys.exit(-1)
 
-    port_num = args[-1] if num_args == len_with_port else "9867"
-
+    # Build the dictionary for the request
+    param_dict = build_param_dict(args)
+    
     # Launch the simulator
-    process = launch_simulator(0, port_num)
-    time.sleep(10)
+    process = launch_simulator(True, param_dict, "0", "false")
 
-    # Submit the request
-    submit(args)
-
-    # Kill the simulator
+    # Kill the simulator (in case it hasn't died)
     kill(process)
+    print("Done")
 
 
 def print_usage_message():
@@ -31,11 +56,11 @@ def print_usage_message():
     message += " failureSetSize failureSetSizeRange[min, max] failureClass failureProb failureProbRange[min, max]"
     message += " numConnections minConnectionsRange[min, max] maxConnectionsRange[min, max]"
     message += " numFailsAllowed numFailsAllowedRange[min, max] processingType percentSrcAlsoDest"
-    message += " percentSrcFail percentDstFail sdn useAWS  portNum(optional)"
+    message += " percentSrcFail percentDstFail sdn useAWS"
     print(message)
 
 if __name__ == "__main__":
-    if len(sys.argv) != default_len + 1 and len(sys.argv) != len_with_port + 1:
+    if len(sys.argv) != default_len + 1:
         print(len(sys.argv))
         print_usage_message()
         sys.exit(-1)
