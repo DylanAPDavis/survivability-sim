@@ -37,13 +37,13 @@ param c_min_sd{SD} >= 0 integer;
 param c_max_sd{SD} >= 0 integer;
 
 # NumGroups - Number of k-sized failure groups
-param NumGroups{SD};
+param NumGroups{SD} default 1;
 
 # GroupIndices - Indexing set for all groups of failure elements of size k
 set GroupIndices{(s,d) in SD} := 1..NumGroups[s,d];
 
 # FG - Set of all failure groups of size k
-set FG {(s,d) in SD, g in GroupIndices[s,d]} within AllPairs;
+set FG {(s,d) in SD, g in GroupIndices[s,d]} within AllPairs default {};
 
 # VARIABLES
 

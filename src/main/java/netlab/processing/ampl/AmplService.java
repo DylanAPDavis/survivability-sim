@@ -133,7 +133,7 @@ public class AmplService {
 
     private List<String> createFlexParamsLines(Request request){
         List<String> flexLines = new ArrayList<>();
-        List<List<Failure>> failureGroups = request.getFailures().getFailureGroups();
+        List<List<Failure>> failureGroups = request.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : request.getFailures().getFailureGroups();
         String numGroups = "param NumGroups := " + failureGroups.size() + ";";
         flexLines.add(numGroups);
         flexLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flex, null, null, false));
@@ -149,14 +149,14 @@ public class AmplService {
 
         Map<Node, List<List<Failure>>> srcFailGroupsMap = request.getFailures().getSrcFailureGroupsMap();
         Map<Node, List<List<Failure>>> dstFailGroupsMap = request.getFailures().getDstFailureGroupsMap();
-        List<List<Failure>> requestFailureGroups = request.getFailures().getFailureGroups();
+        List<List<Failure>> requestFailureGroups = request.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : request.getFailures().getFailureGroups();
 
         Set<Node> sources = request.getSources();
         Set<Node> destinations = request.getDestinations();
 
         boolean printFailsGroupPerMember = problemClass.equals(ProblemClass.Endpoint);
-        endpointLines.addAll(createParamsForMemberGroup(sources, srcMinMap, srcMaxMap, srcFailGroupsMap, true, printFailsGroupPerMember));
-        endpointLines.addAll(createParamsForMemberGroup(destinations, dstMinMap, dstMaxMap, dstFailGroupsMap, false, printFailsGroupPerMember));
+        endpointLines.addAll(createParamsForMemberGroup(sources, srcMinMap, srcMaxMap, srcFailGroupsMap, true, printFailsGroupPerMember, request.getIgnoreFailures()));
+        endpointLines.addAll(createParamsForMemberGroup(destinations, dstMinMap, dstMaxMap, dstFailGroupsMap, false, printFailsGroupPerMember, request.getIgnoreFailures()));
         // If you're solving the EndpointSharedF problem, just print one FG set and one NumGroups param
         if(!printFailsGroupPerMember){
             String numGroups = "param NumGroups := " + requestFailureGroups.size() + ";";
@@ -170,7 +170,8 @@ public class AmplService {
     private Collection<? extends String> createParamsForMemberGroup(Set<Node> members, Map<Node, Integer> memberMinMap,
                                                                     Map<Node, Integer> memberMaxMap,
                                                                     Map<Node, List<List<Failure>>> memberFailGroupsMap,
-                                                                    boolean areSources, boolean printFailsGroupPerMember) {
+                                                                    boolean areSources, boolean printFailsGroupPerMember,
+                                                                    Boolean ignoreFailures) {
         List<String> memberLines = new ArrayList<>();
         String cMin = "param c_min_" + (areSources ? "s" : "d") + " := ";
         String cMax = "param c_max_" + (areSources ? "s" : "d") + " := ";
@@ -182,7 +183,7 @@ public class AmplService {
             cMin += " '" + member.getId() + "' " + min;
             cMax += " '" + member.getId() + "' " + max;
             if(printFailsGroupPerMember) {
-                List<List<Failure>> failureGroups = memberFailGroupsMap.get(member);
+                List<List<Failure>> failureGroups = ignoreFailures ? Collections.singletonList(new ArrayList<>()) : memberFailGroupsMap.get(member);
                 numGroups += " '" + member.getId() + "' " + failureGroups.size();
                 fgLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Endpoint, null, member, areSources));
             }
@@ -210,7 +211,7 @@ public class AmplService {
         Map<SourceDestPair, List<List<Failure>>> pairFailGroupsMap = request.getFailures().getPairFailureGroupsMap();
         List<String> fgLines = new ArrayList<>();
         if(problemClass.equals(ProblemClass.FlowSharedF)){
-            List<List<Failure>> requestFailureGroups = request.getFailures().getFailureGroups();
+            List<List<Failure>> requestFailureGroups = request.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : request.getFailures().getFailureGroups();
             numGroups += requestFailureGroups.size();
             fgLines = createFailureGroupLines(requestFailureGroups, ProblemClass.FlowSharedF, null, null, false);
         }
@@ -218,7 +219,7 @@ public class AmplService {
             if(!pair.getSrc().equals(pair.getDst())) {
                 Integer min = pairMinMap.get(pair);
                 Integer max = pairMaxMap.get(pair);
-                List<List<Failure>> failureGroups = pairFailGroupsMap.get(pair);
+                List<List<Failure>> failureGroups = request.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : pairFailGroupsMap.get(pair);
                 cMin += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + min;
                 cMax += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + max;
                 if(problemClass.equals(ProblemClass.Flow)) {

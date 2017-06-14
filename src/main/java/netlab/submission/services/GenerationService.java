@@ -129,6 +129,7 @@ public class GenerationService {
                 .chosenPaths(null)
                 .isFeasible(false)
                 .runningTimeSeconds(0L)
+                .ignoreFailures(params.getIgnoreFailures())
                 .build();
     }
 
@@ -223,6 +224,7 @@ public class GenerationService {
                 .pairs(pairs)
                 .runningTimeSeconds(0L)
                 .isFeasible(false)
+                .ignoreFailures(params.getIgnoreFailures())
                 .build();
     }
 

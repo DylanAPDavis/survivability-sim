@@ -181,7 +181,7 @@ public class FlowAndEndpointFailuresTest {
         List<Integer> minMaxFails = Arrays.asList(5, 6);
         List<Integer> minMaxFailsAllowed = Arrays.asList(1,2);
         RequestSet ers = createSetWithGenService("Endpoint", 10, 10, 5,
-                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .60, .0, .0);
+                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .60, .0, .0, false);
         analyze(ers, Arrays.asList(14,15, 16), true, true);
     }
 
@@ -192,7 +192,7 @@ public class FlowAndEndpointFailuresTest {
         List<Integer> minMaxFails = Arrays.asList(1,2);
         List<Integer> minMaxFailsAllowed = Arrays.asList(0, 1);
         RequestSet ers = createSetWithGenService("Endpoint", 10, 10, 10,
-                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .10, .20);
+                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .10, .20, false);
         analyze(ers, Arrays.asList(10), true, true);
     }
 
@@ -297,7 +297,7 @@ public class FlowAndEndpointFailuresTest {
         List<Integer> minMaxFails = Arrays.asList(5, 6);
         List<Integer> minMaxFailsAllowed = Arrays.asList(1,2);
         RequestSet ers = createSetWithGenService("Flow", 10, 10, 5,
-                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .0, .0);
+                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .0, .0, false);
         analyze(ers, Arrays.asList(41), true, true);
     }
 
@@ -308,7 +308,7 @@ public class FlowAndEndpointFailuresTest {
         List<Integer> minMaxFails = Arrays.asList(1,2);
         List<Integer> minMaxFailsAllowed = Arrays.asList(0, 1);
         RequestSet ers = createSetWithGenService("Flow", 10, 10, 10,
-                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .10, .20);
+                minConns, maxConns, minMaxFails, minMaxFailsAllowed, .59, .10, .20, false);
         analyze(ers, Arrays.asList(10), true, true);
     }
 
@@ -320,7 +320,7 @@ public class FlowAndEndpointFailuresTest {
         Integer nfa = 1;
         String failureClass = "Link";
         RequestSet ers = createSetWithGenService("EndpointSharedF", 14, 14, 5,
-                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00, false);
         analyze(ers, Arrays.asList(6), true, true);
     }
 
@@ -332,7 +332,7 @@ public class FlowAndEndpointFailuresTest {
         Integer nfa = 2;
         String failureClass = "Link";
         RequestSet ers = createSetWithGenService("EndpointSharedF", 14, 14, 5,
-                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00, false);
         analyze(ers, Arrays.asList(7), true, true);
     }
 
@@ -411,7 +411,7 @@ public class FlowAndEndpointFailuresTest {
         Integer nfa = 1;
         String failureClass = "Link";
         RequestSet ers = createSetWithGenService("FlowSharedF", 14, 14, 5,
-                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00, false);
         analyze(ers, Arrays.asList(6), true, true);
     }
 
@@ -423,10 +423,69 @@ public class FlowAndEndpointFailuresTest {
         Integer nfa = 2;
         String failureClass = "Link";
         RequestSet ers = createSetWithGenService("FlowSharedF", 14, 14, 5,
-                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00);
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00, false);
         analyze(ers, Arrays.asList(7), true, true);
     }
 
+    @Test
+    public void generatedFlowSharedFIgnoreFTwoNFAMaxOneCAllLinksFail(){
+        List<Integer> minConns = Arrays.asList(0,0);
+        List<Integer> maxConns = Arrays.asList(2,3);
+        Integer numFails = 21;
+        Integer nfa = 2;
+        String failureClass = "Link";
+        RequestSet ers = createSetWithGenService("FlowSharedF", 14, 14, 5,
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00, true);
+        analyze(ers, Arrays.asList(5), false, true);
+    }
+
+    @Test
+    public void generatedFlowIgnoreFTwoNFAMaxOneCAllLinksFail(){
+        List<Integer> minConns = Arrays.asList(0,0);
+        List<Integer> maxConns = Arrays.asList(2,3);
+        Integer numFails = 21;
+        Integer nfa = 2;
+        String failureClass = "Link";
+        RequestSet ers = createSetWithGenService("Flow", 14, 14, 5,
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00, true);
+        analyze(ers, Arrays.asList(5), false, true);
+    }
+
+    @Test
+    public void generatedEndpointIgnoreFTwoNFAMaxOneCAllLinksFail(){
+        List<Integer> minConns = Arrays.asList(0,0);
+        List<Integer> maxConns = Arrays.asList(2,3);
+        Integer numFails = 21;
+        Integer nfa = 2;
+        String failureClass = "Link";
+        RequestSet ers = createSetWithGenService("Endpoint", 14, 14, 5,
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00, true);
+        analyze(ers, Arrays.asList(5), false, true);
+    }
+
+    @Test
+    public void generatedEndpointSharedFIgnoreFTwoNFAMaxOneCAllLinksFail(){
+        List<Integer> minConns = Arrays.asList(0,0);
+        List<Integer> maxConns = Arrays.asList(2,3);
+        Integer numFails = 21;
+        Integer nfa = 2;
+        String failureClass = "Link";
+        RequestSet ers = createSetWithGenService("EndpointSharedF", 14, 14, 5,
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00, true);
+        analyze(ers, Arrays.asList(5), false, true);
+    }
+
+    @Test
+    public void generatedFlexIgnoreFTwoNFAMaxOneCAllLinksFail(){
+        List<Integer> minConns = new ArrayList<>();
+        List<Integer> maxConns = new ArrayList<>();
+        Integer numFails = 21;
+        Integer nfa = 2;
+        String failureClass = "Link";
+        RequestSet ers = createSetWithGenService("Flex", 14, 14, 5,
+                minConns, maxConns, numFails, nfa, failureClass,  1.0, .00, .00, true);
+        analyze(ers, Arrays.asList(5), false, true);
+    }
 
 
     // Helper methods
@@ -559,20 +618,22 @@ public class FlowAndEndpointFailuresTest {
 
     private RequestSet createSetWithGenService(String problemClass, int numSources, int numDestinations, int numConns, List<Integer> minConns,
                                  List<Integer> maxConns, List<Integer> minMaxFails, List<Integer> minMaxFailsAllowed,
-                                               double percentSrcAlsoDest, double percentSrcFail, double percentDstFail){
+                                               double percentSrcAlsoDest, double percentSrcFail, double percentDstFail,
+                                               boolean ignoreFailures){
         return createSetAndSolve(1L, "NSFnet", 1, "ServiceILP", problemClass, "LinksUsed", numSources, numDestinations, 0,
                minMaxFails, "Both", 0.0, new ArrayList<>(), numConns, minConns, maxConns,
-                0, minMaxFailsAllowed, "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                0, minMaxFailsAllowed, "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail, ignoreFailures);
 
     }
 
 
     private RequestSet createSetWithGenService(String problemClass, int numSources, int numDestinations, int numConns,
                                                List<Integer> minConns, List<Integer> maxConns, Integer numFails,
-                                               Integer nfa, String failureClass, double percentSrcAlsoDest, double percentSrcFail, double percentDstFail) {
+                                               Integer nfa, String failureClass, double percentSrcAlsoDest, double percentSrcFail,
+                                               double percentDstFail, boolean ignoreFailures) {
         return createSetAndSolve(1L, "NSFnet", 1, "ServiceILP", problemClass, "LinksUsed", numSources, numDestinations, numFails,
                 new ArrayList<>(), failureClass, 0.0, new ArrayList<>(), numConns, minConns, maxConns,
-                nfa, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                nfa, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail, ignoreFailures);
     }
 
     private RequestSet createSetAndSolve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
@@ -582,11 +643,11 @@ public class FlowAndEndpointFailuresTest {
                              List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                              Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
                              Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                             double percentDstFail){
+                             double percentDstFail, boolean ignoreFailures){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
-                numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail, ignoreFailures);
         RequestSet requestSet = generationService.generateFromSimParams(params);
         processingService.processRequestSet(requestSet);
         return requestSet;
@@ -599,7 +660,7 @@ public class FlowAndEndpointFailuresTest {
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 Integer numFails, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
                                                 Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                                double percentDstFail){
+                                                double percentDstFail, boolean ignoreFailures){
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
@@ -625,6 +686,7 @@ public class FlowAndEndpointFailuresTest {
                 .percentSrcAlsoDest(percentSrcAlsoDest)
                 .percentSrcFail(percentSrcFail)
                 .percentDestFail(percentDstFail)
+                .ignoreFailures(ignoreFailures)
                 .build();
     }
 }

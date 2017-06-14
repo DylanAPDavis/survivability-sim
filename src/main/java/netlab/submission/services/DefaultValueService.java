@@ -145,6 +145,9 @@ public class DefaultValueService {
         if(params.getUseAws() == null){
             params.setUseAws(false);
         }
+        if(params.getIgnoreFailures() == null){
+            params.setIgnoreFailures(false);
+        }
         return params;
     }
 
@@ -241,6 +244,9 @@ public class DefaultValueService {
         }
         else if(params.getPercentDestFail() > 1.0){
             params.setPercentDestFail(1.0);
+        }
+        if(params.getIgnoreFailures() == null){
+            params.setIgnoreFailures(false);
         }
 
         return params;

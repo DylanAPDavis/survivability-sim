@@ -69,4 +69,6 @@ public class SimulationParameters {
 
     private Boolean useAws;
 
+    private Boolean ignoreFailures;
+
 }

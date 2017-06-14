@@ -44,9 +44,9 @@ param c_max_d{d in D} >= 0 integer;
 
 
 # NumGroups - Number of k-sized failure groups
-param NumGroups_s{s in S};
+param NumGroups_s{s in S} default 1;
 
-param NumGroups_d{d in D};
+param NumGroups_d{d in D} default 1;
 
 # GroupIndices - Indexing set for all groups of failure elements of size k
 set GroupIndices_s{s in S} := 1..NumGroups_s[s];
@@ -54,9 +54,9 @@ set GroupIndices_s{s in S} := 1..NumGroups_s[s];
 set GroupIndices_d{d in D} := 1..NumGroups_d[d];
 
 # FG - Set of all failure groups of size k
-set FG_s{s in S, g in GroupIndices_s[s]} within AllPairs;
+set FG_s{s in S, g in GroupIndices_s[s]} within AllPairs default {};
 
-set FG_d{d in D, g in GroupIndices_d[d]} within AllPairs;
+set FG_d{d in D, g in GroupIndices_d[d]} within AllPairs default {};
 
 
 # VARIABLES

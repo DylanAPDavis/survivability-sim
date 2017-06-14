@@ -61,4 +61,6 @@ public class RequestParameters {
 
     private Boolean useAws;
 
+    private Boolean ignoreFailures;
+
 }

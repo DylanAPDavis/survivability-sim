@@ -37,4 +37,6 @@ public class Request implements Serializable {
     private double runningTimeSeconds;
 
     private Boolean isFeasible;
+
+    private Boolean ignoreFailures;
 }

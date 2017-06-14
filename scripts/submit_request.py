@@ -2,7 +2,7 @@ import sys
 import json
 import requests
 
-default_len = 24
+default_len = 25
 len_with_port = default_len + 1
 
 
@@ -14,7 +14,7 @@ def submit(args):
         message += " failureSetSize failureSetSizeRange[min, max] failureClass failureProb failureProbRange[min, max]"
         message += " numConnections minConnectionsRange[min, max] maxConnectionsRange[min, max]"
         message += " numFailsAllowed numFailsAllowedRange[min, max] processingType percentSrcAlsoDest"
-        message += " percentSrcFail percentDstFail sdn useAWS  portNum(optional)"
+        message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures portNum(optional)"
         print(message)
         sys.exit(-1)
 
@@ -44,7 +44,8 @@ def submit(args):
         'percentSrcFail': args[20],
         'percentDstFail': args[21],
         'sdn': args[22],
-        'useAws': args[23]
+        'useAws': args[23],
+        'ignoreFailures': args[24]
     }
 
     json_payload = json.dumps(payload)
