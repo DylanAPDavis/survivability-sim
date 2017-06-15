@@ -63,6 +63,25 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
     # " percentSrcFail percentDstFail sdn useAWS ignoreFailures"
 
 
+def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_c_range, max_c_range, num_s, num_d,
+               percent_src_dest, ignore, fail_type, fail_params):
+
+    output_file_path = "_".join([seed, topology, problem, objective, algorithm,
+                                 num_r, num_c, min_c_range,
+                                 max_c_range, num_s, num_d,
+                                 percent_src_dest, ignore, fail_type,
+                                 fail_params])
+    parameters = create_params(seed, topology, problem, objective, algorithm,
+                               num_r, num_c, min_c_range, max_c_range,
+                               num_s, num_d, percent_src_dest, ignore,
+                               fail_type, fail_params)
+    command_input = ["bsub", "-q", "long", "-W", "120:30", "-R",
+                     "rusage[mem=4000] span[hosts=1]", "-n", "10",
+                     "-o", output_file_path, "python", "run_simulation.py"]
+    command_input += parameters
+    process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+
+
 for seed in seeds:
     for topology in topology_ids:
         for problem in problem_classes:
@@ -78,17 +97,10 @@ for seed in seeds:
                                                 for ignore in ignore_failures:
                                                     for fail_type in failure_set_dict.keys():
                                                         for fail_params in failure_set_dict[fail_type]:
-                                                            output_file_path = "_".join([seed, topology, problem, objective, algorithm,
-                                                                                         num_r, num_c, min_c_range,
-                                                                                         max_c_range, num_s, num_d,
-                                                                                         percent_src_dest, ignore, fail_type,
-                                                                                         fail_params])
-                                                            parameters = create_params(seed, topology, problem, objective, algorithm,
-                                                                                       num_r, num_c, min_c_range, max_c_range,
-                                                                                       num_s, num_d, percent_src_dest, ignore,
-                                                                                       fail_type, fail_params)
-                                                            command_input = ["bsub", "-q", "long", "-W", "120:30", "-R",
-                                                                             "rusage[mem=4000] span[hosts=1]", "-n", "10",
-                                                                             "-o", output_file_path, "python", "run_simulation.py"]
-                                                            command_input += parameters
-                                                            process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+                                                            pass
+                                                            '''create_job(seed, topology, problem, objective, algorithm,
+                                                                       num_r, num_c, min_c_range, max_c_range, num_s,
+                                                                       num_d,percent_src_dest, ignore, fail_type,
+                                                                       fail_params)'''
+
+create_job(1, "NSFNet", "Flex", "TotalCost", "ServiceILP", 1000, 14, [1, 1], [4, 4], 14, 14, 1.0, False, "Both", [14, 1, 1.0, 1.0])
