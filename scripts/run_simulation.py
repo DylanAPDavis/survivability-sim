@@ -54,9 +54,9 @@ def build_param_dict(args):
 
 def print_usage_message():
     message = "Usage: seed topologyId numRequests algorithm problemClass objective numSources numDestinations"
-    message += " failureSetSize failureSetSizeRange[min, max] failureClass failureProb failureProbRange[min, max]"
+    message += " failureSetSize minMaxFailures[min, max] failureClass failureProb minMaxFailureProb[min, max]"
     message += " numConnections minConnectionsRange[min, max] maxConnectionsRange[min, max]"
-    message += " numFailsAllowed numFailsAllowedRange[min, max] processingType percentSrcAlsoDest"
+    message += " numFailsAllowed minMaxFailsAllowed[min, max] processingType percentSrcAlsoDest"
     message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures"
     print(message)
 
