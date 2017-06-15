@@ -50,12 +50,11 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
         num_d_fail = math.ceil(dst_fail_percent * num_d)
         if num_s_fail > num_fails or num_d_fail > num_fails:
             return []
-    else:
-        min_range = min_c_range if problem != "Flex" else []
-        max_range = max_c_range if problem != "Flex" else []
-        return [seed, topology, num_r, algorithm, problem, objective, num_s, num_d, num_fails, [], fail_type, 1.0, [],
-                num_c, min_range, max_range, num_fails_allowed, [], "Solo", percent_src_dest, src_fail_percent, dst_fail_percent,
-                False, True, ignore]
+    min_range = min_c_range if problem != "Flex" else []
+    max_range = max_c_range if problem != "Flex" else []
+    return [seed, topology, num_r, algorithm, problem, objective, num_s, num_d, num_fails, [], fail_type, 1.0, [],
+            num_c, min_range, max_range, num_fails_allowed, [], "Solo", percent_src_dest, src_fail_percent, dst_fail_percent,
+            False, True, ignore]
     # "Usage: seed topologyId numRequests algorithm problemClass objective numSources numDestinations"
     # " failureSetSize minMaxFailures[min, max] failureClass failureProb minMaxFailureProb[min, max]"
     # " numConnections minConnectionsRange[min, max] maxConnectionsRange[min, max]"
@@ -66,21 +65,26 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
 def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_c_range, max_c_range, num_s, num_d,
                percent_src_dest, ignore, fail_type, fail_params):
 
-    output_file_path = "_".join([seed, topology, problem, objective, algorithm,
-                                 num_r, num_c, min_c_range,
-                                 max_c_range, num_s, num_d,
-                                 percent_src_dest, ignore, fail_type,
-                                 fail_params])
+    output_file_path = "_".join([str(seed), topology, problem, objective, algorithm,
+                                 str(num_r), str(num_c), str(min_c_range),
+                                 str(max_c_range), str(num_s), str(num_d),
+                                 str(percent_src_dest), str(ignore), fail_type,
+                                 str(fail_params)])
     parameters = create_params(seed, topology, problem, objective, algorithm,
                                num_r, num_c, min_c_range, max_c_range,
                                num_s, num_d, percent_src_dest, ignore,
                                fail_type, fail_params)
-    command_input = ["bsub", "-q", "long", "-W", "120:30", "-R",
-                     "rusage[mem=4000] span[hosts=1]", "-n", "10",
-                     "-o", output_file_path, "python", "run_simulation.py"]
-    command_input += parameters
-    process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+    if len(parameters) > 0:
+        command_input = ["bsub", "-q", "long", "-W", "120:30", "-R", "rusage[mem=4000] span[hosts=1]", "-n", "10", "-o", output_file_path, "python", "run_simulation.py"]
+        for param in parameters:
+            command_input.append(str(param))
+        print(command_input)
+        process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+        print(process.stdout.read())
 
+
+create_job(1, "NSFNet", "Flex", "TotalCost", "ServiceILP", 1, 14, [1, 1], [4, 4], 14, 14, 1.0, False, "Node", [14, 1, 1.0, 1.0])
+exit(1)
 
 for seed in seeds:
     for topology in topology_ids:
@@ -102,5 +106,3 @@ for seed in seeds:
                                                                        num_r, num_c, min_c_range, max_c_range, num_s,
                                                                        num_d,percent_src_dest, ignore, fail_type,
                                                                        fail_params)'''
-
-create_job(1, "NSFNet", "Flex", "TotalCost", "ServiceILP", 1000, 14, [1, 1], [4, 4], 14, 14, 1.0, False, "Both", [14, 1, 1.0, 1.0])

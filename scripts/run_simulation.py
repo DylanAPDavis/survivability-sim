@@ -43,11 +43,11 @@ def build_param_dict(args):
         "numFailsAllowed": ast.literal_eval(args[16]),
         "minMaxFailsAllowed": ast.literal_eval(args[17]),
         "processingType": args[18],
-        "sdn": ast.literal_eval(args[19]),
-        "useAws": ast.literal_eval(args[20]),
-        "percentSrcAlsoDest": ast.literal_eval(args[21]),
-        "percentSrcFail": ast.literal_eval(args[22]),
-        "percentDestFail": ast.literal_eval(args[23]),
+        "percentSrcAlsoDest": ast.literal_eval(args[19]),
+        "percentSrcFail": ast.literal_eval(args[20]),
+        "percentDestFail": ast.literal_eval(args[21]),
+        "sdn": ast.literal_eval(args[22]),
+        "useAws": ast.literal_eval(args[23]),
         "ignoreFailures": ast.literal_eval(args[24])
     }
 
@@ -63,7 +63,7 @@ def print_usage_message():
 
 if __name__ == "__main__":
     if len(sys.argv) != default_len + 1:
-        print(len(sys.argv))
+        print(str(len(sys.argv)) + " args submitted")
         print_usage_message()
         sys.exit(-1)
     run_sim(sys.argv[1:])
