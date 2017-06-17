@@ -1,35 +1,29 @@
 import os
 import subprocess
 import math
-seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+# seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+seeds = [1]
 topology_ids = ["NSFnet"]
 problem_classes = ["Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint"]
 objectives = ["LinksUsed", "Connections", "TotalCost"]
 algorithms = ["ServiceILP"]
-num_requests = [1000]
-num_sources = [1, 2, 3, 4, 5, 6, 7, 14]
-num_dests = [1, 2, 3, 4, 5, 6, 7, 14]
+num_requests = [50]
+num_sources = [1, 2, 7, 14]
+num_dests = [1, 2, 7, 14]
 failure_set_dict = {
     "Link": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 0.0], [2, 1, 0.0, 0.0], [2, 2, 0.0, 0.0], [21, 1, 0.0, 0.0],
              [21, 2, 0.0, 0.0], [21, 21, 0.0, 0.0]
              ],
-    "Node": [[0, 0, 0.0, 0.0],
-             [1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714],
-             [2, 1, 0.0, 0.0], [2, 1, 0.0714, 0.0], [2, 1, 0.0, 0.0714], [2, 1, 0.0714, 0.0714],
-             [2, 2, 0.0, 0.0], [2, 2, 0.0714, 0.0], [2, 2, 0.0, 0.0714], [2, 2, 0.0714, 0.0714],
-             [2, 2, 0.142, 0.0], [2, 2, 0.0, 0.142],
+    "Node": [[0, 0, 0.0, 0.0],  # No node failures
+             [1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714],  # One node - not src or dest, src, dest
+             [2, 1, 0.0, 0.0], [2, 1, 0.0714, 0.0], [2, 1, 0.0, 0.0714], [2, 1, 0.0714, 0.0714],  # Two nodes, one fails
+             [2, 2, 0.0, 0.0], [2, 2, 0.0714, 0.0], [2, 2, 0.0, 0.0714], [2, 2, 0.0714, 0.0714],  # Two nodes, two fail
+             [2, 2, 0.142, 0.0], [2, 2, 0.0, 0.142],  # Two nodes, two fail, - both src or both dest
              [14, 1, 1.0, 1.0], [14, 2, 1.0, 1.0], [14, 14, 1.0, 1.0]
              ],
-    "Both": [[0, 0, 0.0, 0.0],
-             [1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714],
-             [2, 1, 0.0, 0.0], [2, 1, 0.0714, 0.0], [2, 1, 0.0, 0.0714], [2, 1, 0.0714, 0.0714],
-             [2, 2, 0.0, 0.0], [2, 2, 0.0714, 0.0], [2, 2, 0.0, 0.0714], [2, 2, 0.0714, 0.0714],
-             [2, 2, 0.142, 0.0], [2, 2, 0.0, 0.142],
-             [14, 1, 1.0, 1.0], [14, 2, 1.0, 1.0], [14, 14, 1.0, 1.0],
-             [35, 1, 1.0, 1.0], [35, 2, 1.0, 1.0], [35, 35, 1.0, 1.0]
-             ]
+    "Both": [[35, 1, 1.0, 1.0], [35, 2, 1.0, 1.0], [35, 35, 1.0, 1.0]]
 }  # Includes failure class, num fails, num fails allowed, percent src fail, percent dst fail
-num_conns = [1, 2, 3, 4, 5, 6, 7, 14]
+num_conns = [1, 2, 7, 14]
 min_connection_ranges = [[0, 0], [1, 1], [2, 2]]
 max_connection_ranges = [[1, 1], [2, 2], [14, 14]]
 percent_src_also_dests = [0.0, 0.5, 1.0]
@@ -43,12 +37,12 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
     num_fails_allowed = fail_params[1]
     src_fail_percent = fail_params[2]
     dst_fail_percent = fail_params[3]
-    if num_s_in_d > num_d:
+    if num_s_in_d > num_d or (num_s_in_d == num_d and num_d == 1):
         return []
-    if fail_type != "Link":
+    if fail_type == "Node":
         num_s_fail = math.ceil(src_fail_percent * num_s)
         num_d_fail = math.ceil(dst_fail_percent * num_d)
-        if num_s_fail > num_fails or num_d_fail > num_fails:
+        if num_s_fail > num_fails or num_d_fail > num_fails or (num_s_fail - num_s_in_d + num_d_fail > num_fails):
             return []
     min_range = min_c_range if problem != "Flex" else []
     max_range = max_c_range if problem != "Flex" else []
@@ -65,7 +59,7 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
 def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_c_range, max_c_range, num_s, num_d,
                percent_src_dest, ignore, fail_type, fail_params):
 
-    output_file_path = "_".join([str(seed), topology, problem, objective, algorithm,
+    output_file_path = "results/output/" + "_".join([str(seed), topology, problem, objective, algorithm,
                                  str(num_r), str(num_c), str(min_c_range),
                                  str(max_c_range), str(num_s), str(num_d),
                                  str(percent_src_dest), str(ignore), fail_type,
@@ -75,21 +69,20 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
                                num_s, num_d, percent_src_dest, ignore,
                                fail_type, fail_params)
     if len(parameters) > 0:
-        command_input = ["bsub", "-q", "long", "-W", "120:30", "-R", "rusage[mem=4000] span[hosts=1]", "-n", "10", "-o", output_file_path, "python", "run_simulation.py"]
+        command_input = ["bsub", "-q", "short", "-W", "3:59", "-R", "rusage[mem=1500] span[hosts=1]", "-n", "8", "-o", output_file_path, "python", "scripts/run_simulation.py"]
         for param in parameters:
             command_input.append(str(param))
-        print(command_input)
         process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
-        print(process.stdout.read())
 
-
-create_job(1, "NSFNet", "Flex", "TotalCost", "ServiceILP", 1, 14, [1, 1], [4, 4], 14, 14, 1.0, False, "Node", [14, 1, 1.0, 1.0])
-exit(1)
+# Load relevant modules
+# create_job(1, "NSFNet", "Endpoint", "TotalCost", "ServiceILP", 5, 1, [0, 0], [4, 4], 14, 14, 1.0, False, "Link", [14, 1, 0.0, 0.0])
+# exit(1)
 
 for seed in seeds:
     for topology in topology_ids:
         for problem in problem_classes:
             for objective in objectives:
+                print("Starting: " + problem + " " + objective + " " + str(seed))
                 for algorithm in algorithms:
                     for num_r in num_requests:
                         for num_c in num_conns:
@@ -102,7 +95,8 @@ for seed in seeds:
                                                     for fail_type in failure_set_dict.keys():
                                                         for fail_params in failure_set_dict[fail_type]:
                                                             pass
-                                                            '''create_job(seed, topology, problem, objective, algorithm,
+                                                            create_job(seed, topology, problem, objective, algorithm,
                                                                        num_r, num_c, min_c_range, max_c_range, num_s,
                                                                        num_d,percent_src_dest, ignore, fail_type,
-                                                                       fail_params)'''
+                                                                       fail_params)
+                print("Done with: " + problem + " " + objective + " " + str(seed))

@@ -18,7 +18,7 @@ def run_sim(args):
     process = launch_simulator(True, param_dict, "0", "false")
 
     # Kill the simulator (in case it hasn't died)
-    kill(process)
+    # kill(process)
     print("Done")
 
 

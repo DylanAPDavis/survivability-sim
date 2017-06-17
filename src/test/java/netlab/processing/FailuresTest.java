@@ -124,6 +124,47 @@ public class FailuresTest {
         analyze(rs3, 5, true, true);
     }
 
+    /*
+        {
+      "algorithm": "ServiceILP",
+      "completed": 0,
+      "failureClass": "Node",
+      "failureProb": 1,
+      "failureSetSize": 1,
+      "ignoreFailures": 1,
+      "maxConnectionsRange": [],
+      "minConnectionsRange": [],
+      "minMaxFailsAllowed": [],
+      "minMaxFailureProb": [],
+      "minMaxFailures": [],
+      "numConnections": 1,
+      "numDestinations": 1,
+      "numFailsAllowed": 1,
+      "numRequests": 50,
+      "numSources": 1,
+      "objective": "LinksUsed",
+      "percentDestFail": 0,
+      "percentSrcAlsoDest": 1,
+      "percentSrcFail": 0,
+      "problemClass": "Flex",
+      "processingType": "Solo",
+      "requestSetId": "82d9af34-c801-4786-adae-640e7165997d",
+      "sdn": 0,
+      "seed": 1,
+      "submittedDate": "2017-06-16T19:41:02.193Z",
+      "topologyId": "NSFnet",
+      "useAws": 1
+    }
+     */
+
+    @Test
+    public void failedOnClusterTest(){
+        RequestSet rs1 = solve(1L, "NSFnet", 50, "ServiceILP", "Flex",
+                "LinksUsed", 1, 1, 1, new ArrayList<>(), "Node", 1.0,
+                new ArrayList<>(), 1,  new ArrayList<>(), new ArrayList<>(),
+                1, new ArrayList<>(), "Solo", false, false, 1.0, 0.0, 0.0);
+    }
+
 
     private void solveAndAnalyzeSrcDestOverlap(Integer numSources, Integer numDestinations, Integer numConnections,
                                                Integer fSize, Integer nfa, String failureClass,
