@@ -7,15 +7,14 @@ topology_ids = ["NSFnet"]
 problem_classes = ["Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint"]
 objectives = ["LinksUsed", "Connections", "TotalCost"]
 algorithms = ["ServiceILP"]
-num_requests = [50]
+num_requests = [1]
 num_sources = [1, 2, 7, 14]
 num_dests = [1, 2, 7, 14]
 failure_set_dict = {
     "Link": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 0.0], [2, 1, 0.0, 0.0], [2, 2, 0.0, 0.0], [21, 1, 0.0, 0.0],
              [21, 2, 0.0, 0.0], [21, 21, 0.0, 0.0]
              ],
-    "Node": [[0, 0, 0.0, 0.0],  # No node failures
-             [1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714],  # One node - not src or dest, src, dest
+    "Node": [[1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714],  # One node - not src or dest, src, dest
              [2, 1, 0.0, 0.0], [2, 1, 0.0714, 0.0], [2, 1, 0.0, 0.0714], [2, 1, 0.0714, 0.0714],  # Two nodes, one fails
              [2, 2, 0.0, 0.0], [2, 2, 0.0714, 0.0], [2, 2, 0.0, 0.0714], [2, 2, 0.0714, 0.0714],  # Two nodes, two fail
              [2, 2, 0.142, 0.0], [2, 2, 0.0, 0.142],  # Two nodes, two fail, - both src or both dest
@@ -37,13 +36,13 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
     num_fails_allowed = fail_params[1]
     src_fail_percent = fail_params[2]
     dst_fail_percent = fail_params[3]
-    if num_s_in_d > num_d or (num_s_in_d == num_d and num_d == 1):
-        return []
+    if num_s_in_d > num_d or (num_s_in_d == num_d and num_d == 1) or (ignore_failures and num_fails != 0):
+        return None
     if fail_type == "Node":
         num_s_fail = math.ceil(src_fail_percent * num_s)
         num_d_fail = math.ceil(dst_fail_percent * num_d)
         if num_s_fail > num_fails or num_d_fail > num_fails or (num_s_fail - num_s_in_d + num_d_fail > num_fails):
-            return []
+            return None
     min_range = min_c_range if problem != "Flex" else []
     max_range = max_c_range if problem != "Flex" else []
     return [seed, topology, num_r, algorithm, problem, objective, num_s, num_d, num_fails, [], fail_type, 1.0, [],
@@ -68,13 +67,13 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
                                num_r, num_c, min_c_range, max_c_range,
                                num_s, num_d, percent_src_dest, ignore,
                                fail_type, fail_params)
-    if len(parameters) > 0:
+    if parameters is not None:
         command_input = ["bsub", "-q", "short", "-W", "3:59", "-R", "rusage[mem=1500] span[hosts=1]", "-n", "8", "-o", output_file_path, "python", "scripts/run_simulation.py"]
         for param in parameters:
             command_input.append(str(param))
         process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
-# Load relevant modules
+
 # create_job(1, "NSFNet", "Endpoint", "TotalCost", "ServiceILP", 5, 1, [0, 0], [4, 4], 14, 14, 1.0, False, "Link", [14, 1, 0.0, 0.0])
 # exit(1)
 
