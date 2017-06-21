@@ -7,6 +7,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
@@ -82,9 +83,11 @@ public class DynamoInterface {
             AttributeValue value = eav.get(attributeName);
             scanExpression.addFilterCondition(attributeName, new Condition().withComparisonOperator(ComparisonOperator.EQ).withAttributeValueList(value));
         }
+        scanExpression.setIndexName("seed-index");
 
         return mapper.scan(SimulationParameters.class, scanExpression);
     }
+
 
     public Map<String, AttributeValue> createExpressionAttributeValueMap(SimulationParameters params){
         Map<String, AttributeValue> eav = new HashMap<>();

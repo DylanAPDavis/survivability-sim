@@ -6,6 +6,7 @@ import netlab.analysis.controller.AnalysisController;
 import netlab.analysis.services.AnalysisService;
 import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
+import netlab.storage.controller.StorageController;
 import netlab.storage.services.StorageService;
 import netlab.submission.request.SimulationParameters;
 import org.junit.Test;
@@ -32,7 +33,7 @@ public class AWSTest {
     private StorageService storageService;
 
     @Autowired
-    private AnalysisController analysisController;
+    private StorageController storageController;
 
     //@Test
     public void updateRows(){
@@ -42,14 +43,12 @@ public class AWSTest {
             param.setGenerated(false);
             storageService.putSimulationParameters(param);
         }
-        System.out.println("Yo");
     }
 
-    @Test
+    //@Test
     public void generateFailureRequests(){
         Long seed = 1L;
-        analysisController.createFailedRequestSets(seed);
-        System.out.println("Yo");
+        storageController.createFailedRequestSets(seed);
     }
 
     @Test

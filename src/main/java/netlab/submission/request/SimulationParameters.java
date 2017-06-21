@@ -1,6 +1,7 @@
 package netlab.submission.request;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import lombok.*;
 
@@ -16,6 +17,7 @@ public class SimulationParameters {
     @DynamoDBHashKey(attributeName="requestSetId")
     private String requestSetId;
 
+    @DynamoDBIndexRangeKey(attributeName="seed", localSecondaryIndexName="seed-index")
     private Long seed;
 
     private Calendar submittedDate;

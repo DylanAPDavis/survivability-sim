@@ -3,7 +3,9 @@ package netlab.storage.controller;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.services.AnalysisService;
+import netlab.storage.services.FailureAdditionService;
 import netlab.storage.services.StorageService;
+import netlab.submission.request.Request;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,21 +15,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
 public class StorageController {
 
-    @Autowired
-    private StorageController(StorageService storageService){
-        this.storageService = storageService;
-    }
-
     private StorageService storageService;
+    private FailureAdditionService failureAdditionService;
+
+    @Autowired
+    private StorageController(StorageService storageService, FailureAdditionService failureAdditionService){
+        this.storageService = storageService;
+        this.failureAdditionService = failureAdditionService;
+    }
 
     @RequestMapping(method = RequestMethod.GET, value = "/storage/raw/{requestSetId}/{useAwes}")
     public RequestSet getRequestSet(@PathVariable String requestSetId, @PathVariable Boolean useAws){
@@ -51,4 +53,24 @@ public class StorageController {
         }
         return storageService.getAnalyzedSets(params);
     }
+
+    @RequestMapping(value = "/analyze/create_failed_request_sets", method = RequestMethod.POST)
+    @ResponseBody
+    public String createFailedRequestSets(Long seed){
+        // 1. Get all simulation parameters for a particular seed
+        SimulationParameters filterParams = SimulationParameters.builder()
+                .seed(seed)
+                .generated(false)
+                .build();
+        List<SimulationParameters> matchingParams = storageService.getMatchingSimulationParameters(filterParams);
+
+        // 2. From those, get the zero failure parameters & requests
+        List<SimulationParameters> zeroFailureParams = matchingParams.parallelStream().filter(SimulationParameters::getIgnoreFailures).collect(Collectors.toList());
+
+        // 3. For each zero failure param/request
+        // Create another parameters/request with a new ID, and matching failure stats, for each parameter
+        return failureAdditionService.createNewParamsAndSets(zeroFailureParams, matchingParams);
+    }
+
+
 }
