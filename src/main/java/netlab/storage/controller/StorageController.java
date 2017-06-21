@@ -54,7 +54,7 @@ public class StorageController {
         return storageService.getAnalyzedSets(params);
     }
 
-    @RequestMapping(value = "/analyze/create_failed_request_sets", method = RequestMethod.POST)
+    @RequestMapping(value = "/storage/create_failed_request_sets", method = RequestMethod.POST)
     @ResponseBody
     public String createFailedRequestSets(Long seed){
         // 1. Get all simulation parameters for a particular seed

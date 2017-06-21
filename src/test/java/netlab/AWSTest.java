@@ -8,6 +8,7 @@ import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
 import netlab.storage.controller.StorageController;
 import netlab.storage.services.StorageService;
+import netlab.submission.controller.SubmissionController;
 import netlab.submission.request.SimulationParameters;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,6 +36,9 @@ public class AWSTest {
     @Autowired
     private StorageController storageController;
 
+    @Autowired
+    private SubmissionController submissionController;
+
     //@Test
     public void updateRows(){
         SimulationParameters seedParams = SimulationParameters.builder().seed(1L).build();
@@ -49,6 +53,12 @@ public class AWSTest {
     public void generateFailureRequests(){
         Long seed = 1L;
         storageController.createFailedRequestSets(seed);
+    }
+
+    //@Test
+    public void rerunRequests(){
+        Long seed = 1L;
+        submissionController.rerunRequestSets(seed);
     }
 
     @Test

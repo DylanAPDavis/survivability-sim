@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Slf4j
 @Controller
 public class SubmissionController {
@@ -53,6 +56,38 @@ public class SubmissionController {
 
         // Return the request set ID
         return requestSet.getId();
+    }
+
+    @RequestMapping(value = "/submit_rerun_all", method = RequestMethod.POST)
+    @ResponseBody
+    public List<String> rerunAllRequestSets(){
+        SimulationParameters searchParams = SimulationParameters.builder()
+                .completed(false)
+                .useAws(true)
+                .build();
+        return rerunParams(searchParams);
+    }
+
+    @RequestMapping(value = "/submit_rerun", method = RequestMethod.POST)
+    @ResponseBody
+    public List<String> rerunRequestSets(Long seed){
+        SimulationParameters searchParams = SimulationParameters.builder()
+                .seed(seed)
+                .completed(false)
+                .useAws(true)
+                .build();
+        return rerunParams(searchParams);
+    }
+
+    private List<String> rerunParams(SimulationParameters searchParams){
+        List<SimulationParameters> matchingParams = storageService.getMatchingSimulationParameters(searchParams);
+        List<String> ids = new ArrayList<>();
+        for(SimulationParameters params : matchingParams){
+            RequestSet generatedSet = generationService.generateFromSimParams(params);
+            processingService.processRequestSet(generatedSet);
+            ids.add(generatedSet.getId());
+        }
+        return ids;
     }
 
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
