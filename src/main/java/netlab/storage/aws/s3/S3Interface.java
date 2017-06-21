@@ -75,7 +75,7 @@ public class S3Interface {
             Upload xfer = transferManager.upload(bucketName, keyName, f);
             xfer.waitForCompletion();
             return true;
-        } catch (AmazonServiceException | InterruptedException | NullPointerException e) {
+        } catch (Exception e) {
             log.error(e.getMessage());
             return false;
         }
@@ -96,7 +96,7 @@ public class S3Interface {
             return f;
             // loop with Transfer.isDone()
             // or block with Transfer.waitForCompletion()
-        } catch (AmazonServiceException | InterruptedException | NullPointerException e) {
+        } catch (Exception e) {
             log.error(e.getMessage());
             return null;
         }

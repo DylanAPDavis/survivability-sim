@@ -22,6 +22,9 @@ public class SimulationParameters {
 
     private Boolean completed;
 
+    // Keeps track of if the request was generated using failure set of another request
+    private Boolean generated;
+
     private String topologyId;
 
     private String problemClass;

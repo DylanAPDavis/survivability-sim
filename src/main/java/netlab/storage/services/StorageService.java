@@ -15,6 +15,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,7 +45,7 @@ public class StorageService {
     public RequestSet retrieveRequestSet(String requestSetId, boolean useAws){
         RequestSet rs = null;
         File f = new File(System.getProperty("user.dir") + "/results/raw/" + requestSetId);
-        if(useAws){
+        if(!f.exists() && useAws){
             f = s3Interface.downloadFromRaw(f, requestSetId);
         }
         if(f != null && f.exists()){
@@ -78,6 +79,10 @@ public class StorageService {
 
     public boolean putSimulationParameters(SimulationParameters params){
         return dynamoInterface.put(params);
+    }
+
+    public List<SimulationParameters> getMatchingSimulationParameters(SimulationParameters params){
+        return dynamoInterface.getSimulationParameters(params);
     }
 
     public List<AnalyzedSet> getAnalyzedSets(SimulationParameters params){
@@ -122,7 +127,7 @@ public class StorageService {
         return obj;
     }
 
-    private boolean writeLocal(Object object, File outputFile){
+    public boolean writeLocal(Object object, File outputFile){
         try {
             FileOutputStream f = new FileOutputStream(outputFile);
             ObjectOutputStream o = new ObjectOutputStream(f);
@@ -142,7 +147,7 @@ public class StorageService {
         return true;
     }
 
-    private File createFile(String id, String subDir){
+    public File createFile(String id, String subDir){
         //String fileName = nameComponents.stream().reduce("", (s1, s2) -> s1 + "_" + s2);
         //fileName = fileName.substring(1);
         String outputPath = System.getProperty("user.dir") + "/results/" + subDir + "/";

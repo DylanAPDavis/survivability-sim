@@ -181,13 +181,13 @@ public class GenerationService {
         Random rng = new Random(params.getSeed());
 
         for(int i = 0; i < params.getNumRequests(); i++){
-            Request r = createRequest(params, topo, rng);
+            Request r = createRequest(params, topo, i, rng);
             requests.put(r.getId(), r);
         }
         return requests;
     }
 
-    public Request createRequest(SimulationParameters params, Topology topo, Random rng){
+    public Request createRequest(SimulationParameters params, Topology topo, Integer index, Random rng){
 
         Set<Node> sources = selectionService.pickSources(topo.getNodes(), params.getNumSources(), rng);
         Set<Node> destinations = selectionService.pickDestinations(topo.getNodes(), params.getNumDestinations(), rng,
@@ -215,7 +215,7 @@ public class GenerationService {
 
 
         return Request.builder()
-                .id(UUID.randomUUID().toString())
+                .id(String.valueOf(index))
                 .sources(sources)
                 .destinations(destinations)
                 .connections(connectionsCollection)

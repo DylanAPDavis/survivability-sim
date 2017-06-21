@@ -159,9 +159,11 @@ public class DefaultValueService {
         if(params.getSubmittedDate() == null){
             params.setSubmittedDate(Calendar.getInstance());
         }
-        // Change finished date to null --> hasn't happened yet
         if(params.getCompleted() == null || params.getCompleted()){
             params.setCompleted(false);
+        }
+        if(params.getGenerated() == null || params.getGenerated()){
+            params.setGenerated(false);
         }
         if(params.getTopologyId() == null){
             params.setTopologyId("NSFnet");

@@ -72,6 +72,10 @@ public class DynamoInterface {
 
     // Given full/partial definition of parameters, retrieve matching requestSetIds
     public List<String> getRequestSetIds(SimulationParameters params){
+        return getSimulationParameters(params).stream().map(SimulationParameters::getRequestSetId).collect(Collectors.toList());
+    }
+
+    public List<SimulationParameters> getSimulationParameters(SimulationParameters params){
         Map<String, AttributeValue> eav = createExpressionAttributeValueMap(params);
         DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
         for(String attributeName : eav.keySet()){
@@ -79,8 +83,7 @@ public class DynamoInterface {
             scanExpression.addFilterCondition(attributeName, new Condition().withComparisonOperator(ComparisonOperator.EQ).withAttributeValueList(value));
         }
 
-        List<SimulationParameters> paramList =  mapper.scan(SimulationParameters.class, scanExpression);
-        return paramList.stream().map(SimulationParameters::getRequestSetId).collect(Collectors.toList());
+        return mapper.scan(SimulationParameters.class, scanExpression);
     }
 
     public Map<String, AttributeValue> createExpressionAttributeValueMap(SimulationParameters params){
@@ -88,6 +91,7 @@ public class DynamoInterface {
         if(params.getRequestSetId() != null) {eav.put("requestSetId", new AttributeValue().withS(params.getRequestSetId()));}
         if(params.getSeed() != null) {eav.put("seed", new AttributeValue().withN(Long.toString(params.getSeed())));}
         if(params.getCompleted() != null) {eav.put("completed", new AttributeValue().withN(String.valueOf(params.getCompleted() ? 1 : 0)));}
+        if(params.getGenerated() != null) {eav.put("generated", new AttributeValue().withN(String.valueOf(params.getGenerated() ? 1 : 0)));}
         if(params.getTopologyId() != null) {eav.put("topologyId", new AttributeValue().withS(params.getTopologyId()));}
         if(params.getProblemClass() != null) {eav.put("problemClass", new AttributeValue().withS(params.getProblemClass()));}
         if(params.getObjective() != null) {eav.put("objective", new AttributeValue().withS(params.getObjective()));}
