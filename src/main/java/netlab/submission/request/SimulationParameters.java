@@ -76,4 +76,42 @@ public class SimulationParameters {
 
     private Boolean ignoreFailures;
 
+    public SimulationParameters clone(){
+        try{
+            return (SimulationParameters) super.clone();
+        } catch (Exception e){
+            return SimulationParameters.builder()
+                    .requestSetId(requestSetId)
+                    .seed(seed)
+                    .submittedDate(submittedDate)
+                    .completed(completed)
+                    .generated(generated)
+                    .topologyId(topologyId)
+                    .problemClass(problemClass)
+                    .objective(objective)
+                    .algorithm(algorithm)
+                    .numRequests(numRequests)
+                    .numSources(numSources)
+                    .numDestinations(numDestinations)
+                    .failureSetSize(failureSetSize)
+                    .minMaxFailures(new ArrayList<>(minMaxFailures))
+                    .failureClass(failureClass)
+                    .failureProb(failureProb)
+                    .minMaxFailureProb(new ArrayList<>(minMaxFailureProb))
+                    .numConnections(numConnections)
+                    .minConnectionsRange(new ArrayList<>(minConnectionsRange))
+                    .maxConnectionsRange(new ArrayList<>(maxConnectionsRange))
+                    .numFailsAllowed(numFailsAllowed)
+                    .minMaxFailsAllowed(new ArrayList<>(minMaxFailsAllowed))
+                    .processingType(processingType)
+                    .percentSrcAlsoDest(percentSrcAlsoDest)
+                    .percentSrcFail(percentSrcFail)
+                    .percentDestFail(percentDestFail)
+                    .sdn(sdn)
+                    .useAws(useAws)
+                    .ignoreFailures(ignoreFailures)
+                    .build();
+        }
+    }
+
 }

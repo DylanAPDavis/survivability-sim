@@ -57,5 +57,32 @@ public class AnalysisController {
     }
 
 
+    @RequestMapping(value = "/analyze/aggregate_seeds", method = RequestMethod.POST)
+    @ResponseBody
+    public String aggregateSeeds(List<Long> seeds){
+        SimulationParameters searchParams = SimulationParameters.builder()
+                .seed(seeds.get(0))
+                .completed(true)
+                .useAws(true)
+                .build();
+        List<SimulationParameters> firstSeedParams = storageService.getMatchingSimulationParameters(searchParams);
+        for(SimulationParameters firstParams : firstSeedParams){
+
+            List<SimulationParameters> otherParams = new ArrayList<>();
+            for(int i = 1; i < seeds.size(); i++){
+                SimulationParameters matchingParamsSeed = firstParams.clone();
+                matchingParamsSeed.setSeed(seeds.get(i));
+                matchingParamsSeed.setRequestSetId(null);
+                matchingParamsSeed.setSubmittedDate(null);
+                otherParams.addAll(storageService.getMatchingSimulationParameters(matchingParamsSeed));
+            }
+            // TODO: Aggregate these params
+        }
+        // TODO: Take all aggregate params, make a CSV (somehow)
+
+        return "";
+    }
+
+
 
 }
