@@ -83,9 +83,8 @@ public class SubmissionController {
         List<SimulationParameters> matchingParams = storageService.getMatchingSimulationParameters(searchParams);
         List<String> ids = new ArrayList<>();
         for(SimulationParameters params : matchingParams){
-            RequestSet generatedSet = generationService.generateFromSimParams(params);
-            processingService.processRequestSet(generatedSet);
-            ids.add(generatedSet.getId());
+            String id = submitRequestSet(params);
+            ids.add(id);
         }
         return ids;
     }

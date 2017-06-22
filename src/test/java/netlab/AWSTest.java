@@ -55,9 +55,9 @@ public class AWSTest {
         storageController.createFailedRequestSets(seed);
     }
 
-    //@Test
+    @Test
     public void rerunRequests(){
-        Long seed = 1L;
+        Long seed = 2L;
         submissionController.rerunRequestSets(seed);
     }
 

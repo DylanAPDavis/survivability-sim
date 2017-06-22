@@ -190,6 +190,14 @@ public class NoFailuresTest {
         solveAndAnalyzeSrcDestOverlap(3, 3, 3, 1.0);
     }
 
+    @Test
+    public void clusterFailureSeed2(){
+        solve(2L, "NSFnet", 10, "ServiceILP", "Endpoint", "LinksUsed", 7, 7,
+                0, new ArrayList<>(), "Link", 1.0, new ArrayList<>(),
+                1, Arrays.asList(0,0), Arrays.asList(14,14), 0, new ArrayList<>(),
+                "Solo", false, false, 0.5, 0.0, 0.0);
+    }
+
     private void solveAndAnalyzeSrcDestOverlap(Integer numSources, Integer numDestinations, Integer numConnections, Double percentSrcAlsoDest){
         RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
                 "TotalCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
