@@ -2,7 +2,7 @@ import os
 import subprocess
 import math
 # seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
-seeds = [2]
+seeds = [1]
 topology_ids = ["NSFnet"]
 problem_classes = ["Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint"]
 objectives = ["LinksUsed", "Connections", "TotalCost"]
@@ -38,8 +38,7 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
     src_fail_percent = fail_params[2]
     dst_fail_percent = fail_params[3]
     complete_overlap = num_s_in_d == num_d and exclusive_s == 0
-    if num_s_in_d > num_d or (complete_overlap and num_d == 1) or (ignore_failures and num_fails != 0) \
-            or (node_count(topology) - exclusive_s < num_d):
+    if num_s_in_d > num_d or (complete_overlap and num_d == 1) or (node_count(topology) - exclusive_s < num_d):
         return None
     if fail_type == "Node":
         num_s_fail = math.ceil(src_fail_percent * num_s)

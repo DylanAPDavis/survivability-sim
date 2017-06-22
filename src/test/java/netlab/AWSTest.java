@@ -61,7 +61,7 @@ public class AWSTest {
         submissionController.rerunRequestSets(seed);
     }
 
-    @Test
+    //@Test
     public void deleteRequests(){
         Long seed = 2L;
         storageController.deleteRecordsAndRequests(seed);

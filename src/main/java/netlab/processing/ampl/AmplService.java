@@ -112,7 +112,7 @@ public class AmplService {
         dataLines.add(createNodeSetLine(request.getDestinations(), "D"));
 
         // I_max
-        String iMax = "param I_max := 10;";
+        String iMax = "param I_max := 14;";
         dataLines.add(iMax);
 
         // C_total
