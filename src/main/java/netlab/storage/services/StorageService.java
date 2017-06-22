@@ -97,6 +97,20 @@ public class StorageService {
         return sets;
     }
 
+    public Boolean deleteRequests(Long seed){
+        SimulationParameters searchParams = SimulationParameters.builder()
+                .seed(seed)
+                .build();
+        List<SimulationParameters> matchingParams = dynamoInterface.getSimulationParameters(searchParams);
+        Boolean deleteRecords = dynamoInterface.deleteRecords(matchingParams);
+        Boolean deleteRequests = false;
+        if(deleteRecords) {
+            List<String> requestSetIds = matchingParams.stream().map(SimulationParameters::getRequestSetId).collect(Collectors.toList());
+            deleteRequests = s3Interface.deleteFromRaw(requestSetIds);
+        }
+        return deleteRecords && deleteRequests;
+    }
+
     // Private subfunctions
 
     private RequestSet readRequestSetLocal(File file){

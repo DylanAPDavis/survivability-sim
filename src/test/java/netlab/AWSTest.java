@@ -51,14 +51,20 @@ public class AWSTest {
 
     //@Test
     public void generateFailureRequests(){
-        Long seed = 1L;
+        Long seed = 2L;
         storageController.createFailedRequestSets(seed);
     }
 
-    @Test
+    //@Test
     public void rerunRequests(){
         Long seed = 2L;
         submissionController.rerunRequestSets(seed);
+    }
+
+    @Test
+    public void deleteRequests(){
+        Long seed = 2L;
+        storageController.deleteRecordsAndRequests(seed);
     }
 
     @Test

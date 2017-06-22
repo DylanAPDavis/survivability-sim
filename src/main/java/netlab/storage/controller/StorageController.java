@@ -72,5 +72,11 @@ public class StorageController {
         return failureAdditionService.createNewParamsAndSets(zeroFailureParams, matchingParams);
     }
 
+    @RequestMapping(value="/storage/delete_seed", method = RequestMethod.POST)
+    @ResponseBody
+    public Boolean deleteRecordsAndRequests(Long seed){
+        return storageService.deleteRequests(seed);
+    }
+
 
 }

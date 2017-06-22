@@ -1,11 +1,13 @@
 package netlab.storage.aws.s3;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.File;
+import java.util.List;
 
 @Slf4j
 @Controller
@@ -104,5 +107,26 @@ public class S3Interface {
 
     public void shutdown(){
         if(transferManager != null) transferManager.shutdownNow(true);
+    }
+
+    public Boolean deleteFromRaw(List<String> requestSetIds) {
+        for(String key : requestSetIds) {
+            try {
+                s3.deleteObject(new DeleteObjectRequest(awsConfig.getRawBucket(), key));
+            } catch (AmazonServiceException ase) {
+                System.out.println("Caught an AmazonServiceException.");
+                System.out.println("Error Message:    " + ase.getMessage());
+                System.out.println("HTTP Status Code: " + ase.getStatusCode());
+                System.out.println("AWS Error Code:   " + ase.getErrorCode());
+                System.out.println("Error Type:       " + ase.getErrorType());
+                System.out.println("Request ID:       " + ase.getRequestId());
+                return false;
+            } catch (AmazonClientException ace) {
+                System.out.println("Caught an AmazonClientException.");
+                System.out.println("Error Message: " + ace.getMessage());
+                return false;
+            }
+        }
+        return true;
     }
 }
