@@ -23,13 +23,13 @@ public class AmplService {
 
     private String modelDirectory = "linear-programs/models";
 
-    public Request solve(Request request, ProblemClass problemClass, Objective objective, Topology topology){
+    public Request solve(Request request, ProblemClass problemClass, Objective objective, Topology topology, String requestSetId){
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         Environment env = new Environment(System.getProperty("user.dir") + "/linear-programs/ampl/");
         AMPL ampl = new AMPL(env);
         double duration = 0.0;
         try {
-            ampl = assignValues(request, problemClass, objective, topology, ampl);
+            ampl = assignValues(request, problemClass, objective, topology, requestSetId, ampl);
             long startTime = System.nanoTime();
             ampl.solve();
             long endTime = System.nanoTime();
@@ -53,7 +53,8 @@ public class AmplService {
         return request;
     }
 
-    private AMPL assignValues(Request request, ProblemClass problemClass, Objective objective, Topology topology, AMPL ampl) throws IOException{
+    private AMPL assignValues(Request request, ProblemClass problemClass, Objective objective, Topology topology,
+                              String requestSetId, AMPL ampl) throws IOException{
         if(problemClass.equals(ProblemClass.Flex)){
             ampl.read(modelDirectory + "/flex.mod");
         }
@@ -76,7 +77,7 @@ public class AmplService {
         ampl.eval("option gurobi_options \'threads " + 8 + "\';");
 
         List<String> dataLines = createDataLines(request, topology, problemClass);
-        java.nio.file.Path file = Paths.get(request.getId() + ".dat");
+        java.nio.file.Path file = Paths.get(requestSetId + "_" + request.getId() + ".dat");
         try {
             // Create the empty file with default permissions, etc.
             Files.createFile(file);
@@ -88,7 +89,7 @@ public class AmplService {
             System.err.format("createFile error: %s%n", x);
         }
         Files.write(file, dataLines);
-        ampl.readData(request.getId() + ".dat");
+        ampl.readData(requestSetId + "_" + request.getId() + ".dat");
 
         Files.delete(file);
 

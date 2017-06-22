@@ -38,7 +38,7 @@ public class ProcessingService {
         if(requestSet.getProcessingType().equals(ProcessingType.Solo)){
             for(Request request : requestSet.getRequests().values()){
                 processRequest(request, requestSet.getAlgorithm(), requestSet.getProblemClass(), requestSet.getObjective(),
-                        topo, requestSet.isUseAws(), requestSet.isSdn());
+                        topo, requestSet.getId(), requestSet.isUseAws(), requestSet.isSdn());
             }
         }
 
@@ -46,10 +46,10 @@ public class ProcessingService {
     }
 
     private void processRequest(Request request, Algorithm algorithm, ProblemClass problemClass, Objective objective,
-                                Topology topology, Boolean useAws, Boolean sdn){
+                                Topology topology, String requestSetId, Boolean useAws, Boolean sdn){
         switch(algorithm){
             case ServiceILP:
-                amplService.solve(request, problemClass, objective, topology);
+                amplService.solve(request, problemClass, objective, topology, requestSetId);
         }
     }
 }

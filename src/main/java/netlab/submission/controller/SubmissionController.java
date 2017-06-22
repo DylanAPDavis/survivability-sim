@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -81,11 +82,8 @@ public class SubmissionController {
 
     private List<String> rerunParams(SimulationParameters searchParams){
         List<SimulationParameters> matchingParams = storageService.getMatchingSimulationParameters(searchParams);
-        List<String> ids = new ArrayList<>();
-        for(SimulationParameters params : matchingParams){
-            String id = submitRequestSet(params);
-            ids.add(id);
-        }
+        List<String> ids = matchingParams.stream().map(SimulationParameters::getRequestSetId).collect(Collectors.toList());
+        matchingParams.parallelStream().forEach(this::submitRequestSet);
         return ids;
     }
 
