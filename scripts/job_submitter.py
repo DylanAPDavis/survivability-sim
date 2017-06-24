@@ -31,6 +31,8 @@ ignore_failures = [True, False]
 
 def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, min_c_range, max_c_range, num_s, num_d,
                   percent_src_dest, ignore, fail_type, fail_params):
+    if 2 in min_c_range and 1 in max_c_range:
+        return None
     num_s_in_d = math.ceil(percent_src_dest * num_s)
     exclusive_s = num_s - num_s_in_d
     num_fails = fail_params[0]

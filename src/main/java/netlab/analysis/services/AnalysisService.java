@@ -535,7 +535,7 @@ public class AnalysisService {
     }
 
 
-    public AggregateAnalyzedSet aggregateAnalyzedSetsGivenParams(List<AnalyzedSet> analyzedSets) {
+    public AggregateAnalyzedSet aggregateAnalyzedSets(List<AnalyzedSet> analyzedSets) {
 
         if(analyzedSets.isEmpty()){
             return AggregateAnalyzedSet.builder().build();

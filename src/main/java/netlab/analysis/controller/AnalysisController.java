@@ -2,22 +2,19 @@ package netlab.analysis.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.AggregateAnalyzedSet;
+import netlab.analysis.analyzed.AggregationParameters;
 import netlab.analysis.analyzed.AnalysisParameters;
 import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.services.AnalysisService;
 import netlab.storage.services.StorageService;
-import netlab.submission.request.Request;
-import netlab.submission.request.RequestParameters;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.SerializationUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,15 +50,15 @@ public class AnalysisController {
     public AggregateAnalyzedSet aggregateAnalyzedSets(SimulationParameters params){
 
         List<AnalyzedSet> analyzedSets = storageService.getAnalyzedSets(params);
-        return analysisService.aggregateAnalyzedSetsGivenParams(analyzedSets);
+        return analysisService.aggregateAnalyzedSets(analyzedSets);
     }
 
 
     @RequestMapping(value = "/analyze/aggregate_seeds", method = RequestMethod.POST)
     @ResponseBody
-    public String aggregateSeeds(List<Long> seeds){
+    public String aggregateSeeds(AggregationParameters agParams){
         SimulationParameters searchParams = SimulationParameters.builder()
-                .seed(seeds.get(0))
+                .seed(agParams.getSeeds().get(0))
                 .completed(true)
                 .useAws(true)
                 .build();
@@ -69,16 +66,21 @@ public class AnalysisController {
         for(SimulationParameters firstParams : firstSeedParams){
 
             List<SimulationParameters> otherParams = new ArrayList<>();
-            for(int i = 1; i < seeds.size(); i++){
+            for(int i = 1; i < agParams.getSeeds().size(); i++){
                 SimulationParameters matchingParamsSeed = firstParams.clone();
-                matchingParamsSeed.setSeed(seeds.get(i));
+                matchingParamsSeed.setSeed(agParams.getSeeds().get(i));
                 matchingParamsSeed.setRequestSetId(null);
                 matchingParamsSeed.setSubmittedDate(null);
                 otherParams.addAll(storageService.getMatchingSimulationParameters(matchingParamsSeed));
             }
-            // TODO: Aggregate these params
+            otherParams.add(firstParams);
+            List<AnalyzedSet> analyzedSets = otherParams.stream()
+                    .map(p -> storageService.retrieveAnalyzedSet(p.getRequestSetId(), true))
+                    .collect(Collectors.toList());
+            AggregateAnalyzedSet aggregateAnalyzedSet = analysisService.aggregateAnalyzedSets(analyzedSets);
         }
         // TODO: Take all aggregate params, make a CSV (somehow)
+
 
         return "";
     }
