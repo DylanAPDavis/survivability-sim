@@ -38,7 +38,8 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
     src_fail_percent = fail_params[2]
     dst_fail_percent = fail_params[3]
     complete_overlap = num_s_in_d == num_d and exclusive_s == 0
-    if num_s_in_d > num_d or (complete_overlap and num_d == 1) or (node_count(topology) - exclusive_s < num_d):
+    if num_s_in_d > num_d or (complete_overlap and num_d == 1) or (node_count(topology) - exclusive_s < num_d) or \
+            (ignore_failures and num_fails != 0):
         return None
     if fail_type == "Node":
         num_s_fail = math.ceil(src_fail_percent * num_s)
