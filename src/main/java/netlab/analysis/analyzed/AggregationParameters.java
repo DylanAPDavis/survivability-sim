@@ -26,7 +26,7 @@ public class AggregationParameters {
     List<Integer> numConnections;
     List<List<Integer>> minConnectionRanges;
     List<List<Integer>> maxConnectionRanges;
-    List<Integer> percentSrcAlsoDests;
+    List<Double> percentSrcAlsoDests;
     List<Boolean> ignoreFailures;
     
 }
