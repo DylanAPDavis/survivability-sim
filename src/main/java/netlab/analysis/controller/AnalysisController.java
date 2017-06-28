@@ -87,6 +87,7 @@ public class AnalysisController {
             SimulationParameters params = firstSeedParams.get(index);
             AggregateAnalyzedSet aggSet = aggregateSets.get(index);
             String topologyName = params.getTopologyId();
+            String algorithm = params.getAlgorithm();
             String problemClass = params.getProblemClass();
             String objective = params.getObjective();
             Double sourceDestOverlap = params.getPercentSrcAlsoDest();
