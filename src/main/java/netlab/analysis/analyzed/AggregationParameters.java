@@ -22,7 +22,7 @@ public class AggregationParameters {
     List<Integer> numRequests;
     List<Integer> numSources;
     List<Integer> numDestinations;
-    Map<String, List<Double>> failureMap;
+    Map<String, List<List<Double>>> failureMap;
     List<Integer> numConnections;
     List<List<Integer>> minConnectionRanges;
     List<List<Integer>> maxConnectionRanges;

@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.*;
 import netlab.analysis.enums.MemberType;
 import netlab.submission.enums.Algorithm;
+import netlab.submission.enums.FailureClass;
+import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
@@ -80,6 +82,8 @@ public class AnalysisService {
                 .seed(requestSet.getSeed())
                 .problemClass(requestSet.getProblemClass())
                 .algorithm(requestSet.getAlgorithm())
+                .objective(requestSet.getObjective())
+                .failureClass(requestSet.getFailureClass())
                 .requestMetrics(requestMetricsMap)
                 .numRequests(numRequests)
                 .totalRunningTimeSeconds(totalRunningTime)
@@ -546,6 +550,10 @@ public class AnalysisService {
         ProblemClass problemClass = analyzedSets.get(0).getProblemClass();
         Algorithm algorithm = analyzedSets.get(0).getAlgorithm();
         Integer numRequests = analyzedSets.get(0).getNumRequests();
+        Objective objective = analyzedSets.get(0).getObjective();
+        FailureClass failureClass = analyzedSets.get(0).getFailureClass();
+
+
         Double totalRunningTime = 0.0;
         Double totalRunningTimeSecondsForFeasible = 0.0;
         Double avgRunningTimeSeconds = 0.0;
@@ -650,6 +658,8 @@ public class AnalysisService {
                 .seeds(seeds)
                 .problemClass(problemClass)
                 .algorithm(algorithm)
+                .objective(objective)
+                .failureClass(failureClass)
                 .numRequests(numRequests)
                 .totalRunningTimeSeconds(totalRunningTime/numSets)
                 .totalRunningTimeSecondsForFeasible(totalRunningTimeSecondsForFeasible/numSets)

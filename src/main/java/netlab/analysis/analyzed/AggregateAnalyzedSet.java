@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import netlab.submission.enums.Algorithm;
+import netlab.submission.enums.FailureClass;
+import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
 
 import java.io.Serializable;
@@ -20,6 +22,8 @@ public class AggregateAnalyzedSet implements Serializable {
     private List<Long> seeds;
     private ProblemClass problemClass;
     private Algorithm algorithm;
+    private Objective objective;
+    private FailureClass failureClass;
 
     private Integer numRequests;
 

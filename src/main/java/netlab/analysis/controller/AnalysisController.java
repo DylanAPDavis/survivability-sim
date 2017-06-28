@@ -63,6 +63,7 @@ public class AnalysisController {
                 .useAws(true)
                 .build();
         List<SimulationParameters> firstSeedParams = storageService.getMatchingSimulationParameters(searchParams);
+        List<AggregateAnalyzedSet> aggregateSets = new ArrayList<>();
         for(SimulationParameters firstParams : firstSeedParams){
 
             List<SimulationParameters> otherParams = new ArrayList<>();
@@ -78,9 +79,27 @@ public class AnalysisController {
                     .map(p -> storageService.retrieveAnalyzedSet(p.getRequestSetId(), true))
                     .collect(Collectors.toList());
             AggregateAnalyzedSet aggregateAnalyzedSet = analysisService.aggregateAnalyzedSets(analyzedSets);
+            aggregateSets.add(aggregateAnalyzedSet);
         }
         // TODO: Take all aggregate params, make a CSV (somehow)
-
+        Map<String, Map<String, Map<String, Map<String, Map<String, Map<String, List<AggregateAnalyzedSet>>>>>>> outputMap = new HashMap<>();
+        for(int index = 0; index < firstSeedParams.size(); index++){
+            SimulationParameters params = firstSeedParams.get(index);
+            AggregateAnalyzedSet aggSet = aggregateSets.get(index);
+            String topologyName = params.getTopologyId();
+            String problemClass = params.getProblemClass();
+            String objective = params.getObjective();
+            Double sourceDestOverlap = params.getPercentSrcAlsoDest();
+            String failureClass = params.getFailureClass();
+            Integer failureSetSize = params.getFailureSetSize();
+            Integer numFailsAllowed = params.getNumFailsAllowed();
+            Double percentSrcFail = params.getPercentSrcFail();
+            Double percentDstFail = params.getPercentDestFail();
+            List<Integer> minC = params.getMinConnectionsRange();
+            List<Integer> maxC = params.getMaxConnectionsRange();
+            Integer numSources = params.getNumSources();
+            Integer numDestinations = params.getNumDestinations();
+        }
 
         return "";
     }

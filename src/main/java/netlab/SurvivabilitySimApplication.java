@@ -57,7 +57,7 @@ public class SurvivabilitySimApplication {
 			String requestId = subCon.submitRequestSet(simParams);
 			RequestSet requestSet = storCon.getRequestSet(requestId, simParams.getUseAws());
 			log.info("Request Set ID: " + requestId);
-			log.info("Request Set Details: " + requestSet.toString());
+			//log.info("Request Set Details: " + requestSet.toString());
 			ctx.close();
 			System.exit(0);
 		}
