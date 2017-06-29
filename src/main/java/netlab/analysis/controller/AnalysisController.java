@@ -45,6 +45,26 @@ public class AnalysisController {
         return analyzedSet;
     }
 
+    @RequestMapping(value="/analyze_seed", method = RequestMethod.POST)
+    @ResponseBody
+    public String analyzeSeeds(List<Long> seeds){
+        for(Long seed : seeds) {
+            SimulationParameters searchParams = SimulationParameters.builder()
+                    .seed(seed)
+                    .completed(true)
+                    .useAws(true)
+                    .build();
+            storageService.getMatchingSimulationParameters(searchParams).parallelStream()
+                    .map(SimulationParameters::getRequestSetId)
+                    .forEach( id -> {
+                        RequestSet requestSet = storageService.retrieveRequestSet(id, true);
+                        AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
+                        storageService.storeAnalyzedSet(analyzedSet, true);
+                    });
+        }
+        return "Success";
+    }
+
     @RequestMapping(value = "/analyze/aggregate", method = RequestMethod.POST)
     @ResponseBody
     public AggregateAnalyzedSet aggregateAnalyzedSets(SimulationParameters params){
