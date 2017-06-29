@@ -1,5 +1,6 @@
 package netlab.analysis.services;
 
+import com.opencsv.CSVWriter;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.*;
 import netlab.analysis.enums.MemberType;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -714,7 +717,6 @@ public class AnalysisService {
 
     private AggregateAnalyzedSet calculateConfidenceIntervals(AggregateAnalyzedSet agAnSet, List<AnalyzedSet> analyzedSets) {
 
-        //TODO: Calculate the confidence intervals
         agAnSet.setTotalRunningTimeSecondsConfInterval(calcConfInterval(agAnSet.getTotalRunningTimeSeconds(), analyzedSets, "totalRunningTimeSeconds"));
         agAnSet.setTotalRunningTimeSecondsForFeasibleConfInterval(calcConfInterval(agAnSet.getTotalRunningTimeSecondsForFeasible(), analyzedSets, "totalRunningTimeSecondsForFeasible"));
         agAnSet.setAvgRunningTimeSecondsConfInterval(calcConfInterval(agAnSet.getAvgRunningTimeSeconds(), analyzedSets, "avgRunningTimeSeconds"));
@@ -785,5 +787,198 @@ public class AnalysisService {
         confInterval.add(metricMean - confDist);
         confInterval.add(metricMean + confDist);
         return confInterval;
+    }
+
+    public String aggregateSeeds(AggregationParameters agParams, List<SimulationParameters> baseParams,
+                                  List<AggregateAnalyzedSet> aggregateSets){
+        Map<String, AggregateAnalyzedSet> outputMap = new HashMap<>();
+        for(int index = 0; index < baseParams.size(); index++){
+            SimulationParameters params = baseParams.get(index);
+            AggregateAnalyzedSet aggSet = aggregateSets.get(index);
+            String topologyName = params.getTopologyId();
+            String algorithm = params.getAlgorithm();
+            String problemClass = params.getProblemClass();
+            String objective = params.getObjective();
+            Double sourceDestOverlap = params.getPercentSrcAlsoDest();
+            String failureClass = params.getFailureClass();
+            Double failureSetSize = params.getFailureSetSize() * 1.0;
+            Double numFailsAllowed = params.getNumFailsAllowed() * 1.0;
+            Double percentSrcFail = params.getPercentSrcFail();
+            Double percentDstFail = params.getPercentDestFail();
+            List<Integer> minC = params.getMinConnectionsRange();
+            List<Integer> maxC = params.getMaxConnectionsRange();
+            Integer numSources = params.getNumSources();
+            Integer numDestinations = params.getNumDestinations();
+            String hashString = hash(topologyName, algorithm, problemClass, objective,
+                    String.valueOf(sourceDestOverlap), failureClass, String.valueOf(failureSetSize),
+                    String.valueOf(numFailsAllowed), String.valueOf(percentSrcFail), String.valueOf(percentDstFail),
+                    String.valueOf(minC), String.valueOf(maxC), String.valueOf(numSources), String.valueOf(numDestinations));
+            outputMap.putIfAbsent(hashString, aggSet);
+        }
+        List<String[]> aggregationOutput = createAggregationOutput(agParams, outputMap);
+        try {
+            CSVWriter writer = new CSVWriter(new FileWriter("Output.csv"), '\t');
+            writer.writeAll(aggregationOutput);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    private List<String[]> createAggregationOutput(AggregationParameters agParams, Map<String, AggregateAnalyzedSet> outputMap){
+        List<String[]> outputLines = new ArrayList<>();
+        for(String topology : agParams.getTopologyIds()){
+            outputLines.add(new String[]{"TOPOLOGY: " + topology});
+            for(String algorithm : agParams.getAlgorithms()){
+                outputLines.add(new String[]{"ALGORITHM: " + algorithm});
+                for(String problemClass : agParams.getProblemClasses()){
+                    outputLines.add(new String[]{"PROBLEM CLASS: " + problemClass});
+                    for(String objective : agParams.getObjectives()){
+                        outputLines.add(new String[]{"OBJECTIVE: " + objective});
+                        for(Double percentSrcAlsoDest : agParams.getPercentSrcAlsoDests()){
+                            outputLines.add(new String[]{"SRC/DEST OVERLAP: " + percentSrcAlsoDest});
+                            for(String failureClass : agParams.getFailureMap().keySet()){
+                                outputLines.add(new String[]{"FAILURE TYPE: " + failureClass});
+                                List<List<Double>> allParamsPerClass = agParams.getFailureMap().get(failureClass);
+                                for(List<Double> failureParams : allParamsPerClass){
+                                    Double numFails = failureParams.get(0);
+                                    Double numFailsAllowed = failureParams.get(1);
+                                    Double srcFailPercent = failureParams.get(2);
+                                    Double dstFailPercent = failureParams.get(3);
+                                    String failParam = "FSETSIZE: " + numFails + " NFA: " + numFailsAllowed;
+                                    failParam += " SFAIL%: " + srcFailPercent + " DFAIL%: " + dstFailPercent;
+                                    outputLines.add(new String[]{failParam});
+                                    for (List<Integer> minC : agParams.getMinConnectionRanges()) {
+                                        outputLines.add(new String[]{"MINC: " + minC});
+                                        for (List<Integer> maxC : agParams.getMaxConnectionRanges()) {
+                                            outputLines.add(new String[]{"MAXC: " + minC});
+                                            for (Integer numS : agParams.getNumSources()) {
+                                                outputLines.add(generateAggregateHeadingLine(numS));
+                                                for (Integer numD : agParams.getNumDestinations()) {
+                                                    String hashString = hash(topology, algorithm, problemClass, objective,
+                                                            String.valueOf(percentSrcAlsoDest), failureClass,
+                                                            String.valueOf(numFails), String.valueOf(numFailsAllowed),
+                                                            String.valueOf(srcFailPercent), String.valueOf(dstFailPercent),
+                                                            String.valueOf(minC), String.valueOf(maxC),
+                                                            String.valueOf(numS), String.valueOf(numD));
+                                                    AggregateAnalyzedSet agSet = outputMap.getOrDefault(hashString, null);
+                                                    outputLines.add(generateAggregateMetricLine(numD, agSet));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return outputLines;
+    }
+
+    private String[] generateAggregateHeadingLine(Integer numS){
+        return makeArray(
+                "NUMS: " + numS,
+                "AvgRunTime",
+                "AvgRunTime-0",
+                "AvgRunTime-1",
+                "AvgRunTimeFeas",
+                "AvgRunTimeFeas-0",
+                "AvgRunTimeFeas-1",
+                "%Feas",
+                "%Feas-0",
+                "%Feas-1",
+                "%Surv",
+                "%Surv-0",
+                "%Surv-1",
+                "%SurvFeas",
+                "%SurvFeas-0",
+                "%SurvFeas-1",
+                "AvgLinksUsed",
+                "AvgLinksUsed-0",
+                "AvgLinksUsed-1",
+                "AvgCostLinksUsed",
+                "AvgCostLinksUsed-0",
+                "AvgCostLinksUsed-1",
+                "AvgNumPaths",
+                "AvgNumPaths-0",
+                "AvgNumPaths-1",
+                "AvgIntPaths",
+                "AvgIntPaths-0",
+                "AvgIntPaths-1",
+                "AvgDisPaths",
+                "AvgDisPaths-0",
+                "AvgDisPaths-1",
+                "AvgPathLen",
+                "AvgPathLen-0",
+                "AvgPathLen-1",
+                "AvgPathCost",
+                "AvgPathCost-0",
+                "AvgPathCost-1"
+        );
+    }
+
+    private String[] generateAggregateMetricLine(Integer numD, AggregateAnalyzedSet agSet) {
+        if(agSet == null){
+            return new String[]{"NUMD: " + String.valueOf(numD)};
+        }
+        else{
+            return makeArray( "NUMD: " + String.valueOf(numD),
+                    agSet.getAvgRunningTimeSeconds(),
+                    agSet.getAvgRunningTimeSecondsConfInterval().get(0),
+                    agSet.getAvgRunningTimeSecondsConfInterval().get(1),
+                    agSet.getAvgRunningTimeSecondsForFeasible(),
+                    agSet.getAvgRunningTimeSecondsForFeasibleConfInterval().get(0),
+                    agSet.getAvgRunningTimeSecondsForFeasibleConfInterval().get(1),
+                    agSet.getPercentFeasible(),
+                    agSet.getPercentFeasibleConfInterval().get(0),
+                    agSet.getPercentFeasibleConfInterval().get(1),
+                    agSet.getPercentSurvivable(),
+                    agSet.getPercentSurvivableConfInterval().get(0),
+                    agSet.getPercentSurvivableConfInterval().get(1),
+                    agSet.getPercentSurvivableForFeasible(),
+                    agSet.getPercentSurvivableForFeasibleConfInterval().get(0),
+                    agSet.getPercentSurvivableForFeasibleConfInterval().get(1),
+                    agSet.getAvgLinksUsedForFeasible(),
+                    agSet.getAvgLinksUsedForFeasibleConfInterval().get(0),
+                    agSet.getAvgLinksUsedForFeasibleConfInterval().get(1),
+                    agSet.getAvgCostLinksUsedForFeasible(),
+                    agSet.getAvgCostLinksUsedForFeasibleConfInterval().get(0),
+                    agSet.getAvgCostLinksUsedForFeasibleConfInterval().get(1),
+                    agSet.getAvgNumPathsForFeasible(),
+                    agSet.getAvgNumPathsForFeasibleConfInterval().get(0),
+                    agSet.getAvgNumPathsForFeasibleConfInterval().get(1),
+                    agSet.getAvgIntactPathsForFeasible(),
+                    agSet.getAvgIntactPathsForFeasibleConfInterval().get(0),
+                    agSet.getAvgIntactPathsForFeasibleConfInterval().get(1),
+                    agSet.getAvgDisconnectedPathsForFeasible(),
+                    agSet.getAvgDisconnectedPathsForFeasibleConfInterval().get(0),
+                    agSet.getAvgDisconnectedPathsForFeasibleConfInterval().get(1),
+                    agSet.getAvgAvgPathLength(),
+                    agSet.getAvgAvgPathLengthConfInterval().get(0),
+                    agSet.getAvgAvgPathLengthConfInterval().get(1),
+                    agSet.getAvgAvgPathCost(),
+                    agSet.getAvgAvgPathCostConfInterval().get(0),
+                    agSet.getAvgAvgPathCostConfInterval().get(1)
+                    );
+        }
+    }
+
+    private String[] makeArray(Object... args){
+        String[] line = new String[args.length];
+        for(int i = 0; i < args.length; i++){
+            line[i] = String.valueOf(args[i]);
+        }
+        return line;
+    }
+
+    private String hash(String... args){
+        return String.join("_", args);
+    }
+
+    private String[] unhash(String hashString){
+        return hashString.split("_");
     }
 }
