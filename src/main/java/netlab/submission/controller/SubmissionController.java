@@ -64,8 +64,8 @@ public class SubmissionController {
     public List<String> rerunRequestSets(List<Long> seeds){
         List<String> ids = new ArrayList<>();
         for(Long seed : seeds) {
-            List<SimulationParameters> matchingParams = storageService.queryForSeed(seed);
-            ids.addAll(matchingParams.stream().filter(p -> !p.getCompleted()).map(SimulationParameters::getRequestSetId).collect(Collectors.toList()));
+            List<SimulationParameters> matchingParams = storageService.queryForSeed(seed).parallelStream().filter(p -> !p.getCompleted()).collect(Collectors.toList());
+            ids.addAll(matchingParams.parallelStream().map(SimulationParameters::getRequestSetId).collect(Collectors.toList()));
             matchingParams.parallelStream().forEach(this::submitRequestSet);
         }
         return ids;
