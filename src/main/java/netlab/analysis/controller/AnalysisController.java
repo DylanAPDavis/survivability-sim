@@ -49,12 +49,10 @@ public class AnalysisController {
     @ResponseBody
     public String analyzeSeeds(List<Long> seeds){
         for(Long seed : seeds) {
-            SimulationParameters searchParams = SimulationParameters.builder()
-                    .seed(seed)
-                    .completed(true)
-                    .useAws(true)
-                    .build();
-            storageService.getMatchingSimulationParameters(searchParams).parallelStream()
+            List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
+            seedParams.parallelStream()
+                    .filter(SimulationParameters::getCompleted)
+                    .filter(SimulationParameters::getUseAws)
                     .map(SimulationParameters::getRequestSetId)
                     .forEach( id -> {
                         RequestSet requestSet = storageService.retrieveRequestSet(id, true);
@@ -77,32 +75,64 @@ public class AnalysisController {
     @RequestMapping(value = "/analyze/aggregate_seeds", method = RequestMethod.POST)
     @ResponseBody
     public String aggregateSeeds(AggregationParameters agParams){
-        SimulationParameters searchParams = SimulationParameters.builder()
-                .seed(agParams.getSeeds().get(0))
-                .completed(true)
-                .useAws(true)
-                .build();
-        List<SimulationParameters> firstSeedParams = storageService.getMatchingSimulationParameters(searchParams);
+        List<List<SimulationParameters>> paramsBySeed = new ArrayList<>();
+        for(Long seed : agParams.getSeeds()) {
+            List<SimulationParameters> seedParams = storageService.queryForSeed(seed)
+                    .stream()
+                    .filter(SimulationParameters::getCompleted)
+                    .collect(Collectors.toList());
+            paramsBySeed.add(seedParams);
+        }
         List<AggregateAnalyzedSet> aggregateSets = new ArrayList<>();
-        for(SimulationParameters firstParams : firstSeedParams){
-            List<SimulationParameters> otherParams = new ArrayList<>();
+        List<SimulationParameters> primaryParamList = paramsBySeed.get(0);
+        for(SimulationParameters primaryParams : primaryParamList){
+            List<SimulationParameters> paramsToBeAnalyzed = new ArrayList<>();
             for(int i = 1; i < agParams.getSeeds().size(); i++){
-                SimulationParameters matchingParamsSeed = firstParams.clone();
-                matchingParamsSeed.setSeed(agParams.getSeeds().get(i));
-                matchingParamsSeed.setRequestSetId(null);
-                matchingParamsSeed.setSubmittedDate(null);
-                otherParams.addAll(storageService.getMatchingSimulationParameters(matchingParamsSeed));
+                Optional<SimulationParameters> matchingParam = findMatchingSimParams(primaryParams, paramsBySeed.get(i));
+                matchingParam.ifPresent(paramsToBeAnalyzed::add);
             }
-            otherParams.add(firstParams);
-            List<AnalyzedSet> analyzedSets = otherParams.stream()
+            paramsToBeAnalyzed.add(primaryParams);
+            List<AnalyzedSet> analyzedSets = paramsToBeAnalyzed.stream()
                     .map(p -> storageService.retrieveAnalyzedSet(p.getRequestSetId(), true))
                     .collect(Collectors.toList());
             AggregateAnalyzedSet aggregateAnalyzedSet = analysisService.aggregateAnalyzedSets(analyzedSets);
             aggregateSets.add(aggregateAnalyzedSet);
         }
 
-        return analysisService.aggregateSeeds(agParams, firstSeedParams, aggregateSets);
+        return analysisService.aggregateSeeds(agParams, primaryParamList, aggregateSets);
 
+    }
+
+    public Optional<SimulationParameters> findMatchingSimParams(SimulationParameters searchParams, List<SimulationParameters> candidates){
+        // Filter by everything except requestSetId and submittedDate
+        return candidates.parallelStream()
+                .filter(p -> p.getCompleted().equals(searchParams.getCompleted()))
+                .filter(p -> p.getGenerated().equals(searchParams.getGenerated()))
+                .filter(p -> p.getAlgorithm().equals(searchParams.getAlgorithm()))
+                .filter(p -> p.getProblemClass().equals(searchParams.getProblemClass()))
+                .filter(p -> p.getTopologyId().equals(searchParams.getTopologyId()))
+                .filter(p -> p.getObjective().equals(searchParams.getObjective()))
+                .filter(p -> p.getNumRequests().equals(searchParams.getNumRequests()))
+                .filter(p -> p.getNumSources().equals(searchParams.getNumSources()))
+                .filter(p -> p.getNumDestinations().equals(searchParams.getNumDestinations()))
+                .filter(p -> p.getNumConnections().equals(searchParams.getNumConnections()))
+                .filter(p -> p.getMinConnectionsRange().equals(searchParams.getMinConnectionsRange()))
+                .filter(p -> p.getMaxConnectionsRange().equals(searchParams.getMaxConnectionsRange()))
+                .filter(p -> p.getProcessingType().equals(searchParams.getProcessingType()))
+                .filter(p -> p.getPercentSrcAlsoDest().equals(searchParams.getPercentSrcAlsoDest()))
+                .filter(p -> p.getSdn().equals(searchParams.getSdn()))
+                .filter(p -> p.getUseAws().equals(searchParams.getUseAws()))
+                .filter(p -> p.getFailureSetSize().equals(searchParams.getFailureSetSize()))
+                .filter(p -> p.getMinMaxFailures().equals(searchParams.getMinMaxFailures()))
+                .filter(p -> p.getFailureClass().equals(searchParams.getFailureClass()))
+                .filter(p -> p.getFailureProb().equals(searchParams.getFailureProb()))
+                .filter(p -> p.getMinMaxFailureProb().equals(searchParams.getMinMaxFailureProb()))
+                .filter(p -> p.getNumFailsAllowed().equals(searchParams.getNumFailsAllowed()))
+                .filter(p -> p.getMinMaxFailsAllowed().equals(searchParams.getMinMaxFailsAllowed()))
+                .filter(p -> p.getPercentSrcFail().equals(searchParams.getPercentSrcFail()))
+                .filter(p -> p.getPercentDestFail().equals(searchParams.getPercentDestFail()))
+                .filter(p -> p.getIgnoreFailures().equals(searchParams.getIgnoreFailures()))
+                .findFirst();
     }
 
 

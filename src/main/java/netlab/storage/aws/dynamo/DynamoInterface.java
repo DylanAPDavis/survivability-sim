@@ -76,6 +76,18 @@ public class DynamoInterface {
         return getSimulationParameters(params).stream().map(SimulationParameters::getRequestSetId).collect(Collectors.toList());
     }
 
+    public List<SimulationParameters> queryForSeed(Long seed){
+        Map<String, AttributeValue> eav = new HashMap<>();
+        eav.put(":val1", new AttributeValue().withN(String.valueOf(seed)));
+
+        DynamoDBQueryExpression<SimulationParameters> queryExpression = new DynamoDBQueryExpression<SimulationParameters>()
+                .withKeyConditionExpression("seed = :val1").withExpressionAttributeValues(eav)
+                .withIndexName("seed-index")
+                .withConsistentRead(false);
+
+        return mapper.query(SimulationParameters.class, queryExpression);
+    }
+
     public List<SimulationParameters> getSimulationParameters(SimulationParameters params){
         Map<String, AttributeValue> eav = createExpressionAttributeValueMap(params);
         DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();

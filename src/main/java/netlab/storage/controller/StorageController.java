@@ -58,11 +58,9 @@ public class StorageController {
     @ResponseBody
     public String createFailedRequestSets(Long seed){
         // 1. Get all simulation parameters for a particular seed
-        SimulationParameters filterParams = SimulationParameters.builder()
-                .seed(seed)
-                .generated(false)
-                .build();
-        List<SimulationParameters> matchingParams = storageService.getMatchingSimulationParameters(filterParams);
+        List<SimulationParameters> matchingParams = storageService.queryForSeed(seed);
+        // Filter out generated parameters from previous runs of this function
+        matchingParams = matchingParams.parallelStream().filter(p -> !p.getGenerated()).collect(Collectors.toList());
 
         // 2. From those, get the zero failure parameters & requests
         List<SimulationParameters> zeroFailureParams = matchingParams.parallelStream().filter(SimulationParameters::getIgnoreFailures).collect(Collectors.toList());

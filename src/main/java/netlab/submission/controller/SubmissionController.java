@@ -59,31 +59,15 @@ public class SubmissionController {
         return requestSet.getId();
     }
 
-    @RequestMapping(value = "/submit_rerun_all", method = RequestMethod.POST)
-    @ResponseBody
-    public List<String> rerunAllRequestSets(){
-        SimulationParameters searchParams = SimulationParameters.builder()
-                .completed(false)
-                .useAws(true)
-                .build();
-        return rerunParams(searchParams);
-    }
-
     @RequestMapping(value = "/submit_rerun", method = RequestMethod.POST)
     @ResponseBody
-    public List<String> rerunRequestSets(Long seed){
-        SimulationParameters searchParams = SimulationParameters.builder()
-                .seed(seed)
-                .completed(false)
-                .useAws(true)
-                .build();
-        return rerunParams(searchParams);
-    }
-
-    private List<String> rerunParams(SimulationParameters searchParams){
-        List<SimulationParameters> matchingParams = storageService.getMatchingSimulationParameters(searchParams);
-        List<String> ids = matchingParams.stream().map(SimulationParameters::getRequestSetId).collect(Collectors.toList());
-        matchingParams.parallelStream().forEach(this::submitRequestSet);
+    public List<String> rerunRequestSets(List<Long> seeds){
+        List<String> ids = new ArrayList<>();
+        for(Long seed : seeds) {
+            List<SimulationParameters> matchingParams = storageService.queryForSeed(seed);
+            ids.addAll(matchingParams.stream().map(SimulationParameters::getRequestSetId).collect(Collectors.toList()));
+            matchingParams.parallelStream().forEach(this::submitRequestSet);
+        }
         return ids;
     }
 

@@ -85,6 +85,12 @@ public class StorageService {
         return dynamoInterface.getSimulationParameters(params);
     }
 
+    public List<SimulationParameters> queryForSeed(Long seed){
+        return dynamoInterface.queryForSeed(seed);
+    }
+
+
+
     public List<AnalyzedSet> getAnalyzedSets(SimulationParameters params){
         List<String> requestSetIds = dynamoInterface.getRequestSetIds(params);
         List<AnalyzedSet> sets = new ArrayList<>();
