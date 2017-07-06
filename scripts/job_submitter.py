@@ -2,30 +2,23 @@ import os
 import subprocess
 import math
 # seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
-seeds = [24]
+seeds = [1]
 topology_ids = ["NSFnet"]
 problem_classes = ["Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint"]
-objectives = ["LinksUsed", "Connections", "TotalCost"]
+objectives = ["TotalCost"]
 algorithms = ["ServiceILP"]
 num_requests = [1]
-num_sources = [1, 2, 7, 14]
-num_dests = [1, 2, 7, 14]
+num_sources = [1, 7, 14]
+num_dests = [1, 7, 14]
 failure_set_dict = {
-    "Link": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 0.0], [2, 1, 0.0, 0.0], [2, 2, 0.0, 0.0], [21, 1, 0.0, 0.0],
-             [21, 2, 0.0, 0.0], [21, 21, 0.0, 0.0]
-             ],
-    "Node": [[1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714],  # One node - not src or dest, src, dest
-             [2, 1, 0.0, 0.0], [2, 1, 0.0714, 0.0], [2, 1, 0.0, 0.0714], [2, 1, 0.0714, 0.0714],  # Two nodes, one fails
-             [2, 2, 0.0, 0.0], [2, 2, 0.0714, 0.0], [2, 2, 0.0, 0.0714], [2, 2, 0.0714, 0.0714],  # Two nodes, two fail
-             [2, 2, 0.142, 0.0], [2, 2, 0.0, 0.142],  # Two nodes, two fail, - both src or both dest
-             [14, 1, 1.0, 1.0], [14, 2, 1.0, 1.0], [14, 14, 1.0, 1.0]
-             ],
-    "Both": [[35, 1, 1.0, 1.0], [35, 2, 1.0, 1.0], [35, 35, 1.0, 1.0]]
+    "Link": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 0.0], [21, 1, 0.0, 0.0], [21, 2, 0.0, 0.0]],
+    "Node": [[1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714], [14, 1, 1.0, 1.0], [14, 2, 1.0, 1.0]],
+    "Both": [[35, 1, 1.0, 1.0], [35, 2, 1.0, 1.0]]
 }  # Includes failure class, num fails, num fails allowed, percent src fail, percent dst fail
-num_conns = [1, 2, 7, 14]
-min_connection_ranges = [[0, 0], [1, 1], [2, 2]]
-max_connection_ranges = [[1, 1], [2, 2], [14, 14]]
-percent_src_also_dests = [0.0, 0.5, 1.0]
+num_conns = [1, 7, 14]
+min_connection_ranges = [[0, 0], [1, 1]]
+max_connection_ranges = [[1, 1], [2, 2]]
+percent_src_also_dests = [0.0, 1.0]
 ignore_failures = [True, False]
 
 
@@ -39,8 +32,6 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
     num_fails_allowed = fail_params[1]
     src_fail_percent = fail_params[2]
     dst_fail_percent = fail_params[3]
-    if (2 in min_c_range and 1 in max_c_range) or (ignore and num_fails != 0):
-        return None
     num_s_in_d = math.ceil(percent_src_dest * num_s)
     exclusive_s = num_s - num_s_in_d
     complete_overlap = num_s_in_d == num_d and exclusive_s == 0
@@ -87,10 +78,10 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
             num_node_params += 1
         if fail_type == "Both":
             num_both_params += 1
-        command_input = ["bsub", "-q", "short", "-W", "3:59", "-R", "rusage[mem=1500] span[hosts=1]", "-n", "8", "-o", output_file_path, "python", "scripts/run_simulation.py"]
+        command_input = ["bsub", "-q", "short", "-W", "0:30", "-R", "rusage[mem=1000] span[hosts=1]", "-n", "4", "-o", output_file_path, "python", "scripts/run_simulation.py"]
         for param in parameters:
             command_input.append(str(param))
-        # process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+        process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 
 # create_job(1, "NSFNet", "Endpoint", "TotalCost", "ServiceILP", 5, 1, [0, 0], [4, 4], 14, 14, 1.0, False, "Link", [14, 1, 0.0, 0.0])
@@ -118,6 +109,6 @@ for seed in seeds:
                                                                        fail_params)
                 print("Done with: " + problem + " " + objective + " " + str(seed))
 
-print num_params
-print num_node_params
-print num_both_params
+print(num_params)
+print(num_node_params)
+print(num_both_params)
