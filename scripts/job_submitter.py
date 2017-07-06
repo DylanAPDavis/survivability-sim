@@ -2,12 +2,12 @@ import os
 import subprocess
 import math
 # seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
-seeds = [13]
+seeds = [24]
 topology_ids = ["NSFnet"]
 problem_classes = ["Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint"]
 objectives = ["LinksUsed", "Connections", "TotalCost"]
 algorithms = ["ServiceILP"]
-num_requests = [10]
+num_requests = [1]
 num_sources = [1, 2, 7, 14]
 num_dests = [1, 2, 7, 14]
 failure_set_dict = {
@@ -29,19 +29,22 @@ percent_src_also_dests = [0.0, 0.5, 1.0]
 ignore_failures = [True, False]
 
 
+num_params = 0
+num_node_params = 0
+num_both_params = 0
+
 def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, min_c_range, max_c_range, num_s, num_d,
                   percent_src_dest, ignore, fail_type, fail_params):
-    if 2 in min_c_range and 1 in max_c_range:
-        return None
-    num_s_in_d = math.ceil(percent_src_dest * num_s)
-    exclusive_s = num_s - num_s_in_d
     num_fails = fail_params[0]
     num_fails_allowed = fail_params[1]
     src_fail_percent = fail_params[2]
     dst_fail_percent = fail_params[3]
+    if (2 in min_c_range and 1 in max_c_range) or (ignore and num_fails != 0):
+        return None
+    num_s_in_d = math.ceil(percent_src_dest * num_s)
+    exclusive_s = num_s - num_s_in_d
     complete_overlap = num_s_in_d == num_d and exclusive_s == 0
-    if num_s_in_d > num_d or (complete_overlap and num_d == 1) or (node_count(topology) - exclusive_s < num_d) or \
-            (ignore_failures and num_fails != 0):
+    if num_s_in_d > num_d or (complete_overlap and num_d == 1) or (node_count(topology) - exclusive_s < num_d):
         return None
     if fail_type == "Node":
         num_s_fail = math.ceil(src_fail_percent * num_s)
@@ -61,7 +64,7 @@ def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, m
 
 
 def node_count(topology_name):
-    if topology == "NSFnet":
+    if topology_name == "NSFnet":
         return 14
 
 
@@ -78,10 +81,16 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
                                num_s, num_d, percent_src_dest, ignore,
                                fail_type, fail_params)
     if parameters is not None:
+        global num_params, num_node_params, num_both_params
+        num_params += 1
+        if fail_type == "Node":
+            num_node_params += 1
+        if fail_type == "Both":
+            num_both_params += 1
         command_input = ["bsub", "-q", "short", "-W", "3:59", "-R", "rusage[mem=1500] span[hosts=1]", "-n", "8", "-o", output_file_path, "python", "scripts/run_simulation.py"]
         for param in parameters:
             command_input.append(str(param))
-        process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+        # process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 
 # create_job(1, "NSFNet", "Endpoint", "TotalCost", "ServiceILP", 5, 1, [0, 0], [4, 4], 14, 14, 1.0, False, "Link", [14, 1, 0.0, 0.0])
@@ -103,9 +112,12 @@ for seed in seeds:
                                                 for ignore in ignore_failures:
                                                     for fail_type in failure_set_dict.keys():
                                                         for fail_params in failure_set_dict[fail_type]:
-                                                            pass
                                                             create_job(seed, topology, problem, objective, algorithm,
                                                                        num_r, num_c, min_c_range, max_c_range, num_s,
                                                                        num_d,percent_src_dest, ignore, fail_type,
                                                                        fail_params)
                 print("Done with: " + problem + " " + objective + " " + str(seed))
+
+print num_params
+print num_node_params
+print num_both_params

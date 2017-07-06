@@ -1,6 +1,7 @@
 package netlab.storage.services;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.services.HashingService;
 import netlab.submission.request.Request;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
@@ -15,41 +16,28 @@ import java.util.stream.Collectors;
 public class FailureAdditionService {
 
     private StorageService storageService;
+    private HashingService hashingService;
 
     @Autowired
-    private FailureAdditionService(StorageService storageService){
+    private FailureAdditionService(StorageService storageService, HashingService hashingService){
         this.storageService = storageService;
+        this.hashingService = hashingService;
     }
 
-    public String createNewParamsAndSets(List<SimulationParameters> zeroFailureParams, List<SimulationParameters> matchingParams){
+    public String createNewParamsAndSets(List<SimulationParameters> zeroFailureParams, Map<String, List<SimulationParameters>> matchingMap){
         String lastId = "";
         for(SimulationParameters zeroParam : zeroFailureParams){
-            System.out.println("Working on: " + zeroParam.getRequestSetId());
+            //System.out.println("Working on: " + zeroParam.getRequestSetId());
             lastId = zeroParam.getRequestSetId();
-            List<SimulationParameters> matchingParameters = matchingParams.parallelStream()
-                    .filter(p -> !p.getIgnoreFailures())
-                    .filter(p -> !p.getGenerated())
-                    .filter(p -> p.getAlgorithm().equals(zeroParam.getAlgorithm()))
-                    .filter(p -> p.getProblemClass().equals(zeroParam.getProblemClass()))
-                    .filter(SimulationParameters::getCompleted)
-                    .filter(p -> p.getTopologyId().equals(zeroParam.getTopologyId()))
-                    .filter(p -> p.getObjective().equals(zeroParam.getObjective()))
-                    .filter(p -> p.getNumRequests().equals(zeroParam.getNumRequests()))
-                    .filter(p -> p.getNumSources().equals(zeroParam.getNumSources()))
-                    .filter(p -> p.getNumDestinations().equals(zeroParam.getNumDestinations()))
-                    .filter(p -> p.getNumConnections().equals(zeroParam.getNumConnections()))
-                    .filter(p -> p.getMinConnectionsRange().equals(zeroParam.getMinConnectionsRange()))
-                    .filter(p -> p.getMaxConnectionsRange().equals(zeroParam.getMaxConnectionsRange()))
-                    .filter(p -> p.getProcessingType().equals(zeroParam.getProcessingType()))
-                    .filter(p -> p.getPercentSrcAlsoDest().equals(zeroParam.getPercentSrcAlsoDest()))
-                    .filter(p -> p.getSdn().equals(zeroParam.getSdn()))
-                    .filter(p -> p.getUseAws().equals(zeroParam.getUseAws()))
-                    .collect(Collectors.toList());
-            System.out.println("Got matching params");
+            List<SimulationParameters> matchingParameters = matchingMap.get(hashSimParams(zeroParam));
+            //System.out.println("Got matching params");
             RequestSet zeroSet = storageService.retrieveRequestSet(zeroParam.getRequestSetId(), true);
-            System.out.println("Got the request set");
+            //System.out.println("Got the request set");
             for(SimulationParameters matchParam : matchingParameters){
                 String matchId = matchParam.getRequestSetId();
+                if(matchId.equals(lastId)){
+                    continue;
+                }
                 RequestSet matchSet = storageService.retrieveRequestSet(matchId, true);
                 String newId = UUID.randomUUID().toString();
                 matchParam.setGenerated(true);
@@ -65,7 +53,7 @@ public class FailureAdditionService {
                     return lastId;
                 }
             }
-            System.out.println("Made the new request set and params");
+            //System.out.println("Made the new request set and params");
         }
         return lastId;
     }
@@ -101,6 +89,14 @@ public class FailureAdditionService {
             return filtered.get(0);
         }
         return options.remove(options.size()-1);
+    }
+
+    public String hashSimParams(SimulationParameters params){
+        return hashingService.hash(params.getAlgorithm(), params.getProblemClass(), String.valueOf(params.getCompleted()), params.getTopologyId(),
+                params.getObjective(), String.valueOf(params.getNumRequests()), String.valueOf(params.getNumSources()), String.valueOf(params.getNumDestinations()),
+                String.valueOf(params.getNumConnections()), String.valueOf(params.getMinConnectionsRange()),
+                String.valueOf(params.getMaxConnectionsRange()), params.getProcessingType(),
+                String.valueOf(params.getPercentSrcAlsoDest()), String.valueOf(params.getSdn()), String.valueOf(params.getUseAws()));
     }
 
 }

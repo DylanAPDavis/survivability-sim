@@ -10,6 +10,7 @@ import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.beans.IntrospectionException;
@@ -25,6 +26,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AnalysisService {
 
+    private HashingService hashingService;
+
+    @Autowired
+    public AnalysisService(HashingService hashingService){
+        this.hashingService = hashingService;
+    }
 
     public AnalyzedSet analyzeRequestSet(RequestSet requestSet) {
 
@@ -810,7 +817,7 @@ public class AnalysisService {
             List<Integer> maxC = params.getMaxConnectionsRange();
             Integer numSources = params.getNumSources();
             Integer numDestinations = params.getNumDestinations();
-            String hashString = hash(topologyName, algorithm, problemClass, objective,
+            String hashString = hashingService.hash(topologyName, algorithm, problemClass, objective,
                     String.valueOf(sourceDestOverlap), failureClass, String.valueOf(failureSetSize),
                     String.valueOf(numFailsAllowed), String.valueOf(percentSrcFail), String.valueOf(percentDstFail), String.valueOf(ignoreFailures),
                     String.valueOf(minC), String.valueOf(maxC), String.valueOf(numSources), String.valueOf(numDestinations));
@@ -859,7 +866,7 @@ public class AnalysisService {
                                                 for (Integer numS : agParams.getNumSources()) {
                                                     outputLines.add(generateAggregateHeadingLine(numS));
                                                     for (Integer numD : agParams.getNumDestinations()) {
-                                                        String hashString = hash(topology, algorithm, problemClass, objective,
+                                                        String hashString = hashingService.hash(topology, algorithm, problemClass, objective,
                                                                 String.valueOf(percentSrcAlsoDest), failureClass,
                                                                 String.valueOf(numFails), String.valueOf(numFailsAllowed),
                                                                 String.valueOf(srcFailPercent), String.valueOf(dstFailPercent),
@@ -979,11 +986,4 @@ public class AnalysisService {
         return line;
     }
 
-    private String hash(String... args){
-        return String.join("_", args);
-    }
-
-    private String[] unhash(String hashString){
-        return hashString.split("_");
-    }
 }

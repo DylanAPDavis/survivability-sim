@@ -3,6 +3,7 @@ package netlab.storage.controller;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.services.AnalysisService;
+import netlab.analysis.services.HashingService;
 import netlab.storage.services.FailureAdditionService;
 import netlab.storage.services.StorageService;
 import netlab.submission.request.Request;
@@ -24,11 +25,13 @@ public class StorageController {
 
     private StorageService storageService;
     private FailureAdditionService failureAdditionService;
+    private HashingService hashingService;
 
     @Autowired
-    private StorageController(StorageService storageService, FailureAdditionService failureAdditionService){
+    private StorageController(StorageService storageService, FailureAdditionService failureAdditionService, HashingService hashingService){
         this.storageService = storageService;
         this.failureAdditionService = failureAdditionService;
+        this.hashingService = hashingService;
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/storage/raw/{requestSetId}/{useAwes}")
@@ -59,15 +62,25 @@ public class StorageController {
     public String createFailedRequestSets(Long seed){
         // 1. Get all simulation parameters for a particular seed
         List<SimulationParameters> matchingParams = storageService.queryForSeed(seed);
-        // Filter out generated parameters from previous runs of this function
-        matchingParams = matchingParams.parallelStream().filter(p -> !p.getGenerated()).collect(Collectors.toList());
+
 
         // 2. From those, get the zero failure parameters & requests
-        List<SimulationParameters> zeroFailureParams = matchingParams.parallelStream().filter(SimulationParameters::getIgnoreFailures).collect(Collectors.toList());
+        List<SimulationParameters> zeroFailureParams = matchingParams.parallelStream()
+                .filter(p -> !p.getGenerated())
+                .filter(SimulationParameters::getIgnoreFailures)
+                .collect(Collectors.toList());
+
+        List<SimulationParameters> oneFailAllowedParams = matchingParams.parallelStream().filter(p -> p.getNumFailsAllowed() == 1).collect(Collectors.toList());
+
+        Map<String, List<SimulationParameters>> matchingMap = matchingParams.parallelStream()
+                .filter(p -> !p.getGenerated())
+                .filter(p -> p.getNumFailsAllowed() == 1)
+                .filter(p -> !p.getIgnoreFailures())
+                .collect(Collectors.groupingBy(p -> failureAdditionService.hashSimParams(p), Collectors.toList()));
 
         // 3. For each zero failure param/request
         // Create another parameters/request with a new ID, and matching failure stats, for each parameter
-        return failureAdditionService.createNewParamsAndSets(zeroFailureParams, matchingParams);
+        return failureAdditionService.createNewParamsAndSets(zeroFailureParams, matchingMap);
     }
 
     @RequestMapping(value="/storage/delete_seed", method = RequestMethod.POST)
