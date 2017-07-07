@@ -11,8 +11,8 @@ num_requests = [1]
 num_sources = [1, 7, 14]
 num_dests = [1, 7, 14]
 failure_set_dict = {
-    "Link": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 0.0], [21, 1, 0.0, 0.0], [21, 2, 0.0, 0.0]],
-    "Node": [[1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714], [14, 1, 1.0, 1.0], [14, 2, 1.0, 1.0]],
+    "Link": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 0.0], [21, 1, 0.0, 0.0]],
+    "Node": [[1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714], [14, 1, 1.0, 1.0]],
     "Both": [[35, 1, 1.0, 1.0], [35, 2, 1.0, 1.0]]
 }  # Includes failure class, num fails, num fails allowed, percent src fail, percent dst fail
 num_conns = [1, 7, 14]
@@ -25,6 +25,7 @@ ignore_failures = [True, False]
 num_params = 0
 num_node_params = 0
 num_both_params = 0
+
 
 def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, min_c_range, max_c_range, num_s, num_d,
                   percent_src_dest, ignore, fail_type, fail_params):
@@ -66,7 +67,7 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
                                  str(num_r), str(num_c), str(min_c_range),
                                  str(max_c_range), str(num_s), str(num_d),
                                  str(percent_src_dest), str(ignore), fail_type,
-                                 str(fail_params)])
+                                 str(fail_params)]).replace(" ", "")
     parameters = create_params(seed, topology, problem, objective, algorithm,
                                num_r, num_c, min_c_range, max_c_range,
                                num_s, num_d, percent_src_dest, ignore,
@@ -78,7 +79,16 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
             num_node_params += 1
         if fail_type == "Both":
             num_both_params += 1
-        command_input = ["bsub", "-q", "short", "-W", "0:30", "-R", "rusage[mem=1000] span[hosts=1]", "-n", "4", "-o", output_file_path, "python", "scripts/run_simulation.py"]
+
+        run_time = "2:00" if (fail_params[0] >= 14 and not ignore) else "0:30"
+        memory = "1000"
+        if fail_params[0] >= 14 and not ignore:
+            if num_s >= 14 or num_d >= 14:
+                memory = "4000"
+            else:
+                memory = "2250"
+
+        command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n", "4", "-o", output_file_path, "python", "scripts/run_simulation.py"]
         for param in parameters:
             command_input.append(str(param))
         process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
