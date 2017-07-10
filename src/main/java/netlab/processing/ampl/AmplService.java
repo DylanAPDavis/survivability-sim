@@ -39,9 +39,12 @@ public class AmplService {
             String result = obj.result();
             if(result.toLowerCase().contains("solved")){
                 request.setIsFeasible(true);
+                DataFrame flows = ampl.getData("L");
+                paths = translateFlowsIntoPaths(flows, request.getPairs(), topology);
             }
-            DataFrame flows = ampl.getData("L");
-            paths = translateFlowsIntoPaths(flows, request.getPairs(), topology);
+            else{
+                paths = request.getPairs().stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

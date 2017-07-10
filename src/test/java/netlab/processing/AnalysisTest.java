@@ -236,6 +236,15 @@ public class AnalysisTest {
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
 
+    @Test
+    public void exceptionTest(){
+        RequestSet rs = createSetAndSolve(2L, "NSFnet", 1, "ServiceILP", "Endpoint",
+                "TotalCost", 1, 1, 14, new ArrayList<>(), "Node",
+                1.0, new ArrayList<>(), 14, Arrays.asList(1,1), Arrays.asList(2,2), 1,
+                new ArrayList<>(), "Solo", false, false, 0.0, 1.0, 1.0);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+    }
+
     private RequestSet createSetWithGenService(String problemClass, int numSources, int numDestinations, int numConns,
                                                List<Integer> minConns, List<Integer> maxConns, Integer numFails,
                                                Integer nfa, String failureClass, double percentSrcAlsoDest, double percentSrcFail,
