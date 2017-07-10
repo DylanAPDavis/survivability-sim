@@ -83,7 +83,9 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
         run_time = "2:00" if (fail_params[0] >= 14 and not ignore) else "0:30"
         memory = "1000"
         if fail_params[0] >= 14 and not ignore:
-            if num_s >= 14 or num_d >= 14:
+            if fail_params[0] >= 35 and fail_params[1] >= 2:
+                memory = "8000"
+            elif num_s >= 14 or num_d >= 14:
                 memory = "4000"
             else:
                 memory = "2250"

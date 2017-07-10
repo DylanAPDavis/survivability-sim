@@ -159,9 +159,9 @@ public class DynamoInterface {
         if(database != null) database.shutdown();
     }
 
-    public Boolean deleteRecords(List<SimulationParameters> requestSetIds) {
+    public Boolean deleteRecords(List<SimulationParameters> requestParameters) {
         try {
-            mapper.batchDelete(requestSetIds);
+            mapper.batchDelete(requestParameters);
         } catch (Exception e){
             e.printStackTrace();
             return false;

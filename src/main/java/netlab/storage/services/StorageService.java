@@ -104,10 +104,7 @@ public class StorageService {
     }
 
     public Boolean deleteRequests(Long seed){
-        SimulationParameters searchParams = SimulationParameters.builder()
-                .seed(seed)
-                .build();
-        List<SimulationParameters> matchingParams = dynamoInterface.getSimulationParameters(searchParams);
+        List<SimulationParameters> matchingParams = dynamoInterface.queryForSeed(seed);
         Boolean deleteRecords = dynamoInterface.deleteRecords(matchingParams);
         Boolean deleteRequests = false;
         if(deleteRecords) {

@@ -70,8 +70,6 @@ public class StorageController {
                 .filter(SimulationParameters::getIgnoreFailures)
                 .collect(Collectors.toList());
 
-        List<SimulationParameters> oneFailAllowedParams = matchingParams.parallelStream().filter(p -> p.getNumFailsAllowed() == 1).collect(Collectors.toList());
-
         Map<String, List<SimulationParameters>> matchingMap = matchingParams.parallelStream()
                 .filter(p -> !p.getGenerated())
                 .filter(p -> p.getNumFailsAllowed() == 1)
