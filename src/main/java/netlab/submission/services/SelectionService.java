@@ -43,6 +43,17 @@ public class SelectionService {
         return (int) Math.ceil(percentage * numOptions);
     }
 
+    public Set<String> choosenRandomSubsetStrings(Set<String> options, Integer numChoices, Random rng){
+        if(numChoices == 0){
+            return new HashSet<>();
+        }
+        if(numChoices > options.size()){
+            return options;
+        }
+        List<String> choices = new ArrayList<>(options);
+        Collections.shuffle(choices, rng);
+        return new HashSet<>(choices.subList(0, numChoices));
+    }
 
     public Set<Node> chooseRandomSubsetNodes(Set<Node> options, Integer numChoices, Random rng) {
         if(numChoices == 0){

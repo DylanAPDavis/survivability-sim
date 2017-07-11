@@ -238,10 +238,10 @@ public class AnalysisTest {
 
     @Test
     public void exceptionTest(){
-        RequestSet rs = createSetAndSolve(2L, "NSFnet", 1, "ServiceILP", "Endpoint",
-                "TotalCost", 1, 1, 14, new ArrayList<>(), "Node",
-                1.0, new ArrayList<>(), 14, Arrays.asList(1,1), Arrays.asList(2,2), 1,
-                new ArrayList<>(), "Solo", false, false, 0.0, 1.0, 1.0);
+        RequestSet rs = createSetAndSolve(1L, "NSFnet", 1, "ServiceILP", "Flow",
+                "TotalCost", 1, 7, 35, new ArrayList<>(), "Both",
+                1.0, new ArrayList<>(), 7, Arrays.asList(1,1), Arrays.asList(1,1), 2,
+                new ArrayList<>(), "Solo", false, false, 1.0, 1.0, 1.0);
         AnalyzedSet as = analysisService.analyzeRequestSet(rs);
     }
 

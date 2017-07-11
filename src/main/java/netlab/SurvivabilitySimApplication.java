@@ -12,6 +12,8 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @SpringBootApplication
@@ -22,7 +24,8 @@ public class SurvivabilitySimApplication {
 	public static void main(String[] args) {
 		Boolean webValue = false;
 		SimulationParameters simParams = null;
-		String usage = "Usage: --server.port=<port num> --web=<true or false> --sim={JSON representation of SimulationParameter Class}";
+		Long rerunSeed = null;
+		String usage = "Usage: --server.port=<port num> --web=<true or false> --sim={JSON representation of SimulationParameter Class} --rerun_incomplete={seed}";
 		String message = "Startup Arguments: ";
 		for (String arg : args) {
 			message += arg + ", ";
@@ -45,19 +48,30 @@ public class SurvivabilitySimApplication {
 					e.printStackTrace();
 				}
 			}
+			if (option.contains("--rerun_incomplete")){
+				rerunSeed = Long.parseLong(value);
+			}
 		}
 		ConfigurableApplicationContext ctx = new SpringApplicationBuilder(SurvivabilitySimApplication.class)
 				.web(webValue ? WebApplicationType.SERVLET : WebApplicationType.NONE)
 				.run(args);
+		StorageController storCon =  ctx.getBean(StorageController.class);
+		SubmissionController subCon = ctx.getBean(SubmissionController.class);
 
 		// If they provided simulation parameters, just run the simulation, output results, and shutdown
 		if(simParams != null){
-			SubmissionController subCon = ctx.getBean(SubmissionController.class);
-			StorageController storCon = ctx.getBean(StorageController.class);
 			String requestId = subCon.submitRequestSet(simParams);
-			RequestSet requestSet = storCon.getRequestSet(requestId, simParams.getUseAws());
 			log.info("Request Set ID: " + requestId);
-			//log.info("Request Set Details: " + requestSet.toString());
+			ctx.close();
+			System.exit(0);
+		}
+		if(rerunSeed != null){
+			List<SimulationParameters> params = storCon.getParameters(rerunSeed);
+			params = params.stream().filter(p -> !p.getCompleted()).collect(Collectors.toList());
+			for(SimulationParameters param : params){
+				subCon.submitRequestSet(param);
+				log.info("Request Set ID: " + param.getRequestSetId());
+			}
 			ctx.close();
 			System.exit(0);
 		}

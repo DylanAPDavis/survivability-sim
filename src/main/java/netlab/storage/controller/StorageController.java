@@ -87,5 +87,10 @@ public class StorageController {
         return storageService.deleteRequests(seed);
     }
 
+    @RequestMapping(value="storage/get_seed", method = RequestMethod.GET)
+    @ResponseBody
+    public List<SimulationParameters> getParameters(Long seed){
+        return storageService.queryForSeed(seed);
+    }
 
 }

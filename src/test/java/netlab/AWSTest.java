@@ -53,7 +53,7 @@ public class AWSTest {
         }
     }
 
-    @Test
+    //@Test
     public void generateFailureRequests(){
         List<Long> seeds = Arrays.asList(1L);
         for(Long seed : seeds) {
@@ -61,7 +61,7 @@ public class AWSTest {
         }
     }
 
-    @Test
+    //@Test
     public void rerunRequests(){
        List<Long> seeds = Arrays.asList(1L);
         submissionController.rerunRequestSets(seeds);
@@ -69,13 +69,13 @@ public class AWSTest {
 
     @Test
     public void deleteRequests(){
-        Long seed = 2L;
+        Long seed = 1L;
         storageController.deleteRecordsAndRequests(seed);
     }
 
-    //@Test
+    @Test
     public void analysisGeneration(){
-        List<Long> seeds = Arrays.asList(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L);
+        List<Long> seeds = Arrays.asList(1L);
         analysisController.analyzeSeeds(seeds);
     }
 

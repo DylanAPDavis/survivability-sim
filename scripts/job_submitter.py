@@ -1,6 +1,7 @@
 import os
 import subprocess
 import math
+import time
 # seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
 seeds = [1]
 topology_ids = ["NSFnet"]
@@ -110,6 +111,7 @@ for seed in seeds:
                             for min_c_range in min_connection_ranges:
                                 for max_c_range in max_connection_ranges:
                                     for num_s in num_sources:
+                                        time.sleep(10)
                                         for num_d in num_dests:
                                             for percent_src_dest in percent_src_also_dests:
                                                 for ignore in ignore_failures:

@@ -265,7 +265,7 @@ public class FailureGenerationService {
         if(minMaxFailures.size() < 2){
             failureSetSize = numFailures;
             failures = generateFailureSet(topo.getNodes(), filteredLinks, numFailures, failureClass,
-                    params.getFailureProb(), params.getMinMaxFailureProb(), sources, destinations, srcDstFailures, rng);
+                    params.getFailureProb(), params.getMinMaxFailureProb(), sources, destinations, srcDstFailures, topo, rng);
         }
         else{
             if(problemClass.equals(ProblemClass.Flow)){
@@ -273,7 +273,7 @@ public class FailureGenerationService {
                     Integer randomNumFailures = selectionService.randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
                     Set<Failure> failureSet = generateFailureSet(topo.getNodes(), filteredLinks,
                             randomNumFailures, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(),
-                            sources, destinations, srcDstFailures, rng);
+                            sources, destinations, srcDstFailures, topo, rng);
                     pairFailuresMap.put(pair, failureSet);
                     failureSetSize += failureSet.size();
                 }
@@ -292,7 +292,7 @@ public class FailureGenerationService {
                 failureSetSize = selectionService.randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
                 failures = generateFailureSet(topo.getNodes(), filteredLinks,
                         failureSetSize, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(),
-                        sources, destinations, srcDstFailures, rng);
+                        sources, destinations, srcDstFailures, topo, rng);
             }
         }
 
@@ -315,7 +315,7 @@ public class FailureGenerationService {
         Set<Link> filteredLinks = filterLinks(topo.getLinks(), topo.getLinkIdMap());
         Set<Failure> failureSet = generateFailureSet(topo.getNodes(), filteredLinks,
                 randomNumFailures, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(),
-                sources, destinations, srcDstFailures, rng);
+                sources, destinations, srcDstFailures, topo, rng);
         failuresMap.put(member, failureSet);
         failureSetSize += failureSet.size();
         return failureSetSize;
@@ -323,7 +323,7 @@ public class FailureGenerationService {
 
     private Set<Failure> generateFailureSet(Set<Node> nodes, Set<Link> links, Integer numFailures, FailureClass failureClass,
                                             Double probability, List<Double> minMaxFailureProb, List<Node> sources, List<Node> destinations,
-                                            Set<Node> prioritySet, Random rng) {
+                                            Set<Node> prioritySet, Topology topo, Random rng) {
 
         List<Link> chosenLinks = new ArrayList<>();
         List<Node> chosenNodes = new ArrayList<>();
@@ -354,10 +354,19 @@ public class FailureGenerationService {
             }
 
             if(failureClass.equals(FailureClass.Both)){
-                Integer numNodeFailures = rng.nextInt(numLeftToChoose);
-                Integer numLinkFailures = numLeftToChoose - numNodeFailures;
-                chosenNodes.addAll(selectionService.chooseRandomSubsetNodes(nodeOptions, numNodeFailures, rng));
-                chosenLinks.addAll(selectionService.chooseRandomSubsetLinks(linkOptions, numLinkFailures, rng));
+                Set<String> idOptions = nodeOptions.stream().map(Node::getId).collect(Collectors.toSet());
+                idOptions.addAll(linkOptions.stream().map(Link::getId).collect(Collectors.toSet()));
+                Set<String> chosenIds = selectionService.choosenRandomSubsetStrings(idOptions, numLeftToChoose, rng);
+                Map<String, Node> nodeIdMap = topo.getNodeIdMap();
+                Map<String, Link> linkIdMap = topo.getLinkIdMap();
+                for(String chosenId : chosenIds){
+                    if(nodeIdMap.containsKey(chosenId)){
+                        chosenNodes.add(nodeIdMap.get(chosenId));
+                    }
+                    if(linkIdMap.containsKey(chosenId)){
+                        chosenLinks.add(linkIdMap.get(chosenId));
+                    }
+                }
             }
         }
 
