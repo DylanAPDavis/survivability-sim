@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import netlab.submission.request.SimulationParameters;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,19 +16,18 @@ import java.util.Map;
 @AllArgsConstructor
 public class AggregationParameters {
 
-    List<Long> seeds;
-    List<String> topologyIds;
-    List<String> problemClasses;
-    List<String> objectives;
-    List<String> algorithms;
-    List<Integer> numRequests;
-    List<Integer> numSources;
-    List<Integer> numDestinations;
-    Map<String, List<List<Double>>> failureMap;
-    List<Integer> numConnections;
-    List<List<Integer>> minConnectionRanges;
-    List<List<Integer>> maxConnectionRanges;
-    List<Double> percentSrcAlsoDests;
-    List<Boolean> ignoreFailures;
-    
+    private List<Long> seeds;
+    private List<String> topologyIds;
+    private List<String> problemClasses;
+    private List<String> objectives;
+    private List<String> algorithms;
+    private List<Integer> numRequests;
+    private List<Integer> numSources;
+    private List<Integer> numDestinations;
+    private Map<String, List<List<Double>>> failureMap;
+    private List<Integer> numConnections;
+    private List<List<Integer>> minConnectionRanges;
+    private List<List<Integer>> maxConnectionRanges;
+    private List<Double> percentSrcAlsoDests;
+    private List<Boolean> ignoreFailures;
 }
