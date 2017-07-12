@@ -1,6 +1,7 @@
 package netlab.storage.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.analyzed.AggregationParameters;
 import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.services.AnalysisService;
 import netlab.analysis.services.HashingService;

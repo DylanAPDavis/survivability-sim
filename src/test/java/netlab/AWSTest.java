@@ -61,7 +61,7 @@ public class AWSTest {
         }
     }
 
-    //@Test
+    @Test
     public void rerunRequests(){
        List<Long> seeds = Arrays.asList(1L);
         submissionController.rerunRequestSets(seeds);

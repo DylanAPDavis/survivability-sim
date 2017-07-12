@@ -88,6 +88,17 @@ public class DynamoInterface {
         return mapper.query(SimulationParameters.class, queryExpression);
     }
 
+    public List<SimulationParameters> queryForId(String requestSetId) {
+        Map<String, AttributeValue> eav = new HashMap<>();
+        eav.put(":val1", new AttributeValue().withS(requestSetId));
+
+        DynamoDBQueryExpression<SimulationParameters> queryExpression = new DynamoDBQueryExpression<SimulationParameters>()
+                .withKeyConditionExpression("requestSetId = :val1").withExpressionAttributeValues(eav)
+                .withConsistentRead(false);
+
+        return mapper.query(SimulationParameters.class, queryExpression);
+    }
+
     public List<SimulationParameters> getSimulationParameters(SimulationParameters params){
         Map<String, AttributeValue> eav = createExpressionAttributeValueMap(params);
         DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
@@ -168,4 +179,5 @@ public class DynamoInterface {
         }
         return true;
     }
+
 }

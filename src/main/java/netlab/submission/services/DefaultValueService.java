@@ -178,7 +178,7 @@ public class DefaultValueService {
             params.setProblemClass("Flow");
         }
         if(params.getObjective() == null){
-            params.setObjective("LinkCost");
+            params.setObjective("TotalCost");
         }
         if(params.getAlgorithm() == null){
             params.setObjective("ServiceILP");

@@ -42,6 +42,16 @@ public class SubmissionController {
         log.info("Generated request set: " + requestSet.getId());
         // Find solutions for the request set, as long as at least one request has been generated
         if(requestSet.getRequests().keySet().size() > 0) {
+            List<SimulationParameters> matchingParams = storageService.queryForId(requestSet.getId());
+            if(!matchingParams.isEmpty()){
+                SimulationParameters previousRun = matchingParams.get(0);
+                log.info("Request Set ID: " + requestSet.getId() + " is already in Dynamo DB!");
+                if(previousRun.getCompleted()) {
+                    log.info("Already completed, exiting...");
+                    return requestSet.getId();
+                }
+                log.info("Has not been completed, rerunning now...");
+            }
             // Store the request ID and sim params in Dynamo DB
             storageService.putSimulationParameters(simulationParameters);
             log.info("Stored params");

@@ -1,6 +1,7 @@
 package netlab.submission.services;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.services.HashingService;
 import netlab.submission.enums.*;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
@@ -28,15 +29,18 @@ public class GenerationService {
 
     private SelectionService selectionService;
 
+    private HashingService hashingService;
+
     @Autowired
     public GenerationService(TopologyService topologyService, DefaultValueService defaultValueService,
                              EnumGenerationService enumGenerationService, FailureGenerationService failureGenerationService,
-                             SelectionService selectionService) {
+                             SelectionService selectionService, HashingService hashingService) {
         this.topologyService = topologyService;
         this.defaultValueService = defaultValueService;
         this.enumGenerationService = enumGenerationService;
         this.failureGenerationService = failureGenerationService;
         this.selectionService = selectionService;
+        this.hashingService = hashingService;
     }
 
     public RequestSet generateFromSimParams(SimulationParameters params){
@@ -47,7 +51,7 @@ public class GenerationService {
         if(requests.isEmpty()){
             status = "Submission failed. Could not generate requests.";
         }
-        String setId = params.getRequestSetId() != null ? params.getRequestSetId() : UUID.randomUUID().toString();
+        String setId = params.getRequestSetId() != null ? params.getRequestSetId() : hashParams(params);
         params.setRequestSetId(setId);
         return RequestSet.builder()
                 .requests(requests)
@@ -66,6 +70,15 @@ public class GenerationService {
                 .useAws(params.getUseAws())
                 .topologyId(params.getTopologyId())
                 .build();
+    }
+
+    private String hashParams(SimulationParameters params) {
+        return hashingService.hash(params.getSeed(), params.getTopologyId(), params.getProblemClass(), params.getObjective(), params.getAlgorithm(),
+                params.getNumRequests(), params.getNumSources(), params.getNumDestinations(), params.getNumConnections(),
+                params.getMinConnectionsRange(), params.getMaxConnectionsRange(), params.getFailureSetSize(), params.getMinMaxFailures(),
+                params.getFailureClass(), params.getFailureProb(), params.getMinMaxFailureProb(), params.getNumFailsAllowed(), params.getMinMaxFailsAllowed(),
+                params.getProcessingType(), params.getPercentSrcAlsoDest(), params.getPercentSrcFail(),
+                params.getPercentDestFail(), params.getSdn(), params.getUseAws(), params.getIgnoreFailures());
     }
 
     public RequestSet generateFromRequestParams(RequestParameters requestParameters) {

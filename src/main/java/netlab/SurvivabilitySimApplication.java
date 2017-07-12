@@ -2,7 +2,6 @@ package netlab;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import netlab.analysis.analyzed.AggregationParameters;
 import netlab.storage.controller.StorageController;
 import netlab.submission.controller.SubmissionController;
 import netlab.submission.request.SimulationParameters;
@@ -25,7 +24,6 @@ public class SurvivabilitySimApplication {
 		Boolean webValue = false;
 		SimulationParameters simParams = null;
 		Long rerunSeed = null;
-		AggregationParameters rerunParams = null;
 		ObjectMapper mapper = new ObjectMapper();
 		printUsage(args);
 		for (String arg : args) {
@@ -45,14 +43,6 @@ public class SurvivabilitySimApplication {
 			}
 			if (option.contains("--rerun_incomplete")){
 				rerunSeed = Long.parseLong(value);
-			}
-			if (option.contains("--rerun_params")){
-				try {
-					rerunParams = mapper.readValue(value, AggregationParameters.class);
-					log.info("Params: " + rerunParams.toString());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}
 		}
 
@@ -85,7 +75,6 @@ public class SurvivabilitySimApplication {
 			System.exit(0);
 		}
 
-		// If they provided rerun parameters, get all param
 	}
 
 	private static void printUsage(String[] args){
@@ -100,4 +89,6 @@ public class SurvivabilitySimApplication {
 		log.info(usage);
 		log.info(message);
 	}
+
+
 }

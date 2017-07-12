@@ -89,6 +89,9 @@ public class StorageService {
         return dynamoInterface.queryForSeed(seed);
     }
 
+    public List<SimulationParameters> queryForId(String requestSetId){
+        return dynamoInterface.queryForId(requestSetId);
+    }
 
 
     public List<AnalyzedSet> getAnalyzedSets(SimulationParameters params){

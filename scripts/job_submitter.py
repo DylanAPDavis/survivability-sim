@@ -81,16 +81,18 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
             num_both_params += 1
 
         run_time = "2:00" if (fail_params[0] >= 14 and not ignore) else "0:30"
-        memory = "1000"
+        memory = "700"
+        threads = "6"
         if fail_params[0] >= 14 and not ignore:
             if fail_params[0] >= 35 and fail_params[1] >= 2:
-                memory = "8000"
+                memory = "7500"
             elif num_s >= 14 or num_d >= 14:
-                memory = "4000"
+                memory = "2700"
             else:
-                memory = "2250"
+                memory = "1500"
 
-        command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n", "4", "-o", output_file_path, "python", "scripts/run_simulation.py"]
+        command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
+                         threads, "-o", output_file_path, "python", "scripts/run_simulation.py"]
         for param in parameters:
             command_input.append(str(param))
         process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)

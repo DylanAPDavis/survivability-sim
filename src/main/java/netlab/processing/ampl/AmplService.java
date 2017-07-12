@@ -77,7 +77,7 @@ public class AmplService {
         ampl.eval("objective " + objective.getCode()  + ";");
         ampl.setIntOption("omit_zero_rows", 1);
         ampl.setOption("solver", "gurobi");
-        ampl.eval("option gurobi_options \'threads " + 4 + "\';");
+        ampl.eval("option gurobi_options \'threads " + 6 + "\';");
 
         List<String> dataLines = createDataLines(request, topology, problemClass);
         java.nio.file.Path file = Paths.get(requestSetId + "_" + request.getId() + ".dat");
