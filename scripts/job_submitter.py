@@ -80,7 +80,7 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
         if fail_type == "Both":
             num_both_params += 1
 
-        run_time = "2:00" if (fail_params[0] >= 14 and not ignore) else "0:30"
+        run_time = "3:00" if (fail_params[0] >= 14 and not ignore) else "0:30"
         memory = "700"
         threads = "6"
         if fail_params[0] >= 14 and not ignore:
