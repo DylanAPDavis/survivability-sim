@@ -11,9 +11,9 @@ num_requests = [1]
 num_sources = [1, 7, 14]
 num_dests = [1, 7, 14]
 failure_set_dict = {
-    "Link": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 0.0], [21, 1, 0.0, 0.0]],
-    "Node": [[1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714], [14, 1, 1.0, 1.0]],
-    "Both": [[35, 1, 1.0, 1.0], [35, 2, 1.0, 1.0]]
+    "Link": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 0.0], [21, 1, 0.0, 0.0], [21, 2, 0.0, 0.0]],
+    "Node": [[1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714], [14, 1, 1.0, 1.0], [14, 2, 1.0, 1.0]],
+    "Both": [[35, 1, 1.0, 1.0]]
 }  # Includes failure class, num fails, num fails allowed, percent src fail, percent dst fail
 num_conns = [1, 7, 14]
 min_connection_ranges = [[0, 0], [1, 1]]
@@ -62,12 +62,14 @@ def node_count(topology_name):
 
 def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_c_range, max_c_range, num_s, num_d,
                percent_src_dest, ignore, fail_type, fail_params):
-
-    output_file_path = "results/output/" + "_".join([str(seed), topology, problem, objective, algorithm,
-                                 str(num_r), str(num_c), str(min_c_range),
-                                 str(max_c_range), str(num_s), str(num_d),
-                                 str(percent_src_dest), str(ignore), fail_type,
-                                 str(fail_params)]).replace(" ", "")
+    # 1_NSFnet_Flex_TotalCost_ServiceILP_1_1_1_1_[0,0]_[1,1]_0_[]_Link_1.0_[]_0_[]_Solo_0.0_0.0_0.0_false_true_true
+    output_file_path = "results/output/" + "_".join(
+        [str(seed), topology, problem, objective, algorithm, str(num_r), str(num_s), str(num_d), str(num_c),
+         str(min_c_range), str(max_c_range), str(fail_params[0]), str([]), fail_type, str(1.0), str([]), str(fail_params[1]),
+         str([]), "Solo", str(percent_src_dest), str(fail_params[2]), str(fail_params[3]), "false", "true", str(ignore).lower()
+        ]
+    ).replace(" ", "")
+    print(output_file_path)
     parameters = create_params(seed, topology, problem, objective, algorithm,
                                num_r, num_c, min_c_range, max_c_range,
                                num_s, num_d, percent_src_dest, ignore,
@@ -84,8 +86,8 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
         memory = "700"
         threads = "6"
         if fail_params[0] >= 14 and not ignore:
-            if fail_params[0] >= 35 and fail_params[1] >= 2:
-                memory = "7500"
+            if fail_params[1] >= 2:
+                memory = "3500"
             elif num_s >= 14 or num_d >= 14:
                 memory = "2700"
             else:

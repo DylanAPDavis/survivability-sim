@@ -17,7 +17,7 @@ public class HashingService {
     public String hash(Object... args){
         List<String> strings = new ArrayList<>();
         for(Object arg : args){
-            strings.add(String.valueOf(arg));
+            strings.add(String.valueOf(arg).replace(" ", ""));
         }
         return String.join("_", strings);
     }
