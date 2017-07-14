@@ -75,7 +75,7 @@ public class AWSTest {
 
     @Test
     public void analysisGeneration(){
-        List<Long> seeds = Arrays.asList(1L);
+        List<Long> seeds = Arrays.asList(2L);
         analysisController.analyzeSeeds(seeds);
     }
 

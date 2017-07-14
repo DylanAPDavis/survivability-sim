@@ -2,7 +2,7 @@ import subprocess
 import math
 import time
 # seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
-seeds = [1]
+seeds = [7,8]
 topology_ids = ["NSFnet"]
 problem_classes = ["Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint"]
 objectives = ["TotalCost"]
@@ -69,7 +69,6 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
          str([]), "Solo", str(percent_src_dest), str(fail_params[2]), str(fail_params[3]), "false", "true", str(ignore).lower()
         ]
     ).replace(" ", "")
-    print(output_file_path)
     parameters = create_params(seed, topology, problem, objective, algorithm,
                                num_r, num_c, min_c_range, max_c_range,
                                num_s, num_d, percent_src_dest, ignore,
@@ -82,12 +81,14 @@ def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_
         if fail_type == "Both":
             num_both_params += 1
 
-        run_time = "3:00" if (fail_params[0] >= 14 and not ignore) else "0:30"
+        run_time = "3:59" if (fail_params[0] >= 14 and not ignore) else "0:30"
         memory = "700"
         threads = "6"
         if fail_params[0] >= 14 and not ignore:
             if fail_params[1] >= 2:
                 memory = "3500"
+                if problem == "Endpoint":
+                    memory = "4000"
             elif num_s >= 14 or num_d >= 14:
                 memory = "2700"
             else:
