@@ -825,7 +825,7 @@ public class AnalysisService {
         }
         List<String[]> aggregationOutput = createAggregationOutput(agParams, outputMap);
         try {
-            CSVWriter writer = new CSVWriter(new FileWriter("Output.csv"), '\t');
+            CSVWriter writer = new CSVWriter(new FileWriter("Output.csv"), ',');
             writer.writeAll(aggregationOutput);
             writer.close();
         } catch (IOException e) {
