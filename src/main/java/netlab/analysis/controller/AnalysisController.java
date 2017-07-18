@@ -50,15 +50,19 @@ public class AnalysisController {
     public String analyzeSeeds(List<Long> seeds){
         for(Long seed : seeds) {
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
-            seedParams.parallelStream()
+            seedParams.stream()
                     .filter(SimulationParameters::getCompleted)
                     .filter(SimulationParameters::getUseAws)
                     .map(SimulationParameters::getRequestSetId)
                     .forEach( id -> {
-                        RequestSet requestSet = storageService.retrieveRequestSet(id, true);
-                        AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
-                        storageService.storeAnalyzedSet(analyzedSet, true);
+                        AnalyzedSet analyzedSet = storageService.retrieveAnalyzedSet(id, true);
+                        if(analyzedSet == null) {
+                            RequestSet requestSet = storageService.retrieveRequestSet(id, true);
+                            analyzedSet = analysisService.analyzeRequestSet(requestSet);
+                            storageService.storeAnalyzedSet(analyzedSet, true);
+                        }
                     });
+            System.out.println("Analyzed seed: " + seed);
         }
         return "Success";
     }
