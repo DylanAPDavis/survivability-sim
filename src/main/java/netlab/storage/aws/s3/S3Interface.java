@@ -97,10 +97,8 @@ public class S3Interface {
             Download xfer = transferManager.download(bucketName, keyName, f);
             xfer.waitForCompletion();
             return f;
-            // loop with Transfer.isDone()
-            // or block with Transfer.waitForCompletion()
         } catch (Exception e) {
-            log.error(e.getMessage());
+            //log.error(e.getMessage());
             return null;
         }
     }

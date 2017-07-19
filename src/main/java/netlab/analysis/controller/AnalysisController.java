@@ -58,8 +58,12 @@ public class AnalysisController {
                         AnalyzedSet analyzedSet = storageService.retrieveAnalyzedSet(id, true);
                         if(analyzedSet == null) {
                             RequestSet requestSet = storageService.retrieveRequestSet(id, true);
-                            analyzedSet = analysisService.analyzeRequestSet(requestSet);
-                            storageService.storeAnalyzedSet(analyzedSet, true);
+                            if(requestSet != null) {
+                                analyzedSet = analysisService.analyzeRequestSet(requestSet);
+                                storageService.storeAnalyzedSet(analyzedSet, true);
+                            } else{
+                                System.out.println("Request Set ID: " + id + " does not exist!");
+                            }
                         }
                     });
             System.out.println("Analyzed seed: " + seed);
