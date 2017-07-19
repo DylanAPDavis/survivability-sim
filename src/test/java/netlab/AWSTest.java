@@ -114,7 +114,8 @@ public class AWSTest {
         percent_src_also_dests = [0.0, 1.0]
         ignore_failures = [True, False]
          */
-        List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
+        //List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
+        List<Long> seeds = Arrays.asList(1L, 2L);
         List<String> topologyIds = Collections.singletonList("NSFnet");
         List<String> problemClasses = Arrays.asList("Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint");
         List<String> objectives = Collections.singletonList("TotalCost");

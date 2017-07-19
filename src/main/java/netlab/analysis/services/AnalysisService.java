@@ -802,25 +802,7 @@ public class AnalysisService {
         for(int index = 0; index < baseParams.size(); index++){
             SimulationParameters params = baseParams.get(index);
             AggregateAnalyzedSet aggSet = aggregateSets.get(index);
-            String topologyName = params.getTopologyId();
-            String algorithm = params.getAlgorithm();
-            String problemClass = params.getProblemClass();
-            String objective = params.getObjective();
-            Double sourceDestOverlap = params.getPercentSrcAlsoDest();
-            String failureClass = params.getFailureClass();
-            Double failureSetSize = params.getFailureSetSize() * 1.0;
-            Double numFailsAllowed = params.getNumFailsAllowed() * 1.0;
-            Double percentSrcFail = params.getPercentSrcFail();
-            Double percentDstFail = params.getPercentDestFail();
-            Boolean ignoreFailures = params.getIgnoreFailures();
-            List<Integer> minC = params.getMinConnectionsRange();
-            List<Integer> maxC = params.getMaxConnectionsRange();
-            Integer numSources = params.getNumSources();
-            Integer numDestinations = params.getNumDestinations();
-            String hashString = hashingService.hash(topologyName, algorithm, problemClass, objective,
-                    String.valueOf(sourceDestOverlap), failureClass, String.valueOf(failureSetSize),
-                    String.valueOf(numFailsAllowed), String.valueOf(percentSrcFail), String.valueOf(percentDstFail), String.valueOf(ignoreFailures),
-                    String.valueOf(minC), String.valueOf(maxC), String.valueOf(numSources), String.valueOf(numDestinations));
+            String hashString = makeHash(params);
             outputMap.putIfAbsent(hashString, aggSet);
         }
         List<String[]> aggregationOutput = createAggregationOutput(agParams, outputMap);
@@ -833,6 +815,16 @@ public class AnalysisService {
         }
         return "";
     }
+
+    private String makeHash(SimulationParameters p) {
+        return hashingService.hash(p.getTopologyId(), p.getAlgorithm(), p.getProblemClass(), p.getObjective(),
+                String.valueOf(p.getPercentSrcAlsoDest()), p.getFailureClass(), String.valueOf(p.getFailureSetSize()),
+                String.valueOf(p.getNumFailsAllowed()), String.valueOf(p.getPercentSrcFail()),
+                String.valueOf(p.getPercentDestFail()), String.valueOf(p.getIgnoreFailures()), String.valueOf(p.getNumConnections()),
+                String.valueOf(p.getMinConnectionsRange()), String.valueOf(p.getMaxConnectionsRange()),
+                String.valueOf(p.getNumSources()), String.valueOf(p.getNumDestinations()));
+    }
+
 
     private List<String[]> createAggregationOutput(AggregationParameters agParams, Map<String, AggregateAnalyzedSet> outputMap){
         List<String[]> outputLines = new ArrayList<>();
@@ -859,22 +851,27 @@ public class AnalysisService {
                                     outputLines.add(new String[]{failParam});
                                     for(Boolean ignoreFailures : agParams.getIgnoreFailures()) {
                                         outputLines.add(new String[]{"IGNORE F: " + ignoreFailures});
-                                        for (List<Integer> minC : agParams.getMinConnectionRanges()) {
-                                            outputLines.add(new String[]{"MINC: " + minC});
-                                            for (List<Integer> maxC : agParams.getMaxConnectionRanges()) {
-                                                outputLines.add(new String[]{"MAXC: " + minC});
-                                                for (Integer numS : agParams.getNumSources()) {
-                                                    outputLines.add(generateAggregateHeadingLine(numS));
-                                                    for (Integer numD : agParams.getNumDestinations()) {
-                                                        String hashString = hashingService.hash(topology, algorithm, problemClass, objective,
-                                                                String.valueOf(percentSrcAlsoDest), failureClass,
-                                                                String.valueOf(numFails), String.valueOf(numFailsAllowed),
-                                                                String.valueOf(srcFailPercent), String.valueOf(dstFailPercent),
-                                                                String.valueOf(ignoreFailures),
-                                                                String.valueOf(minC), String.valueOf(maxC),
-                                                                String.valueOf(numS), String.valueOf(numD));
-                                                        AggregateAnalyzedSet agSet = outputMap.getOrDefault(hashString, null);
-                                                        outputLines.add(generateAggregateMetricLine(numD, agSet));
+                                        for(Integer numC : agParams.getNumConnections()) {
+                                            outputLines.add(new String[]{"NUM C: " + numC});
+                                            for (List<Integer> minC : agParams.getMinConnectionRanges()) {
+                                                outputLines.add(new String[]{"MINC: " + minC});
+                                                for (List<Integer> maxC : agParams.getMaxConnectionRanges()) {
+                                                    outputLines.add(new String[]{"MAXC: " + maxC});
+                                                    for (Integer numS : agParams.getNumSources()) {
+                                                        outputLines.add(generateAggregateHeadingLine(numS));
+                                                        for (Integer numD : agParams.getNumDestinations()) {
+                                                            String hashString = hashingService.hash(topology,
+                                                                    algorithm, problemClass, objective,
+                                                                    String.valueOf(percentSrcAlsoDest), failureClass,
+                                                                    String.valueOf(numFails),
+                                                                    String.valueOf(numFailsAllowed), String.valueOf(srcFailPercent),
+                                                                    String.valueOf(dstFailPercent), String.valueOf(ignoreFailures),
+                                                                    String.valueOf(numC),
+                                                                    String.valueOf(minC), String.valueOf(maxC),
+                                                                    String.valueOf(numS), String.valueOf(numD));
+                                                            AggregateAnalyzedSet agSet = outputMap.getOrDefault(hashString, null);
+                                                            outputLines.add(generateAggregateMetricLine(numD, agSet));
+                                                        }
                                                     }
                                                 }
                                             }

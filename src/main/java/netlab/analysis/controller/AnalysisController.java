@@ -6,6 +6,7 @@ import netlab.analysis.analyzed.AggregationParameters;
 import netlab.analysis.analyzed.AnalysisParameters;
 import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.services.AnalysisService;
+import netlab.analysis.services.HashingService;
 import netlab.storage.services.StorageService;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
@@ -23,13 +24,15 @@ import java.util.stream.Collectors;
 public class AnalysisController {
 
     @Autowired
-    private AnalysisController(AnalysisService analysisService, StorageService storageService){
+    private AnalysisController(AnalysisService analysisService, StorageService storageService, HashingService hashingService){
         this.analysisService = analysisService;
         this.storageService = storageService;
+        this.hashingService = hashingService;
     }
 
     private AnalysisService analysisService;
     private StorageService storageService;
+    private HashingService hashingService;
 
     @RequestMapping(value = "/analyze", method = RequestMethod.POST)
     @ResponseBody
@@ -84,22 +87,22 @@ public class AnalysisController {
     @ResponseBody
     public String aggregateSeeds(AggregationParameters agParams){
         List<List<SimulationParameters>> paramsBySeed = new ArrayList<>();
+        Map<String, List<SimulationParameters>> paramMap = new HashMap<>();
         for(Long seed : agParams.getSeeds()) {
-            List<SimulationParameters> seedParams = storageService.queryForSeed(seed)
-                    .stream()
-                    .filter(SimulationParameters::getCompleted)
-                    .collect(Collectors.toList());
+            List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
+            for(SimulationParameters params : seedParams){
+                if(params.getCompleted()){
+                    String hash = makeHash(params);
+                    paramMap.putIfAbsent(hash, new ArrayList<>());
+                    paramMap.get(hash).add(params);
+                }
+            }
             paramsBySeed.add(seedParams);
         }
         List<AggregateAnalyzedSet> aggregateSets = new ArrayList<>();
         List<SimulationParameters> primaryParamList = paramsBySeed.get(0);
         for(SimulationParameters primaryParams : primaryParamList){
-            List<SimulationParameters> paramsToBeAnalyzed = new ArrayList<>();
-            for(int i = 1; i < agParams.getSeeds().size(); i++){
-                Optional<SimulationParameters> matchingParam = findMatchingSimParams(primaryParams, paramsBySeed.get(i));
-                matchingParam.ifPresent(paramsToBeAnalyzed::add);
-            }
-            paramsToBeAnalyzed.add(primaryParams);
+            List<SimulationParameters> paramsToBeAnalyzed = paramMap.get(makeHash(primaryParams));
             List<AnalyzedSet> analyzedSets = paramsToBeAnalyzed.stream()
                     .map(p -> storageService.retrieveAnalyzedSet(p.getRequestSetId(), true))
                     .collect(Collectors.toList());
@@ -111,6 +114,16 @@ public class AnalysisController {
 
     }
 
+    private String makeHash(SimulationParameters p) {
+        return hashingService.hash(p.getTopologyId(), p.getAlgorithm(), p.getProblemClass(), p.getObjective(),
+                String.valueOf(p.getPercentSrcAlsoDest()), p.getFailureClass(), String.valueOf(p.getFailureSetSize()),
+                String.valueOf(p.getNumFailsAllowed()), String.valueOf(p.getPercentSrcFail()),
+                String.valueOf(p.getPercentDestFail()), String.valueOf(p.getIgnoreFailures()), String.valueOf(p.getNumConnections()),
+                String.valueOf(p.getMinConnectionsRange()), String.valueOf(p.getMaxConnectionsRange()),
+                String.valueOf(p.getNumSources()), String.valueOf(p.getNumDestinations()));
+    }
+
+    /*
     public Optional<SimulationParameters> findMatchingSimParams(SimulationParameters searchParams, List<SimulationParameters> candidates){
         // Filter by everything except requestSetId and submittedDate
         return candidates.parallelStream()
@@ -141,7 +154,7 @@ public class AnalysisController {
                 .filter(p -> p.getPercentDestFail().equals(searchParams.getPercentDestFail()))
                 .filter(p -> p.getIgnoreFailures().equals(searchParams.getIgnoreFailures()))
                 .findFirst();
-    }
+    }*/
 
 
 
