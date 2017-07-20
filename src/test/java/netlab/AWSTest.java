@@ -79,7 +79,8 @@ public class AWSTest {
 
     @Test
     public void analysisGeneration(){
-        List<Long> seeds = Arrays.asList(29L, 30L);
+        //List<Long> seeds = Arrays.asList(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L);
+        List<Long> seeds = Arrays.asList(2L);
         analysisController.analyzeSeeds(seeds);
     }
 
@@ -115,24 +116,32 @@ public class AWSTest {
         ignore_failures = [True, False]
          */
         //List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
+
         List<Long> seeds = Arrays.asList(1L, 2L);
         List<String> topologyIds = Collections.singletonList("NSFnet");
         List<String> problemClasses = Arrays.asList("Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint");
         List<String> objectives = Collections.singletonList("TotalCost");
         List<String> algorithms = Collections.singletonList("ServiceILP");
         List<Integer> numRequests = Collections.singletonList(1);
-        List<Integer> numSources = Arrays.asList(1,7,14);
-        List<Integer> numDests = Arrays.asList(1,7,14);
+        //List<Integer> numSources = Arrays.asList(1,7,14);
+        List<Integer> numSources = Arrays.asList(7,14);
+        //List<Integer> numDests = Arrays.asList(1,7,14);
+        List<Integer> numDests = Arrays.asList(7,14);
         Map<String, List<List<Double>>> failureMap = new HashMap<>();
-        failureMap.put("Link", Arrays.asList(Arrays.asList(0.0, 0.0, 0.0, 0.0), Arrays.asList(1.0, 1.0, 0.0, 0.0), Arrays.asList(21.0, 1.0, 0.0, 0.0), Arrays.asList(21.0, 2.0, 0.0, 0.0)));
-        failureMap.put("Node", Arrays.asList(Arrays.asList(1.0, 1.0, 0.0, 0.0), Arrays.asList(1.0, 1.0, 0.0714, 0.0),
-                Arrays.asList(1.0, 1.0, 0.0, 0.0714), Arrays.asList(14.0, 1.0, 1.0, 1.0), Arrays.asList(14.0, 2.0, 1.0, 1.0)));
+        //failureMap.put("Link", Arrays.asList(Arrays.asList(0.0, 0.0, 0.0, 0.0), Arrays.asList(1.0, 1.0, 0.0, 0.0), Arrays.asList(21.0, 1.0, 0.0, 0.0), Arrays.asList(21.0, 2.0, 0.0, 0.0)));
+        failureMap.put("Link", Arrays.asList(Arrays.asList(21.0, 1.0, 0.0, 0.0), Arrays.asList(21.0, 2.0, 0.0, 0.0)));
+        //failureMap.put("Node", Arrays.asList(Arrays.asList(1.0, 1.0, 0.0, 0.0), Arrays.asList(1.0, 1.0, 0.0714, 0.0),
+        //        Arrays.asList(1.0, 1.0, 0.0, 0.0714), Arrays.asList(14.0, 1.0, 1.0, 1.0), Arrays.asList(14.0, 2.0, 1.0, 1.0)));
+        failureMap.put("Node", Arrays.asList(Arrays.asList(14.0, 1.0, 1.0, 1.0), Arrays.asList(14.0, 2.0, 1.0, 1.0)));
         failureMap.put("Both", Collections.singletonList(Arrays.asList(35.0, 1.0, 1.0, 1.0)));
-        List<Integer> numConnections = Arrays.asList(1, 7, 14);
-        List<List<Integer>> minConnectionRanges = Arrays.asList(Arrays.asList(0,0), Arrays.asList(1,1));
-        List<List<Integer>> maxConnectionRanges = Arrays.asList(Arrays.asList(1,1), Arrays.asList(2,2));
+        //List<Integer> numConnections = Arrays.asList(1, 7, 14);
+        List<Integer> numConnections = Arrays.asList(14);
+        //List<List<Integer>> minConnectionRanges = Arrays.asList(new ArrayList<>(), Arrays.asList(0,0), Arrays.asList(1,1));
+        List<List<Integer>> minConnectionRanges = Arrays.asList(new ArrayList<>(), Arrays.asList(0,0));
+        //List<List<Integer>> maxConnectionRanges = Arrays.asList(new ArrayList<>(), Arrays.asList(1,1), Arrays.asList(2,2));
+        List<List<Integer>> maxConnectionRanges = Arrays.asList(new ArrayList<>(), Arrays.asList(2,2));
         List<Double> percentSrcAlsoDests = Arrays.asList(0.0, 1.0);
-        List<Boolean> ignoreFailures = Arrays.asList(true, false);
+        List<Boolean> ignoreFailures = Arrays.asList(false, true);
         AggregationParameters agParams = AggregationParameters.builder()
                 .seeds(seeds)
                 .topologyIds(topologyIds)

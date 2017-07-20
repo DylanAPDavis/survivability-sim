@@ -10,6 +10,7 @@ import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
+import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,17 +28,19 @@ import java.util.stream.Collectors;
 public class AnalysisService {
 
     private HashingService hashingService;
+    private TopologyService topologyService;
 
     @Autowired
-    public AnalysisService(HashingService hashingService){
+    public AnalysisService(HashingService hashingService, TopologyService topologyService) {
         this.hashingService = hashingService;
+        this.topologyService = topologyService;
     }
 
     public AnalyzedSet analyzeRequestSet(RequestSet requestSet) {
 
         Map<String, Request> requestMap = requestSet.getRequests();
         Map<String, RequestMetrics> requestMetricsMap = new HashMap<>();
-        for(String requestId : requestMap.keySet()){
+        for (String requestId : requestMap.keySet()) {
             Request request = requestMap.get(requestId);
             RequestMetrics requestMetrics = generateMetrics(request, requestSet.getProblemClass());
             requestMetricsMap.put(requestId, requestMetrics);
@@ -64,10 +67,10 @@ public class AnalysisService {
         Set<Averages> pairAverages = new HashSet<>();
         Set<Averages> srcAverages = new HashSet<>();
         Set<Averages> dstAverages = new HashSet<>();
-        for(RequestMetrics metrics : metricsCollection){
+        for (RequestMetrics metrics : metricsCollection) {
             totalRunningTime += metrics.getRunningTimeSeconds();
             numSurvivable += metrics.getIsSurvivable() ? 1 : 0;
-            if(metrics.getIsFeasible()){
+            if (metrics.getIsFeasible()) {
                 numSurvivableAndFeasible += metrics.getIsSurvivable() ? 1 : 0;
                 totalRunningTimeForFeasible += metrics.getRunningTimeSeconds();
                 numFeasible++;
@@ -159,7 +162,7 @@ public class AnalysisService {
         Boolean forPair = false;
         Boolean forSource = false;
         Boolean forDest = false;
-        for(Averages averages : averagesSet){
+        for (Averages averages : averagesSet) {
             totalAvgPaths += averages.getAvgPaths();
             totalAvgPathsPerChosen += averages.getAvgPathsPerChosen();
             totalAvgPathLength += averages.getAvgPathLength();
@@ -208,14 +211,14 @@ public class AnalysisService {
         Long totalPathCost = 0L;
 
         // Check the high-level attributes
-        if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.FlowSharedF)){
+        if (problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.FlowSharedF)) {
             List<List<Failure>> failureGroups = failureColl.getFailureGroups();
             Map<Node, List<List<Failure>>> srcFailureGroupsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> failureGroups));
             Map<Node, List<List<Failure>>> dstFailureGroupsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> failureGroups));
 
             // Must analyze paths based on total paths - choose just one failure group for everybody
             pathSetMetricsMap = analyzeAllPaths(chosenPaths, pairs, failureGroups);
-            for(PathSetMetrics psm : pathSetMetricsMap.values()){
+            for (PathSetMetrics psm : pathSetMetricsMap.values()) {
                 numLinkUsages += psm.getNumLinkUsages();
                 numFailed += psm.getNumFailed();
                 numPaths += psm.getNumPaths();
@@ -224,13 +227,13 @@ public class AnalysisService {
             memberPathSetMetricsMap = analyzeAllPathsForEndpoints(chosenPaths, sources, destinations, pairs, srcFailureGroupsMap, dstFailureGroupsMap);
         }
         // Check the flow-level attributes
-        if(problemClass.equals(ProblemClass.Flow)){
+        if (problemClass.equals(ProblemClass.Flow)) {
             Map<SourceDestPair, Integer> minNumConnectionsMap = connectionColl.getPairMinConnectionsMap();
             Map<SourceDestPair, List<List<Failure>>> failuresMap = failureColl.getPairFailureGroupsMap();
             Map<Node, List<List<Failure>>> srcFailureGroupsMap = new HashMap<>();
             Map<Node, List<List<Failure>>> dstFailureGroupsMap = new HashMap<>();
             // Must analyze number of paths based on pairs
-            for(SourceDestPair pair : pairs){
+            for (SourceDestPair pair : pairs) {
                 Map<String, Path> pathMap = chosenPaths.get(pair);
                 numPaths += pathMap.values().size();
 
@@ -248,13 +251,13 @@ public class AnalysisService {
                 totalPathCost += pathSetMetrics.getTotalLinkCost();
                 pathSetMetricsMap.put(pair, pathSetMetrics);
 
-                if(pathMap.values().size() - pathSetMetrics.getNumFailed() < minConn){
+                if (pathMap.values().size() - pathSetMetrics.getNumFailed() < minConn) {
                     requestIsSurvivable = false;
                 }
             }
             memberPathSetMetricsMap = analyzeAllPathsForEndpoints(chosenPaths, sources, destinations, pairs, srcFailureGroupsMap, dstFailureGroupsMap);
         }
-        if(problemClass.equals(ProblemClass.Endpoint)){
+        if (problemClass.equals(ProblemClass.Endpoint)) {
             Map<Node, List<List<Failure>>> srcFailureGroupsMap = failureColl.getSrcFailureGroupsMap();
             Map<Node, List<List<Failure>>> dstFailureGroupMap = failureColl.getDstFailureGroupsMap();
             memberPathSetMetricsMap = analyzeAllPathsForEndpoints(chosenPaths, sources, destinations, pairs, srcFailureGroupsMap, dstFailureGroupMap);
@@ -265,15 +268,15 @@ public class AnalysisService {
             numFailed = determineMaxNumFailedAcrossMemberTypes(memberPathSetMetricsMap);
 
             // Get metrics for pairs
-            for(SourceDestPair pair : pairs){
+            for (SourceDestPair pair : pairs) {
                 List<List<Failure>> failureGroups = srcFailureGroupsMap.get(pair.getSrc());
                 failureGroups.addAll(dstFailureGroupMap.get(pair.getDst()));
-                PathSetMetrics psm =  getWorstCasePathSetMetrics(chosenPaths.get(pair), failureGroups);
+                PathSetMetrics psm = getWorstCasePathSetMetrics(chosenPaths.get(pair), failureGroups);
                 pathSetMetricsMap.put(pair, psm);
             }
         }
 
-        if(numPaths - numFailed < numConnections){
+        if (numPaths - numFailed < numConnections) {
             requestIsSurvivable = false;
         }
 
@@ -311,19 +314,19 @@ public class AnalysisService {
         Double totalDisconnectedPaths = 0.0;
         Integer numChosen = 0;
         Map<Node, Map<SourceDestPair, PathSetMetrics>> memberMap = isSource ? memberPathSetMetricsMap.get(MemberType.Source) : memberPathSetMetricsMap.get(MemberType.Destination);
-        for(Node member: members){
+        for (Node member : members) {
             boolean isUsed = false;
-            for(SourceDestPair pair : memberMap.get(member).keySet()) {
+            for (SourceDestPair pair : memberMap.get(member).keySet()) {
                 PathSetMetrics psm = memberMap.get(member).get(pair);
                 totalPaths += psm.getNumPaths();
                 totalPathLength += psm.getNumLinkUsages();
                 totalPathCost += psm.getTotalLinkCost();
                 totalDisconnectedPaths += psm.getNumFailed();
-                if(psm.getChosen()){
+                if (psm.getChosen()) {
                     isUsed = true;
                 }
             }
-            if(isUsed){
+            if (isUsed) {
                 numChosen++;
             }
         }
@@ -342,20 +345,20 @@ public class AnalysisService {
                 .build();
     }
 
-    private Averages getAveragesForPairs(Set<SourceDestPair> pairs, Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap){
+    private Averages getAveragesForPairs(Set<SourceDestPair> pairs, Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap) {
 
         Double totalPaths = 0.0;
         Double totalPathLength = 0.0;
         Double totalPathCost = 0.0;
         Double totalDisconnectedPaths = 0.0;
         Integer numChosen = 0;
-        for(SourceDestPair pair: pairs){
+        for (SourceDestPair pair : pairs) {
             PathSetMetrics psm = pathSetMetricsMap.get(pair);
             totalPaths += psm.getNumPaths();
             totalPathLength += psm.getNumLinkUsages();
             totalPathCost += psm.getTotalLinkCost();
             totalDisconnectedPaths += psm.getNumFailed();
-            if(psm.getChosen()){
+            if (psm.getChosen()) {
                 numChosen++;
             }
         }
@@ -367,7 +370,7 @@ public class AnalysisService {
                 .avgPathsPerChosen(numChosen > 0 ? totalPaths / numChosen : 0)
                 .avgPathLengthPerChosen(numChosen > 0 ? totalPathLength / numChosen : 0)
                 .avgPathCostPerChosen(numChosen > 0 ? totalPathCost / numChosen : 0)
-                .avgDisconnectedPathsPerChosen(numChosen > 0 ?  totalDisconnectedPaths / pairs.size() : 0)
+                .avgDisconnectedPathsPerChosen(numChosen > 0 ? totalDisconnectedPaths / pairs.size() : 0)
                 .forPair(true)
                 .forSource(false)
                 .forDest(false)
@@ -376,12 +379,12 @@ public class AnalysisService {
 
     private Integer determineMaxNumFailedAcrossMemberTypes(Map<MemberType, Map<Node, Map<SourceDestPair, PathSetMetrics>>> memberPathSetMetricsMap) {
         Integer maxSum = 0;
-        for(MemberType memberType : memberPathSetMetricsMap.keySet()){
+        for (MemberType memberType : memberPathSetMetricsMap.keySet()) {
             Map<Node, Map<SourceDestPair, PathSetMetrics>> memberMetricsMap = memberPathSetMetricsMap.get(memberType);
             Integer memberSum = 0;
-            for(Node node : memberMetricsMap.keySet()){
+            for (Node node : memberMetricsMap.keySet()) {
                 Map<SourceDestPair, PathSetMetrics> metricsMap = memberMetricsMap.get(node);
-                memberSum +=  metricsMap.values().stream().mapToInt(PathSetMetrics::getNumFailed).sum();
+                memberSum += metricsMap.values().stream().mapToInt(PathSetMetrics::getNumFailed).sum();
             }
             maxSum = maxSum < memberSum ? memberSum : maxSum;
         }
@@ -389,10 +392,10 @@ public class AnalysisService {
     }
 
     private Map<MemberType, Map<Node, Map<SourceDestPair, PathSetMetrics>>> analyzeAllPathsForEndpoints(Map<SourceDestPair, Map<String, Path>> chosenPaths,
-                                                                                        Set<Node> sources, Set<Node> destinations,
-                                                                                        Set<SourceDestPair> pairs,
-                                                                                        Map<Node, List<List<Failure>>> srcFailureGroupsMap,
-                                                                                        Map<Node, List<List<Failure>>> dstFailureGroupMap) {
+                                                                                                        Set<Node> sources, Set<Node> destinations,
+                                                                                                        Set<SourceDestPair> pairs,
+                                                                                                        Map<Node, List<List<Failure>>> srcFailureGroupsMap,
+                                                                                                        Map<Node, List<List<Failure>>> dstFailureGroupMap) {
         // Must analyze number of paths based on source/dest
         // Pick worst case failure group per member
         Map<Node, Map<SourceDestPair, PathSetMetrics>> metricsBySource = getPathSetMetricsPerMember(sources, pairs, srcFailureGroupsMap, chosenPaths, true);
@@ -405,13 +408,13 @@ public class AnalysisService {
     }
 
     private Map<Node, Map<SourceDestPair, PathSetMetrics>> getPathSetMetricsPerMember(Set<Node> members, Set<SourceDestPair> pairs,
-                                                                Map<Node, List<List<Failure>>> srcFailureGroupsMap,
-                                                                Map<SourceDestPair, Map<String, Path>> chosenPaths, boolean bySource) {
+                                                                                      Map<Node, List<List<Failure>>> srcFailureGroupsMap,
+                                                                                      Map<SourceDestPair, Map<String, Path>> chosenPaths, boolean bySource) {
         Map<Node, Set<SourceDestPair>> pairsByMemberMap = getPairsByMember(pairs, bySource);
         Map<Node, Map<SourceDestPair, PathSetMetrics>> metricsMap = new HashMap<>();
         // Must analyze number of paths based on source/dest
         // Pick worst case failure group per member
-        for(Node member : members){
+        for (Node member : members) {
             List<List<Failure>> failureGroups = srcFailureGroupsMap.get(member);
             Set<SourceDestPair> pairsWithSrc = pairsByMemberMap.get(member);
             // This gives us the metrics for the worst-case failure group
@@ -423,7 +426,7 @@ public class AnalysisService {
 
     private Map<Node, Set<SourceDestPair>> getPairsByMember(Set<SourceDestPair> pairs, boolean bySource) {
         Map<Node, Set<SourceDestPair>> pairMap = new HashMap<>();
-        for(SourceDestPair pair : pairs){
+        for (SourceDestPair pair : pairs) {
             Node member = bySource ? pair.getSrc() : pair.getDst();
             pairMap.putIfAbsent(member, new HashSet<>());
             pairMap.get(member).add(pair);
@@ -432,14 +435,14 @@ public class AnalysisService {
     }
 
     private Map<SourceDestPair, PathSetMetrics> analyzeAllPaths(Map<SourceDestPair, Map<String, Path>> chosenPaths, Set<SourceDestPair> pairs,
-                                 List<List<Failure>> failureGroups) {
+                                                                List<List<Failure>> failureGroups) {
         Map<SourceDestPair, PathSetMetrics> worstCasePathSetMap = new HashMap<>();
         Integer worstNumFailed = 0;
 
-        for(List<Failure> failureGroup : failureGroups){
+        for (List<Failure> failureGroup : failureGroups) {
             Integer numFailedTemp = 0;
             Map<SourceDestPair, PathSetMetrics> tempMap = new HashMap<>();
-            for(SourceDestPair pair : pairs){
+            for (SourceDestPair pair : pairs) {
                 Map<String, Path> pathMap = chosenPaths.get(pair);
 
                 PathSetMetrics pathSetMetrics = getMetricsForPathSet(pathMap, failureGroup);
@@ -447,13 +450,13 @@ public class AnalysisService {
                 numFailedTemp += pathSetMetrics.getNumFailed();
                 tempMap.put(pair, pathSetMetrics);
             }
-            if(numFailedTemp > worstNumFailed){
+            if (numFailedTemp > worstNumFailed) {
                 worstCasePathSetMap = new HashMap<>(tempMap);
                 worstNumFailed = numFailedTemp;
             }
         }
-        if(worstCasePathSetMap.isEmpty()){
-            for(SourceDestPair pair : pairs){
+        if (worstCasePathSetMap.isEmpty()) {
+            for (SourceDestPair pair : pairs) {
                 Map<String, Path> pathMap = chosenPaths.get(pair);
                 PathSetMetrics pathSetMetrics = getMetricsForPathSet(pathMap, new ArrayList<>());
                 worstNumFailed += pathSetMetrics.getNumFailed();
@@ -464,28 +467,28 @@ public class AnalysisService {
         return worstCasePathSetMap;
     }
 
-    private PathSetMetrics getWorstCasePathSetMetrics(Map<String, Path> pathMap, List<List<Failure>> failureGroups){
+    private PathSetMetrics getWorstCasePathSetMetrics(Map<String, Path> pathMap, List<List<Failure>> failureGroups) {
         PathSetMetrics worstPathSetMetrics = null;
-        for(List<Failure> group : failureGroups){
+        for (List<Failure> group : failureGroups) {
             PathSetMetrics pathSetMetrics = getMetricsForPathSet(pathMap, group);
-            if(worstPathSetMetrics == null || worstPathSetMetrics.getNumFailed() < pathSetMetrics.getNumFailed()){
+            if (worstPathSetMetrics == null || worstPathSetMetrics.getNumFailed() < pathSetMetrics.getNumFailed()) {
                 worstPathSetMetrics = pathSetMetrics;
             }
         }
-        if(worstPathSetMetrics == null){
+        if (worstPathSetMetrics == null) {
             worstPathSetMetrics = getMetricsForPathSet(pathMap, new ArrayList<>());
         }
         return worstPathSetMetrics;
     }
 
-    private PathSetMetrics getMetricsForPathSet(Map<String, Path> pathMap, List<Failure> group){
+    private PathSetMetrics getMetricsForPathSet(Map<String, Path> pathMap, List<Failure> group) {
         Map<String, PathMetrics> pathMetrics = getPathMetrics(pathMap, group);
         return analyzePathMetrics(pathMetrics);
     }
 
     private Map<String, PathMetrics> getPathMetrics(Map<String, Path> pathMap, List<Failure> failures) {
         Map<String, PathMetrics> pathMetricsMap = new HashMap<>();
-        for(String pathId : pathMap.keySet()){
+        for (String pathId : pathMap.keySet()) {
             Path path = pathMap.get(pathId);
             Integer numLinks = path.getLinks().size();
             Long totalCost = path.getLinks().stream().mapToLong(Link::getWeight).sum();
@@ -500,14 +503,14 @@ public class AnalysisService {
         Set<String> nodeIds = path.getNodeIds();
         Set<String> linkIds = path.getLinkIds();
 
-        for(Failure failure : failures){
-            if(failure.getNode() != null){
-                if(nodeIds.contains(failure.getNode().getId())){
+        for (Failure failure : failures) {
+            if (failure.getNode() != null) {
+                if (nodeIds.contains(failure.getNode().getId())) {
                     return false;
                 }
             }
-            if(failure.getLink() != null){
-                if(linkIds.contains(failure.getLink().getId()) || linkIds.contains(invertLinkId(failure.getLink()))){
+            if (failure.getLink() != null) {
+                if (linkIds.contains(failure.getLink().getId()) || linkIds.contains(invertLinkId(failure.getLink()))) {
                     return false;
                 }
             }
@@ -526,7 +529,7 @@ public class AnalysisService {
         Integer numPaths = 0;
         Long totalCost = 0L;
         Boolean chosen = false;
-        if(!pathMetricsMap.isEmpty()) {
+        if (!pathMetricsMap.isEmpty()) {
             chosen = true;
             for (PathMetrics pathMetrics : pathMetricsMap.values()) {
                 numLinkUsages += pathMetrics.getNumLinks();
@@ -551,7 +554,7 @@ public class AnalysisService {
 
     public AggregateAnalyzedSet aggregateAnalyzedSets(List<AnalyzedSet> analyzedSets) {
 
-        if(analyzedSets.isEmpty()){
+        if (analyzedSets.isEmpty()) {
             return AggregateAnalyzedSet.builder().build();
         }
 
@@ -611,7 +614,7 @@ public class AnalysisService {
         Double dstAvgPathCostPerChosen = 0.0;
         Double dstAvgDisconnectedPathsPerChosen = 0.0;
 
-        for(AnalyzedSet analyzedSet : analyzedSets){
+        for (AnalyzedSet analyzedSet : analyzedSets) {
             requestSetIds.add(analyzedSet.getRequestSetId());
             seeds.add(analyzedSet.getSeed());
             totalRunningTime += analyzedSet.getTotalRunningTimeSeconds();
@@ -671,52 +674,52 @@ public class AnalysisService {
                 .objective(objective)
                 .failureClass(failureClass)
                 .numRequests(numRequests)
-                .totalRunningTimeSeconds(totalRunningTime/numSets)
-                .totalRunningTimeSecondsForFeasible(totalRunningTimeSecondsForFeasible/numSets)
-                .avgRunningTimeSeconds(avgRunningTimeSeconds/numSets)
-                .avgRunningTimeSecondsForFeasible(avgRunningTimeSecondsForFeasible/numSets)
-                .totalSurvivable(totalSurvivable/numSets)
-                .percentSurvivable(percentSurvivable/numSets)
-                .percentSurvivableForFeasible(percentSurvivableForFeasible/numSets)
-                .totalFeasible(totalFeasible/numSets)
-                .percentFeasible(percentFeasible/numSets)
-                .totalFeasibleAndSurvivable(totalFeasibleAndSurvivable/numSets)
-                .totalLinksUsed(totalLinksUsed/numSets)
-                .avgLinksUsedForFeasible(avgLinksUsedForFeasible/numSets)
-                .totalCostLinksUsed(totalCostLinksUsed/numSets)
-                .avgCostLinksUsedForFeasible(avgCostLinksUsedForFeasible/numSets)
-                .totalNumPaths(totalNumPaths/numSets)
-                .avgNumPathsForFeasible(avgNumPathsForFeasible/numSets)
-                .totalDisconnectedPaths(totalDisconnectedPaths/numSets)
-                .avgDisconnectedPathsForFeasible(avgDisconnectedPathsForFeasible/numSets)
-                .totalIntactPaths(totalIntactPaths/numSets)
-                .avgIntactPathsForFeasible(avgIntactPathsForFeasible/numSets)
-                .avgAvgPathLength(avgAvgPathLength/numSets)
-                .avgAvgPathCost(avgAvgPathCost/numSets)
-                .pairAvgPaths(pairAvgPaths/numSets)
-                .pairAvgPathLength(pairAvgPathLength/numSets)
-                .pairAvgPathCost(pairAvgPathCost/numSets)
-                .pairAvgDisconnectedPaths(pairAvgDisconnectedPaths/numSets)
-                .pairAvgPathsPerChosen(pairAvgPathsPerChosen/numSets)
-                .pairAvgPathLengthPerChosen(pairAvgPathLengthPerChosen/numSets)
-                .pairAvgPathCostPerChosen(pairAvgPathCostPerChosen/numSets)
-                .pairAvgDisconnectedPathsPerChosen(pairAvgDisconnectedPathsPerChosen/numSets)
-                .srcAvgPaths(srcAvgPaths/numSets)
-                .srcAvgPathLength(srcAvgPathLength/numSets)
-                .srcAvgPathCost(srcAvgPathCost/numSets)
-                .srcAvgDisconnectedPaths(srcAvgDisconnectedPaths/numSets)
-                .srcAvgPathsPerChosen(srcAvgPathsPerChosen/numSets)
-                .srcAvgPathLengthPerChosen(srcAvgPathLengthPerChosen/numSets)
-                .srcAvgPathCostPerChosen(srcAvgPathCostPerChosen/numSets)
-                .srcAvgDisconnectedPathsPerChosen(srcAvgDisconnectedPathsPerChosen/numSets)
-                .dstAvgPaths(dstAvgPaths/numSets)
-                .dstAvgPathLength(dstAvgPathLength/numSets)
-                .dstAvgPathCost(dstAvgPathCost/numSets)
-                .dstAvgDisconnectedPaths(dstAvgDisconnectedPaths/numSets)
-                .dstAvgPathsPerChosen(dstAvgPathsPerChosen/numSets)
-                .dstAvgPathLengthPerChosen(dstAvgPathLengthPerChosen/numSets)
-                .dstAvgPathCostPerChosen(dstAvgPathCostPerChosen/numSets)
-                .dstAvgDisconnectedPathsPerChosen(dstAvgDisconnectedPathsPerChosen/numSets)
+                .totalRunningTimeSeconds(totalRunningTime / numSets)
+                .totalRunningTimeSecondsForFeasible(totalRunningTimeSecondsForFeasible / numSets)
+                .avgRunningTimeSeconds(avgRunningTimeSeconds / numSets)
+                .avgRunningTimeSecondsForFeasible(avgRunningTimeSecondsForFeasible / numSets)
+                .totalSurvivable(totalSurvivable / numSets)
+                .percentSurvivable(percentSurvivable / numSets)
+                .percentSurvivableForFeasible(percentSurvivableForFeasible / numSets)
+                .totalFeasible(totalFeasible / numSets)
+                .percentFeasible(percentFeasible / numSets)
+                .totalFeasibleAndSurvivable(totalFeasibleAndSurvivable / numSets)
+                .totalLinksUsed(totalLinksUsed / numSets)
+                .avgLinksUsedForFeasible(avgLinksUsedForFeasible / numSets)
+                .totalCostLinksUsed(totalCostLinksUsed / numSets)
+                .avgCostLinksUsedForFeasible(avgCostLinksUsedForFeasible / numSets)
+                .totalNumPaths(totalNumPaths / numSets)
+                .avgNumPathsForFeasible(avgNumPathsForFeasible / numSets)
+                .totalDisconnectedPaths(totalDisconnectedPaths / numSets)
+                .avgDisconnectedPathsForFeasible(avgDisconnectedPathsForFeasible / numSets)
+                .totalIntactPaths(totalIntactPaths / numSets)
+                .avgIntactPathsForFeasible(avgIntactPathsForFeasible / numSets)
+                .avgAvgPathLength(avgAvgPathLength / numSets)
+                .avgAvgPathCost(avgAvgPathCost / numSets)
+                .pairAvgPaths(pairAvgPaths / numSets)
+                .pairAvgPathLength(pairAvgPathLength / numSets)
+                .pairAvgPathCost(pairAvgPathCost / numSets)
+                .pairAvgDisconnectedPaths(pairAvgDisconnectedPaths / numSets)
+                .pairAvgPathsPerChosen(pairAvgPathsPerChosen / numSets)
+                .pairAvgPathLengthPerChosen(pairAvgPathLengthPerChosen / numSets)
+                .pairAvgPathCostPerChosen(pairAvgPathCostPerChosen / numSets)
+                .pairAvgDisconnectedPathsPerChosen(pairAvgDisconnectedPathsPerChosen / numSets)
+                .srcAvgPaths(srcAvgPaths / numSets)
+                .srcAvgPathLength(srcAvgPathLength / numSets)
+                .srcAvgPathCost(srcAvgPathCost / numSets)
+                .srcAvgDisconnectedPaths(srcAvgDisconnectedPaths / numSets)
+                .srcAvgPathsPerChosen(srcAvgPathsPerChosen / numSets)
+                .srcAvgPathLengthPerChosen(srcAvgPathLengthPerChosen / numSets)
+                .srcAvgPathCostPerChosen(srcAvgPathCostPerChosen / numSets)
+                .srcAvgDisconnectedPathsPerChosen(srcAvgDisconnectedPathsPerChosen / numSets)
+                .dstAvgPaths(dstAvgPaths / numSets)
+                .dstAvgPathLength(dstAvgPathLength / numSets)
+                .dstAvgPathCost(dstAvgPathCost / numSets)
+                .dstAvgDisconnectedPaths(dstAvgDisconnectedPaths / numSets)
+                .dstAvgPathsPerChosen(dstAvgPathsPerChosen / numSets)
+                .dstAvgPathLengthPerChosen(dstAvgPathLengthPerChosen / numSets)
+                .dstAvgPathCostPerChosen(dstAvgPathCostPerChosen / numSets)
+                .dstAvgDisconnectedPathsPerChosen(dstAvgDisconnectedPathsPerChosen / numSets)
                 .build();
 
         return calculateConfidenceIntervals(aggregateAnalyzedSet, analyzedSets);
@@ -780,7 +783,7 @@ public class AnalysisService {
     private List<Double> calcConfInterval(Double metricMean, List<AnalyzedSet> analyzedSets, String fieldName) {
         List<Double> confInterval = new ArrayList<>();
         Double squaredDifferenceSum = 0.0;
-        for(AnalyzedSet as : analyzedSets){
+        for (AnalyzedSet as : analyzedSets) {
             try {
                 Double metricValue = Double.valueOf(new PropertyDescriptor(fieldName, AnalyzedSet.class).getReadMethod().invoke(as).toString());
                 squaredDifferenceSum += (metricValue - metricMean) * (metricValue - metricMean);
@@ -797,9 +800,9 @@ public class AnalysisService {
     }
 
     public String aggregateSeeds(AggregationParameters agParams, List<SimulationParameters> baseParams,
-                                  List<AggregateAnalyzedSet> aggregateSets){
+                                 List<AggregateAnalyzedSet> aggregateSets) {
         Map<String, AggregateAnalyzedSet> outputMap = new HashMap<>();
-        for(int index = 0; index < baseParams.size(); index++){
+        for (int index = 0; index < baseParams.size(); index++) {
             SimulationParameters params = baseParams.get(index);
             AggregateAnalyzedSet aggSet = aggregateSets.get(index);
             String hashString = makeHash(params);
@@ -826,40 +829,54 @@ public class AnalysisService {
     }
 
 
-    private List<String[]> createAggregationOutput(AggregationParameters agParams, Map<String, AggregateAnalyzedSet> outputMap){
+    private List<String[]> createAggregationOutput(AggregationParameters agParams, Map<String, AggregateAnalyzedSet> outputMap) {
         List<String[]> outputLines = new ArrayList<>();
-        for(String topology : agParams.getTopologyIds()){
-            outputLines.add(new String[]{"TOPOLOGY: " + topology});
-            for(String algorithm : agParams.getAlgorithms()){
-                outputLines.add(new String[]{"ALGORITHM: " + algorithm});
-                for(String problemClass : agParams.getProblemClasses()){
-                    outputLines.add(new String[]{"PROBLEM CLASS: " + problemClass});
-                    for(String objective : agParams.getObjectives()){
-                        outputLines.add(new String[]{"OBJECTIVE: " + objective});
-                        for(Double percentSrcAlsoDest : agParams.getPercentSrcAlsoDests()){
-                            outputLines.add(new String[]{"SRC/DEST OVERLAP: " + percentSrcAlsoDest});
-                            for(String failureClass : agParams.getFailureMap().keySet()){
-                                outputLines.add(new String[]{"FAILURE TYPE: " + failureClass});
-                                List<List<Double>> allParamsPerClass = agParams.getFailureMap().get(failureClass);
-                                for(List<Double> failureParams : allParamsPerClass){
-                                    Double numFails = failureParams.get(0);
-                                    Double numFailsAllowed = failureParams.get(1);
-                                    Double srcFailPercent = failureParams.get(2);
-                                    Double dstFailPercent = failureParams.get(3);
-                                    String failParam = "FSETSIZE: " + numFails + " NFA: " + numFailsAllowed;
-                                    failParam += " SFAIL%: " + srcFailPercent + " DFAIL%: " + dstFailPercent;
-                                    outputLines.add(new String[]{failParam});
-                                    for(Boolean ignoreFailures : agParams.getIgnoreFailures()) {
-                                        outputLines.add(new String[]{"IGNORE F: " + ignoreFailures});
-                                        for(Integer numC : agParams.getNumConnections()) {
-                                            outputLines.add(new String[]{"NUM C: " + numC});
+        int numPossible = 0;
+
+        for (Boolean ignoreFailures : agParams.getIgnoreFailures()) {
+            outputLines.add(new String[]{"IGNORE F: " + ignoreFailures});
+            for (String topology : agParams.getTopologyIds()) {
+                outputLines.add(new String[]{"TOPOLOGY: " + topology});
+                for (String algorithm : agParams.getAlgorithms()) {
+                    outputLines.add(new String[]{"ALGORITHM: " + algorithm});
+                    for (String problemClass : agParams.getProblemClasses()) {
+                        outputLines.add(new String[]{"PROBLEM CLASS: " + problemClass});
+                        for (String objective : agParams.getObjectives()) {
+                            outputLines.add(new String[]{"OBJECTIVE: " + objective});
+                            for (Double percentSrcAlsoDest : agParams.getPercentSrcAlsoDests()) {
+                                outputLines.add(new String[]{"SRC/DEST OVERLAP: " + percentSrcAlsoDest});
+                                for (String failureClass : agParams.getFailureMap().keySet()) {
+                                    outputLines.add(new String[]{"FAILURE TYPE: " + failureClass});
+                                    List<List<Double>> allParamsPerClass = agParams.getFailureMap().get(failureClass);
+                                    for (List<Double> failureParams : allParamsPerClass) {
+                                        Integer numFails = (int) Math.round(failureParams.get(0));
+                                        Integer numFailsAllowed = (int) Math.round(failureParams.get(1));
+                                        Double srcFailPercent = failureParams.get(2);
+                                        Double dstFailPercent = failureParams.get(3);
+                                        String failParam = "FSETSIZE: " + numFails + " NFA: " + numFailsAllowed;
+                                        failParam += " SFAIL%: " + srcFailPercent + " DFAIL%: " + dstFailPercent;
+                                        //outputLines.add(new String[]{failParam});
+                                        for (Integer numC : agParams.getNumConnections()) {
+                                            //outputLines.add(new String[]{"NUM C: " + numC});
                                             for (List<Integer> minC : agParams.getMinConnectionRanges()) {
-                                                outputLines.add(new String[]{"MINC: " + minC});
+                                                //outputLines.add(new String[]{"MINC: " + minC});
                                                 for (List<Integer> maxC : agParams.getMaxConnectionRanges()) {
-                                                    outputLines.add(new String[]{"MAXC: " + maxC});
+                                                    //outputLines.add(new String[]{"MAXC: " + maxC});
                                                     for (Integer numS : agParams.getNumSources()) {
-                                                        outputLines.add(generateAggregateHeadingLine(numS));
+                                                        //outputLines.add(generateAggregateHeadingLine(numS));
                                                         for (Integer numD : agParams.getNumDestinations()) {
+                                                            if (!checkIfPossible(topology, algorithm, problemClass, objective,
+                                                                    percentSrcAlsoDest, failureClass, numFails, numFailsAllowed,
+                                                                    srcFailPercent, dstFailPercent, ignoreFailures, numC,
+                                                                    minC, maxC, numS, numD)) {
+                                                                continue;
+                                                            }
+                                                            numPossible++;
+                                                            outputLines.add(new String[]{failParam});
+                                                            outputLines.add(new String[]{"NUM C: " + numC});
+                                                            outputLines.add(new String[]{"MINC: " + minC});
+                                                            outputLines.add(new String[]{"MAXC: " + maxC});
+                                                            outputLines.add(generateAggregateHeadingLine(numS));
                                                             String hashString = hashingService.hash(topology,
                                                                     algorithm, problemClass, objective,
                                                                     String.valueOf(percentSrcAlsoDest), failureClass,
@@ -884,10 +901,45 @@ public class AnalysisService {
                 }
             }
         }
+        log.info("Possible combinations: " + numPossible);
         return outputLines;
     }
 
-    private String[] generateAggregateHeadingLine(Integer numS){
+    private boolean checkIfPossible(String topology, String algorithm, String problemClass, String objective,
+                                    Double percentSrcAlsoDest, String failureClass, Integer numFails,
+                                    Integer numFailsAllowed, Double srcFailPercent, Double dstFailPercent,
+                                    Boolean ignoreFailures, Integer numC, List<Integer> minC, List<Integer> maxC,
+                                    Integer numS, Integer numD) {
+        if(!Objects.equals(numS, numD) || (percentSrcAlsoDest == 1.0 && numS == 7)){
+            return false;
+        }
+        int numSInD = (int) Math.ceil(percentSrcAlsoDest * numS);
+        int exclusiveS = numS - numSInD;
+        boolean completeOverlap = numSInD == numD && exclusiveS == 0;
+        if (numSInD > numD || (completeOverlap && numD == 1) || (topologyService.getTopologyById(topology).getNodes().size() - exclusiveS < numD)) {
+            return false;
+        }
+        if (failureClass.equals("Node")) {
+            int numSFail = (int) Math.ceil(srcFailPercent * numS);
+            int numDFail = (int) Math.ceil(dstFailPercent * numD);
+            if (numSFail > numFails || numDFail > numFails || (numSFail - numSInD + numDFail > numFails))
+                return false;
+        }
+        if (minC.isEmpty() || maxC.isEmpty()) {
+            if (!problemClass.equals("Flex") || !(minC.isEmpty() && maxC.isEmpty())) {
+                return false;
+            }
+        }
+        else{
+            if(problemClass.equals("Flex")){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    private String[] generateAggregateHeadingLine(Integer numS) {
         return makeArray(
                 "NUMS: " + numS,
                 "AvgRunTime",
@@ -899,27 +951,27 @@ public class AnalysisService {
                 "%Feas",
                 "%Feas-0",
                 "%Feas-1",
-                "%Surv",
+                /*"%Surv",
                 "%Surv-0",
-                "%Surv-1",
+                "%Surv-1",*/
                 "%SurvFeas",
                 "%SurvFeas-0",
                 "%SurvFeas-1",
-                "AvgLinksUsed",
+                /*"AvgLinksUsed",
                 "AvgLinksUsed-0",
-                "AvgLinksUsed-1",
+                "AvgLinksUsed-1",*/
                 "AvgCostLinksUsed",
                 "AvgCostLinksUsed-0",
                 "AvgCostLinksUsed-1",
                 "AvgNumPaths",
                 "AvgNumPaths-0",
                 "AvgNumPaths-1",
-                "AvgIntPaths",
+                /*"AvgIntPaths",
                 "AvgIntPaths-0",
                 "AvgIntPaths-1",
                 "AvgDisPaths",
                 "AvgDisPaths-0",
-                "AvgDisPaths-1",
+                "AvgDisPaths-1",*/
                 "AvgPathLen",
                 "AvgPathLen-0",
                 "AvgPathLen-1",
@@ -930,11 +982,10 @@ public class AnalysisService {
     }
 
     private String[] generateAggregateMetricLine(Integer numD, AggregateAnalyzedSet agSet) {
-        if(agSet == null){
+        if (agSet == null) {
             return new String[]{"NUMD: " + String.valueOf(numD)};
-        }
-        else{
-            return makeArray( "NUMD: " + String.valueOf(numD),
+        } else {
+            return makeArray("NUMD: " + String.valueOf(numD),
                     agSet.getAvgRunningTimeSeconds(),
                     agSet.getAvgRunningTimeSecondsConfInterval().get(0),
                     agSet.getAvgRunningTimeSecondsConfInterval().get(1),
@@ -944,40 +995,40 @@ public class AnalysisService {
                     agSet.getPercentFeasible(),
                     agSet.getPercentFeasibleConfInterval().get(0),
                     agSet.getPercentFeasibleConfInterval().get(1),
-                    agSet.getPercentSurvivable(),
+                    /*agSet.getPercentSurvivable(),
                     agSet.getPercentSurvivableConfInterval().get(0),
-                    agSet.getPercentSurvivableConfInterval().get(1),
+                    agSet.getPercentSurvivableConfInterval().get(1),*/
                     agSet.getPercentSurvivableForFeasible(),
                     agSet.getPercentSurvivableForFeasibleConfInterval().get(0),
                     agSet.getPercentSurvivableForFeasibleConfInterval().get(1),
-                    agSet.getAvgLinksUsedForFeasible(),
+                    /*agSet.getAvgLinksUsedForFeasible(),
                     agSet.getAvgLinksUsedForFeasibleConfInterval().get(0),
-                    agSet.getAvgLinksUsedForFeasibleConfInterval().get(1),
+                    agSet.getAvgLinksUsedForFeasibleConfInterval().get(1),*/
                     agSet.getAvgCostLinksUsedForFeasible(),
                     agSet.getAvgCostLinksUsedForFeasibleConfInterval().get(0),
                     agSet.getAvgCostLinksUsedForFeasibleConfInterval().get(1),
                     agSet.getAvgNumPathsForFeasible(),
                     agSet.getAvgNumPathsForFeasibleConfInterval().get(0),
                     agSet.getAvgNumPathsForFeasibleConfInterval().get(1),
-                    agSet.getAvgIntactPathsForFeasible(),
+                    /*agSet.getAvgIntactPathsForFeasible(),
                     agSet.getAvgIntactPathsForFeasibleConfInterval().get(0),
                     agSet.getAvgIntactPathsForFeasibleConfInterval().get(1),
                     agSet.getAvgDisconnectedPathsForFeasible(),
                     agSet.getAvgDisconnectedPathsForFeasibleConfInterval().get(0),
-                    agSet.getAvgDisconnectedPathsForFeasibleConfInterval().get(1),
+                    agSet.getAvgDisconnectedPathsForFeasibleConfInterval().get(1),*/
                     agSet.getAvgAvgPathLength(),
                     agSet.getAvgAvgPathLengthConfInterval().get(0),
                     agSet.getAvgAvgPathLengthConfInterval().get(1),
                     agSet.getAvgAvgPathCost(),
                     agSet.getAvgAvgPathCostConfInterval().get(0),
                     agSet.getAvgAvgPathCostConfInterval().get(1)
-                    );
+            );
         }
     }
 
-    private String[] makeArray(Object... args){
+    private String[] makeArray(Object... args) {
         String[] line = new String[args.length];
-        for(int i = 0; i < args.length; i++){
+        for (int i = 0; i < args.length; i++) {
             line[i] = String.valueOf(args[i]);
         }
         return line;
