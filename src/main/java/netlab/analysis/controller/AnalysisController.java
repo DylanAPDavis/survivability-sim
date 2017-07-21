@@ -98,6 +98,11 @@ public class AnalysisController {
                 }
             }
             paramsBySeed.add(seedParams);
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         List<AggregateAnalyzedSet> aggregateSets = new ArrayList<>();
         List<SimulationParameters> primaryParamList = paramsBySeed.get(0);

@@ -614,7 +614,12 @@ public class AnalysisService {
         Double dstAvgPathCostPerChosen = 0.0;
         Double dstAvgDisconnectedPathsPerChosen = 0.0;
 
+        int numSets = 0;
         for (AnalyzedSet analyzedSet : analyzedSets) {
+            if (analyzedSet == null){
+                continue;
+            }
+            numSets++;
             requestSetIds.add(analyzedSet.getRequestSetId());
             seeds.add(analyzedSet.getSeed());
             totalRunningTime += analyzedSet.getTotalRunningTimeSeconds();
@@ -665,7 +670,6 @@ public class AnalysisService {
             dstAvgDisconnectedPathsPerChosen = analyzedSet.getDstAvgDisconnectedPathsPerChosen();
         }
 
-        Integer numSets = analyzedSets.size();
         AggregateAnalyzedSet aggregateAnalyzedSet = AggregateAnalyzedSet.builder()
                 .requestSetIds(requestSetIds)
                 .seeds(seeds)
@@ -783,7 +787,12 @@ public class AnalysisService {
     private List<Double> calcConfInterval(Double metricMean, List<AnalyzedSet> analyzedSets, String fieldName) {
         List<Double> confInterval = new ArrayList<>();
         Double squaredDifferenceSum = 0.0;
+        int numSets = 0;
         for (AnalyzedSet as : analyzedSets) {
+            if(as == null){
+                continue;
+            }
+            numSets++;
             try {
                 Double metricValue = Double.valueOf(new PropertyDescriptor(fieldName, AnalyzedSet.class).getReadMethod().invoke(as).toString());
                 squaredDifferenceSum += (metricValue - metricMean) * (metricValue - metricMean);
@@ -791,9 +800,9 @@ public class AnalysisService {
                 e.printStackTrace();
             }
         }
-        Double variance = squaredDifferenceSum / analyzedSets.size();
+        Double variance = squaredDifferenceSum / numSets;
         Double stdDev = Math.sqrt(variance);
-        Double confDist = 1.96 * stdDev / Math.sqrt(analyzedSets.size());
+        Double confDist = 1.96 * stdDev / Math.sqrt(numSets);
         confInterval.add(metricMean - confDist);
         confInterval.add(metricMean + confDist);
         return confInterval;

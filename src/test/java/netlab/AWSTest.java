@@ -79,8 +79,7 @@ public class AWSTest {
 
     @Test
     public void analysisGeneration(){
-        //List<Long> seeds = Arrays.asList(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L);
-        List<Long> seeds = Arrays.asList(2L);
+        List<Long> seeds = Arrays.asList(3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L);
         analysisController.analyzeSeeds(seeds);
     }
 
@@ -117,7 +116,8 @@ public class AWSTest {
          */
         //List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
 
-        List<Long> seeds = Arrays.asList(1L, 2L);
+        List<Long> seeds = Arrays.asList(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L,
+                18L, 19L, 20L, 21L, 22L, 23L, 24L, 25L, 26L, 27L, 28L, 29L,30L);
         List<String> topologyIds = Collections.singletonList("NSFnet");
         List<String> problemClasses = Arrays.asList("Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint");
         List<String> objectives = Collections.singletonList("TotalCost");
