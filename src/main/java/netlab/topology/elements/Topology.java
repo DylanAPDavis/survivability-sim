@@ -38,6 +38,16 @@ public class Topology {
         nodeLinkMap = makeNodeLinkMap(nodes, links);
     }
 
+    public void setLinks(Set<Link> links){
+        this.links = links;
+        this.nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
+    }
+
+    public void setNodes(Set<Node> nodes){
+        this.nodes = nodes;
+        this.nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
+    }
+
     private Map<Node, Set<Link>> makeNodeLinkMap(Set<Node> nodes, Set<Link> links){
         Map<Node, Set<Link>> nodeLinkMap = nodes.stream().collect(Collectors.toMap(n -> n, n -> new HashSet<>()));
         for(Link link : links){

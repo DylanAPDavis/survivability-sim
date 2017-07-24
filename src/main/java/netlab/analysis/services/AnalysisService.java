@@ -842,20 +842,29 @@ public class AnalysisService {
         List<String[]> outputLines = new ArrayList<>();
         int numPossible = 0;
 
+        int lineNum = 1;
         for (Boolean ignoreFailures : agParams.getIgnoreFailures()) {
             outputLines.add(new String[]{"IGNORE F: " + ignoreFailures});
+            lineNum++;
             for (String topology : agParams.getTopologyIds()) {
                 outputLines.add(new String[]{"TOPOLOGY: " + topology});
+                lineNum++;
                 for (String algorithm : agParams.getAlgorithms()) {
                     outputLines.add(new String[]{"ALGORITHM: " + algorithm});
+                    lineNum++;
                     for (String problemClass : agParams.getProblemClasses()) {
                         outputLines.add(new String[]{"PROBLEM CLASS: " + problemClass});
+                        lineNum++;
                         for (String objective : agParams.getObjectives()) {
                             outputLines.add(new String[]{"OBJECTIVE: " + objective});
+                            lineNum++;
                             for (Double percentSrcAlsoDest : agParams.getPercentSrcAlsoDests()) {
                                 outputLines.add(new String[]{"SRC/DEST OVERLAP: " + percentSrcAlsoDest});
-                                for (String failureClass : agParams.getFailureMap().keySet()) {
+                                lineNum++;
+                                List<String> failureClasses = agParams.getFailureMap().keySet().stream().sorted().collect(Collectors.toList());
+                                for (String failureClass : failureClasses) {
                                     outputLines.add(new String[]{"FAILURE TYPE: " + failureClass});
+                                    lineNum++;
                                     List<List<Double>> allParamsPerClass = agParams.getFailureMap().get(failureClass);
                                     for (List<Double> failureParams : allParamsPerClass) {
                                         Integer numFails = (int) Math.round(failureParams.get(0));
@@ -882,10 +891,15 @@ public class AnalysisService {
                                                             }
                                                             numPossible++;
                                                             outputLines.add(new String[]{failParam});
+                                                            lineNum++;
                                                             outputLines.add(new String[]{"NUM C: " + numC});
+                                                            lineNum++;
                                                             outputLines.add(new String[]{"MINC: " + minC});
+                                                            lineNum++;
                                                             outputLines.add(new String[]{"MAXC: " + maxC});
+                                                            lineNum++;
                                                             outputLines.add(generateAggregateHeadingLine(numS));
+                                                            lineNum++;
                                                             String hashString = hashingService.hash(topology,
                                                                     algorithm, problemClass, objective,
                                                                     String.valueOf(percentSrcAlsoDest), failureClass,
@@ -897,6 +911,8 @@ public class AnalysisService {
                                                                     String.valueOf(numS), String.valueOf(numD));
                                                             AggregateAnalyzedSet agSet = outputMap.getOrDefault(hashString, null);
                                                             outputLines.add(generateAggregateMetricLine(numD, agSet));
+                                                            lineNum++;
+                                                            System.out.println(hashString + ": " + lineNum);
                                                         }
                                                     }
                                                 }
