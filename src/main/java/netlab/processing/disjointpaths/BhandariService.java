@@ -92,35 +92,42 @@ public class BhandariService {
         List<List<Link>> paths = new ArrayList<>();
 
         // Remove all inverse edges taken in new shortest path (along with mapped edge in original shortest path)
+        boolean removedFromSP = false;
         Set<Link> combinedEdges = new HashSet<>();
         for (Integer index = 1; index < tempPaths.size(); index++) {
-            List<Link> tempPath = tempPaths.get(index);
-            for (Link modSpEdge : tempPath) {
+            List<Link> outputPath = new ArrayList<>(tempPaths.get(index));
+            boolean removedFromThisPath = false;
+            for (Link modSpEdge : tempPaths.get(index)) {
                 if (reversedToOriginalMap.containsKey(modSpEdge)) {
                     Link origSpEdge = reversedToOriginalMap.get(modSpEdge);
                     shortestPath.remove(origSpEdge);
-                } else {
-                    combinedEdges.add(modSpEdge);
+                    removedFromSP = true;
+                    removedFromThisPath = true;
                 }
             }
+            if(removedFromThisPath){
+                combinedEdges.addAll(outputPath);
+            }
+            else{
+                paths.add(outputPath);
+            }
         }
-        combinedEdges.addAll(shortestPath);
+        if(removedFromSP) {
+            combinedEdges.addAll(shortestPath);
+        }
+        else{
+            paths.add(shortestPath);
+        }
 
+        if(paths.size() == k){
+            return paths;
+        }
+
+        // Use the edges from paths that had to be split up
         topo.setLinks(combinedEdges);
 
-        // Get all the paths
+        // With those edges, perform a DFS to build up k - |paths| paths
 
-        for(Integer pIndex = 0; pIndex < k; pIndex++){
-            List<Link> sp = bellmanFordService.shortestPath(topo, source, dest);
-            if(sp.isEmpty()){
-                log.info("Couldn't find disjoint path from " + source.getId() + " to " + dest.getId());
-                log.info("Returning all found paths");
-                return paths;
-            }
-            paths.add(sp);
-            combinedEdges.removeAll(sp);
-            topo.setLinks(combinedEdges);
-        }
 
         return paths;
     }
