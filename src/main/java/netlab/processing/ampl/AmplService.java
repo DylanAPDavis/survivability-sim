@@ -34,7 +34,7 @@ public class AmplService {
             ampl.solve();
             long endTime = System.nanoTime();
             duration = (endTime - startTime)/1e9;
-            System.out.println("Solution took: " + duration + " seconds");
+            log.info("Solution took: " + duration + " seconds");
             com.ampl.Objective obj = ampl.getObjective(objective.getCode());
             String result = obj.result();
             if(result.toLowerCase().contains("solved")){

@@ -23,16 +23,17 @@ public class BhandariService {
     }
 
 
-    public List<List<Link>> computeDisjointPaths(Topology topo, Node source, Node dest, Integer k, Boolean partial, Set<Failure> failures)
+    public List<List<Link>> computeDisjointPaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA,
+                                                 Boolean partial, Set<Failure> failures)
     {
-        if(k == 0)
+        if(numC == 0)
             return new ArrayList<>();
 
         // Bhandari's algorithm
-        return computePaths(topo, source, dest, k, partial, failures);
+        return computePaths(topo, source, dest, numC, numFA, partial, failures);
     }
 
-    private List<List<Link>> computePaths(Topology topo, Node source, Node dest, Integer k, Boolean partial, Set<Failure> failures){
+    private List<List<Link>> computePaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA, Boolean partial, Set<Failure> failures){
 
         // Find the first shortest path
         List<Link> shortestPath = bellmanFordService.shortestPath(topo, source, dest);
@@ -45,6 +46,8 @@ public class BhandariService {
         List<List<Link>> paths = new ArrayList<>();
         paths.add(shortestPath);
 
+        int k = numC;
+
         if(k == 1){
             return paths;
         }
@@ -52,22 +55,35 @@ public class BhandariService {
         List<List<Link>> tempPaths = new ArrayList<>(paths);
         Map<Link, Link> reversedToOriginalMap = new HashMap<>();
 
-        // Modify the topology
+        //TODO: Modify the topology (if necessary) by removing nodes and replacing with incoming/outgoing nodes
         Topology modifiedTopo = new Topology(topo.getId(), new HashSet<>(topo.getNodes()), new HashSet<>(topo.getLinks()));
 
-        for(Integer pIndex = 1; pIndex < k; pIndex++){
+
+        // Convert failures to a set of links
+        Set<Link> failureLinks = convertFailuresToLinks(failures);
+        Set<Link> alreadyConsideredFailureLinks = new HashSet<>();
+        for(Integer pIndex = 1; pIndex < k && k <= numC + numFA; pIndex++){
 
             // Get the previous shortest path
             List<Link> prevPath = tempPaths.get(pIndex-1);
 
             // Reverse and give negative weight to edges in shortest path
             for(Link pathEdge : prevPath){
-                Long reversedMetric = -1 * pathEdge.getWeight();
-                Link reversedEdge = new Link(pathEdge.getTarget(), pathEdge.getOrigin(), reversedMetric);
-                reversedToOriginalMap.put(reversedEdge, pathEdge);
-                Set<Link> allBetweenPair = findAllBetweenPair(pathEdge.getOrigin(), pathEdge.getTarget(), modifiedTopo.getLinks());
-                modifiedTopo.getLinks().removeAll(allBetweenPair);
-                modifiedTopo.getLinks().add(reversedEdge);
+                // If this link (or internal link) is in the set of failures, reverse it and give it negative weight
+                if(failureLinks.contains(pathEdge)) {
+                    Long reversedMetric = -1 * pathEdge.getWeight();
+                    Link reversedEdge = new Link(pathEdge.getTarget(), pathEdge.getOrigin(), reversedMetric);
+                    reversedToOriginalMap.put(reversedEdge, pathEdge);
+                    Set<Link> allBetweenPair = findAllBetweenPair(pathEdge.getOrigin(), pathEdge.getTarget(), modifiedTopo.getLinks());
+                    modifiedTopo.getLinks().removeAll(allBetweenPair);
+                    modifiedTopo.getLinks().add(reversedEdge);
+                    // If this is a new failure link, increase the number of paths that you will have to get
+                    // (Up until numC + numFA)
+                    if(!alreadyConsideredFailureLinks.contains(pathEdge)){
+                        k++;
+                        alreadyConsideredFailureLinks.add(pathEdge);
+                    }
+                }
             }
 
             // Find the new shortest path
@@ -78,6 +94,36 @@ public class BhandariService {
         return combine(shortestPath, tempPaths, reversedToOriginalMap, modifiedTopo, source, dest, k);
 
     }
+
+    private Set<Link> convertFailuresToLinks(Set<Failure> failures) {
+        Set<Link> failureLinks = new HashSet<>();
+        for(Failure failure : failures){
+            if(failure.getLink() != null){
+                failureLinks.add(failure.getLink());
+            }
+            if(failure.getNode() != null){
+                Node failNode = failure.getNode();
+                failureLinks.add(buildInternalLink(failNode));
+            }
+        }
+        return failureLinks;
+    }
+
+    private Link buildInternalLink(Node node){
+        Node incomingNode = Node.builder()
+                .id(node.getId() + "-incoming")
+                .build();
+        Node outgoingNode = Node.builder()
+                .id(node.getId() + "-outgoing")
+                .build();
+        return Link.builder()
+                .id(node.getId() + "-internal")
+                .origin(incomingNode)
+                .target(outgoingNode)
+                .weight(0L)
+                .build();
+    }
+
 
     private Set<Link> findAllBetweenPair(Node src, Node dst, Set<Link> edges){
         return edges.stream()
@@ -126,7 +172,7 @@ public class BhandariService {
         // Use the edges from paths that had to be split up
         topo.setLinks(combinedEdges);
 
-        // With those edges, perform a DFS to build up k - |paths| paths
+        //TODO: With those edges, perform a DFS to build up k - |paths| paths
 
 
         return paths;

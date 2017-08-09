@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public enum Algorithm {
-    ServiceILP("ServiceILP");
+    ServiceILP("ServiceILP"),
+    PartialBhandari("PartialBhandari");
 
     private String code;
 

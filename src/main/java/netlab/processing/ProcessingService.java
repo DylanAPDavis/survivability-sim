@@ -2,6 +2,7 @@ package netlab.processing;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ampl.AmplService;
+import netlab.processing.disjointpaths.PartialBhandariService;
 import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
@@ -25,12 +26,15 @@ public class ProcessingService {
 
     private AmplService amplService;
 
+    private PartialBhandariService partialBhandariService;
+
     private TopologyService topoService;
 
     @Autowired
-    public ProcessingService(TopologyService topologyService, AmplService amplService) {
+    public ProcessingService(TopologyService topologyService, AmplService amplService, PartialBhandariService partialBhandariService) {
         this.topoService = topologyService;
         this.amplService = amplService;
+        this.partialBhandariService = partialBhandariService;
     }
 
     public RequestSet processRequestSet(RequestSet requestSet) {
@@ -50,6 +54,8 @@ public class ProcessingService {
         switch(algorithm){
             case ServiceILP:
                 amplService.solve(request, problemClass, objective, topology, requestSetId);
+            case PartialBhandari:
+                partialBhandariService.solve(request, problemClass, objective, topology, requestSetId);
         }
     }
 }
