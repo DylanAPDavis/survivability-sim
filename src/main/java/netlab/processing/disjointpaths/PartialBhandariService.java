@@ -59,8 +59,10 @@ public class PartialBhandariService {
 
         Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
         List<SourceDestPair> sortedPairs = sortPairsByPathCost(pairs, topology);
+        boolean nodesCanFail = failureSet.stream().anyMatch(f -> f.getNode() != null);
         for(SourceDestPair pair : sortedPairs){
-            List<List<Link>> paths = bhandariService.computeDisjointPaths(topology, pair.getSrc(), pair.getDst(), numConnections, totalNumFailsAllowed, true, failureSet);
+            List<List<Link>> paths = bhandariService.computeDisjointPaths(topology, pair.getSrc(), pair.getDst(), numConnections, totalNumFailsAllowed, nodesCanFail, failureSet);
+            System.out.println(paths);
             //TODO: Add these to a path map
             //TODO: Determine if sufficient number of connections have been established. If not, continue looping through pairs.
         }

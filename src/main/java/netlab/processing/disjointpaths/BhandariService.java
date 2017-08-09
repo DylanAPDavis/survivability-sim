@@ -24,16 +24,16 @@ public class BhandariService {
 
 
     public List<List<Link>> computeDisjointPaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA,
-                                                 Boolean partial, Set<Failure> failures)
+                                                 Boolean nodesCanFail, Set<Failure> failures)
     {
         if(numC == 0)
             return new ArrayList<>();
 
         // Bhandari's algorithm
-        return computePaths(topo, source, dest, numC, numFA, partial, failures);
+        return computePaths(topo, source, dest, numC, numFA, nodesCanFail, failures);
     }
 
-    private List<List<Link>> computePaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA, Boolean partial, Set<Failure> failures){
+    private List<List<Link>> computePaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA, Boolean nodesCanFail, Set<Failure> failures){
 
         // Find the first shortest path
         List<Link> shortestPath = bellmanFordService.shortestPath(topo, source, dest);
@@ -41,7 +41,6 @@ public class BhandariService {
             log.info("No shortest path from " + source.getId() + " to " + dest.getId() + " found");
             return new ArrayList<>();
         }
-        //logPath(shortestPath, "First Shortest Path");
 
         List<List<Link>> paths = new ArrayList<>();
         paths.add(shortestPath);
@@ -58,19 +57,20 @@ public class BhandariService {
         //TODO: Modify the topology (if necessary) by removing nodes and replacing with incoming/outgoing nodes
         Topology modifiedTopo = new Topology(topo.getId(), new HashSet<>(topo.getNodes()), new HashSet<>(topo.getLinks()));
 
-
+        //TODO: Consider bidirectional failures
         // Convert failures to a set of links
         Set<Link> failureLinks = convertFailuresToLinks(failures);
         Set<Link> alreadyConsideredFailureLinks = new HashSet<>();
-        for(Integer pIndex = 1; pIndex < k && k <= numC + numFA; pIndex++){
+        for(Integer pIndex = 1; pIndex < k && k < numC + numFA; pIndex++){
 
             // Get the previous shortest path
             List<Link> prevPath = tempPaths.get(pIndex-1);
 
             // Reverse and give negative weight to edges in shortest path
+            boolean pathCanFail = false;
             for(Link pathEdge : prevPath){
                 // If this link (or internal link) is in the set of failures, reverse it and give it negative weight
-                if(failureLinks.contains(pathEdge)) {
+                if(failureLinks.contains(pathEdge) || failureLinks.size() == 0) {
                     Long reversedMetric = -1 * pathEdge.getWeight();
                     Link reversedEdge = new Link(pathEdge.getTarget(), pathEdge.getOrigin(), reversedMetric);
                     reversedToOriginalMap.put(reversedEdge, pathEdge);
@@ -80,15 +80,17 @@ public class BhandariService {
                     // If this is a new failure link, increase the number of paths that you will have to get
                     // (Up until numC + numFA)
                     if(!alreadyConsideredFailureLinks.contains(pathEdge)){
-                        k++;
+                        pathCanFail = true;
                         alreadyConsideredFailureLinks.add(pathEdge);
                     }
                 }
             }
+            if(pathCanFail){
+                k++;
+            }
 
             // Find the new shortest path
             List<Link> modShortestPath = bellmanFordService.shortestPath(modifiedTopo, source, dest);
-            //(modShortestPath, "SP on modified topology for (" + source.getUrn() + "," + dest.getUrn() + ")");
             tempPaths.add(modShortestPath);
         }
         return combine(shortestPath, tempPaths, reversedToOriginalMap, modifiedTopo, source, dest, k);
@@ -134,76 +136,60 @@ public class BhandariService {
     private List<List<Link>> combine(List<Link> shortestPath, List<List<Link>> tempPaths,
                                          Map<Link, Link> reversedToOriginalMap, Topology topo,
                                          Node source, Node dest, Integer k) {
-
-        List<List<Link>> paths = new ArrayList<>();
-
         // Remove all inverse edges taken in new shortest path (along with mapped edge in original shortest path)
-        boolean removedFromSP = false;
         Set<Link> combinedEdges = new HashSet<>();
         for (Integer index = 1; index < tempPaths.size(); index++) {
             List<Link> outputPath = new ArrayList<>(tempPaths.get(index));
-            boolean removedFromThisPath = false;
             for (Link modSpEdge : tempPaths.get(index)) {
                 if (reversedToOriginalMap.containsKey(modSpEdge)) {
                     Link origSpEdge = reversedToOriginalMap.get(modSpEdge);
                     shortestPath.remove(origSpEdge);
-                    removedFromSP = true;
-                    removedFromThisPath = true;
+                    outputPath.remove(modSpEdge);
                 }
             }
-            if(removedFromThisPath){
-                combinedEdges.addAll(outputPath);
-            }
-            else{
-                paths.add(outputPath);
-            }
-        }
-        if(removedFromSP) {
-            combinedEdges.addAll(shortestPath);
-        }
-        else{
-            paths.add(shortestPath);
+            combinedEdges.addAll(outputPath);
         }
 
-        if(paths.size() == k){
-            return paths;
-        }
+        combinedEdges.addAll(shortestPath);
 
         // Use the edges from paths that had to be split up
         topo.setLinks(combinedEdges);
 
-        //TODO: With those edges, perform a DFS to build up k - |paths| paths
+        return createPaths(topo, source, dest, k);
+    }
 
+    private List<List<Link>> createPaths(Topology topo, Node source, Node dest, Integer k) {
+        Map<Node, List<Link>> nodeLinkMap = topo.getNodeOrderedLinkMap();
 
+        // Track all links used while performing a depth-first search
+        List<Link> linksAlongPaths = new ArrayList<>();
+        depthFirstSearch(nodeLinkMap, source, dest, linksAlongPaths);
+
+        List<List<Link>> paths = new ArrayList<>();
+        int pathIndex = 0;
+        for(Link link : linksAlongPaths){
+            if(link.getOrigin().equals(source)){
+                paths.add(pathIndex, new ArrayList<>());
+            }
+            paths.get(pathIndex).add(link);
+            if(link.getTarget().equals(dest)){
+                pathIndex++;
+            }
+        }
         return paths;
     }
 
-    /*
-    private List<List<Link>> getPaths(Topology topo, Node source, Node destination){
-        Map<Node, Set<Link>> nodeLinkMap = topo.getNodeLinkMap();
-        Set<Link> sourceLinks = nodeLinkMap.get(source);
-        Set<Link> destLinks = nodeLinkMap.get(destination);
-
-        Map<String, List<Link>> paths = new ArrayList<>();
-        int pathNum = 0;
-        for(Link link : sourceLinks){
-            // Build a new path
-            List<Link> newPath = new ArrayList<>();
-            newPath.add(link);
-            String pathId = String.valueOf(pathNum);
-            paths.put(pathId, newPath);
-            pathNum++;
-            // Get the next node in the path
+    private void depthFirstSearch(Map<Node, List<Link>> nodeLinkMap, Node v, Node dest, List<Link> linksAlongPaths){
+        //discovered.add(v);
+        for(Link link : nodeLinkMap.get(v)){
             Node target = link.getTarget();
-            Set<Link> targetLinks = nodeLinkMap.get(target);
-            while(!target.equals(destination)) {
-
+            linksAlongPaths.add(link);
+            if(!target.equals(dest)){
+                depthFirstSearch(nodeLinkMap, target, dest, linksAlongPaths);
             }
-
         }
-
     }
-    */
+
 
     private void logPath(List<Link> path, String title){
         log.info(title + ": " + path.stream().map(e -> "(" + e.getOrigin().getId() + ", " + e.getTarget().getId() + ")").collect(Collectors.toList()).toString());

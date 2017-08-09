@@ -26,17 +26,19 @@ import java.util.Set;
 public class PartialBhandariServiceTest {
 
     @Autowired
-    private BhandariService bhandariService;
-
-    @Autowired
     private GenerationService generationService;
 
+    @Autowired
+    private ProcessingService processingService;
+
     @Test
-    private void basicTest(){
+    public void basicTest(){
         RequestSet requestSet = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
                 "TotalCost", 1, 1, 14, new ArrayList<>(), "Link", 1.0,
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
+        processingService.processRequestSet(requestSet);
+
     }
 
     private RequestSet createRequestSet(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
