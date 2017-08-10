@@ -6,9 +6,7 @@ import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.FailureGenerationService;
 import netlab.submission.services.GenerationService;
-import netlab.topology.elements.Failure;
-import netlab.topology.elements.Node;
-import netlab.topology.elements.Topology;
+import netlab.topology.elements.*;
 import netlab.topology.services.TopologyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,7 +36,8 @@ public class PartialBhandariServiceTest {
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
         processingService.processRequestSet(requestSet);
-
+        Map<SourceDestPair, Map<String, Path>> pathMap = requestSet.getRequests().values().iterator().next().getChosenPaths();
+        System.out.println(pathMap);
     }
 
     private RequestSet createRequestSet(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

@@ -51,27 +51,79 @@ public class PartialBhandariService {
         log.info("Solution took: " + duration + " seconds");
         request.setChosenPaths(paths);
         request.setRunningTimeSeconds(duration);
+        request.setIsFeasible(true);
         return request;
     }
 
     private Map<SourceDestPair,Map<String,Path>> pathsForFlex(Set<SourceDestPair> pairs, Set<Failure> failureSet,
                                                               Integer totalNumFailsAllowed, Integer numConnections, Topology topology) {
 
-        Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
+        Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
+        Map<Failure, Set<Path>> failureToPathMap = failureSet.stream().collect(Collectors.toMap(f -> f, f -> new HashSet<>()));
         List<SourceDestPair> sortedPairs = sortPairsByPathCost(pairs, topology);
         boolean nodesCanFail = failureSet.stream().anyMatch(f -> f.getNode() != null);
+
+        int totalChosenPaths = 0;
+        int totalAtRiskPaths = 0;
+
         for(SourceDestPair pair : sortedPairs){
-            List<List<Link>> pathLinks = bhandariService.computeDisjointPaths(topology, pair.getSrc(), pair.getDst(), numConnections, totalNumFailsAllowed, nodesCanFail, failureSet);
-            System.out.println(pathLinks);
-            //TODO: Add these to a path map
-            List<Path> paths = convertToPaths(pathLinks);
-            paths = sortPathsByWeight(paths);
-            //TODO: Determine if sufficient number of connections have been established. If not, continue looping through pairs.
+            List<Path> paths = findAndSortPaths(topology, pair.getSrc(), pair.getDst(),
+                    numConnections, totalNumFailsAllowed, nodesCanFail, failureSet);
+            // For each new path, figure out if adding it will get you any closer to goal
+            // Will not get you closer if it will be disconnected by X failures shared by an existing path
+            int id = 0;
+            for(Path newPath : paths){
+                boolean shouldBeAdded = true;
+                for(Failure failure : failureSet){
+                    // If this failure is in this path
+                    if(determineIfFailureIsInPath(failure, newPath)){
+                        // If this failure already could disconnect a chosen path, don't keep this new path
+                        if(failureToPathMap.get(failure).size() > 0){
+                            shouldBeAdded = false;
+                            break;
+                        }
+                        else{
+                            totalAtRiskPaths++;
+                            failureToPathMap.get(failure).add(newPath);
+                        }
+                    }
+                }
+                if(shouldBeAdded){
+                    pathMap.get(pair).put(String.valueOf(id), newPath);
+                    id++;
+                    totalChosenPaths++;
+                }
+                if(totalChosenPaths - Math.min(totalAtRiskPaths, totalNumFailsAllowed) >= numConnections){
+                    break;
+                }
+            }
+            if(totalChosenPaths - Math.min(totalAtRiskPaths, totalNumFailsAllowed) >= numConnections){
+                break;
+            }
         }
-        return new HashMap<>();
+        return pathMap;
     }
 
-    private List<List<Link>> sortPathsByWeight(List<Path> paths) {
+    private List<Path> findAndSortPaths(Topology topology, Node src, Node dst, Integer numConnections,
+                                        Integer totalNumFailsAllowed, boolean nodesCanFail, Set<Failure> failureSet){
+        List<List<Link>> pathLinks = bhandariService.computeDisjointPaths(topology, src, dst,
+                numConnections, totalNumFailsAllowed, nodesCanFail, failureSet);
+        List<Path> paths = convertToPaths(pathLinks);
+        return sortPathsByWeight(paths);
+    }
+
+    private boolean determineIfFailureIsInPath(Failure failure, Path newPath) {
+        if(failure.getNode() != null){
+            return newPath.getNodeIds().contains(failure.getNode().getId());
+        }
+        else{
+            return newPath.getLinkIds().contains(failure.getLink().getId());
+        }
+    }
+
+
+    private List<Path> sortPathsByWeight(List<Path> paths) {
+        return paths.stream().sorted(Comparator.comparing(Path::getTotalWeight)).collect(Collectors.toList());
     }
 
     private List<Path> convertToPaths(List<List<Link>> pathLinks){

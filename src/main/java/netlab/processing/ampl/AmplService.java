@@ -364,9 +364,7 @@ public class AmplService {
             else{
                 List<Link> links = new ArrayList<>();
                 links.add(link);
-                Path newPath = Path.builder()
-                        .links(links)
-                        .build();
+                Path newPath = new Path(links);
                 pairMap.put(pathId, newPath);
             }
         }
