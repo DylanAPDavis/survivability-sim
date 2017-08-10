@@ -6,8 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -20,4 +22,25 @@ public class Path implements Serializable {
 
     private Set<String> linkIds;
     private Set<String> nodeIds;
+
+    private Long totalWeight;
+
+    public Path(List<Link> links){
+        this.links = links;
+        this.nodes = getNodes(links);
+        this.linkIds = links.stream().map(Link::getId).collect(Collectors.toSet());
+        this.nodeIds = this.nodes.stream().map(Node::getId).collect(Collectors.toSet());
+        totalWeight = links.stream().map(Link::getWeight).reduce(0L, (w1, w2) -> w1 + w2);
+    }
+
+
+    private List<Node> getNodes(List<Link> links){
+        List<Node> nodes = new ArrayList<>();
+        for(Link link : links){
+            nodes.add(link.getOrigin());
+        }
+        nodes.add(links.get(links.size()-1).getTarget());
+        return nodes;
+    }
+
 }
