@@ -55,7 +55,8 @@ public class BhandariService {
         Map<Link, Link> reversedToOriginalMap = new HashMap<>();
 
         //TODO: Modify the topology (if necessary) by removing nodes and replacing with incoming/outgoing nodes
-        Topology modifiedTopo = new Topology(topo.getId(), new HashSet<>(topo.getNodes()), new HashSet<>(topo.getLinks()));
+        Topology modifiedTopo = nodesCanFail ?
+                makeNodeFailTopo(topo) : new Topology(topo.getId(), new HashSet<>(topo.getNodes()), new HashSet<>(topo.getLinks()));
 
         //TODO: Consider bidirectional failures
         // Convert failures to a set of links
@@ -95,6 +96,23 @@ public class BhandariService {
         }
         return combine(shortestPath, tempPaths, reversedToOriginalMap, modifiedTopo, source, dest, k);
 
+    }
+
+    private Topology makeNodeFailTopo(Topology topo) {
+        // For each node n, create an "n-incoming" node and "n-outgoing" node, and connect them with an internal link
+        // Connect all incoming edges to n to the new incoming ndoe, and all outgoing edges from n from the new outgoing node
+        Set<Node> originalNodes = topo.getNodes();
+        Set<Link> internalLinks = originalNodes.stream().map(this::buildInternalLink).collect(Collectors.toSet());
+        Set<Node> incomingNodes = new HashSet<>();
+        Set<Node> outgoingNodes = new HashSet<>();
+        for(Link internalLink : internalLinks){
+            incomingNodes.add(internalLink.getOrigin());
+            outgoingNodes.add(internalLink.getTarget());
+        }
+        Set<Link> modifiedLinks = new HashSet<>(topo.getLinks());
+        for(Link link : modifiedLinks){
+
+        }
     }
 
     private Set<Link> convertFailuresToLinks(Set<Failure> failures) {
