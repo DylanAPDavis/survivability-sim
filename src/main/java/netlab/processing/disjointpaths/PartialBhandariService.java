@@ -75,6 +75,7 @@ public class PartialBhandariService {
             int id = 0;
             for(Path newPath : paths){
                 boolean shouldBeAdded = true;
+                boolean atRisk = false;
                 for(Failure failure : failureSet){
                     // If this failure is in this path
                     if(determineIfFailureIsInPath(failure, newPath)){
@@ -84,10 +85,13 @@ public class PartialBhandariService {
                             break;
                         }
                         else{
-                            totalAtRiskPaths++;
+                            atRisk = true;
                             failureToPathMap.get(failure).add(newPath);
                         }
                     }
+                }
+                if(atRisk){
+                    totalAtRiskPaths++;
                 }
                 if(shouldBeAdded){
                     pathMap.get(pair).put(String.valueOf(id), newPath);

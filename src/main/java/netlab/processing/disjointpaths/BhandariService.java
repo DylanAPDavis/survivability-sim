@@ -39,8 +39,8 @@ public class BhandariService {
         // Modify topology, source and dest if necessary to find node-disjoint paths
         Topology modifiedTopo = nodesCanFail ?
                 makeNodeFailTopo(topo) : new Topology(topo.getId(), new HashSet<>(topo.getNodes()), new HashSet<>(topo.getLinks()));
-        Node src = nodesCanFail ? Node.builder().id(source.getId() + "-outgoing").build() : source;
-        Node dst = nodesCanFail ? Node.builder().id(dest.getId() + "-incoming").build() : dest;
+        Node src = nodesCanFail ? Node.builder().id(source.getId() + "-incoming").build() : source;
+        Node dst = nodesCanFail ? Node.builder().id(dest.getId() + "-outgoing").build() : dest;
 
 
         // Find the first shortest path
@@ -63,14 +63,14 @@ public class BhandariService {
         Map<Link, Link> reversedToOriginalMap = new HashMap<>();
 
 
-        //TODO: Consider bidirectional failures
         // Convert failures to a set of links
+        // Also adds an inverse link for each failure to enable consideration of bidirectional failures
         Set<Link> failureLinks = convertFailuresToLinks(failures);
         Set<Link> alreadyConsideredFailureLinks = new HashSet<>();
-        for(Integer pIndex = 0; pIndex < k && k < numC + numFA; pIndex++){
+        for(Integer pIndex = 1; pIndex < k; pIndex++){
 
             // Get the previous shortest path
-            List<Link> prevPath = tempPaths.get(pIndex);
+            List<Link> prevPath = tempPaths.get(pIndex-1);
 
             // Reverse and give negative weight to edges in shortest path
             boolean pathCanFail = false;
@@ -92,7 +92,7 @@ public class BhandariService {
                     }
                 }
             }
-            if(pathCanFail){
+            if(pathCanFail && k < numC + numFA){
                 k++;
             }
 
@@ -146,12 +146,26 @@ public class BhandariService {
     private Set<Link> convertFailuresToLinks(Set<Failure> failures) {
         Set<Link> failureLinks = new HashSet<>();
         for(Failure failure : failures){
-            if(failure.getLink() != null){
-                failureLinks.add(failure.getLink());
+            Link link = failure.getLink();
+            Node node = failure.getNode();
+            if(link != null){
+                failureLinks.add(link);
+                // Add inverse link
+                Link inverse = new Link(link.getTarget(), link.getOrigin(), link.getWeight());
+                failureLinks.add(inverse);
             }
-            if(failure.getNode() != null){
+            if(node != null){
                 Node failNode = failure.getNode();
-                failureLinks.add(buildInternalLink(failNode));
+                Link internalLink = buildInternalLink(failNode);
+                failureLinks.add(internalLink);
+                // Add inverse link
+                Link inverse = Link.builder()
+                        .id(internalLink.getId())
+                        .origin(internalLink.getTarget())
+                        .target(internalLink.getOrigin())
+                        .weight(internalLink.getWeight())
+                        .build();
+                failureLinks.add(inverse);
             }
         }
         return failureLinks;
@@ -222,9 +236,9 @@ public class BhandariService {
                 pathIndex++;
             }
         }
-        if(paths.size() < k){
+        /*if(paths.size() < k){
             paths = augmentPaths(paths, k);
-        }
+        }*/
         return paths;
     }
 

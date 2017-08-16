@@ -3,6 +3,7 @@ package netlab.processing;
 import lombok.extern.slf4j.Slf4j;
 import netlab.TestConfiguration;
 import netlab.processing.disjointpaths.BhandariService;
+import netlab.submission.request.Request;
 import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.FailureGenerationService;
@@ -19,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.joining;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -32,7 +36,7 @@ public class PartialBhandariServiceTest {
     private ProcessingService processingService;
 
     @Test
-    public void basicTest(){
+    public void halfNodeFailTest(){
         RequestSet requestSet = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
                 "TotalCost", 1, 1, 6, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
@@ -40,6 +44,19 @@ public class PartialBhandariServiceTest {
         processingService.processRequestSet(requestSet);
         Map<SourceDestPair, Map<String, Path>> pathMap = requestSet.getRequests().values().iterator().next().getChosenPaths();
         log.info("Failure set: " + requestSet.getRequests().values().iterator().next().getFailures().getFailureSet());
+        printMap(pathMap);
+    }
+
+    @Test
+    public void halfLinkFailTest(){
+        RequestSet requestSet = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
+                "TotalCost", 1, 1, 10, new ArrayList<>(), "Link", 1.0,
+                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
+                2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
+        processingService.processRequestSet(requestSet);
+        Request request = requestSet.getRequests().values().iterator().next();
+        Map<SourceDestPair, Map<String, Path>> pathMap = request.getChosenPaths();
+        printFailureSet(request.getFailures().getFailureSet());
         printMap(pathMap);
     }
 
@@ -53,6 +70,17 @@ public class PartialBhandariServiceTest {
                 }
             }
         }
+    }
+
+    private void printFailureSet(Set<Failure> failures){
+        log.info("Failure set: " + failures.stream().map(f -> {
+            if(f.getLink() != null){
+                return String.format("(%s, %s)", f.getLink().getOrigin().getId(), f.getLink().getTarget().getId());
+            }
+            else{
+                return f.getNode().getId();
+            }
+        }).collect(Collectors.joining(", ")));
     }
 
     private RequestSet createRequestSet(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
