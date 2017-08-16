@@ -56,18 +56,19 @@ public class PartialBhandariService {
     }
 
     private Map<SourceDestPair,Map<String,Path>> pathsForFlex(Set<SourceDestPair> pairs, Set<Failure> failureSet,
-                                                              Integer totalNumFailsAllowed, Integer numConnections, Topology topology) {
+                                                              Integer totalNumFailsAllowed, Integer numConnections, Topology topo) {
 
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
         Map<Failure, Set<Path>> failureToPathMap = failureSet.stream().collect(Collectors.toMap(f -> f, f -> new HashSet<>()));
-        List<SourceDestPair> sortedPairs = sortPairsByPathCost(pairs, topology);
+        List<SourceDestPair> sortedPairs = sortPairsByPathCost(pairs, topo);
+        //Modify the topology (if necessary) by removing nodes and replacing with incoming/outgoing nodes
         boolean nodesCanFail = failureSet.stream().anyMatch(f -> f.getNode() != null);
 
         int totalChosenPaths = 0;
         int totalAtRiskPaths = 0;
 
         for(SourceDestPair pair : sortedPairs){
-            List<Path> paths = findAndSortPaths(topology, pair.getSrc(), pair.getDst(),
+            List<Path> paths = findAndSortPaths(topo, pair.getSrc(), pair.getDst(),
                     numConnections, totalNumFailsAllowed, nodesCanFail, failureSet);
             // For each new path, figure out if adding it will get you any closer to goal
             // Will not get you closer if it will be disconnected by X failures shared by an existing path
@@ -107,7 +108,7 @@ public class PartialBhandariService {
     private List<Path> findAndSortPaths(Topology topology, Node src, Node dst, Integer numConnections,
                                         Integer totalNumFailsAllowed, boolean nodesCanFail, Set<Failure> failureSet){
         List<List<Link>> pathLinks = bhandariService.computeDisjointPaths(topology, src, dst,
-                numConnections, totalNumFailsAllowed, nodesCanFail, failureSet);
+                numConnections, totalNumFailsAllowed, nodesCanFail, failureSet, false);
         List<Path> paths = convertToPaths(pathLinks);
         return sortPathsByWeight(paths);
     }

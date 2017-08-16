@@ -1,5 +1,6 @@
 package netlab.processing;
 
+import lombok.extern.slf4j.Slf4j;
 import netlab.TestConfiguration;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.submission.request.RequestSet;
@@ -21,6 +22,7 @@ import java.util.Set;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
+@Slf4j
 public class PartialBhandariServiceTest {
 
     @Autowired
@@ -32,12 +34,23 @@ public class PartialBhandariServiceTest {
     @Test
     public void basicTest(){
         RequestSet requestSet = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
-                "TotalCost", 1, 1, 14, new ArrayList<>(), "Link", 1.0,
+                "TotalCost", 1, 1, 6, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
         processingService.processRequestSet(requestSet);
         Map<SourceDestPair, Map<String, Path>> pathMap = requestSet.getRequests().values().iterator().next().getChosenPaths();
-        System.out.println(pathMap);
+        log.info("Failure set: " + requestSet.getRequests().values().iterator().next().getFailures().getFailureSet());
+        printMap(pathMap);
+    }
+
+    private void printMap(Map<SourceDestPair, Map<String, Path>> pathMap) {
+        for(SourceDestPair pair : pathMap.keySet()){
+            log.info(String.format("Pair: (%s, %s)", pair.getSrc().getId(), pair.getDst().getId()));
+            Map<String, Path> paths = pathMap.get(pair);
+            for(String pathId : paths.keySet()){
+                log.info(pathId + ": " + paths.get(pathId).toString());
+            }
+        }
     }
 
     private RequestSet createRequestSet(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

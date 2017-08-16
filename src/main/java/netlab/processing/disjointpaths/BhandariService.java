@@ -24,21 +24,29 @@ public class BhandariService {
 
 
     public List<List<Link>> computeDisjointPaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA,
-                                                 Boolean nodesCanFail, Set<Failure> failures)
+                                                 Boolean nodesCanFail, Set<Failure> failures, Boolean defaultBehavior)
     {
         if(numC == 0)
             return new ArrayList<>();
 
         // Bhandari's algorithm
-        return computePaths(topo, source, dest, numC, numFA, nodesCanFail, failures);
+        return computePaths(topo, source, dest, numC, numFA, nodesCanFail, failures, defaultBehavior);
     }
 
-    private List<List<Link>> computePaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA, Boolean nodesCanFail, Set<Failure> failures){
+    private List<List<Link>> computePaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA,
+                                          Boolean nodesCanFail, Set<Failure> failures, Boolean defaultBehavior){
+
+        // Modify topology, source and dest if necessary to find node-disjoint paths
+        Topology modifiedTopo = nodesCanFail ?
+                makeNodeFailTopo(topo) : new Topology(topo.getId(), new HashSet<>(topo.getNodes()), new HashSet<>(topo.getLinks()));
+        Node src = nodesCanFail ? Node.builder().id(source.getId() + "-outgoing").build() : source;
+        Node dst = nodesCanFail ? Node.builder().id(dest.getId() + "-incoming").build() : dest;
+
 
         // Find the first shortest path
-        List<Link> shortestPath = bellmanFordService.shortestPath(topo, source, dest);
+        List<Link> shortestPath = bellmanFordService.shortestPath(modifiedTopo, src, dst);
         if(shortestPath.isEmpty()){
-            log.info("No shortest path from " + source.getId() + " to " + dest.getId() + " found");
+            log.info("No shortest path from " + src.getId() + " to " + dst.getId() + " found");
             return new ArrayList<>();
         }
 
@@ -54,24 +62,22 @@ public class BhandariService {
         List<List<Link>> tempPaths = new ArrayList<>(paths);
         Map<Link, Link> reversedToOriginalMap = new HashMap<>();
 
-        //TODO: Modify the topology (if necessary) by removing nodes and replacing with incoming/outgoing nodes
-        Topology modifiedTopo = nodesCanFail ?
-                makeNodeFailTopo(topo) : new Topology(topo.getId(), new HashSet<>(topo.getNodes()), new HashSet<>(topo.getLinks()));
 
         //TODO: Consider bidirectional failures
         // Convert failures to a set of links
         Set<Link> failureLinks = convertFailuresToLinks(failures);
         Set<Link> alreadyConsideredFailureLinks = new HashSet<>();
-        for(Integer pIndex = 1; pIndex < k && k < numC + numFA; pIndex++){
+        for(Integer pIndex = 0; pIndex < k && k < numC + numFA; pIndex++){
 
             // Get the previous shortest path
-            List<Link> prevPath = tempPaths.get(pIndex-1);
+            List<Link> prevPath = tempPaths.get(pIndex);
 
             // Reverse and give negative weight to edges in shortest path
             boolean pathCanFail = false;
             for(Link pathEdge : prevPath){
                 // If this link (or internal link) is in the set of failures, reverse it and give it negative weight
-                if(failureLinks.contains(pathEdge) || failureLinks.size() == 0) {
+                // If default behavior flag is set and no failures are passed in, this will produce a basic link-disjoint solution
+                if(failureLinks.contains(pathEdge) || defaultBehavior) {
                     Long reversedMetric = -1 * pathEdge.getWeight();
                     Link reversedEdge = new Link(pathEdge.getTarget(), pathEdge.getOrigin(), reversedMetric);
                     reversedToOriginalMap.put(reversedEdge, pathEdge);
@@ -91,28 +97,50 @@ public class BhandariService {
             }
 
             // Find the new shortest path
-            List<Link> modShortestPath = bellmanFordService.shortestPath(modifiedTopo, source, dest);
+            List<Link> modShortestPath = bellmanFordService.shortestPath(modifiedTopo, src, dst);
             tempPaths.add(modShortestPath);
         }
-        return combine(shortestPath, tempPaths, reversedToOriginalMap, modifiedTopo, source, dest, k);
-
+        List<List<Link>> pathLinks = combine(shortestPath, tempPaths, reversedToOriginalMap, modifiedTopo, src, dst, k);
+        return nodesCanFail ? convertToOriginalTopoLinks(pathLinks) : pathLinks;
     }
 
-    private Topology makeNodeFailTopo(Topology topo) {
+    private List<List<Link>> convertToOriginalTopoLinks(List<List<Link>> pathLinks) {
+        List<List<Link>> modifiedPaths = new ArrayList<>();
+        for(List<Link> path : pathLinks){
+            List<Link> newPath = path.stream().filter(l -> !l.getId().contains("-internal")).map(l ->
+                Link.builder()
+                        .id(l.getId())
+                        .origin(Node.builder().id(l.getOrigin().getId().replace("-outgoing", "")).build())
+                        .target(Node.builder().id(l.getTarget().getId().replace("-incoming", "")).build())
+                        .weight(l.getWeight())
+                        .build()
+            ).collect(Collectors.toList());
+            modifiedPaths.add(newPath);
+        }
+        return modifiedPaths;
+    }
+
+    Topology makeNodeFailTopo(Topology topo) {
         // For each node n, create an "n-incoming" node and "n-outgoing" node, and connect them with an internal link
         // Connect all incoming edges to n to the new incoming ndoe, and all outgoing edges from n from the new outgoing node
         Set<Node> originalNodes = topo.getNodes();
         Set<Link> internalLinks = originalNodes.stream().map(this::buildInternalLink).collect(Collectors.toSet());
-        Set<Node> incomingNodes = new HashSet<>();
-        Set<Node> outgoingNodes = new HashSet<>();
+        Set<Node> modifiedNodes = new HashSet<>();
         for(Link internalLink : internalLinks){
-            incomingNodes.add(internalLink.getOrigin());
-            outgoingNodes.add(internalLink.getTarget());
+            modifiedNodes.add(internalLink.getOrigin());
+            modifiedNodes.add(internalLink.getTarget());
         }
         Set<Link> modifiedLinks = new HashSet<>(topo.getLinks());
         for(Link link : modifiedLinks){
-
+            // Set origin to origin-outgoing
+            Node originOutgoing = Node.builder().id(link.getOrigin().getId() + "-outgoing").build();
+            link.setOrigin(originOutgoing);
+            // Set target to target-incoming
+            Node targetIncoming = Node.builder().id(link.getTarget().getId() + "-incoming").build();
+            link.setTarget(targetIncoming);
         }
+        modifiedLinks.addAll(internalLinks);
+        return new Topology(topo.getId() + "-modified", modifiedNodes, modifiedLinks);
     }
 
     private Set<Link> convertFailuresToLinks(Set<Failure> failures) {
@@ -193,6 +221,30 @@ public class BhandariService {
             if(link.getTarget().equals(dest)){
                 pathIndex++;
             }
+        }
+        if(paths.size() < k){
+            paths = augmentPaths(paths, k);
+        }
+        return paths;
+    }
+
+    private List<List<Link>> augmentPaths(List<List<Link>> paths, int k) {
+        if(k < paths.size()){
+            return paths;
+        }
+        int minIndex = 0;
+        long minWeight = Long.MAX_VALUE;
+        for(int index = 0; index < paths.size(); index++){
+            long totalWeight = paths.get(index).stream().map(Link::getWeight).reduce(0L, (w1, w2) -> w1 + w2);
+            if(totalWeight < minWeight){
+                minWeight = totalWeight;
+                minIndex = index;
+            }
+        }
+        // Duplicate the minimum weight path until there are k paths
+        int numToDuplicate = k - paths.size();
+        for(int i = 0; i < numToDuplicate; i++){
+            paths.add(new ArrayList<>(paths.get(minIndex)));
         }
         return paths;
     }

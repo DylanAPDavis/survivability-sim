@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.joining;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -41,6 +43,11 @@ public class Path implements Serializable {
         }
         nodes.add(links.get(links.size()-1).getTarget());
         return nodes;
+    }
+
+    public String toString(){
+        //return this.links.stream().map(l -> String.format("(%s, %s)", l.getOrigin().getId(), l.getTarget().getId())).collect(joining(" "));
+        return this.nodes.stream().map(Node::getId).collect(joining(", "));
     }
 
 }
