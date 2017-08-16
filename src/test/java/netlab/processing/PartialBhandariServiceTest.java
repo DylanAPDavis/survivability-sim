@@ -44,11 +44,13 @@ public class PartialBhandariServiceTest {
     }
 
     private void printMap(Map<SourceDestPair, Map<String, Path>> pathMap) {
-        for(SourceDestPair pair : pathMap.keySet()){
-            log.info(String.format("Pair: (%s, %s)", pair.getSrc().getId(), pair.getDst().getId()));
+        for(SourceDestPair pair : pathMap.keySet()){;
             Map<String, Path> paths = pathMap.get(pair);
-            for(String pathId : paths.keySet()){
-                log.info(pathId + ": " + paths.get(pathId).toString());
+            if(paths.size() > 0) {
+                log.info(String.format("Pair: (%s, %s)", pair.getSrc().getId(), pair.getDst().getId()));
+                for (String pathId : paths.keySet()) {
+                    log.info(pathId + ": " + paths.get(pathId).toString());
+                }
             }
         }
     }
