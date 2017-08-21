@@ -178,12 +178,11 @@ public class FailureGenerationService {
         Map<Node, Integer> dstNumFailsMap = new HashMap<>();
         Map<Node, List<List<Failure>>> dstFailureGroupsMap = new HashMap<>();
 
-        Topology topo = topologyService.getTopologyById(params.getTopologyId());
-
         // Assign random number of cuts between min and max
         // Except: cap out at the number of failureSet for a pair, so you're not trying to cut more than than the
         // size of the failure set
-        if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.FlowSharedF) || problemClass.equals(ProblemClass.EndpointSharedF)){
+        if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.FlowSharedF)
+                || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.Combined)){
             if(minMaxFails.size() == 2) {
                 numFails = Math.min(failureCollection.getFailureSet().size(), selectionService.randomInt(minMaxFails.get(0), minMaxFails.get(1), rng));
             }
@@ -288,7 +287,8 @@ public class FailureGenerationService {
                             dstFailuresMap, failureSetSize, dst);
                 }
             }
-            else if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.FlowSharedF) || problemClass.equals(ProblemClass.EndpointSharedF)){
+            else if(problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.FlowSharedF)
+                    || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.Combined)){
                 failureSetSize = selectionService.randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
                 failures = generateFailureSet(topo.getNodes(), filteredLinks,
                         failureSetSize, failureClass, params.getFailureProb(), params.getMinMaxFailureProb(),

@@ -211,7 +211,8 @@ public class AnalysisService {
         Long totalPathCost = 0L;
 
         // Check the high-level attributes
-        if (problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.FlowSharedF)) {
+        if (problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.EndpointSharedF)
+                || problemClass.equals(ProblemClass.FlowSharedF) || problemClass.equals(ProblemClass.Combined)) {
             List<List<Failure>> failureGroups = failureColl.getFailureGroups();
             Map<Node, List<List<Failure>>> srcFailureGroupsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> failureGroups));
             Map<Node, List<List<Failure>>> dstFailureGroupsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> failureGroups));
@@ -991,6 +992,15 @@ public class AnalysisService {
                 "AvgNumPaths",
                 "AvgNumPaths-0",
                 "AvgNumPaths-1",
+                "AvgPairNumPaths",
+                "AvgPairNumPaths-0",
+                "AvgPairNumPaths-1",
+                "AvgSrcNumPaths",
+                "AvgSrcNumPaths-0",
+                "AvgSrcNumPaths-1",
+                "AvgDstNumPaths",
+                "AvgDstNumPaths-0",
+                "AvgDstNumPaths-1",
                 /*"AvgIntPaths",
                 "AvgIntPaths-0",
                 "AvgIntPaths-1",
@@ -1035,6 +1045,15 @@ public class AnalysisService {
                     agSet.getAvgNumPathsForFeasible(),
                     agSet.getAvgNumPathsForFeasibleConfInterval().get(0),
                     agSet.getAvgNumPathsForFeasibleConfInterval().get(1),
+                    agSet.getPairAvgPaths(),
+                    agSet.getPairAvgPathsConfInterval().get(0),
+                    agSet.getPairAvgPathsConfInterval().get(1),
+                    agSet.getSrcAvgPaths(),
+                    agSet.getSrcAvgPathsConfInterval().get(0),
+                    agSet.getSrcAvgPathsConfInterval().get(1),
+                    agSet.getDstAvgPaths(),
+                    agSet.getDstAvgPathsConfInterval().get(0),
+                    agSet.getDstAvgPathsConfInterval().get(1),
                     /*agSet.getAvgIntactPathsForFeasible(),
                     agSet.getAvgIntactPathsForFeasibleConfInterval().get(0),
                     agSet.getAvgIntactPathsForFeasibleConfInterval().get(1),

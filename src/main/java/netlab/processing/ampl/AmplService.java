@@ -73,6 +73,9 @@ public class AmplService {
         if(problemClass.equals(ProblemClass.FlowSharedF)){
             ampl.read(modelDirectory + "/flowSharedF.mod");
         }
+        if(problemClass.equals(ProblemClass.Combined)){
+            ampl.read(modelDirectory + "/combined.mod");
+        }
 
         ampl.eval("objective " + objective.getCode()  + ";");
         ampl.setIntOption("omit_zero_rows", 1);
@@ -132,9 +135,13 @@ public class AmplService {
         if(problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF)){
             dataLines.addAll(createPairParamsLines(request, problemClass));
         }
+        if(problemClass.equals(ProblemClass.Combined)){
+            dataLines.addAll(createCombinedParamsLines(request, problemClass));
+        }
 
         return dataLines;
     }
+
 
     private List<String> createFlexParamsLines(Request request){
         List<String> flexLines = new ArrayList<>();
@@ -163,7 +170,7 @@ public class AmplService {
         endpointLines.addAll(createParamsForMemberGroup(sources, srcMinMap, srcMaxMap, srcFailGroupsMap, true, printFailsGroupPerMember, request.getIgnoreFailures()));
         endpointLines.addAll(createParamsForMemberGroup(destinations, dstMinMap, dstMaxMap, dstFailGroupsMap, false, printFailsGroupPerMember, request.getIgnoreFailures()));
         // If you're solving the EndpointSharedF problem, just print one FG set and one NumGroups param
-        if(!printFailsGroupPerMember){
+        if(problemClass.equals(ProblemClass.EndpointSharedF)){
             String numGroups = "param NumGroups := " + requestFailureGroups.size() + ";";
             List<String> fgLines = createFailureGroupLines(requestFailureGroups, ProblemClass.EndpointSharedF, null, null, false);
             endpointLines.add(numGroups);
@@ -238,9 +245,25 @@ public class AmplService {
         numGroups += ";";
         pairLines.add(cMin);
         pairLines.add(cMax);
-        pairLines.add(numGroups);
-        pairLines.addAll(fgLines);
+        if(problemClass.equals(ProblemClass.FlowSharedF) || problemClass.equals(ProblemClass.Flow)) {
+            pairLines.add(numGroups);
+            pairLines.addAll(fgLines);
+        }
         return pairLines;
+    }
+
+    /**
+     * Create print lines for Combined model - takes C and F/FG params for Flex, adds in cMin and cMax params for both
+     * endpoint and flow models.
+     * @param request
+     * @param problemClass
+     * @return
+     */
+    private List<String> createCombinedParamsLines(Request request, ProblemClass problemClass) {
+        List<String> lines = createFlexParamsLines(request);
+        lines.addAll(createEndpointParamsLines(request, problemClass));
+        lines.addAll(createPairParamsLines(request, problemClass));
+        return lines;
     }
 
     private List<String> createFailureGroupLines(List<List<Failure>> failureGroups, ProblemClass problemClass, SourceDestPair pair, Node node, Boolean isSource) {

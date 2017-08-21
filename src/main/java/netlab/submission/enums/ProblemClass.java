@@ -11,7 +11,8 @@ public enum ProblemClass {
     Endpoint("Endpoint"),
     Flow("Flow"),
     EndpointSharedF("EndpointSharedF"),
-    FlowSharedF("FlowSharedF");
+    FlowSharedF("FlowSharedF"),
+    Combined("Combined");
 
     private String code;
 

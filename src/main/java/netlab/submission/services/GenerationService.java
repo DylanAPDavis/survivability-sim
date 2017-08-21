@@ -263,10 +263,10 @@ public class GenerationService {
             Integer maxForMinConn = minConnectionsRange.get(1);
             Integer minForMaxConn = maxConnectionsRange.get(0);
             Integer maxForMaxConn = maxConnectionsRange.get(1);
-            if (problemClass.equals(ProblemClass.Flex)) {
+            if (problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.Combined)) {
                 numConnections = selectionService.randomInt(minConnectionsRange.get(0), maxConnectionsRange.get(1), rng);
             }
-            if (problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF)) {
+            if (problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF) || problemClass.equals(ProblemClass.Combined)) {
                 // Give random min/max num of connections per pair
                 // If src = dst for a pair, both numbers are 0
                 pairMinConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
@@ -276,9 +276,9 @@ public class GenerationService {
 
                 //Update number of required connections for request to be equal to the total min
                 if (numConnections == 0)
-                    numConnections = pairMinConnectionsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
+                    numConnections += pairMinConnectionsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
             }
-            if(problemClass.equals(ProblemClass.Endpoint) || problemClass.equals(ProblemClass.EndpointSharedF)){
+            if(problemClass.equals(ProblemClass.Endpoint) || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.Combined)){
                 srcMinConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForMinConn, maxForMinConn, rng)));
                 srcMaxConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForMaxConn, maxForMaxConn, rng)));
                 dstMinConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> selectionService.randomInt(minForMinConn, maxForMinConn, rng)));
@@ -288,16 +288,17 @@ public class GenerationService {
                     numConnections = Math.max(
                             srcMinConnectionsMap.values().stream().reduce(0, (c1,c2) -> c1 + c2),
                             dstMinConnectionsMap.values().stream().reduce(0, (c1,c2) -> c1 + c2));
+
                 }
             }
         }
         else{
-            if(problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF)){
+            if(problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF) || problemClass.equals(ProblemClass.Combined)){
                 pairMinConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
                 pairMaxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
                         p -> p.getSrc() == p.getDst() ? 0 : params.getNumConnections()));
             }
-            if(problemClass.equals(ProblemClass.Endpoint) || problemClass.equals(ProblemClass.EndpointSharedF)){
+            if(problemClass.equals(ProblemClass.Endpoint) || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.Combined)){
                 srcMinConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> 0));
                 srcMaxConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> params.getNumConnections()));
                 dstMinConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> 0));
