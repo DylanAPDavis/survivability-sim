@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -40,22 +41,24 @@ public class ProcessingService {
     public RequestSet processRequestSet(RequestSet requestSet) {
         Topology topo = topoService.getTopologyById(requestSet.getTopologyId());
         if(requestSet.getProcessingType().equals(ProcessingType.Solo)){
-            for(Request request : requestSet.getRequests().values()){
-                processRequest(request, requestSet.getAlgorithm(), requestSet.getProblemClass(), requestSet.getObjective(),
-                        topo, requestSet.getId(), requestSet.isUseAws(), requestSet.isSdn());
-            }
+           for(Request r : requestSet.getRequests().values()){
+               r = processRequest(r, requestSet.getAlgorithm(), requestSet.getProblemClass(), requestSet.getObjective(),
+                       topo, requestSet.getId(), requestSet.isUseAws(), requestSet.isSdn());
+               requestSet.getRequests().put(r.getId(), r);
+           }
         }
 
         return requestSet;
     }
 
-    private void processRequest(Request request, Algorithm algorithm, ProblemClass problemClass, Objective objective,
+    private Request processRequest(Request request, Algorithm algorithm, ProblemClass problemClass, Objective objective,
                                 Topology topology, String requestSetId, Boolean useAws, Boolean sdn){
         switch(algorithm){
             case ServiceILP:
-                amplService.solve(request, problemClass, objective, topology, requestSetId);
+                return amplService.solve(request, problemClass, objective, topology, requestSetId);
             case PartialBhandari:
-                partialBhandariService.solve(request, problemClass, objective, topology, requestSetId);
+                return partialBhandariService.solve(request, problemClass, objective, topology, requestSetId);
         }
+        return request;
     }
 }

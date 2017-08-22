@@ -2,10 +2,18 @@ package netlab.processing;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.TestConfiguration;
+import netlab.analysis.analyzed.AnalyzedSet;
+import netlab.analysis.analyzed.PathSetMetrics;
+import netlab.analysis.analyzed.RequestMetrics;
+import netlab.analysis.enums.MemberType;
+import netlab.analysis.services.AnalysisService;
 import netlab.submission.enums.FailureClass;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.*;
 import netlab.submission.services.GenerationService;
+import netlab.topology.elements.Node;
+import netlab.topology.elements.Path;
+import netlab.topology.elements.SourceDestPair;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -26,6 +35,9 @@ public class CombinedModelTest {
 
     @Autowired
     private ProcessingService processingService;
+
+    @Autowired
+    private AnalysisService analysisService;
 
 
     @Test
@@ -45,13 +57,40 @@ public class CombinedModelTest {
         double percentSrcAlsoDest = 0.0;
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
+        boolean survivable = true;
         RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
+    private void testSolution(RequestSet rs, AnalyzedSet as, Boolean survivable, int numConnections,
+                              List<Integer> minConnectionsRange, List<Integer> minSrcConnectionsRange,
+                              List<Integer> minDstConnectionsRange) {
+
+        Request r = rs.getRequests().values().iterator().next();
+        assert(survivable ? as.getTotalSurvivable() == 1 : as.getTotalSurvivable() == 0);
+        RequestMetrics rm = as.getRequestMetrics().values().iterator().next();
+        assert(rm.getNumIntactPaths() == numConnections);
+        Map<MemberType, Map<Node, Map<SourceDestPair, PathSetMetrics>>> memberPathSetMetricsMap = rm.getMemberPathSetMetricsMap();
+        for(MemberType memberType : memberPathSetMetricsMap.keySet()){
+            Map<Node, Map<SourceDestPair, PathSetMetrics>> pathsSetMapsForType = memberPathSetMetricsMap.get(memberType);
+            for(Node node : pathsSetMapsForType.keySet()){
+                Map<SourceDestPair, PathSetMetrics> pathMap = pathsSetMapsForType.get(node);
+                int nodePaths = pathMap.values().stream().map(PathSetMetrics::getNumPaths).reduce(0, (m1, m2) -> m1 + m2);
+                assert(memberType.equals(MemberType.Source) ? nodePaths >= minSrcConnectionsRange.get(0) : nodePaths >= minDstConnectionsRange.get(0));
+            }
+        }
+        Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap = rm.getPathSetMetricsMap();
+        for(SourceDestPair pair : pathSetMetricsMap.keySet()){
+            PathSetMetrics psm = pathSetMetricsMap.get(pair);
+            assert(psm.getNumPaths() >= minConnectionsRange.get(0));
+        }
     }
 
     private void verify(RequestSet rs, int numSources, int numDestinations, int fSetSize, String failureClass,
