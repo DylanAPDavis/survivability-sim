@@ -56,6 +56,11 @@ public class SimulationParameters {
     // Alternatively, give a random number between values at index 0 and index 1
     private List<Integer> minConnectionsRange;
     private List<Integer> maxConnectionsRange;
+    // Optional, random number between values at index 0 and index 1 for src connections and dst connections
+    private List<Integer> minSrcConnectionsRange;
+    private List<Integer> maxSrcConnectionsRange;
+    private List<Integer> minDstConnectionsRange;
+    private List<Integer> maxDstConnectionsRange;
 
     // Number of failureSet that will occur
     private Integer numFailsAllowed;

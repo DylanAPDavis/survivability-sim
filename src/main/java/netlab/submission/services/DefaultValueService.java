@@ -205,6 +205,18 @@ public class DefaultValueService {
         if(params.getMaxConnectionsRange() == null){
             params.setMaxConnectionsRange(new ArrayList<>());
         }
+        if(params.getMinSrcConnectionsRange() == null){
+            params.setMinSrcConnectionsRange(new ArrayList<>());
+        }
+        if(params.getMaxSrcConnectionsRange() == null){
+            params.setMaxSrcConnectionsRange(new ArrayList<>());
+        }
+        if(params.getMinDstConnectionsRange() == null){
+            params.setMinDstConnectionsRange(new ArrayList<>());
+        }
+        if(params.getMaxDstConnectionsRange() == null){
+            params.setMaxDstConnectionsRange(new ArrayList<>());
+        }
         if(params.getNumFailsAllowed() == null || params.getNumFailsAllowed() < 0){
             params.setNumFailsAllowed(0);
         }

@@ -249,6 +249,11 @@ public class GenerationService {
         List<Integer> minConnectionsRange = params.getMinConnectionsRange();
         List<Integer> maxConnectionsRange = params.getMaxConnectionsRange();
 
+        List<Integer> minSrcConnectionsRange = params.getMinSrcConnectionsRange();
+        List<Integer> maxSrcConnectionsRange = params.getMaxSrcConnectionsRange();
+        List<Integer> minDstConnectionsRange = params.getMinDstConnectionsRange();
+        List<Integer> maxDstConnectionsRange = params.getMaxDstConnectionsRange();
+
         Map<SourceDestPair, Integer> pairMinConnectionsMap = new HashMap<>();
         Map<SourceDestPair, Integer> pairMaxConnectionsMap = new HashMap<>();
 
@@ -263,9 +268,9 @@ public class GenerationService {
             Integer maxForMinConn = minConnectionsRange.get(1);
             Integer minForMaxConn = maxConnectionsRange.get(0);
             Integer maxForMaxConn = maxConnectionsRange.get(1);
-            if (problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.Combined)) {
+            /*if (problemClass.equals(ProblemClass.Flex) || problemClass.equals(ProblemClass.Combined)) {
                 numConnections = selectionService.randomInt(minConnectionsRange.get(0), maxConnectionsRange.get(1), rng);
-            }
+            }*/
             if (problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF) || problemClass.equals(ProblemClass.Combined)) {
                 // Give random min/max num of connections per pair
                 // If src = dst for a pair, both numbers are 0
@@ -275,21 +280,33 @@ public class GenerationService {
                         p -> p.getSrc() == p.getDst() ? 0 : selectionService.randomInt(minForMaxConn, maxForMaxConn, rng)));
 
                 //Update number of required connections for request to be equal to the total min
-                if (numConnections == 0)
+                /*if (numConnections == 0)
                     numConnections += pairMinConnectionsMap.values().stream().reduce(0, (c1, c2) -> c1 + c2);
+                    */
             }
             if(problemClass.equals(ProblemClass.Endpoint) || problemClass.equals(ProblemClass.EndpointSharedF) || problemClass.equals(ProblemClass.Combined)){
-                srcMinConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForMinConn, maxForMinConn, rng)));
-                srcMaxConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForMaxConn, maxForMaxConn, rng)));
-                dstMinConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> selectionService.randomInt(minForMinConn, maxForMinConn, rng)));
-                dstMaxConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> selectionService.randomInt(minForMaxConn, maxForMaxConn, rng)));
+                int minForSrcMin = minSrcConnectionsRange.size() == 2 ? minSrcConnectionsRange.get(0) : minForMinConn;
+                int maxForSrcMin = minSrcConnectionsRange.size() == 2 ? minSrcConnectionsRange.get(1) : minForMaxConn;
+                int minForSrcMax = maxSrcConnectionsRange.size() == 2 ? maxSrcConnectionsRange.get(0) : minForMaxConn;
+                int maxForSrcMax = maxSrcConnectionsRange.size() == 2 ? maxSrcConnectionsRange.get(1) : maxForMaxConn;
+                int minForDstMin = minDstConnectionsRange.size() == 2 ? minDstConnectionsRange.get(0) : minForMinConn;
+                int maxForDstMin = minDstConnectionsRange.size() == 2 ? minDstConnectionsRange.get(1) : minForMaxConn;
+                int minForDstMax = maxDstConnectionsRange.size() == 2 ? maxDstConnectionsRange.get(0) : minForMaxConn;
+                int maxForDstMax = maxDstConnectionsRange.size() == 2 ? maxDstConnectionsRange.get(1) : maxForMaxConn;
 
+                srcMinConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForSrcMin, maxForSrcMin, rng)));
+                srcMaxConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForSrcMax, maxForSrcMax, rng)));
+                dstMinConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> selectionService.randomInt(minForDstMin, maxForDstMin, rng)));
+                dstMaxConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> selectionService.randomInt(minForDstMax, maxForDstMax, rng)));
+
+                /*
                 if(numConnections == 0){
                     numConnections = Math.max(
                             srcMinConnectionsMap.values().stream().reduce(0, (c1,c2) -> c1 + c2),
                             dstMinConnectionsMap.values().stream().reduce(0, (c1,c2) -> c1 + c2));
 
                 }
+                */
             }
         }
         else{

@@ -140,6 +140,20 @@ public class DynamoInterface {
         if(params.getMaxConnectionsRange() != null  && !params.getMaxConnectionsRange().isEmpty()) {
             eav.put("maxConnectionsRange", new AttributeValue().withNS(params.getMaxConnectionsRange().stream().map(Object::toString).collect(Collectors.toList())));
         }
+        if(params.getMinSrcConnectionsRange() != null  && !params.getMinSrcConnectionsRange().isEmpty()) {
+            eav.put("minSrcConnectionsRange", new AttributeValue().withNS(params.getMinSrcConnectionsRange().stream().map(Object::toString).collect(Collectors.toList())));
+        }
+        if(params.getMaxSrcConnectionsRange() != null  && !params.getMaxSrcConnectionsRange().isEmpty()) {
+            eav.put("maxSrcConnectionsRange", new AttributeValue().withNS(params.getMaxSrcConnectionsRange().stream().map(Object::toString).collect(Collectors.toList())));
+        }
+        if(params.getMinDstConnectionsRange() != null  && !params.getMinDstConnectionsRange().isEmpty()) {
+            eav.put("minDstConnectionsRange", new AttributeValue().withNS(params.getMinDstConnectionsRange().stream().map(Object::toString).collect(Collectors.toList())));
+        }
+        if(params.getMaxDstConnectionsRange() != null  && !params.getMaxDstConnectionsRange().isEmpty()) {
+            eav.put("maxDstConnectionsRange", new AttributeValue().withNS(params.getMaxDstConnectionsRange().stream().map(Object::toString).collect(Collectors.toList())));
+        }
+
+
         if(params.getNumFailsAllowed() != null) {eav.put("numFailsAllowed", new AttributeValue().withN(Integer.toString(params.getNumFailsAllowed())));}
         if(params.getMinMaxFailsAllowed() != null  && !params.getMinMaxFailsAllowed().isEmpty()) {
             eav.put("minMaxFailsAllowed", new AttributeValue().withNS(params.getMinMaxFailsAllowed().stream().map(Object::toString).collect(Collectors.toList())));
