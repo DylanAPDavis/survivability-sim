@@ -40,6 +40,8 @@ public class AmplService {
             if(result.toLowerCase().contains("solved")){
                 request.setIsFeasible(true);
                 DataFrame flows = ampl.getData("L");
+                DataFrame fgConn = ampl.getData("FG_Conn");
+                Object cMaxSD = ampl.getParameter("c_max_sd").get(new Tuple("Palo Alto", "Pittsburgh"));
                 paths = translateFlowsIntoPaths(flows, request.getPairs(), topology);
             }
             else{
@@ -118,7 +120,8 @@ public class AmplService {
         dataLines.add(createNodeSetLine(request.getDestinations(), "D"));
 
         // I_max
-        String iMax = "param I_max := 14;";
+        int iMaxNum = request.getConnections().getNumConnections() * (request.getNumFailsAllowed().getTotalNumFailsAllowed() + 1);
+        String iMax = String.format("param I_max := %d;", iMaxNum);
         dataLines.add(iMax);
 
         // C_total

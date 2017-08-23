@@ -137,7 +137,6 @@ subject to nodeInConnection_A{(s,d) in SD, i in I, v in V}:
 subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 	NC[s,d,i,v] * card(V)^4 >= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
 
-
 ## Failure Constraints
 
 # Connection (s,d,i) fails or does not fail due to FG[g]
