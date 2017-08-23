@@ -40,8 +40,6 @@ public class AmplService {
             if(result.toLowerCase().contains("solved")){
                 request.setIsFeasible(true);
                 DataFrame flows = ampl.getData("L");
-                DataFrame fgConn = ampl.getData("FG_Conn");
-                Object cMaxSD = ampl.getParameter("c_max_sd").get(new Tuple("Palo Alto", "Pittsburgh"));
                 paths = translateFlowsIntoPaths(flows, request.getPairs(), topology);
             }
             else{

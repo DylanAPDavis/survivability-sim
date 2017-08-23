@@ -68,11 +68,23 @@ var NC{(s,d) in SD, i in I, v in V} binary;
 # Connection (s,d,i) fails because of the removal of FG[g]
 var FG_Conn {(s,d) in SD, i in I, g in GroupIndices} binary;
 
+# Sources
+# At least one connection from s is disconnected by removal of FG[g]
+var FG_Conn_s{s in S, g in GroupIndices} binary;
+
+# At least one connection from s is disconnected by removal of any FG
+var FG_Conn_s_any{s in S} binary;
+
+#Destinations
+# At least one connection to d is disconnected by removal of FG[g]
+var FG_Conn_d{d in D, g in GroupIndices} binary;
+
+# At least one connection to d is disconnected by removal of any FG
+var FG_Conn_d_any{d in D} binary;
+
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {g in GroupIndices} >= 0 integer;
 
-# FG_Sum_Max - Maximum number of failed connections for a (s,d) pair across a failure group
-var FG_Sum_Max{(s,d) in SD} >= 0 integer;
 
 # Total number of connections per (s,d) pair
 var Num_Conn{(s,d) in SD} = sum{i in I} C[s,d,i];
@@ -107,17 +119,30 @@ minimize TotalCost:
 subject to minNumConnections{g in GroupIndices}:
 	Num_Conns_Total >= c_total + FG_Sum[g];
 
-subject to minNumConnectionsNeededSource{s in S}:
-	Num_Conn_src[s] >= c_min_s[s] + sum{d in D: s != d} FG_Sum_Max[s,d];
+# ENDPOINT CONSTRAINTS
 
-subject to maxNumConnectionsNeededSource{s in S}:
-	Num_Conn_src[s] <= c_max_s[s] + sum{d in D: s != d} FG_Sum_Max[s,d];
+# Source Constraints
+subject to minNumConnectionsNeededSource{s in S, g in GroupIndices}:
+	Num_Conn_src[s] >= c_min_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to minNumConnectionsNeededDest{d in D}:
-	Num_Conn_dst[d] >= c_min_d[d] + sum{s in S: s != d} FG_Sum_Max[s,d];
+subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices}:
+	FG_Conn_s[s,g] == 1 ==> Num_Conn_src[s] <= c_max_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededDest{d in D}:
-	Num_Conn_dst[d] <= c_max_d[d] + sum{s in S: s != d} FG_Sum_Max[s,d];
+subject to maxNumConnectionsNeededSourceNoFails{s in S}:
+	FG_Conn_s_any[s] == 0 ==> Num_Conn_src[s] <= c_max_s[s];
+
+# Destination Constraints
+subject to minNumConnectionsNeededDest{d in D, g in GroupIndices}:
+	Num_Conn_dst[d] >= c_min_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+
+subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices}:
+	FG_Conn_d[d,g] == 1 ==> Num_Conn_dst[d] <= c_max_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+
+subject to maxNumConnectionsNeededDestNoFails{d in D}:
+	FG_Conn_d_any[d] == 0 ==> Num_Conn_dst[d] <= c_max_d[d];
+
+
+# Other Connection Constraints
 
 subject to noSelfConnections{(s,d) in SD: s == d}:
 	Num_Conn[s,d] = 0;
@@ -164,6 +189,31 @@ subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices}
 subject to numFailsDueToGroup{g in GroupIndices}:
 	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn[s,d,i,g];
 
-subject to maxFailuresFromGroup{(s,d) in SD, g in GroupIndices}:
-	FG_Sum_Max[s,d] >= sum{i in I} FG_Conn[s,d,i,g];
+# Endpoints
+
+subject to atLeastOneConnFailsForS_1{s in S, g in GroupIndices}:
+    FG_Conn_s[s,g] <= sum{i in I, d in D: s != d} FG_Conn[s,d,i,g];
+
+subject to atLeastOneConnFailsForS_2{s in S, g in GroupIndices}:
+    FG_Conn_s[s,g] * card(V) ^ 4 >= sum{i in I, d in D: s != d} FG_Conn[s,d,i,g];
+
+subject to atLeastOneConnFailsForSAny_1{s in S}:
+    FG_Conn_s_any[s] <= sum{g in GroupIndices} FG_Conn_s[s,g];
+
+subject to atLeastOneConnFailsForSAny_2{s in S}:
+    FG_Conn_s_any[s] * card(V) ^ 4 >= sum{g in GroupIndices} FG_Conn_s[s,g];
+
+
+
+subject to atLeastOneConnFailsForD_1{d in D, g in GroupIndices}:
+    FG_Conn_d[d,g] <= sum{i in I, s in S: s != d} FG_Conn[s,d,i,g];
+
+subject to atLeastOneConnFailsForD_2{d in D, g in GroupIndices}:
+    FG_Conn_d[d,g] * card(V) ^ 4 >= sum{i in I, s in S: s != d} FG_Conn[s,d,i,g];
+
+subject to atLeastOneConnFailsForDAny_1{d in D}:
+    FG_Conn_d_any[d] <= sum{g in GroupIndices} FG_Conn_d[d,g];
+
+subject to atLeastOneConnFailsForDAny_2{d in D}:
+    FG_Conn_d_any[d] * card(V) ^ 4 >= sum{g in GroupIndices} FG_Conn_d[d,g];
 

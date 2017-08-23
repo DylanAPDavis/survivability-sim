@@ -59,11 +59,14 @@ var NC{(s,d) in SD, i in I, v in V} binary;
 # Connection (s,d,i) fails because of the removal of FG[s,d,g]
 var FG_Conn {(s,d) in SD, i in I, g in GroupIndices} binary;
 
+# At least one connection from (s,d) is disconnected by removal of any FG
+var FG_Conn_sd_any{(s,d) in SD} binary;
+
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {g in GroupIndices} >= 0 integer;
 
-# FG_Sum_Max - Maximum number of failed connections for a (s,d) pair across a failure group
-var FG_Sum_Max{(s,d) in SD} >= 0 integer;
+# At least one connection from (s,d) is disconnected by removal of FG[g]
+var FG_Conn_sd{(s,d) in SD, g in GroupIndices} binary;
 
 # Number of connections
 var Num_Conn{(s,d) in SD} = sum{i in I} C[s,d,i];
@@ -94,11 +97,16 @@ minimize TotalCost:
 subject to totalConnectionsNeeded{g in GroupIndices}:
 	Num_Conns_Total >= c_total + FG_Sum[g];
 
-subject to minNumConnectionsNeeded{(s,d) in SD}:
-	Num_Conn[s,d] >= c_min_sd[s,d] + FG_Sum_Max[s,d];
+subject to minNumConnectionsNeeded{(s,d) in SD, g in GroupIndices}:
+	Num_Conn[s,d] >= c_min_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeeded{(s,d) in SD}:
-	Num_Conn[s,d] <= c_max_sd[s,d] + FG_Sum_Max[s,d];
+subject to maxNumConnectionsNeededFails{(s,d) in SD, g in GroupIndices}:
+	FG_Conn_sd[s,d,g] == 1 ==> Num_Conn[s,d] <= c_max_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
+
+subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
+	FG_Conn_sd_any[s,d] == 0 ==> Num_Conn[s,d] <= c_max_sd[s,d];
+
+
 
 subject to noSelfConnections{(s,d) in SD: s == d}:
 	Num_Conn[s,d] = 0;
@@ -152,8 +160,17 @@ subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices}
 subject to numFailsDueToGroup{g in GroupIndices}:
 	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn[s,d,i,g];
 
-subject to maxFailuresFromGroup{(s,d) in SD, g in GroupIndices}:
-	FG_Sum_Max[s,d] >= sum{i in I} FG_Conn[s,d,i,g];
+subject to atLeastOneConnFailsForSD_1{(s,d) in SD, g in GroupIndices}:
+    FG_Conn_sd[s,d,g] <= sum{i in I} FG_Conn[s,d,i,g];
 
+subject to atLeastOneConnFailsForSD_2{(s,d) in SD, g in GroupIndices}:
+    FG_Conn_sd[s,d,g] * card(V) ^ 4 >= sum{i in I} FG_Conn[s,d,i,g];
+
+# Any group G fails
+subject to atLeastOneConnFailsForSDAny_1{(s,d) in SD}:
+    FG_Conn_sd_any[s,d] <= sum{g in GroupIndices} FG_Conn_sd[s,d,g];
+
+subject to atLeastOneConnFailsForSDAny_2{(s,d) in SD}:
+    FG_Conn_sd_any[s,d] * card(V) ^ 4 >= sum{g in GroupIndices} FG_Conn_sd[s,d,g];
 
 #-------------------------------------------------------

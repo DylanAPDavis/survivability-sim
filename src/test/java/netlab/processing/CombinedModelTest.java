@@ -158,7 +158,67 @@ public class CombinedModelTest {
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
+    // Flow - Max 1 per pair, no Failures
+    @Test
+    public void flow1MaxPair3Conns(){
+        int numSources = 3;
+        int numDestinations = 3;
+        int fSetSize = 0;
+        String failureClass = "Link";
+        int numConnections = 9;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(7, 7);
+        List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(7, 7);
+        int numFailsAllowed = 0;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
+
     // Endpoint: 1 Min for each source, 1 min for each destination, 2 max for each source, 3 max for each destination
+    // Flow - Max 1 per pair, no Failures
+    @Test
+    public void endpoint1Min2MaxSrc2Min3MaxDst(){
+        int numSources = 3;
+        int numDestinations = 3;
+        int fSetSize = 21;
+        String failureClass = "Link";
+        int numConnections = 6;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(9, 9);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(3, 3);
+        int numFailsAllowed = 1;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+
+    }
 
     // Flow + Endpoint Restrictions
 
