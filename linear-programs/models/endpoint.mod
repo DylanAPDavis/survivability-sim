@@ -192,16 +192,16 @@ subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 ## Failure Constraints
 
 subject to groupCausesSrcConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices_s[s]}:
-	FG_Conn_src[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG_s[s,g] or (v,u) in FG_s[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_s[s,g]} NC[s,d,i,v];
+	FG_Conn_src[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG_s[s,g] or (v,u) in FG_s[s,g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG_s[s,g]} NC[s,d,i,v];
 
 subject to groupCausesSrcConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices_s[s]}:
-	FG_Conn_src[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_s[s,g] or (v,u) in FG_s[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_s[s,g]} NC[s,d,i,v];
+	FG_Conn_src[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_s[s,g] or (v,u) in FG_s[s,g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG_s[s,g]} NC[s,d,i,v];
 
 subject to groupCausesDstConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices_d[d]}:
-	FG_Conn_dst[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_d[d,g]} NC[s,d,i,v];
+	FG_Conn_dst[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG_d[d,g]} NC[s,d,i,v];
 
 subject to groupCausesDstConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices_d[d]}:
-	FG_Conn_dst[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_d[d,g]} NC[s,d,i,v];
+	FG_Conn_dst[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG_d[d,g]} NC[s,d,i,v];
 
 # Sum max
 subject to maxFailsPerSrc{s in S, g in GroupIndices_s[s]}:

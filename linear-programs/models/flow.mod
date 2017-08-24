@@ -154,10 +154,10 @@ subject to maxFailsPerPair{(s,d) in SD, g in GroupIndices[s,d]}:
 # Connection (s,d,i) fails or does not fail due to FG[s,d,g]
 
 subject to groupCausesConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices[s,d]}:
-	FG_Conn[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[s,d,g] or (v,u) in FG[s,d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[s,d,g]} NC[s,d,i,v];
+	FG_Conn[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[s,d,g] or (v,u) in FG[s,d,g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[s,d,g]} NC[s,d,i,v];
 
 subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices[s,d]}:
-	FG_Conn[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[s,d,g] or (v,u) in FG[s,d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[s,d,g]} NC[s,d,i,v];
+	FG_Conn[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[s,d,g] or (v,u) in FG[s,d,g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[s,d,g]} NC[s,d,i,v];
 
 # Flow pairs
 subject to atLeastOneConnFailsForSD_1{(s,d) in SD, g in GroupIndices[s,d]}:
