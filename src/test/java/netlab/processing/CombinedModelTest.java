@@ -341,30 +341,394 @@ public class CombinedModelTest {
     }
 
     // Anycast
+    @Test
+    public void anycast(){
+        int numSources = 1;
+        int numDestinations = 3;
+        int fSetSize = 0;
+        String failureClass = "Node";
+        int numConnections = 1;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int numFailsAllowed = 0;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Anycast + Link-Disjoint Backup Path
+    @Test
+    public void anycastLinkDisjointBackup(){
+        int numSources = 1;
+        int numDestinations = 3;
+        int fSetSize = 21;
+        String failureClass = "Link";
+        int numConnections = 1;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int numFailsAllowed = 1;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Anycast + Node-Disjoint Backup Path
+    @Test
+    public void anycastNodeDisjointBackup(){
+        int numSources = 1;
+        int numDestinations = 3;
+        int fSetSize = 10;
+        String failureClass = "Node";
+        int numConnections = 1;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int numFailsAllowed = 1;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Multicast
+    @Test
+    public void multicast(){
+        int numSources = 1;
+        int numDestinations = 4;
+        int numConnections = 4;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(4, 4);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(4, 4);
+        List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int fSetSize = 0;
+        String failureClass = "Node";
+        int numFailsAllowed = 0;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Multicast + Link-Disjoint Paths
+    @Test
+    public void multicastLinkDisjoint(){
+        int numSources = 1;
+        int numDestinations = 4;
+        int numConnections = 4;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(4, 4);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(4, 4);
+        List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int fSetSize = 21;
+        String failureClass = "Link";
+        int numFailsAllowed = 1;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Multicast + Node-Disjoint Paths
+    @Test
+    public void multicastNodeDisjoint(){
+        int numSources = 1;
+        int numDestinations = 3;
+        int numConnections = 3;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(4, 4);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(4, 4);
+        List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int fSetSize = 13;
+        String failureClass = "Node";
+        int numFailsAllowed = 1;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 1.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
-    // Multicast + Destination-Node Disjoint Paths
+    // Multicast + Destination-Node Disjoint Paths - Kinda a weird one
+    @Test
+    public void multicastDestinationNodeDisjoint(){
+        int numSources = 1;
+        int numDestinations = 3;
+        int numConnections = 2;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(3, 3);
+        List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int fSetSize = 3;
+        String failureClass = "Node";
+        int numFailsAllowed = 1;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 1.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Manycast
+    @Test
+    public void manycast(){
+        int numSources = 1;
+        int numDestinations = 3;
+        int numConnections = 2;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(3, 3);
+        List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int fSetSize = 0;
+        String failureClass = "Node";
+        int numFailsAllowed = 0;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 1.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Broadcast
+    @Test
+    public void broadcast(){
+        int numSources = 10;
+        int numDestinations = 10;
+        int numConnections = 90;
+        List<Integer> minConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(9, 9);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(90, 90);
+        List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(90, 90);
+        int fSetSize = 0;
+        String failureClass = "Node";
+        int numFailsAllowed = 0;
+        double percentSrcAlsoDest = 1.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Many-to-Many (Min 1 from each source)
+    @Test
+    public void manyToManyMin1Src(){
+        int numSources = 3;
+        int numDestinations = 3;
+        int numConnections = 3;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(10, 10);
+        int fSetSize = 0;
+        String failureClass = "Node";
+        int numFailsAllowed = 0;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Many-to-Many (Min 1 to each destination)
+    @Test
+    public void manyToManyMin1Dst(){
+        int numSources = 3;
+        int numDestinations = 3;
+        int numConnections = 3;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(10, 10);
+        List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int fSetSize = 0;
+        String failureClass = "Node";
+        int numFailsAllowed = 0;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Many-to-Many (Min 1 from each s, 1 to each d)
+    @Test
+    public void manyToManyMin1SrcMin1Dst(){
+        int numSources = 3;
+        int numDestinations = 3;
+        int numConnections = 3;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int fSetSize = 0;
+        String failureClass = "Node";
+        int numFailsAllowed = 0;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     // Many-to-Many (Min 1 from each s, 1 to each d, 1 backup path for each)
+    @Test
+    public void manyToManyMin1SrcMin1Dst1BackupEach(){
+        int numSources = 3;
+        int numDestinations = 3;
+        int numConnections = 3;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        int fSetSize = 21;
+        String failureClass = "Link";
+        int numFailsAllowed = 1;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
 
     private void printFailureSet(Set<Failure> failures){
         System.out.println("Failure set: " + failures.stream().map(f -> {
@@ -421,8 +785,10 @@ public class CombinedModelTest {
 
         Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap = rm.getPathSetMetricsMap();
         for(SourceDestPair pair : pathSetMetricsMap.keySet()){
-            PathSetMetrics psm = pathSetMetricsMap.get(pair);
-            assert(psm.getNumPaths() >= minConnectionsRange.get(0));
+            if(pair.getSrc() != pair.getDst()) {
+                PathSetMetrics psm = pathSetMetricsMap.get(pair);
+                assert (psm.getNumPaths() >= minConnectionsRange.get(0));
+            }
         }
     }
 
@@ -439,12 +805,12 @@ public class CombinedModelTest {
         assert(rs.getFailureClass().equals(FailureClass.valueOf(failureClass)));
         Connections connections = r.getConnections();
         assert(connections.getNumConnections() == numConnections);
-        assert(connections.getPairMinConnectionsMap().values().stream().allMatch(c -> c.equals(minConnectionsRange.get(0))));
-        assert(connections.getPairMaxConnectionsMap().values().stream().allMatch(c -> c.equals(maxConnectionsRange.get(0))));
-        assert(connections.getSrcMinConnectionsMap().values().stream().allMatch(c -> c.equals(minSrcConnectionsRange.get(0))));
-        assert(connections.getSrcMaxConnectionsMap().values().stream().allMatch(c -> c.equals(maxSrcConnectionsRange.get(0))));
-        assert(connections.getDstMinConnectionsMap().values().stream().allMatch(c -> c.equals(minDstConnectionsRange.get(0))));
-        assert(connections.getDstMaxConnectionsMap().values().stream().allMatch(c -> c.equals(maxDstConnectionsRange.get(0))));
+        assert(connections.getPairMinConnectionsMap().values().stream().allMatch(c -> c.equals(minConnectionsRange.get(0)) || c.equals(0)));
+        assert(connections.getPairMaxConnectionsMap().values().stream().allMatch(c -> c.equals(maxConnectionsRange.get(0))  || c.equals(0)));
+        assert(connections.getSrcMinConnectionsMap().values().stream().allMatch(c -> c.equals(minSrcConnectionsRange.get(0))  || c.equals(0)));
+        assert(connections.getSrcMaxConnectionsMap().values().stream().allMatch(c -> c.equals(maxSrcConnectionsRange.get(0))  || c.equals(0)));
+        assert(connections.getDstMinConnectionsMap().values().stream().allMatch(c -> c.equals(minDstConnectionsRange.get(0))  || c.equals(0)));
+        assert(connections.getDstMaxConnectionsMap().values().stream().allMatch(c -> c.equals(maxDstConnectionsRange.get(0))  || c.equals(0)));
         Failures failures = r.getFailures();
         assert(failures.getFailureSet().size() == fSetSize);
         assert(failures.getPairFailuresMap().values().stream().noneMatch(fails -> fails.size() > 0));
