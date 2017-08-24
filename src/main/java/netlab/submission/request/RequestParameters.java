@@ -63,4 +63,6 @@ public class RequestParameters {
 
     private Boolean ignoreFailures;
 
+    private Integer numThreads;
+
 }

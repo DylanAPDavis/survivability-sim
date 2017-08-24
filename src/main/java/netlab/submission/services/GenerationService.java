@@ -69,6 +69,7 @@ public class GenerationService {
                 .sdn(params.getSdn())
                 .useAws(params.getUseAws())
                 .topologyId(params.getTopologyId())
+                .numThreads(params.getNumThreads())
                 .build();
     }
 
@@ -108,6 +109,7 @@ public class GenerationService {
                 .sdn(requestParameters.getSdn())
                 .useAws(requestParameters.getUseAws())
                 .topologyId(requestParameters.getTopologyId())
+                .numThreads(6)
                 .build();
     }
 

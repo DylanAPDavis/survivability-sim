@@ -46,4 +46,6 @@ public class RequestSet implements Serializable {
 
     private boolean useAws;
 
+    private Integer numThreads;
+
 }

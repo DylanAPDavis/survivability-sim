@@ -153,17 +153,18 @@ public class DynamoInterface {
             eav.put("maxDstConnectionsRange", new AttributeValue().withNS(params.getMaxDstConnectionsRange().stream().map(Object::toString).collect(Collectors.toList())));
         }
 
-
         if(params.getNumFailsAllowed() != null) {eav.put("numFailsAllowed", new AttributeValue().withN(Integer.toString(params.getNumFailsAllowed())));}
         if(params.getMinMaxFailsAllowed() != null  && !params.getMinMaxFailsAllowed().isEmpty()) {
             eav.put("minMaxFailsAllowed", new AttributeValue().withNS(params.getMinMaxFailsAllowed().stream().map(Object::toString).collect(Collectors.toList())));
         }
+
         if(params.getProcessingType() != null) {eav.put("processingType", new AttributeValue().withS(params.getProcessingType()));}
         if(params.getPercentSrcAlsoDest() != null) {eav.put("percentSrcAlsoDest", new AttributeValue().withN(Double.toString(params.getPercentSrcAlsoDest())));}
         if(params.getPercentSrcFail() != null) {eav.put("percentSrcFail", new AttributeValue().withN(Double.toString(params.getPercentSrcFail())));}
         if(params.getPercentDestFail() != null) {eav.put("percentDestFail", new AttributeValue().withN(Double.toString(params.getPercentDestFail())));}
         if(params.getSdn() != null) {eav.put("sdn", new AttributeValue().withN(String.valueOf(params.getSdn() ? 1 : 0)));}
         if(params.getUseAws() != null) {eav.put("useAws", new AttributeValue().withN(String.valueOf(params.getUseAws() ? 1 : 0)));}
+        if(params.getNumThreads() != null) {eav.put("numThreads", new AttributeValue().withN(Integer.toString(params.getNumThreads())));}
         return eav;
     }
 

@@ -43,7 +43,7 @@ public class ProcessingService {
         if(requestSet.getProcessingType().equals(ProcessingType.Solo)){
            for(Request r : requestSet.getRequests().values()){
                r = processRequest(r, requestSet.getAlgorithm(), requestSet.getProblemClass(), requestSet.getObjective(),
-                       topo, requestSet.getId(), requestSet.isUseAws(), requestSet.isSdn());
+                       topo, requestSet.getId(), requestSet.isUseAws(), requestSet.isSdn(), requestSet.getNumThreads());
                requestSet.getRequests().put(r.getId(), r);
            }
         }
@@ -52,10 +52,10 @@ public class ProcessingService {
     }
 
     private Request processRequest(Request request, Algorithm algorithm, ProblemClass problemClass, Objective objective,
-                                Topology topology, String requestSetId, Boolean useAws, Boolean sdn){
+                                Topology topology, String requestSetId, Boolean useAws, Boolean sdn, Integer numThreads){
         switch(algorithm){
             case ServiceILP:
-                return amplService.solve(request, problemClass, objective, topology, requestSetId);
+                return amplService.solve(request, problemClass, objective, topology, requestSetId, numThreads);
             case PartialBhandari:
                 return partialBhandariService.solve(request, problemClass, objective, topology, requestSetId);
         }

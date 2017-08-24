@@ -81,6 +81,8 @@ public class SimulationParameters {
 
     private Boolean ignoreFailures;
 
+    private Integer numThreads;
+
     public SimulationParameters clone(){
         try{
             return (SimulationParameters) super.clone();
@@ -106,6 +108,10 @@ public class SimulationParameters {
                     .numConnections(numConnections)
                     .minConnectionsRange(new ArrayList<>(minConnectionsRange))
                     .maxConnectionsRange(new ArrayList<>(maxConnectionsRange))
+                    .minSrcConnectionsRange(new ArrayList<>(minSrcConnectionsRange))
+                    .maxSrcConnectionsRange(new ArrayList<>(maxSrcConnectionsRange))
+                    .minDstConnectionsRange(new ArrayList<>(minDstConnectionsRange))
+                    .maxDstConnectionsRange(new ArrayList<>(maxDstConnectionsRange))
                     .numFailsAllowed(numFailsAllowed)
                     .minMaxFailsAllowed(new ArrayList<>(minMaxFailsAllowed))
                     .processingType(processingType)
@@ -115,6 +121,7 @@ public class SimulationParameters {
                     .sdn(sdn)
                     .useAws(useAws)
                     .ignoreFailures(ignoreFailures)
+                    .numThreads(numThreads)
                     .build();
         }
     }

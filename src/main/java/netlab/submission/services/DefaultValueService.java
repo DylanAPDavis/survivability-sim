@@ -148,6 +148,9 @@ public class DefaultValueService {
         if(params.getIgnoreFailures() == null){
             params.setIgnoreFailures(false);
         }
+        if(params.getNumThreads() == null){
+            params.setNumThreads(6);
+        }
         return params;
     }
 
@@ -261,6 +264,9 @@ public class DefaultValueService {
         }
         if(params.getIgnoreFailures() == null){
             params.setIgnoreFailures(false);
+        }
+        if(params.getNumThreads() == null){
+            params.setNumThreads(6);
         }
 
         return params;

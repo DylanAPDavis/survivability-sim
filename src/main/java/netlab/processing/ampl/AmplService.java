@@ -23,13 +23,14 @@ public class AmplService {
 
     private String modelDirectory = "linear-programs/models";
 
-    public Request solve(Request request, ProblemClass problemClass, Objective objective, Topology topology, String requestSetId){
+    public Request solve(Request request, ProblemClass problemClass, Objective objective, Topology topology,
+                         String requestSetId, Integer numThreads){
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         Environment env = new Environment(System.getProperty("user.dir") + "/linear-programs/ampl/");
         AMPL ampl = new AMPL(env);
         double duration = 0.0;
         try {
-            ampl = assignValues(request, problemClass, objective, topology, requestSetId, ampl);
+            ampl = assignValues(request, problemClass, objective, topology, requestSetId, numThreads, ampl);
             long startTime = System.nanoTime();
             ampl.solve();
             long endTime = System.nanoTime();
@@ -57,7 +58,7 @@ public class AmplService {
     }
 
     private AMPL assignValues(Request request, ProblemClass problemClass, Objective objective, Topology topology,
-                              String requestSetId, AMPL ampl) throws IOException{
+                              String requestSetId, Integer numThreads, AMPL ampl) throws IOException{
         if(problemClass.equals(ProblemClass.Flex)){
             ampl.read(modelDirectory + "/flex.mod");
         }
@@ -80,7 +81,7 @@ public class AmplService {
         ampl.eval("objective " + objective.getCode()  + ";");
         ampl.setIntOption("omit_zero_rows", 1);
         ampl.setOption("solver", "gurobi");
-        ampl.eval("option gurobi_options \'threads " + 6 + "\';");
+        ampl.eval("option gurobi_options \'threads " + numThreads + "\';");
 
         List<String> dataLines = createDataLines(request, topology, problemClass);
         java.nio.file.Path file = Paths.get(requestSetId + "_" + request.getId() + ".dat");
