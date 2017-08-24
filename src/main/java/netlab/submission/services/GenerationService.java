@@ -254,10 +254,10 @@ public class GenerationService {
         List<Integer> maxDstConnectionsRange = params.getMaxDstConnectionsRange();
 
         // GENERATE VALUES FOR PAIRS
-        Integer minForMinConn = minConnectionsRange.size() == 2 ? minConnectionsRange.get(0) : 0;
-        Integer maxForMinConn = minConnectionsRange.size() == 2 ? minConnectionsRange.get(1): 0;
-        Integer minForMaxConn = maxConnectionsRange.size() == 2 ? maxConnectionsRange.get(0) : numConnections;
-        Integer maxForMaxConn = maxConnectionsRange.size() == 2 ? maxConnectionsRange.get(1) : numConnections;
+        Integer minForMinConn = minConnectionsRange.size() > 0 ? minConnectionsRange.get(0) : 0;
+        Integer maxForMinConn = minConnectionsRange.size() > 0 ? minConnectionsRange.get(minConnectionsRange.size()-1): 0;
+        Integer minForMaxConn = maxConnectionsRange.size() > 0 ? maxConnectionsRange.get(0) : numConnections;
+        Integer maxForMaxConn = maxConnectionsRange.size() > 0 ? maxConnectionsRange.get(maxConnectionsRange.size()-1) : numConnections;
         // Give random min/max num of connections per pair
         // If src = dst for a pair, both numbers are 0
         Map<SourceDestPair, Integer> pairMinConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
@@ -266,14 +266,17 @@ public class GenerationService {
                 p -> p.getSrc() == p.getDst() ? 0 : selectionService.randomInt(minForMaxConn, maxForMaxConn, rng)));
 
         // GENERATE VALUES FOR SOURCES & DESTINATIONS
-        int minForSrcMin = minSrcConnectionsRange.size() == 2 ? minSrcConnectionsRange.get(0) : 0;
-        int maxForSrcMin = minSrcConnectionsRange.size() == 2 ? minSrcConnectionsRange.get(1) : 0;
-        int minForSrcMax = maxSrcConnectionsRange.size() == 2 ? maxSrcConnectionsRange.get(0) : numConnections;
-        int maxForSrcMax = maxSrcConnectionsRange.size() == 2 ? maxSrcConnectionsRange.get(1) : numConnections;
-        int minForDstMin = minDstConnectionsRange.size() == 2 ? minDstConnectionsRange.get(0) : 0;
-        int maxForDstMin = minDstConnectionsRange.size() == 2 ? minDstConnectionsRange.get(1) : 0;
-        int minForDstMax = maxDstConnectionsRange.size() == 2 ? maxDstConnectionsRange.get(0) : numConnections;
-        int maxForDstMax = maxDstConnectionsRange.size() == 2 ? maxDstConnectionsRange.get(1) : numConnections;
+        int minForSrcMin = minSrcConnectionsRange.size() > 0 ? minSrcConnectionsRange.get(0) : 0;
+        int maxForSrcMin = minSrcConnectionsRange.size() > 0 ? minSrcConnectionsRange.get(minSrcConnectionsRange.size() -1) : 0;
+
+        int minForSrcMax = maxSrcConnectionsRange.size() > 0 ? maxSrcConnectionsRange.get(0) : numConnections;
+        int maxForSrcMax = maxSrcConnectionsRange.size() > 0 ? maxSrcConnectionsRange.get(maxSrcConnectionsRange.size() - 1) : numConnections;
+
+        int minForDstMin = minDstConnectionsRange.size() > 0 ? minDstConnectionsRange.get(0) : 0;
+        int maxForDstMin = minDstConnectionsRange.size() > 0 ? minDstConnectionsRange.get(minDstConnectionsRange.size() -1) : 0;
+
+        int minForDstMax = maxDstConnectionsRange.size() > 0 ? maxDstConnectionsRange.get(0) : numConnections;
+        int maxForDstMax = maxDstConnectionsRange.size() > 0 ? maxDstConnectionsRange.get(maxDstConnectionsRange.size() -1) : numConnections;
 
         Map<Node, Integer> srcMinConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForSrcMin, maxForSrcMin, rng)));
         Map<Node, Integer> srcMaxConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForSrcMax, maxForSrcMax, rng)));

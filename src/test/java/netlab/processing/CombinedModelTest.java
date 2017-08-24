@@ -706,10 +706,10 @@ public class CombinedModelTest {
         int numSources = 3;
         int numDestinations = 3;
         int numConnections = 3;
-        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
-        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
-        List<Integer> minSrcConnectionsRange = Arrays.asList(1, 1);
-        List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> minConnectionsRange = Arrays.asList(0);
+        List<Integer> maxConnectionsRange = Arrays.asList(1);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(1);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(1);
         List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
         List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
         int fSetSize = 21;
