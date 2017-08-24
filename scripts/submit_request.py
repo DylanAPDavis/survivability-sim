@@ -2,7 +2,7 @@ import sys
 import json
 import requests
 
-default_len = 25
+default_len = 30
 len_with_port = default_len + 1
 
 
@@ -13,8 +13,10 @@ def submit(args):
         message = "Usage: seed topologyId numRequests algorithm problemClass objective numSources numDestinations"
         message += " failureSetSize failureSetSizeRange[min, max] failureClass failureProb failureProbRange[min, max]"
         message += " numConnections minConnectionsRange[min, max] maxConnectionsRange[min, max]"
+        message += " minSrcConnectionsRange[min, max] maxSrcConnectionsRange[min, max]"
+        message += " minDstConnectionsRange[min, max] maxDstConnectionsRange[min, max]"
         message += " numFailsAllowed numFailsAllowedRange[min, max] processingType percentSrcAlsoDest"
-        message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures portNum(optional)"
+        message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures numThreads portNum(optional)"
         print(message)
         sys.exit(-1)
 
@@ -37,15 +39,20 @@ def submit(args):
         'numConnections': args[13],
         'minConnectionsRange': args[14],
         'maxConnectionsRange': args[15],
-        'numFailsAllowed': args[16],
-        'minMaxFailsAllowed': args[17],
-        'processingType': args[18],
-        'percentSrcAlsoDest': args[19],
-        'percentSrcFail': args[20],
-        'percentDstFail': args[21],
-        'sdn': args[22],
-        'useAws': args[23],
-        'ignoreFailures': args[24]
+        'minSrcConnectionsRange': args[16],
+        'maxSrcConnectionsRange': args[17],
+        'minDstConnectionsRange': args[18],
+        'maxDstConnectionsRange': args[19],
+        'numFailsAllowed': args[20],
+        'minMaxFailsAllowed': args[21],
+        'processingType': args[22],
+        'percentSrcAlsoDest': args[23],
+        'percentSrcFail': args[24],
+        'percentDstFail': args[25],
+        'sdn': args[26],
+        'useAws': args[27],
+        'ignoreFailures': args[28],
+        'numThreads': args[29]
     }
 
     json_payload = json.dumps(payload)

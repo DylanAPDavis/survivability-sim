@@ -1,7 +1,7 @@
 from launch import launch_simulator, kill
 import sys, ast
 
-default_len = 25
+default_len = 30
 
 
 def run_sim(args):
@@ -40,15 +40,20 @@ def build_param_dict(args):
         "numConnections": ast.literal_eval(args[13]),
         "minConnectionsRange": ast.literal_eval(args[14]),
         "maxConnectionsRange": ast.literal_eval(args[15]),
-        "numFailsAllowed": ast.literal_eval(args[16]),
-        "minMaxFailsAllowed": ast.literal_eval(args[17]),
-        "processingType": args[18],
-        "percentSrcAlsoDest": ast.literal_eval(args[19]),
-        "percentSrcFail": ast.literal_eval(args[20]),
-        "percentDestFail": ast.literal_eval(args[21]),
-        "sdn": ast.literal_eval(args[22]),
-        "useAws": ast.literal_eval(args[23]),
-        "ignoreFailures": ast.literal_eval(args[24])
+        "minSrcConnectionsRange": ast.literal_eval(args[16]),
+        "maxSrcConnectionsRange": ast.literal_eval(args[17]),
+        "minDstConnectionsRange": ast.literal_eval(args[18]),
+        "maxDstConnectionsRange": ast.literal_eval(args[19]),
+        "numFailsAllowed": ast.literal_eval(args[20]),
+        "minMaxFailsAllowed": ast.literal_eval(args[21]),
+        "processingType": args[22],
+        "percentSrcAlsoDest": ast.literal_eval(args[23]),
+        "percentSrcFail": ast.literal_eval(args[24]),
+        "percentDestFail": ast.literal_eval(args[25]),
+        "sdn": ast.literal_eval(args[26]),
+        "useAws": ast.literal_eval(args[27]),
+        "ignoreFailures": ast.literal_eval(args[28]),
+        "numThreads": ast.literal_eval(args[29])
     }
 
 
@@ -56,8 +61,10 @@ def print_usage_message():
     message = "Usage: seed topologyId numRequests algorithm problemClass objective numSources numDestinations"
     message += " failureSetSize minMaxFailures[min, max] failureClass failureProb minMaxFailureProb[min, max]"
     message += " numConnections minConnectionsRange[min, max] maxConnectionsRange[min, max]"
+    message += " minSrcConnectionsRange[min, max] maxSrcConnectionsRange[min, max]"
+    message += " minDstConnectionsRange[min, max] maxDstConnectionsRange[min, max]"
     message += " numFailsAllowed minMaxFailsAllowed[min, max] processingType percentSrcAlsoDest"
-    message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures"
+    message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures numThreads"
     print(message)
 
 

@@ -76,10 +76,12 @@ public class GenerationService {
     private String hashParams(SimulationParameters params) {
         return hashingService.hash(params.getSeed(), params.getTopologyId(), params.getProblemClass(), params.getObjective(), params.getAlgorithm(),
                 params.getNumRequests(), params.getNumSources(), params.getNumDestinations(), params.getNumConnections(),
-                params.getMinConnectionsRange(), params.getMaxConnectionsRange(), params.getFailureSetSize(), params.getMinMaxFailures(),
-                params.getFailureClass(), params.getFailureProb(), params.getMinMaxFailureProb(), params.getNumFailsAllowed(), params.getMinMaxFailsAllowed(),
+                params.getMinConnectionsRange(), params.getMaxConnectionsRange(), params.getMinSrcConnectionsRange(),
+                params.getMaxSrcConnectionsRange(), params.getMinDstConnectionsRange(), params.getMaxDstConnectionsRange(),
+                params.getFailureSetSize(), params.getMinMaxFailures(), params.getFailureClass(), params.getFailureProb(),
+                params.getMinMaxFailureProb(), params.getNumFailsAllowed(), params.getMinMaxFailsAllowed(),
                 params.getProcessingType(), params.getPercentSrcAlsoDest(), params.getPercentSrcFail(),
-                params.getPercentDestFail(), params.getSdn(), params.getUseAws(), params.getIgnoreFailures());
+                params.getPercentDestFail(), params.getSdn(), params.getUseAws(), params.getIgnoreFailures(), params.getNumThreads());
     }
 
     public RequestSet generateFromRequestParams(RequestParameters requestParameters) {
