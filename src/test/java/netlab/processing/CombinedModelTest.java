@@ -730,6 +730,36 @@ public class CombinedModelTest {
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
+    // Src/Dest Failure - Have two paths left over
+    @Test
+    public void srcDestFailTwoPathsLeftOver(){
+        int numSources = 1;
+        int numDestinations = 3;
+        int numConnections = 2;
+        List<Integer> minConnectionsRange = Collections.singletonList(0);
+        List<Integer> maxConnectionsRange = Collections.singletonList(1);
+        List<Integer> minSrcConnectionsRange = Collections.singletonList(2);
+        List<Integer> maxSrcConnectionsRange = Collections.singletonList(3);
+        List<Integer> minDstConnectionsRange = Collections.singletonList(0);
+        List<Integer> maxDstConnectionsRange = Collections.singletonList(1);
+        int fSetSize = 1;
+        String failureClass = "Node";
+        int numFailsAllowed = 1;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.3;
+        boolean survivable = true;
+        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rs = processingService.processRequestSet(rs);
+        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
+
     private void printFailureSet(Set<Failure> failures){
         System.out.println("Failure set: " + failures.stream().map(f -> {
             if(f.getLink() != null){

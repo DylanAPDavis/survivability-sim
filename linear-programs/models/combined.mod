@@ -71,10 +71,10 @@ var L{(s,d) in SD, i in I, u in V, v in V} binary;
 # NC - Node v is in Connection (s,d,i)
 var NC{(s,d) in SD, i in I, v in V} binary;
 
-# Connection (s,d,i) fails because of the removal of FG[g]
+# Connection (s,d,i) fails because of the removal of FG[g]. Excludes the source and destination
 var FG_Conn {(s,d) in SD, i in I, g in GroupIndices} binary;
 
-
+var FG_Conn_include_endpoints {(s,d) in SD, i in I, g in GroupIndices} binary;
 
 
 # INDICATOR VARIABLES -> Indicate if at least one connection is destroyed by removal of FG g
@@ -226,16 +226,23 @@ subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 
 # Connection (s,d,i) fails or does not fail due to FG[g]
 
-# Number of failures caused by a link --> Number of connections that include that element
+# Number of failures caused by a link --> Number of connections that include that element. Exclude the src/dest of a connection.
 subject to groupCausesConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices}:
 	FG_Conn[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[s,d,i,v];
 
 subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices}:
 	FG_Conn[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[s,d,i,v];
 
+# Track connections that fail due to the removal of a failure group - including the src/dest of a connection.
+subject to groupCausesConnectionToFailIncludeEndpoints_1{(s,d) in SD, i in I, g in GroupIndices}:
+	FG_Conn_include_endpoints[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
+
+subject to groupCausesConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g in GroupIndices}:
+	FG_Conn_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
+
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:
-	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn[s,d,i,g];
+	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn_include_endpoints[s,d,i,g];
 
 
 # INDICATOR VARIABLE CONSTRAINTS

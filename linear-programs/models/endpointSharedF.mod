@@ -185,9 +185,16 @@ subject to groupCausesConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices}
 subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices}:
 	FG_Conn[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and  (v,v) in FG[g]} NC[s,d,i,v];
 
+# Track connections that fail due to the removal of a failure group - including the src/dest of a connection.
+subject to groupCausesConnectionToFailIncludeEndpoints_1{(s,d) in SD, i in I, g in GroupIndices}:
+	FG_Conn_include_endpoints[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
+
+subject to groupCausesConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g in GroupIndices}:
+	FG_Conn_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
+
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:
-	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn[s,d,i,g];
+	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn_include_endpoints[s,d,i,g];
 
 # Endpoints
 
