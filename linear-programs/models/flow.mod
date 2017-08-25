@@ -60,7 +60,7 @@ var NC{(s,d) in SD, i in I, v in V} binary;
 var FG_Conn {(s,d) in SD, i in I, g in GroupIndices[s,d]} binary;
 
 # Connection (s,d,i) can be disconnected by the removal of any members of FG[g] - including sources and destinations
-var FG_Conn_include_endpoints {(s,d) in SD, i in I, g in GroupIndices} binary;
+var FG_Conn_include_endpoints {(s,d) in SD, i in I, g in GroupIndices[s,d]} binary;
 
 # FG_Sum_Max - Number of failed connections caused by any failure group (groupIndex)
 var FG_Sum_Max{(s,d) in SD} >= 0 integer;
@@ -163,11 +163,11 @@ subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices[
 	FG_Conn[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[s,d,g] or (v,u) in FG[s,d,g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[s,d,g]} NC[s,d,i,v];
 
 # Track connections that fail due to the removal of a failure group - including the src/dest of a connection.
-subject to groupCausesConnectionToFailIncludeEndpoints_1{(s,d) in SD, i in I, g in GroupIndices}:
-	FG_Conn_include_endpoints[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
+subject to groupCausesConnectionToFailIncludeEndpoints_1{(s,d) in SD, i in I, g in GroupIndices[s,d]}:
+	FG_Conn_include_endpoints[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[s,d,g] or (v,u) in FG[s,d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[s,d,g]} NC[s,d,i,v];
 
-subject to groupCausesConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g in GroupIndices}:
-	FG_Conn_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
+subject to groupCausesConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g in GroupIndices[s,d]}:
+	FG_Conn_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[s,d,g] or (v,u) in FG[s,d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[s,d,g]} NC[s,d,i,v];
 
 # Flow pairs
 subject to atLeastOneConnFailsForSD_1{(s,d) in SD, g in GroupIndices[s,d]}:

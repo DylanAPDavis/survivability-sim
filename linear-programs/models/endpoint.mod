@@ -78,9 +78,13 @@ var FG_Sum_dst {d in D, g in GroupIndices_d[d]} >= 0 integer;
 var FG_Sum_Max_src{s in S} >= 0 integer;
 var FG_Sum_Max_dst{d in D} >= 0 integer;
 
-# Connection i between (s,d) fails due to group g
+# Connection i between (s,d) fails due to group g - excluding
 var FG_Conn_src{(s,d) in SD, i in I, g in GroupIndices_s[s]} >= 0 integer;
 var FG_Conn_dst{(s,d) in SD, i in I, g in GroupIndices_d[d]} >= 0 integer;
+
+# Connection i between (s,d) fails due to group g
+var FG_Conn_src_include_endpoints{(s,d) in SD, i in I, g in GroupIndices_s[s]} >= 0 integer;
+var FG_Conn_dst_include_endpoints{(s,d) in SD, i in I, g in GroupIndices_d[d]} >= 0 integer;
 
 # At least one connection from s is disconnected by removal of FG[g]
 var FG_Conn_s{s in S, g in GroupIndices_s[s]} binary;
@@ -203,12 +207,26 @@ subject to groupCausesDstConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndic
 subject to groupCausesDstConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices_d[d]}:
 	FG_Conn_dst[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG_d[d,g]} NC[s,d,i,v];
 
+# Endpoint-inclusive failure indicators
+subject to groupCausesSrcConnectionToFailIncludeEndpoints_1{(s,d) in SD, i in I, g in GroupIndices_s[s]}:
+	FG_Conn_src_include_endpoints[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG_s[s,g] or (v,u) in FG_s[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_s[s,g]} NC[s,d,i,v];
+
+subject to groupCausesSrcConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g in GroupIndices_s[s]}:
+	FG_Conn_src_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_s[s,g] or (v,u) in FG_s[s,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_s[s,g]} NC[s,d,i,v];
+
+subject to groupCausesDstConnectionToFailIncludeEndpoints_1{(s,d) in SD, i in I, g in GroupIndices_d[d]}:
+	FG_Conn_dst_include_endpoints[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V:  (v,v) in FG_d[d,g]} NC[s,d,i,v];
+
+subject to groupCausesDstConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g in GroupIndices_d[d]}:
+	FG_Conn_dst_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_d[d,g]} NC[s,d,i,v];
+
+
 # Sum max
 subject to maxFailsPerSrc{s in S, g in GroupIndices_s[s]}:
-    FG_Sum_Max_src[s] >= sum{i in I, d in D: s != d} FG_Conn_src[s,d,i,g];
+    FG_Sum_Max_src[s] >= sum{i in I, d in D: s != d} FG_Conn_src_include_endpoints[s,d,i,g];
 
 subject to maxFailsPerDst{d in D, g in GroupIndices_d[d]}:
-    FG_Sum_Max_dst[d] >= sum{i in I, s in S: s != d} FG_Conn_dst[s,d,i,g];
+    FG_Sum_Max_dst[d] >= sum{i in I, s in S: s != d} FG_Conn_dst_include_endpoints[s,d,i,g];
 
 
 # Indicators to show if at least one source connections is disconnected by the removal of g
