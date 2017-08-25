@@ -494,14 +494,14 @@ public class CombinedModelTest {
     @Test
     public void multicastNodeDisjoint(){
         int numSources = 1;
-        int numDestinations = 3;
-        int numConnections = 3;
-        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
-        List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
-        List<Integer> minSrcConnectionsRange = Arrays.asList(4, 4);
-        List<Integer> maxSrcConnectionsRange = Arrays.asList(4, 4);
+        int numDestinations = 2;
+        int numConnections = 2;
+        List<Integer> minConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(3, 3);
         List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
-        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(2, 2);
         int fSetSize = 13;
         String failureClass = "Node";
         int numFailsAllowed = 1;
@@ -865,7 +865,7 @@ public class CombinedModelTest {
                                                 List<Integer> minDstConnectionsRange, List<Integer> maxDstConnectionsRange,
                                                 int numFailsAllowed, double percentSrcAlsoDest, double percentSrcFail,
                                                 double percentDstFail){
-        return createRequestSet(1L, "NSFnet", 1, "ServiceILP", "Combined",
+        return createRequestSet(3L, "NSFnet", 1, "ServiceILP", "Combined",
                 "TotalCost", numSources, numDestinations, fSetSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange,
                 maxSrcConnectionsRange, minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, new ArrayList<>(),

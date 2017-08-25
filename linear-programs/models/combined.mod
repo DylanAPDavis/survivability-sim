@@ -74,6 +74,7 @@ var NC{(s,d) in SD, i in I, v in V} binary;
 # Connection (s,d,i) fails because of the removal of FG[g]. Excludes the source and destination
 var FG_Conn {(s,d) in SD, i in I, g in GroupIndices} binary;
 
+# Connection (s,d,i) can be disconnected by the removal of any members of FG[g] - including sources and destinations
 var FG_Conn_include_endpoints {(s,d) in SD, i in I, g in GroupIndices} binary;
 
 

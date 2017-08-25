@@ -57,6 +57,9 @@ var FG_Sum {g in GroupIndices} >= 0 integer;
 # Connection (s,d,i) fails because of a member of FG[g]
 var FG_Conn{(s,d) in SD, i in I, g in GroupIndices} binary;
 
+# Connection (s,d,i) can be disconnected by the removal of any members of FG[g] - including sources and destinations
+var FG_Conn_include_endpoints {(s,d) in SD, i in I, g in GroupIndices} binary;
+
 # Number of connections
 var Num_Conns_Total = sum{(s,d) in SD, i in I} C[s,d,i];
 
