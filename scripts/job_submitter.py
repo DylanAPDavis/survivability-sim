@@ -1,152 +1,172 @@
 import subprocess
 import math
 import time
-# seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
-seeds = [9,10,11]
-topology_ids = ["NSFnet"]
-problem_classes = ["Flex", "Flow", "FlowSharedF", "EndpointSharedF", "Endpoint", "Combined"]
-objectives = ["TotalCost"]
-algorithms = ["ServiceILP"]
-num_requests = [1]
-num_sources = [1, 7, 14]
-num_dests = [1, 7, 14]
-failure_set_dict = {
-    "Link": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 0.0], [21, 1, 0.0, 0.0], [21, 2, 0.0, 0.0]],
-    "Node": [[1, 1, 0.0, 0.0], [1, 1, 0.0714, 0.0], [1, 1, 0.0, 0.0714], [14, 1, 1.0, 1.0], [14, 2, 1.0, 1.0]],
-    "Both": [[35, 1, 1.0, 1.0]]
-}  # Includes failure class, num fails, num fails allowed, percent src fail, percent dst fail
-num_conns = [1, 7, 14]
-min_connection_ranges = [[0, 0], [1, 1]]
-max_connection_ranges = [[1, 1], [2, 2]]
-min_src_connection_ranges = [[0, 0], [1, 1]]
-max_src_connection_ranges = [[1, 1], [2, 2]]
-min_dst_connection_ranges = [[0, 0], [[1, 1]]]
-max_dst_connection_ranges = [[1, 1], [2, 2]]
-percent_src_also_dests = [0.0, 1.0]
-ignore_failures = [True, False]
-threads = [6]
 
 
-num_params = 0
-num_node_params = 0
-num_both_params = 0
+def create_ordered_params(*args):
+    return [str(i) for i in args]
 
 
-def create_params(seed, topology, problem, objective, algorithm, num_r, num_c, min_c_range, max_c_range,
-                  min_src_c_range, max_src_c_range, min_dst_c_range, max_dst_c_range, num_s, num_d,
-                  percent_src_dest, ignore, fail_type, fail_params, threads):
-    num_fails = fail_params[0]
-    num_fails_allowed = fail_params[1]
-    src_fail_percent = fail_params[2]
-    dst_fail_percent = fail_params[3]
-    num_s_in_d = math.ceil(percent_src_dest * num_s)
-    exclusive_s = num_s - num_s_in_d
-    complete_overlap = num_s_in_d == num_d and exclusive_s == 0
-    if num_s_in_d > num_d or (complete_overlap and num_d == 1) or (node_count(topology) - exclusive_s < num_d):
-        return None
-    if fail_type == "Node":
-        num_s_fail = math.ceil(src_fail_percent * num_s)
-        num_d_fail = math.ceil(dst_fail_percent * num_d)
-        if num_s_fail > num_fails or num_d_fail > num_fails or (num_s_fail - num_s_in_d + num_d_fail > num_fails):
-            return None
-    min_range = min_c_range if problem == "Flow" or problem == "FlowSharedF" or problem == "Combined" else []
-    max_range = max_c_range if problem == "Flow" or problem == "FlowSharedF" or problem == "Combined" else []
-    min_src_range = min_src_c_range if problem == "Endpoint" or problem == "EndpointSharedF" or problem == "Combined" else []
-    max_src_range = max_src_c_range if problem == "Endpoint" or problem == "EndpointSharedF" or problem == "Combined" else []
-    min_dst_range = min_dst_c_range if problem == "Endpoint" or problem == "EndpointSharedF" or problem == "Combined" else []
-    max_dst_range = max_dst_c_range if problem == "Endpoint" or problem == "EndpointSharedF" or problem == "Combined" else []
-    return [seed, topology, num_r, algorithm, problem, objective, num_s, num_d, num_fails, [], fail_type, 1.0, [],
-            num_c, min_range, max_range, min_src_range, max_src_range, min_dst_range, max_dst_range,
-            num_fails_allowed, [], "Solo", percent_src_dest, src_fail_percent, dst_fail_percent,
-            False, True, ignore, threads]
-    # "Usage: seed topologyId numRequests algorithm problemClass objective numSources numDestinations"
-    # " failureSetSize minMaxFailures[min, max] failureClass failureProb minMaxFailureProb[min, max]"
-    # " numConnections minConnectionsRange[min, max] maxConnectionsRange[min, max]"
-    # " numFailsAllowed minMaxFailsAllowed[min, max] processingType percentSrcAlsoDest"
-    # " percentSrcFail percentDstFail sdn useAWS ignoreFailures"
+class Job:
+    def __init__(self, problem, seed, num_s, num_d, num_c, fail_type, f_size, nfa, overlap, s_fail, d_fail,
+                 min_range, max_range, min_src_range, max_src_range, min_dst_range, max_dst_range, sdn, use_aws,
+                 ignore, fail_prob, processing, topo, num_r, algorithm, objective, fail_range, prob_range,
+                 nfa_range, num_threads):
+        self.problem = problem
+        self.seed = seed
+        self.num_s = num_s
+        self.num_d = num_d
+        self.num_c = num_c
+        self.fail_type = fail_type
+        self.f_size = f_size
+        self.nfa = nfa
+        self.overlap = overlap
+        self.s_fail = s_fail
+        self.d_fail = d_fail
+        self.min_range = min_range
+        self.max_range = max_range
+        self.min_src_range = min_src_range
+        self.max_src_range = max_src_range
+        self.min_dst_range = min_dst_range
+        self.max_dst_range = max_dst_range
+        self.sdn = sdn
+        self.use_aws = use_aws
+        self.ignore = ignore
+        self.fail_prob = fail_prob
+        self.processing = processing
+        self.topo = topo
+        self.num_r = num_r
+        self.algorithm = algorithm
+        self.objective = objective
+        self.fail_range = fail_range
+        self.prob_range = prob_range
+        self.nfa_range = nfa_range
+        self.num_threads = num_threads
+        self.ordered_params = create_ordered_params(problem, seed, num_s, num_d, num_c, fail_type, f_size, nfa,
+                                                    overlap, s_fail, d_fail, min_range, max_range, min_src_range,
+                                                    max_src_range, min_dst_range, max_dst_range, sdn, use_aws, ignore,
+                                                    fail_prob, processing, topo, num_r, algorithm, objective,
+                                                    fail_range, prob_range, nfa_range, num_threads)
 
 
-def node_count(topology_name):
-    if topology_name == "NSFnet":
-        return 14
+def build_request(problem, seed, num_s, num_d, num_c, fail_type, f_size, nfa, overlap=0.0, s_fail=0.0, d_fail=0.0,
+                  min_range=None, max_range=None, min_src_range=None, max_src_range=None, min_dst_range=None,
+                  max_dst_range=None, sdn=False, use_aws=True, make_ignore_f=True, fail_prob=1.0, processing="Solo",
+                  topo="NSFnet", num_r=1, algorithm="ServiceILP", objective="TotalCost", fail_range=None,
+                  prob_range=None, nfa_range=None, num_threads=8):
+    if min_range is None:
+        min_range = []
+    if max_range is None:
+        max_range = []
+    if min_src_range is None:
+        min_src_range = []
+    if max_src_range is None:
+        max_src_range = []
+    if min_dst_range is None:
+        min_dst_range = []
+    if max_dst_range is None:
+        max_dst_range = []
+    if fail_range is None:
+        fail_range = []
+    if prob_range is None:
+        prob_range = []
+    if nfa_range is None:
+        nfa_range = []
+    job = Job(seed, topo, num_r, algorithm, problem, objective, num_s, num_d, f_size, fail_range, fail_type, fail_prob,
+             prob_range, num_c, min_range, max_range, min_src_range, max_src_range, min_dst_range, max_dst_range, nfa,
+             nfa_range, processing, overlap, s_fail, d_fail, sdn, use_aws, False, num_threads)
+    job_ignore = None if not make_ignore_f else \
+        Job(seed, topo, num_r, algorithm, problem, objective, num_s, num_d, f_size, fail_range, fail_type,
+            fail_prob, prob_range, num_c, min_range, max_range, min_src_range, max_src_range, min_dst_range,
+            max_dst_range, nfa, nfa_range, processing, overlap, s_fail, d_fail, sdn, use_aws, True, num_threads)
+    jobs = [job]
+    if job_ignore is not None:
+        jobs.append(job_ignore)
+    return jobs
 
 
-def create_job(seed, topology, problem, objective, algorithm, num_r, num_c, min_c_range, max_c_range,
-               min_src_c_range, max_src_c_range, min_dst_c_range, max_dst_c_range, num_s, num_d, percent_src_dest,
-               ignore, fail_type, fail_params, numThreads):
-    # 1_NSFnet_Flex_TotalCost_ServiceILP_1_1_1_1_[0,0]_[1,1]_0_[]_Link_1.0_[]_0_[]_Solo_0.0_0.0_0.0_false_true_true
+def process_job(job):
     output_file_path = "results/output/" + "_".join(
-        [str(seed), topology, problem, objective, algorithm, str(num_r), str(num_s), str(num_d), str(num_c),
-         str(min_c_range), str(max_c_range), str(min_src_c_range), str(max_src_c_range), str(min_dst_c_range), str(max_dst_c_range),
-         str(fail_params[0]), str([]), fail_type, str(1.0), str([]), str(fail_params[1]),
-         str([]), "Solo", str(percent_src_dest), str(fail_params[2]), str(fail_params[3]), "false", "true", str(ignore).lower(),
-         str(numThreads)
-        ]
-    ).replace(" ", "")
-    parameters = create_params(seed, topology, problem, objective, algorithm,
-                               num_r, num_c, min_c_range, max_c_range,
-                               num_s, num_d, percent_src_dest, ignore,
-                               fail_type, fail_params)
-    if parameters is not None:
-        global num_params, num_node_params, num_both_params
-        num_params += 1
-        if fail_type == "Node":
-            num_node_params += 1
-        if fail_type == "Both":
-            num_both_params += 1
+        [str(job.seed), job.topo, job.problem, job.objective, job.algorithm, str(job.num_r), str(job.num_s),
+         str(job.num_d), str(job.num_c), str(job.min_range), str(job.max_range), str(job.min_src_range),
+         str(job.max_src_range), str(job.min_dst_range), str(job.max_dst_range), str(job.f_size),
+         str(job.fail_range), job.fail_type, str(job.fail_prob), str(job.prob_range), str(job.nfa),
+         str(job.nfa_range), job.processing, str(job.overlap), str(job.s_fail), str(job.d_fail), job.sdn,
+         job.use_aws, str(job.ignore).lower(), str(job.num_threads)]).replace(" ", "")
+    run_time = "3:59" if (job.f_size >= 14 and not job.ignore) else "0:30"
+    memory = "700"
+    if job.f_size >= 14 and not job.ignore:
+        if job.nfa >= 2:
+            memory = "3500"
+            if job.problem == "Endpoint":
+                memory = "4000"
+        elif job.num_s >= 14 or job.num_d >= 14:
+            memory = "2700"
+        else:
+            memory = "1500"
+    command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
+                     str(job.num_threads), "-o", output_file_path, "python", "scripts/run_simulation.py"]
+    command_input += job.ordered_params
+    process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
-        run_time = "3:59" if (fail_params[0] >= 14 and not ignore) else "0:30"
-        memory = "700"
-        if fail_params[0] >= 14 and not ignore:
-            if fail_params[1] >= 2:
-                memory = "3500"
-                if problem == "Endpoint":
-                    memory = "4000"
-            elif num_s >= 14 or num_d >= 14:
-                memory = "2700"
-            else:
-                memory = "1500"
-
-        command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
-                         str(numThreads), "-o", output_file_path, "python", "scripts/run_simulation.py"]
-        for param in parameters:
-            command_input.append(str(param))
-        process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
-
-
-# create_job(1, "NSFNet", "Endpoint", "TotalCost", "ServiceILP", 5, 1, [0, 0], [4, 4], 14, 14, 1.0, False, "Link", [14, 1, 0.0, 0.0])
-# exit(1)
-
+# seeds = range(1, 31)
+seeds = [1]
 for seed in seeds:
-    for topology in topology_ids:
-        for problem in problem_classes:
-            for objective in objectives:
-                print("Starting: " + problem + " " + objective + " " + str(seed))
-                for algorithm in algorithms:
-                    for num_r in num_requests:
-                        for num_c in num_conns:
-                            for min_c_range in min_connection_ranges:
-                                for max_c_range in max_connection_ranges:
-                                    for min_src_c_range in min_src_connection_ranges:
-                                        for max_src_c_range in max_src_connection_ranges:
-                                            for min_dst_c_range in min_dst_connection_ranges:
-                                                for max_dst_c_range in max_dst_connection_ranges:
-                                                    for num_s in num_sources:
-                                                        time.sleep(10)
-                                                        for num_d in num_dests:
-                                                            for percent_src_dest in percent_src_also_dests:
-                                                                for ignore in ignore_failures:
-                                                                    for fail_type in failure_set_dict.keys():
-                                                                        for fail_params in failure_set_dict[fail_type]:
-                                                                            for num_threads in threads:
-                                                                                create_job(seed, topology, problem, objective, algorithm,
-                                                                                           num_r, num_c, min_c_range, max_c_range,
-                                                                                           min_src_c_range, max_src_c_range,
-                                                                                           min_dst_c_range, max_dst_c_range, num_s,
-                                                                                           num_d, percent_src_dest, ignore, fail_type,
-                                                                                           fail_params, num_threads)
-                print("Done with: " + problem + " " + objective + " " + str(seed))
+    # SD7
+    jobs = build_request("Flex", seed, 7, 7, 14, "Link", 21, 1)
+    jobs += build_request("Flex", seed, 7, 7, 14, "Link", 21, 2)
+    jobs += build_request("Flex", seed,  7, 7, 14, "Node", 14, 1, s_fail=1.0, d_fail=1.0)
+    jobs += build_request("Flex", seed, 7, 7, 14, "Node", 14, 2, s_fail=1.0, d_fail=1.0)
+    jobs += build_request("Flex", seed, 7, 7, 14, "Both", 35, 1, s_fail=1.0, d_fail=1.0)
+    # SD14
+    jobs += build_request("Flex", seed, 14, 14, 14, "Link", 21, 1, overlap=1.0)
+    jobs += build_request("Flex", seed, 14, 14, 14, "Link", 21, 2, overlap=1.0)
+    jobs += build_request("Flex", seed,  14, 14, 14, "Node", 14, 1, s_fail=1.0, d_fail=1.0, overlap=1.0)
+    jobs += build_request("Flex", seed, 14, 14, 14, "Node", 14, 2, s_fail=1.0, d_fail=1.0, overlap=1.0)
+    jobs += build_request("Flex", seed, 14, 14, 14, "Both", 35, 1, s_fail=1.0, d_fail=1.0, overlap=1.0)
 
-print(num_params)
-print(num_node_params)
-print(num_both_params)
+
+    # SD7
+    jobs += build_request("FlowSharedF", seed, 7, 7, 14, "Link", 21, 1, min_range=[0, 0], max_range=[2, 2])
+    jobs += build_request("FlowSharedF", seed, 7, 7, 14, "Link", 21, 2, min_range=[0, 0], max_range=[2, 2])
+    jobs += build_request("FlowSharedF", seed,  7, 7, 14, "Node", 14, 1, s_fail=1.0, d_fail=1.0,
+                          min_range=[0, 0], max_range=[2, 2])
+    jobs += build_request("FlowSharedF", seed, 7, 7, 14, "Node", 14, 2, s_fail=1.0, d_fail=1.0, 
+                          min_range=[0, 0], max_range=[2, 2])
+    jobs += build_request("FlowSharedF", seed, 7, 7, 14, "Both", 35, 1, s_fail=1.0, d_fail=1.0,
+                          min_range=[0, 0],  max_range=[2, 2])
+    # SD14
+    jobs += build_request("FlowSharedF", seed, 14, 14, 14, "Link", 21, 1, min_range=[0, 0], max_range=[2, 2], overlap=1.0)
+    jobs += build_request("FlowSharedF", seed, 14, 14, 14, "Link", 21, 2, min_range=[0, 0], max_range=[2, 2], overlap=1.0)
+    jobs += build_request("FlowSharedF", seed,  14, 14, 14, "Node", 14, 1, s_fail=1.0, d_fail=1.0,
+                          min_range=[0, 0], max_range=[2, 2], overlap=1.0)
+    jobs += build_request("FlowSharedF", seed, 14, 14, 14, "Node", 14, 2, s_fail=1.0, d_fail=1.0,
+                          min_range=[0, 0], max_range=[2, 2], overlap=1.0)
+    jobs += build_request("FlowSharedF", seed, 14, 14, 14, "Both", 35, 1, s_fail=1.0, d_fail=1.0,
+                          min_range=[0, 0],  max_range=[2, 2], overlap=1.0)
+
+    # SD7
+    jobs += build_request("EndpointSharedF", seed, 7, 7, 14, "Link", 21, 1,
+                          min_src_range=[0, 0], max_src_range=[2, 2], min_dst_range=[0, 0], max_dst_range=[2, 2])
+    jobs += build_request("EndpointSharedF", seed, 7, 7, 14, "Link", 21, 2,
+                          min_src_range=[0, 0], max_src_range=[2, 2], min_dst_range=[0, 0], max_dst_range=[2, 2])
+    jobs += build_request("EndpointSharedF", seed,  7, 7, 14, "Node", 14, 1, s_fail=1.0, d_fail=1.0,
+                          min_src_range=[0, 0], max_src_range=[2, 2], min_dst_range=[0, 0], max_dst_range=[2, 2])
+    jobs += build_request("EndpointSharedF", seed, 7, 7, 14, "Node", 14, 2, s_fail=1.0, d_fail=1.0,
+                          min_src_range=[0, 0], max_src_range=[2, 2], min_dst_range=[0, 0], max_dst_range=[2, 2])
+    jobs += build_request("EndpointSharedF", seed, 7, 7, 14, "Both", 35, 1, s_fail=1.0, d_fail=1.0,
+                          min_src_range=[0, 0], max_src_range=[2, 2], min_dst_range=[0, 0], max_dst_range=[2, 2])
+    jobs += build_request("EndpointSharedF", seed, 7, 7, 14, "Link", 21, 1,
+                          min_src_range=[0, 0], max_src_range=[2, 2], min_dst_range=[0, 0], max_dst_range=[2, 2])
+    # SD14
+    jobs += build_request("EndpointSharedF", seed, 14, 14, 14, "Link", 21, 2, min_src_range=[0, 0], max_src_range=[2, 2],
+                          min_dst_range=[0, 0], max_dst_range=[2, 2], overlap=1.0)
+    jobs += build_request("EndpointSharedF", seed,  14, 14, 14, "Node", 14, 1, s_fail=1.0, d_fail=1.0, min_src_range=[0, 0],
+                          max_src_range=[2, 2], min_dst_range=[0, 0], max_dst_range=[2, 2], overlap=1.0)
+    jobs += build_request("EndpointSharedF", seed, 14, 14, 14, "Node", 14, 2, s_fail=1.0, d_fail=1.0, min_src_range=[0, 0],
+                          max_src_range=[2, 2], min_dst_range=[0, 0], max_dst_range=[2, 2], overlap=1.0)
+    jobs += build_request("EndpointSharedF", seed, 14, 14, 14, "Both", 35, 1, s_fail=1.0, d_fail=1.0, min_src_range=[0, 0],
+                          max_src_range=[2, 2], min_dst_range=[0, 0], max_dst_range=[2, 2], overlap=1.0)
+    for job in jobs:
+        process_job(job)
+
