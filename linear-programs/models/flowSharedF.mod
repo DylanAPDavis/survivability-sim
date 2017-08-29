@@ -103,11 +103,14 @@ subject to totalConnectionsNeeded{g in GroupIndices}:
 subject to minNumConnectionsNeeded{(s,d) in SD, g in GroupIndices}:
 	Num_Conn[s,d] >= c_min_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededFails{(s,d) in SD, g in GroupIndices}:
-	FG_Conn_sd[s,d,g] == 1 ==> Num_Conn[s,d] <= c_max_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
+#subject to maxNumConnectionsNeededFails{(s,d) in SD, g in GroupIndices}:
+#	FG_Conn_sd[s,d,g] == 1 ==> Num_Conn[s,d] <= c_max_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
-	FG_Conn_sd_any[s,d] == 0 ==> Num_Conn[s,d] <= c_max_sd[s,d];
+#subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
+#	FG_Conn_sd_any[s,d] == 0 ==> Num_Conn[s,d] <= c_max_sd[s,d];
+
+subject to maxNumConnectionsAllowedPair{(s,d) in SD}:
+	Num_Conn[s,d] <= c_max_sd[s,d];
 
 
 

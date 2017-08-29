@@ -57,7 +57,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -66,6 +66,63 @@ public class CombinedModelTest {
         rs = processingService.processRequestSet(rs);
         AnalyzedSet as = analysisService.analyzeRequestSet(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+    }
+
+    @Test
+    public void compareModels(){
+        int numSources = 7;
+        int numDestinations = 7;
+        int fSetSize = 21;
+        String failureClass = "Link";
+        int numConnections = 10;
+        List<Integer> minConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> minSrcConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(2, 2);
+        int numFailsAllowed = 1;
+        double percentSrcAlsoDest = 0.0;
+        double percentSrcFail = 0.0;
+        double percentDstFail = 0.0;
+        boolean survivable = true;
+        System.out.println("Combined");
+        RequestSet rsCombined = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize,
+                failureClass, numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rsCombined = processingService.processRequestSet(rsCombined);
+        verify(rsCombined, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        AnalyzedSet asCombined = analysisService.analyzeRequestSet(rsCombined);
+        testSolution(rsCombined, asCombined, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+
+        System.out.println("------------------------------");
+        System.out.println("Flex");
+        RequestSet rsFlex = createCombinedRequestSet("Flex", numSources, numDestinations, fSetSize,
+                failureClass, numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rsFlex = processingService.processRequestSet(rsFlex);
+        AnalyzedSet asFlex = analysisService.analyzeRequestSet(rsFlex);
+        testSolution(rsFlex, asFlex, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+
+        System.out.println("------------------------------");
+        System.out.println("Flow");
+        RequestSet rsFlow = createCombinedRequestSet("FlowSharedF", numSources, numDestinations, fSetSize,
+                failureClass, numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rsFlow = processingService.processRequestSet(rsFlow);
+        AnalyzedSet asFlow = analysisService.analyzeRequestSet(rsFlow);
+        testSolution(rsFlow, asFlow, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+
+        System.out.println("------------------------------");
+        System.out.println("Endpoint");
+        RequestSet rsEndpoint = createCombinedRequestSet("EndpointSharedF", numSources, numDestinations, fSetSize,
+                failureClass, numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rsEndpoint = processingService.processRequestSet(rsEndpoint);
+        AnalyzedSet asEndpoint = analysisService.analyzeRequestSet(rsEndpoint);
+        testSolution(rsEndpoint, asEndpoint, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
     // Flow: 1 Min for each pair
@@ -87,7 +144,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -117,7 +174,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -147,7 +204,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -177,7 +234,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -207,7 +264,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -238,7 +295,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -269,7 +326,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -299,7 +356,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -329,7 +386,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -359,7 +416,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -389,7 +446,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -419,7 +476,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -449,7 +506,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -479,7 +536,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -509,7 +566,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 1.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -539,7 +596,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 1.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -569,7 +626,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 1.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -599,7 +656,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -629,7 +686,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -659,7 +716,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -689,7 +746,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -719,7 +776,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -749,7 +806,7 @@ public class CombinedModelTest {
         double percentSrcFail = 0.0;
         double percentDstFail = 0.3;
         boolean survivable = true;
-        RequestSet rs = createCombinedRequestSet(numSources, numDestinations, fSetSize, failureClass, numConnections,
+        RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
@@ -859,13 +916,13 @@ public class CombinedModelTest {
         assert(rs.getPercentSrcAlsoDest() == percentSrcAlsoDest);
     }
 
-    private RequestSet createCombinedRequestSet(int numSources, int numDestinations, int fSetSize, String failureClass,
+    private RequestSet createCombinedRequestSet(String problemClass, int numSources, int numDestinations, int fSetSize, String failureClass,
                                                 int numConnections, List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 List<Integer> minSrcConnectionsRange, List<Integer> maxSrcConnectionsRange,
                                                 List<Integer> minDstConnectionsRange, List<Integer> maxDstConnectionsRange,
                                                 int numFailsAllowed, double percentSrcAlsoDest, double percentSrcFail,
                                                 double percentDstFail){
-        return createRequestSet(3L, "NSFnet", 1, "ServiceILP", "Combined",
+        return createRequestSet(3L, "NSFnet", 1, "ServiceILP", problemClass,
                 "TotalCost", numSources, numDestinations, fSetSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange,
                 maxSrcConnectionsRange, minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, new ArrayList<>(),

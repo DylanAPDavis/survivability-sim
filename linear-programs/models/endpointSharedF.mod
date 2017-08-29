@@ -124,25 +124,32 @@ subject to minNumConnections{g in GroupIndices}:
 
 # ENDPOINT CONSTRAINTS
 
-# Source Constraints
+# Source constraints
 subject to minNumConnectionsNeededSource{s in S, g in GroupIndices}:
 	Num_Conn_src[s] >= c_min_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices}:
-	FG_Conn_s[s,g] == 1 ==> Num_Conn_src[s] <= c_max_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+#subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices}:
+#	FG_Conn_s[s,g] == 1 ==> Num_Conn_src[s] <= c_max_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededSourceNoFails{s in S}:
-	FG_Conn_s_any[s] == 0 ==> Num_Conn_src[s] <= c_max_s[s];
+#subject to maxNumConnectionsNeededSourceNoFails{s in S}:
+#	FG_Conn_s_any[s] == 0 ==> Num_Conn_src[s] <= c_max_s[s];
+
+subject to maxNumConnectionsAllowedSrc{s in S}:
+	Num_Conn_src[s] <= c_max_s[s];
 
 # Destination Constraints
+
 subject to minNumConnectionsNeededDest{d in D, g in GroupIndices}:
 	Num_Conn_dst[d] >= c_min_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices}:
-	FG_Conn_d[d,g] == 1 ==> Num_Conn_dst[d] <= c_max_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+#subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices}:
+#	FG_Conn_d[d,g] == 1 ==> Num_Conn_dst[d] <= c_max_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededDestNoFails{d in D}:
-	FG_Conn_d_any[d] == 0 ==> Num_Conn_dst[d] <= c_max_d[d];
+#subject to maxNumConnectionsNeededDestNoFails{d in D}:
+#	FG_Conn_d_any[d] == 0 ==> Num_Conn_dst[d] <= c_max_d[d];
+
+subject to maxNumConnectionsAllowedDst{d in D}:
+	Num_Conn_dst[d] <= c_max_d[d];
 
 
 # Other Connection Constraints
