@@ -77,10 +77,13 @@ public class CombinedModelTest {
         int numConnections = 10;
         List<Integer> minConnectionsRange = Arrays.asList(0, 0);
         List<Integer> maxConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> largeMaxConnectionsRange = Arrays.asList(100, 100);
         List<Integer> minSrcConnectionsRange = Arrays.asList(0, 0);
         List<Integer> maxSrcConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> largeMaxSrcConnectionsRange = Arrays.asList(100, 100);
         List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
         List<Integer> maxDstConnectionsRange = Arrays.asList(2, 2);
+        List<Integer> largeMaxDstConnectionsRange = Arrays.asList(100, 100);
         int numFailsAllowed = 1;
         double percentSrcAlsoDest = 0.0;
         double percentSrcFail = 0.0;
@@ -96,6 +99,7 @@ public class CombinedModelTest {
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         AnalyzedSet asCombined = analysisService.analyzeRequestSet(rsCombined);
         testSolution(rsCombined, asCombined, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+
 
         System.out.println("------------------------------");
         System.out.println("Flex");
@@ -116,6 +120,18 @@ public class CombinedModelTest {
         testSolution(rsFlow, asFlow, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
 
         System.out.println("------------------------------");
+        System.out.println("Combined - Flow");
+        RequestSet rsCombinedFlow = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize,
+                failureClass, numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, largeMaxSrcConnectionsRange,
+                minDstConnectionsRange, largeMaxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rsCombinedFlow = processingService.processRequestSet(rsCombined);
+        verify(rsCombinedFlow, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, largeMaxSrcConnectionsRange,
+                minDstConnectionsRange, largeMaxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        AnalyzedSet asCombinedFlow = analysisService.analyzeRequestSet(rsCombinedFlow);
+        testSolution(rsCombinedFlow, asCombinedFlow, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+
+        System.out.println("------------------------------");
         System.out.println("Endpoint");
         RequestSet rsEndpoint = createCombinedRequestSet("EndpointSharedF", numSources, numDestinations, fSetSize,
                 failureClass, numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
@@ -123,6 +139,18 @@ public class CombinedModelTest {
         rsEndpoint = processingService.processRequestSet(rsEndpoint);
         AnalyzedSet asEndpoint = analysisService.analyzeRequestSet(rsEndpoint);
         testSolution(rsEndpoint, asEndpoint, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
+
+        System.out.println("------------------------------");
+        System.out.println("Combined - Endpoint");
+        RequestSet rsCombinedEndpoint = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize,
+                failureClass, numConnections, minConnectionsRange, largeMaxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        rsCombinedEndpoint = processingService.processRequestSet(rsCombined);
+        verify(rsCombinedEndpoint, numSources, numDestinations, fSetSize, failureClass, numConnections,
+                minConnectionsRange, largeMaxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
+                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+        AnalyzedSet asCombinedEndpoint = analysisService.analyzeRequestSet(rsCombinedEndpoint);
+        testSolution(rsCombinedEndpoint, asCombinedEndpoint, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
     // Flow: 1 Min for each pair
