@@ -79,10 +79,10 @@ public class CombinedModelTest {
         List<Integer> maxConnectionsRange = Arrays.asList(1, 1);
         List<Integer> largeMaxConnectionsRange = Arrays.asList(100, 100);
         List<Integer> minSrcConnectionsRange = Arrays.asList(0, 0);
-        List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxSrcConnectionsRange = Arrays.asList(2, 2);
         List<Integer> largeMaxSrcConnectionsRange = Arrays.asList(100, 100);
         List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
-        List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        List<Integer> maxDstConnectionsRange = Arrays.asList(2, 2);
         List<Integer> largeMaxDstConnectionsRange = Arrays.asList(100, 100);
         int numFailsAllowed = 1;
         double percentSrcAlsoDest = 0.0;

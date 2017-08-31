@@ -221,6 +221,16 @@ subject to groupCausesDstConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I,
 	FG_Conn_dst_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG_d[d,g] or (v,u) in FG_d[d,g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG_d[d,g]} NC[s,d,i,v];
 
 
+# Put limits on the number of connections between a pair that can share a FG
+subject to connectionsBetweenPairDoNotShareFGSrc{(s,d) in SD, g in GroupIndices_s[s]}:
+    sum{i in I} FG_Conn_src[s,d,i,g] <= 1;
+
+subject to connectionsBetweenPairDoNotShareFGDst{(s,d) in SD, g in GroupIndices_d[d]}:
+    sum{i in I} FG_Conn_dst[s,d,i,g] <= 1;
+
+
+
+
 # Sum max
 subject to maxFailsPerSrc{s in S, g in GroupIndices_s[s]}:
     FG_Sum_Max_src[s] >= sum{i in I, d in D: s != d} FG_Conn_src_include_endpoints[s,d,i,g];
@@ -254,3 +264,4 @@ subject to atLeastOneConnFailsForDAny_1{d in D}:
 
 subject to atLeastOneConnFailsForDAny_2{d in D}:
     FG_Conn_d_any[d] * card(V) ^ 4 >= sum{g in GroupIndices_d[d]} FG_Conn_d[d,g];
+

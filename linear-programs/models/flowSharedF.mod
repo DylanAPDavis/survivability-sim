@@ -186,4 +186,10 @@ subject to atLeastOneConnFailsForSDAny_1{(s,d) in SD}:
 subject to atLeastOneConnFailsForSDAny_2{(s,d) in SD}:
     FG_Conn_sd_any[s,d] * card(V) ^ 4 >= sum{g in GroupIndices} FG_Conn_sd[s,d,g];
 
+
+# Put limits on the number of connections between a pair that can share a FG
+subject to connectionsBetweenPairDoNotShareFG{(s,d) in SD, g in GroupIndices}:
+    sum{i in I} FG_Conn[s,d,i,g] <= 1;
+
+
 #-------------------------------------------------------

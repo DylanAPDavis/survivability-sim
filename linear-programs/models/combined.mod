@@ -256,6 +256,12 @@ subject to numFailsDueToGroup{g in GroupIndices}:
 	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn_include_endpoints[s,d,i,g];
 
 
+
+# Put limits on the number of connections between a pair  that can share a FG
+subject to connectionsBetweenPairDoNotShareFG{(s,d) in SD, g in GroupIndices}:
+    sum{i in I} FG_Conn[s,d,i,g] <= 1;
+
+
 # INDICATOR VARIABLE CONSTRAINTS
 
 # Flow pairs

@@ -140,6 +140,12 @@ subject to groupCausesConnectionToFailIncludeEndpoints_1{(s,d) in SD, i in I, g 
 subject to groupCausesConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g in GroupIndices}:
 	FG_Conn_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
 
+# Put limits on the number of connections between a pair that can share a FG
+subject to connectionsBetweenPairDoNotShareFG{(s,d) in SD, g in GroupIndices}:
+    sum{i in I} FG_Conn[s,d,i,g] <= 1;
+
+
+
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:
 	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn_include_endpoints[s,d,i,g];
