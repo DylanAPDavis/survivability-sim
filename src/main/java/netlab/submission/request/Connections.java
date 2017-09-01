@@ -18,6 +18,10 @@ import java.util.Map;
 public class Connections implements Serializable {
 
     private Integer numConnections;
+    private Integer reachMinS;
+    private Integer reachMaxS;
+    private Integer reachMinD;
+    private Integer reachMaxD;
 
     private Map<SourceDestPair, Integer> pairMinConnectionsMap;
     private Map<SourceDestPair, Integer> pairMaxConnectionsMap;

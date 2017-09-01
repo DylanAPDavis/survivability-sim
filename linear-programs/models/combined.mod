@@ -60,6 +60,16 @@ set GroupIndices := 1..NumGroups;
 # FG - Set of all failure groups of size k
 set FG {g in GroupIndices} within AllPairs default {};
 
+# MIN AND MAX PARAMS FOR NUMBER OF SRCS/DESTINATIONS
+param reachMinS >= 0 integer default 0;
+param reachMaxS >= 0 integer default card(S);
+param reachMinD >= 0 integer default 0;
+param reachMaxD >= 0 integer default card(D);
+
+var connSurvivesFromS{s in S, g in GroupIndices} binary;
+var connSurvivesToD{d in D, g in GroupIndices} binary;
+
+
 # VARIABLES
 
 # C - connection number (i) from node s to node d
@@ -103,9 +113,7 @@ var FG_Conn_d{d in D, g in GroupIndices} binary;
 # At least one connection to d is disconnected by removal of any FG
 var FG_Conn_d_any{d in D} binary;
 
-
 # END INDICATOR VARIABLES
-
 
 
 
@@ -159,9 +167,6 @@ subject to maxNumConnectionsNeededFails{(s,d) in SD, g in GroupIndices}:
 subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
 	FG_Conn_sd_any[s,d] == 0 ==> Num_Conn[s,d] <= c_max_sd[s,d];
 
-#subject to maxNumConnectionsAllowedPair{(s,d) in SD}:
-#	Num_Conn[s,d] <= c_max_sd[s,d];
-
 # ENDPOINT CONSTRAINTS
 
 # Source constraints
@@ -174,9 +179,6 @@ subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices}:
 subject to maxNumConnectionsNeededSourceNoFails{s in S}:
 	FG_Conn_s_any[s] == 0 ==> Num_Conn_src[s] <= c_max_s[s];
 
-#subject to maxNumConnectionsAllowedSrc{s in S}:
-#	Num_Conn_src[s] <= c_max_s[s];
-
 # Destination Constraints
 
 subject to minNumConnectionsNeededDest{d in D, g in GroupIndices}:
@@ -188,10 +190,35 @@ subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices}:
 subject to maxNumConnectionsNeededDestNoFails{d in D}:
 	FG_Conn_d_any[d] == 0 ==> Num_Conn_dst[d] <= c_max_d[d];
 
-#subject to maxNumConnectionsAllowedDst{d in D}:
-#	Num_Conn_dst[d] <= c_max_d[d];
-
 #END ENDPOINT CONSTRAINTS
+
+# SRC/DEST REACHABILITY CONSTRAINTS
+
+subject to connSurvivesFromS_1{s in S, g in GroupIndices}:
+   connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+
+subject to connSurvivesFromS_2{s in S, g in GroupIndices}:
+   connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+
+subject to connSurvivesToD_1{d in D, g in GroupIndices}:
+   connSurvivesToD[d,g] <= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+
+subject to connSurvivesToD_2{d in D, g in GroupIndices}:
+   connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+
+subject to minSrcsReached{g in GroupIndices}:
+    sum{s in S} connSurvivesFromS[s,g] >= reachMinS;
+
+subject to minDstsReached{g in GroupIndices}:
+    sum{d in D} connSurvivesToD[d,g] >= reachMinD;
+
+subject to maxSrcsReached{g in GroupIndices}:
+    sum{s in S} connSurvivesFromS[s,g] <= reachMaxS;
+
+subject to maxDstsReached{g in GroupIndices}:
+    sum{d in D} connSurvivesToD[d,g] <= reachMaxD;
+
+# END SRC/DEST REACHABILITY CONSTRAINTS
 
 
 

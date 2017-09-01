@@ -78,6 +78,7 @@ public class GenerationService {
                 params.getNumRequests(), params.getNumSources(), params.getNumDestinations(), params.getNumConnections(),
                 params.getMinConnectionsRange(), params.getMaxConnectionsRange(), params.getMinSrcConnectionsRange(),
                 params.getMaxSrcConnectionsRange(), params.getMinDstConnectionsRange(), params.getMaxDstConnectionsRange(),
+                params.getReachMinS(), params.getReachMaxS(), params.getReachMinD(), params.getReachMaxD(),
                 params.getFailureSetSize(), params.getMinMaxFailures(), params.getFailureClass(), params.getFailureProb(),
                 params.getMinMaxFailureProb(), params.getNumFailsAllowed(), params.getMinMaxFailsAllowed(),
                 params.getProcessingType(), params.getPercentSrcAlsoDest(), params.getPercentSrcFail(),
@@ -111,7 +112,7 @@ public class GenerationService {
                 .sdn(requestParameters.getSdn())
                 .useAws(requestParameters.getUseAws())
                 .topologyId(requestParameters.getTopologyId())
-                .numThreads(6)
+                .numThreads(requestParameters.getNumThreads())
                 .build();
     }
 
@@ -179,6 +180,10 @@ public class GenerationService {
 
         return Connections.builder()
                 .numConnections(params.getNumConnections())
+                .reachMinS(params.getReachMinSources())
+                .reachMaxS(params.getReachMaxSources())
+                .reachMinD(params.getReachMinDestinations())
+                .reachMaxD(params.getReachMaxDestinations())
                 .pairMinConnectionsMap(pairMinConnectionsMap)
                 .pairMaxConnectionsMap(pairMaxConnectionsMap)
                 .srcMinConnectionsMap(srcMinConnectionsMap)
@@ -295,6 +300,10 @@ public class GenerationService {
                 .srcMaxConnectionsMap(srcMaxConnectionsMap)
                 .dstMinConnectionsMap(dstMinConnectionsMap)
                 .dstMaxConnectionsMap(dstMaxConnectionsMap)
+                .reachMinS(params.getReachMinS())
+                .reachMaxS(params.getReachMaxS())
+                .reachMinD(params.getReachMinD())
+                .reachMaxD(params.getReachMaxD())
                 .build();
     }
 

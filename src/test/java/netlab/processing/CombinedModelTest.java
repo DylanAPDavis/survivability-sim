@@ -443,6 +443,10 @@ public class CombinedModelTest {
         List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
         List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
         List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        Integer reachMinS = 1;
+        Integer reachMaxS = 1;
+        Integer reachMinD = 1;
+        Integer reachMaxD = 1;
         int numFailsAllowed = 0;
         double percentSrcAlsoDest = 0.0;
         double percentSrcFail = 0.0;
@@ -450,7 +454,8 @@ public class CombinedModelTest {
         boolean survivable = true;
         RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
-                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                minDstConnectionsRange, maxDstConnectionsRange, reachMinS, reachMaxS, reachMinD, reachMaxD,
+                numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
@@ -473,6 +478,10 @@ public class CombinedModelTest {
         List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
         List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
         List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        Integer reachMinS = 1;
+        Integer reachMaxS = 1;
+        Integer reachMinD = 1;
+        Integer reachMaxD = 1;
         int numFailsAllowed = 1;
         double percentSrcAlsoDest = 0.0;
         double percentSrcFail = 0.0;
@@ -480,7 +489,8 @@ public class CombinedModelTest {
         boolean survivable = true;
         RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
-                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                minDstConnectionsRange, maxDstConnectionsRange, reachMinS, reachMaxS, reachMinD, reachMaxD,
+                numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
@@ -503,6 +513,10 @@ public class CombinedModelTest {
         List<Integer> maxSrcConnectionsRange = Arrays.asList(1, 1);
         List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
         List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        Integer reachMinS = 1;
+        Integer reachMaxS = 1;
+        Integer reachMinD = 1;
+        Integer reachMaxD = 1;
         int numFailsAllowed = 1;
         double percentSrcAlsoDest = 0.0;
         double percentSrcFail = 0.0;
@@ -510,7 +524,8 @@ public class CombinedModelTest {
         boolean survivable = true;
         RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
-                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                minDstConnectionsRange, maxDstConnectionsRange, reachMinS, reachMaxS, reachMinD, reachMaxD,
+                numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
@@ -537,10 +552,15 @@ public class CombinedModelTest {
         double percentSrcAlsoDest = 0.0;
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
+        Integer reachMinS = 1;
+        Integer reachMaxS = 1;
+        Integer reachMinD = 3;
+        Integer reachMaxD = 4;
         boolean survivable = true;
         RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
-                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                minDstConnectionsRange, maxDstConnectionsRange, reachMinS, reachMaxS, reachMinD, reachMaxD,
+                numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
@@ -567,10 +587,15 @@ public class CombinedModelTest {
         double percentSrcAlsoDest = 0.0;
         double percentSrcFail = 0.0;
         double percentDstFail = 0.0;
+        Integer reachMinS = 1;
+        Integer reachMaxS = 1;
+        Integer reachMinD = 4;
+        Integer reachMaxD = 4;
         boolean survivable = true;
         RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
-                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                minDstConnectionsRange, maxDstConnectionsRange, reachMinS, reachMaxS, reachMinD, reachMaxD,
+                numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
@@ -591,6 +616,10 @@ public class CombinedModelTest {
         List<Integer> maxSrcConnectionsRange = Arrays.asList(3, 3);
         List<Integer> minDstConnectionsRange = Arrays.asList(1, 1);
         List<Integer> maxDstConnectionsRange = Arrays.asList(2, 2);
+        Integer reachMinS = 1;
+        Integer reachMaxS = 1;
+        Integer reachMinD = 2;
+        Integer reachMaxD = 2;
         int fSetSize = 13;
         String failureClass = "Node";
         int numFailsAllowed = 1;
@@ -600,7 +629,8 @@ public class CombinedModelTest {
         boolean survivable = true;
         RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
-                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                minDstConnectionsRange, maxDstConnectionsRange, reachMinS, reachMaxS, reachMinD, reachMaxD,
+                numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
@@ -627,10 +657,15 @@ public class CombinedModelTest {
         double percentSrcAlsoDest = 0.0;
         double percentSrcFail = 0.0;
         double percentDstFail = 1.0;
+        Integer reachMinS = 1;
+        Integer reachMaxS = 1;
+        Integer reachMinD = 2;
+        Integer reachMaxD = 3;
         boolean survivable = true;
         RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
-                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                minDstConnectionsRange, maxDstConnectionsRange, reachMinS, reachMaxS, reachMinD, reachMaxD,
+                numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
@@ -651,6 +686,10 @@ public class CombinedModelTest {
         List<Integer> maxSrcConnectionsRange = Arrays.asList(3, 3);
         List<Integer> minDstConnectionsRange = Arrays.asList(0, 0);
         List<Integer> maxDstConnectionsRange = Arrays.asList(1, 1);
+        Integer reachMinS = 1;
+        Integer reachMaxS = 1;
+        Integer reachMinD = 2;
+        Integer reachMaxD = 2;
         int fSetSize = 0;
         String failureClass = "Node";
         int numFailsAllowed = 0;
@@ -660,7 +699,8 @@ public class CombinedModelTest {
         boolean survivable = true;
         RequestSet rs = createCombinedRequestSet("Combined", numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
-                minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                minDstConnectionsRange, maxDstConnectionsRange, reachMinS, reachMaxS, reachMinD, reachMaxD,
+                numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         verify(rs, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
@@ -952,12 +992,28 @@ public class CombinedModelTest {
                                                 int numConnections, List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 List<Integer> minSrcConnectionsRange, List<Integer> maxSrcConnectionsRange,
                                                 List<Integer> minDstConnectionsRange, List<Integer> maxDstConnectionsRange,
+                                                Integer reachMinS, Integer reachMaxS, Integer reachMinD, Integer reachMaxD,
                                                 int numFailsAllowed, double percentSrcAlsoDest, double percentSrcFail,
                                                 double percentDstFail){
         return createRequestSet(3L, "NSFnet", 1, "ServiceILP", problemClass,
                 "TotalCost", numSources, numDestinations, fSetSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange,
-                maxSrcConnectionsRange, minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, new ArrayList<>(),
+                maxSrcConnectionsRange, minDstConnectionsRange, maxDstConnectionsRange,
+                reachMinS, reachMaxS, reachMinD, reachMaxD, numFailsAllowed, new ArrayList<>(),
+                "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+    }
+
+    private RequestSet createCombinedRequestSet(String problemClass, int numSources, int numDestinations, int fSetSize, String failureClass,
+                                                int numConnections, List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
+                                                List<Integer> minSrcConnectionsRange, List<Integer> maxSrcConnectionsRange,
+                                                List<Integer> minDstConnectionsRange, List<Integer> maxDstConnectionsRange,
+                                                int numFailsAllowed, double percentSrcAlsoDest, double percentSrcFail,
+                                                double percentDstFail){
+        return createRequestSet(3L, "NSFnet", 1, "ServiceILP", problemClass,
+                "TotalCost", numSources, numDestinations, fSetSize, new ArrayList<>(), failureClass, 1.0,
+                new ArrayList<>(), numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange,
+                maxSrcConnectionsRange, minDstConnectionsRange, maxDstConnectionsRange,
+                0, numSources, 0, numDestinations, numFailsAllowed, new ArrayList<>(),
                 "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
     }
 
@@ -968,13 +1024,15 @@ public class CombinedModelTest {
                                         List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                         List<Integer> minSrcConnectionsRange, List<Integer> maxSrcConnectionsRange,
                                         List<Integer> minDstConnectionsRange, List<Integer> maxDstConnectionsRange,
+                                        Integer reachMinS, Integer reachMaxS, Integer reachMinD, Integer reachMaxD,
                                         Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
                                         Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
                                         double percentDstFail){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
-                minSrcConnectionsRange, maxSrcConnectionsRange, minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed,
+                minSrcConnectionsRange, maxSrcConnectionsRange, minDstConnectionsRange, maxDstConnectionsRange,
+                reachMinS, reachMaxS, reachMinD, reachMaxD, numFailsAllowed,
                 minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         RequestSet requestSet = generationService.generateFromSimParams(params);
         return requestSet;
@@ -987,6 +1045,7 @@ public class CombinedModelTest {
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 List<Integer> minSrcConnectionsRange, List<Integer> maxSrcConnectionsRange,
                                                 List<Integer> minDstConnectionsRange, List<Integer> maxDstConnectionsRange,
+                                                Integer reachMinS, Integer reachMaxS, Integer reachMinD, Integer reachMaxD,
                                                 Integer numFails, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
                                                 Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
                                                 double percentDstFail){
@@ -1011,6 +1070,10 @@ public class CombinedModelTest {
                 .maxSrcConnectionsRange(maxSrcConnectionsRange)
                 .minDstConnectionsRange(minDstConnectionsRange)
                 .maxDstConnectionsRange(maxDstConnectionsRange)
+                .reachMinS(reachMinS)
+                .reachMaxS(reachMaxS)
+                .reachMinD(reachMinD)
+                .reachMaxD(reachMaxD)
                 .numFailsAllowed(numFails)
                 .minMaxFailsAllowed(minMaxFailsAllowed)
                 .processingType(processingType)

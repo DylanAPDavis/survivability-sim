@@ -45,6 +45,12 @@ set GroupIndices{(s,d) in SD} := 1..NumGroups[s,d];
 # FG - Set of all failure groups of size k
 set FG {(s,d) in SD, g in GroupIndices[s,d]} within AllPairs default {};
 
+# MIN AND MAX PARAMS FOR NUMBER OF SRCS/DESTINATIONS
+param reachMinS >= 0 integer default 0;
+param reachMaxS >= 0 integer default card(S);
+param reachMinD >= 0 integer default 0;
+param reachMaxD >= 0 integer default card(D);
+
 # VARIABLES
 
 # C - connection number (i) from node s to node d

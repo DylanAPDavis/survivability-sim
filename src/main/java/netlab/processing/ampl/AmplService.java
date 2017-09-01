@@ -127,6 +127,16 @@ public class AmplService {
         String cTotal = "param c_total := " + request.getConnections().getNumConnections() + ";";
         dataLines.add(cTotal);
 
+        // Reach min/max src/dest
+        String reachMinS = "param reachMinS := " + request.getConnections().getReachMinS() + ";";
+        dataLines.add(reachMinS);
+        String reachMaxS = "param reachMaxS := " + request.getConnections().getReachMaxS() + ";";
+        dataLines.add(reachMaxS);
+        String reachMinD = "param reachMinD := " + request.getConnections().getReachMinD() + ";";
+        dataLines.add(reachMinD);
+        String reachMaxD = "param reachMaxD := " + request.getConnections().getReachMaxD() + ";";
+        dataLines.add(reachMaxD);
+
         // Flex/Endpoint/Flow level params
         if(problemClass.equals(ProblemClass.Flex)){
             dataLines.addAll(createFlexParamsLines(request));

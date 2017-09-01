@@ -125,6 +125,20 @@ public class DefaultValueService {
             params.setDestMaxNumConnectionsMap(new HashMap<>());
         }
 
+        // Reachability - reach min/max sources/dests
+        if(params.getReachMinSources() == null){
+            params.setReachMinSources(0);
+        }
+        if(params.getReachMaxSources() == null){
+            params.setReachMaxSources(params.getSources().size());
+        }
+        if(params.getReachMinDestinations() == null){
+            params.setReachMinDestinations(0);
+        }
+        if(params.getReachMaxDestinations() == null){
+            params.setReachMaxDestinations(params.getDestinations().size());
+        }
+
         // Number of failureSet that will occur
         if(params.getNumFailsAllowed() == null || params.getNumFailsAllowed() < 0){
             params.setNumFailsAllowed(0);
@@ -220,6 +234,19 @@ public class DefaultValueService {
         if(params.getMaxDstConnectionsRange() == null){
             params.setMaxDstConnectionsRange(new ArrayList<>());
         }
+        if(params.getReachMinS() == null){
+            params.setReachMinS(0);
+        }
+        if(params.getReachMaxS() == null){
+            params.setReachMaxS(params.getNumSources());
+        }
+        if(params.getReachMinD() == null){
+            params.setReachMinD(0);
+        }
+        if(params.getReachMaxD() == null){
+            params.setReachMaxD(params.getNumDestinations());
+        }
+
         if(params.getNumFailsAllowed() == null || params.getNumFailsAllowed() < 0){
             params.setNumFailsAllowed(0);
         }

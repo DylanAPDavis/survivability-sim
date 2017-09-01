@@ -152,6 +152,10 @@ public class DynamoInterface {
         if(params.getMaxDstConnectionsRange() != null  && !params.getMaxDstConnectionsRange().isEmpty()) {
             eav.put("maxDstConnectionsRange", new AttributeValue().withNS(params.getMaxDstConnectionsRange().stream().map(Object::toString).collect(Collectors.toList())));
         }
+        if(params.getReachMinS() != null) {eav.put("reachMinS", new AttributeValue().withN(Integer.toString(params.getReachMinS())));}
+        if(params.getReachMaxS() != null) {eav.put("reachMaxS", new AttributeValue().withN(Integer.toString(params.getReachMaxS())));}
+        if(params.getReachMinD() != null) {eav.put("reachMinD", new AttributeValue().withN(Integer.toString(params.getReachMinD())));}
+        if(params.getReachMaxD() != null) {eav.put("reachMaxD", new AttributeValue().withN(Integer.toString(params.getReachMaxD())));}
 
         if(params.getNumFailsAllowed() != null) {eav.put("numFailsAllowed", new AttributeValue().withN(Integer.toString(params.getNumFailsAllowed())));}
         if(params.getMinMaxFailsAllowed() != null  && !params.getMinMaxFailsAllowed().isEmpty()) {

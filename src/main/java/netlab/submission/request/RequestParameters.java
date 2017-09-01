@@ -50,6 +50,11 @@ public class RequestParameters {
     private Map<String, Integer> destMinNumConnectionsMap;
     private Map<String, Integer> destMaxNumConnectionsMap;
 
+    private Integer reachMinSources;
+    private Integer reachMaxSources;
+    private Integer reachMinDestinations;
+    private Integer reachMaxDestinations;
+
     // Number of failureSet that will occur
     private Integer numFailsAllowed;
     // Alternatively, give a random number between values at index 0 and index 1

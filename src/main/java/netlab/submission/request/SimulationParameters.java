@@ -83,6 +83,11 @@ public class SimulationParameters {
 
     private Integer numThreads;
 
+    private Integer reachMinS;
+    private Integer reachMaxS;
+    private Integer reachMinD;
+    private Integer reachMaxD;
+
     public SimulationParameters clone(){
         try{
             return (SimulationParameters) super.clone();
