@@ -23,10 +23,28 @@ public class BhandariService {
     }
 
 
+    public List<List<Link>> computeDisjointPaths(Topology topo, Node src, Node dst, Integer numC, Integer numPaths,
+                                                 Integer minPairC, Integer maxPairC, Integer minSrcC,
+                                                 Integer maxSrcC, Integer minDstC, Integer maxDstC, Integer numSPaths,
+                                                 Integer numDPaths, Integer nfa, boolean nodesCanFail,
+                                                 Set<Failure> failureSet, boolean defaultBehavior) {
+        // Figure out how many connections to establish
+        if(numSPaths >= maxSrcC || numDPaths >= maxDstC){
+            return new ArrayList<>();
+        }
+
+        // You'll need: at least minPairC established. Do not exceed maxPairC.
+        Integer minimumCap = Math.min(Math.min(numC, maxPairC), Math.min(maxSrcC, maxDstC));
+        if(minimumCap < minPairC){
+            minimumCap = minPairC;
+        }
+        return computePaths(topo, src, dst, minimumCap, nfa, nodesCanFail, failureSet, defaultBehavior);
+    }
+
     public List<List<Link>> computeDisjointPaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA,
                                                  Boolean nodesCanFail, Set<Failure> failures, Boolean defaultBehavior)
     {
-        if(numC == 0)
+        if(numC + numFA == 0)
             return new ArrayList<>();
 
         // Bhandari's algorithm
@@ -278,4 +296,5 @@ public class BhandariService {
     private void logPath(List<Link> path, String title){
         log.info(title + ": " + path.stream().map(e -> "(" + e.getOrigin().getId() + ", " + e.getTarget().getId() + ")").collect(Collectors.toList()).toString());
     }
+
 }
