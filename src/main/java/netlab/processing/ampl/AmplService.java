@@ -59,7 +59,7 @@ public class AmplService {
 
     private AMPL assignValues(Request request, ProblemClass problemClass, Objective objective, Topology topology,
                               String requestSetId, Integer numThreads, AMPL ampl) throws IOException{
-        if(problemClass.equals(ProblemClass.Flex)){
+        /*if(problemClass.equals(ProblemClass.Flex)){
             ampl.read(modelDirectory + "/flex.mod");
         }
         if(problemClass.equals(ProblemClass.Endpoint)){
@@ -76,7 +76,8 @@ public class AmplService {
         }
         if(problemClass.equals(ProblemClass.Combined)){
             ampl.read(modelDirectory + "/combined.mod");
-        }
+        }*/
+        ampl.read(modelDirectory + "/combined.mod");
 
         ampl.eval("objective " + objective.getCode()  + ";");
         ampl.setIntOption("omit_zero_rows", 1);

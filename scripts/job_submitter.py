@@ -32,3 +32,5 @@ def process_job(job):
 seeds = [1]
 for seed in seeds:
     jobs = jobs.create_orig_run_jobs(seed)
+    for job in jobs:
+        process_job(job)

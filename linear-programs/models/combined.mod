@@ -28,27 +28,27 @@ set D;
 set SD within {S cross D} default {s in S, d in D: s != d};
 
 # c_total - Total number of connections needed after k failures
-param c_total >= 0 integer;
+param c_total >= 0 integer default card(SD);
 
 # c_min - Minimum number of connections per (s,d) pair that need to survive k failures
-param c_min_sd{SD} >= 0 integer;
+param c_min_sd{SD} >= 0 integer default 0;
 
 # c_max - Maxmimum number of connections per (s,d) pair that need to survive k failures
-param c_max_sd{SD} >= 0 integer;
+param c_max_sd{SD} >= 0 integer default c_total;
 
 
 # ENDPOINT PARAMETERS
 # c_min - Minimum number of connections from s in S that need to survive
-param c_min_s{s in S} >= 0 integer;
+param c_min_s{s in S} >= 0 integer default 0;
 
 # c_max - Maxmimum number of connections from s in S  that need to survive
-param c_max_s{s in S} >= 0 integer;
+param c_max_s{s in S} >= 0 integer default c_total;
 
 # c_min - Minimum number of connections to d in D that need to survive
-param c_min_d{d in D} >= 0 integer;
+param c_min_d{d in D} >= 0 integer default 0;
 
 # c_max - Maxmimum number of connections to d in D that need to survive
-param c_max_d{d in D} >= 0 integer;
+param c_max_d{d in D} >= 0 integer default c_total;
 # END ENDPOINT PARAMETERS
 
 # NumGroups - Number of k-sized failure groups
@@ -65,9 +65,6 @@ param reachMinS >= 0 integer default 0;
 param reachMaxS >= 0 integer default card(S);
 param reachMinD >= 0 integer default 0;
 param reachMaxD >= 0 integer default card(D);
-
-var connSurvivesFromS{s in S, g in GroupIndices} binary;
-var connSurvivesToD{d in D, g in GroupIndices} binary;
 
 
 # VARIABLES
@@ -113,9 +110,10 @@ var FG_Conn_d{d in D, g in GroupIndices} binary;
 # At least one connection to d is disconnected by removal of any FG
 var FG_Conn_d_any{d in D} binary;
 
+var connSurvivesFromS{s in S, g in GroupIndices} binary;
+var connSurvivesToD{d in D, g in GroupIndices} binary;
+
 # END INDICATOR VARIABLES
-
-
 
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {g in GroupIndices} >= 0 integer;
