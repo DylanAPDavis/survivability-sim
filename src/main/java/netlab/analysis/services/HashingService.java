@@ -10,14 +10,10 @@ import java.util.List;
 @Slf4j
 public class HashingService {
 
-    public String hash(String... args){
-        return String.join("_", args);
-    }
-
     public String hash(Object... args){
         List<String> strings = new ArrayList<>();
         for(Object arg : args){
-            strings.add(String.valueOf(arg).replace(" ", ""));
+            strings.add(String.valueOf(arg).replace(" ", "").toLowerCase());
         }
         return String.join("_", strings);
     }

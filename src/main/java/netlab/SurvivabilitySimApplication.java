@@ -2,6 +2,8 @@ package netlab;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.analyzed.AnalysisParameters;
+import netlab.analysis.controller.AnalysisController;
 import netlab.storage.controller.StorageController;
 import netlab.submission.controller.SubmissionController;
 import netlab.submission.request.SimulationParameters;
@@ -24,6 +26,7 @@ public class SurvivabilitySimApplication {
 		Boolean webValue = false;
 		SimulationParameters simParams = null;
 		Long rerunSeed = null;
+		AnalysisParameters analysisParams = null;
 		ObjectMapper mapper = new ObjectMapper();
 		printUsage(args);
 		for (String arg : args) {
@@ -44,6 +47,14 @@ public class SurvivabilitySimApplication {
 			if (option.contains("--rerun_incomplete")){
 				rerunSeed = Long.parseLong(value);
 			}
+			if (option.contains("--analyze")){
+				try {
+					analysisParams = mapper.readValue(value, AnalysisParameters.class);
+					log.info("Params: " + analysisParams.toString());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
 		// Set up context
@@ -54,11 +65,23 @@ public class SurvivabilitySimApplication {
 		// Get relevant controllers
 		StorageController storCon =  ctx.getBean(StorageController.class);
 		SubmissionController subCon = ctx.getBean(SubmissionController.class);
+		AnalysisController analysCon = ctx.getBean(AnalysisController.class);
 
 		// If they provided simulation parameters, just run the simulation, output results, and shutdown
 		if(simParams != null){
 			String requestId = subCon.submitRequestSet(simParams);
 			log.info("Request Set ID: " + requestId);
+			// If you're not analyzing the request, close the context and shut down the simulator
+			if(analysisParams == null) {
+				ctx.close();
+				System.exit(0);
+			}
+		}
+
+		// If they provided a request ID to analyze, analyze it
+		if(analysisParams != null){
+			analysCon.analyzeRequestSet(analysisParams);
+			log.info("Analyzing request " + analysisParams.getRequestSetId());
 			ctx.close();
 			System.exit(0);
 		}
@@ -81,8 +104,9 @@ public class SurvivabilitySimApplication {
 		String usage = "Usage: --server.port=<port num> --web=<true or false> " +
 				"--sim={JSON representation of SimulationParameter Class} " +
 				"--rerun_incomplete={seed} " +
-				"--rerun_params={JSON representation of AggregationParameters Class}";
-		String message = "Startup Arguments: ";
+				"--rerun_params={JSON representation of AggregationParameters Class}" +
+				"--analyze={requestSetId='id', useAws=true/false}";
+		String message = "Provided Startup Arguments: ";
 		for (String arg : args) {
 			message += arg + ", ";
 		}

@@ -51,7 +51,8 @@ public class GenerationService {
         if(requests.isEmpty()){
             status = "Submission failed. Could not generate requests.";
         }
-        String setId = params.getRequestSetId() != null ? params.getRequestSetId() : hashParams(params);
+        String setId = params.getRequestSetId() != null && !params.getRequestSetId().isEmpty()
+                ? params.getRequestSetId() : hashParams(params);
         params.setRequestSetId(setId);
         return RequestSet.builder()
                 .requests(requests)
@@ -74,7 +75,8 @@ public class GenerationService {
     }
 
     private String hashParams(SimulationParameters params) {
-        return hashingService.hash(params.getSeed(), params.getTopologyId(), params.getProblemClass(), params.getObjective(), params.getAlgorithm(),
+        return hashingService.hash(params.getSeed(), params.getTopologyId(), params.getProblemClass(), params.getObjective(),
+                params.getAlgorithm(),
                 params.getNumRequests(), params.getNumSources(), params.getNumDestinations(), params.getNumConnections(),
                 params.getMinConnectionsRange(), params.getMaxConnectionsRange(), params.getMinSrcConnectionsRange(),
                 params.getMaxSrcConnectionsRange(), params.getMinDstConnectionsRange(), params.getMaxDstConnectionsRange(),
