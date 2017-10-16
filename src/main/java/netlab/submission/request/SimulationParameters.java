@@ -127,6 +127,10 @@ public class SimulationParameters {
                     .useAws(useAws)
                     .ignoreFailures(ignoreFailures)
                     .numThreads(numThreads)
+                    .reachMinS(reachMinS)
+                    .reachMaxS(reachMaxS)
+                    .reachMinD(reachMinD)
+                    .reachMaxD(reachMaxD)
                     .build();
         }
     }
