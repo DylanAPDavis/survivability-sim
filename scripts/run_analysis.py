@@ -1,13 +1,16 @@
 from launch import launch_simulator, kill
+import sys
+default_len = 2
 
-default_len = 1
-def run_analysis(request_set_id, use_aws=False):
+
+def run_analysis(request_set_id, use_aws):
     params = {
-        "requestSetId" : request_set_id,
-        "useAws" : use_aws
+        "requestSetId": request_set_id,
+        "useAws": use_aws
     }
     launch_simulator(loop=True, sim_params={}, analysis_params=params, port_num="0", use_web_server="false")
     print("Done")
+
 
 def print_usage_message():
     message = "Usage: requestSetId useAws"
@@ -19,4 +22,4 @@ if __name__ == "__main__":
         print(str(len(sys.argv)) + " args submitted")
         print_usage_message()
         sys.exit(-1)
-    run_sim(sys.argv[1:])
+    run_analysis(sys.argv[1], sys.argv[2])

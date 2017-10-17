@@ -1,10 +1,10 @@
-from launch import launch_simulator, kill
+from launch import launch_simulator
 import sys, ast
-import logging
 import traceback
 
 
 default_len = 36
+
 
 def run_sim(args):
     print(args)
@@ -22,8 +22,8 @@ def run_sim(args):
     run_analysis = args[-1].lower() == "true"
     if run_analysis:
         analyze_params = {
-            "requestSetId" : param_dict["requestSetId"],
-            "useAws" : param_dict["useAws"]
+            "requestSetId": param_dict["requestSetId"],
+            "useAws": param_dict["useAws"]
         }
     
     # Launch the simulator
@@ -32,7 +32,6 @@ def run_sim(args):
     # Kill the simulator (in case it hasn't died)
     # kill(process)
     print("Done")
-
 
 
 def build_param_dict(args):
@@ -72,7 +71,7 @@ def build_param_dict(args):
             "useAws": args[31].lower() == "true",
             "ignoreFailures": args[32].lower() == "true",
             "numThreads": ast.literal_eval(args[33]),
-            "requestSetId" : args[34]
+            "requestSetId": args[34]
         }
     except Exception as e:
         print(traceback.format_exc())
