@@ -1,9 +1,9 @@
 package netlab.processing;
 
 import netlab.TestConfiguration;
-import netlab.analysis.analyzed.AnalyzedSet;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.services.AnalysisService;
-import netlab.submission.request.RequestSet;
+import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
 import org.junit.Test;
@@ -107,17 +107,17 @@ public class FailuresTest {
 
     @Test
     public void manyFailureRequests(){
-        RequestSet rs1 = solve(2L, "NSFnet", 10, "ServiceILP", "Flex",
+        Request rs1 = solve(2L, "NSFnet", 10, "ServiceILP", "Flex",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
                 false, false, .50, 0.0, 0.0);
         analyze(rs1, 5, true, true);
-        RequestSet rs2 = solve(2L, "NSFnet", 10, "ServiceILP", "Endpoint",
+        Request rs2 = solve(2L, "NSFnet", 10, "ServiceILP", "Endpoint",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
                 false, false, .50, 0.0, 0.0);
         analyze(rs2, 5, true, true);
-        RequestSet rs3 = solve(2L, "NSFnet", 10, "ServiceILP", "Flow",
+        Request rs3 = solve(2L, "NSFnet", 10, "ServiceILP", "Flow",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
                 false, false, .50, 0.0, 0.0);
@@ -159,7 +159,7 @@ public class FailuresTest {
 
     @Test
     public void failedOnClusterTest(){
-        RequestSet rs1 = solve(1L, "NSFnet", 50, "ServiceILP", "Flex",
+        Request rs1 = solve(1L, "NSFnet", 50, "ServiceILP", "Flex",
                 "LinksUsed", 1, 1, 1, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 1,  new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, false, 1.0, 0.0, 0.0);
@@ -170,19 +170,19 @@ public class FailuresTest {
                                                Integer fSize, Integer nfa, String failureClass,
                                                Double percentSrcAlsoDest, Double percentSrcFail,
                                                Double percentDstFail, Boolean survivable, Boolean feasible, Integer numPaths){
-        RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
+        Request rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         analyze(rs1, numPaths, survivable, feasible);
         // Endpoint
-        RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
+        Request rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         analyze(rs2, numPaths, survivable, feasible);
         // Flow
-        RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
+        Request rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
@@ -190,11 +190,11 @@ public class FailuresTest {
         //analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
     }
 
-    private void analyze(RequestSet requestSet, int numExpectedPaths, boolean survivable, boolean feasible){
-        AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
-        assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getIsSurvivable() == survivable));
-        //assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getNumPaths() == numExpectedPaths));
-        assert(requestSet.getRequests().values().stream()
+    private void analyze(Request request, int numExpectedPaths, boolean survivable, boolean feasible){
+        Analysis analysis = analysisService.analyzeRequestSet(request);
+        assert(analysis.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getIsSurvivable() == survivable));
+        //assert(analysis.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getNumPaths() == numExpectedPaths));
+        assert(request.getDetails().values().stream()
                 .allMatch(r ->
                         r.getChosenPaths().keySet().stream()
                                 .filter(pair -> pair.getSrc().equals(pair.getDst()))
@@ -204,21 +204,21 @@ public class FailuresTest {
         );
     }
 
-    private RequestSet solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                             String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
-                             List<Integer> minMaxFailures, String failureClass, Double failureProb,
-                             List<Double> minMaxFailureProb, Integer numConnections,
-                             List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
-                             Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
-                             Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                             double percentDstFail){
+    private Request solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
+                          String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
+                          List<Integer> minMaxFailures, String failureClass, Double failureProb,
+                          List<Double> minMaxFailureProb, Integer numConnections,
+                          List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
+                          Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
+                          Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
+                          double percentDstFail){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        RequestSet requestSet = generationService.generateFromSimParams(params);
-        processingService.processRequestSet(requestSet);
-        return requestSet;
+        Request request = generationService.generateFromSimParams(params);
+        processingService.processRequestSet(request);
+        return request;
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

@@ -6,13 +6,11 @@ import netlab.submission.enums.*;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
 import netlab.topology.services.TopologyService;
-import org.apache.commons.math3.util.Combinations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 
 @Service
@@ -43,19 +41,19 @@ public class GenerationService {
         this.hashingService = hashingService;
     }
 
-    public RequestSet generateFromSimParams(SimulationParameters params){
+    public Request generateFromSimParams(SimulationParameters params){
 
         params = defaultValueService.assignDefaults(params);
-        Map<String, Request> requests = createRequestsFromParameters(params);
+        Details details = createDetailsFromParameters(params);
         String status = "Processing";
-        if(requests.isEmpty()){
-            status = "Submission failed. Could not generate requests.";
+        if(details == null){
+            status = "Submission failed. Could not generate details.";
         }
         String setId = params.getRequestSetId() != null && !params.getRequestSetId().isEmpty()
                 ? params.getRequestSetId() : hashParams(params);
         params.setRequestSetId(setId);
-        return RequestSet.builder()
-                .requests(requests)
+        return Request.builder()
+                .details(details)
                 .status(status)
                 .id(setId)
                 .seed(params.getSeed())
@@ -87,21 +85,17 @@ public class GenerationService {
                 params.getPercentDestFail(), params.getSdn(), params.getUseAws(), params.getIgnoreFailures(), params.getNumThreads());
     }
 
-    public RequestSet generateFromRequestParams(RequestParameters requestParameters) {
+    public Request generateFromRequestParams(RequestParameters requestParameters) {
         requestParameters = defaultValueService.assignDefaults(requestParameters);
-        Map<String, Request> requests = new HashMap<>();
-        Request request = createRequestFromRequestParameters(requestParameters);
-        if(request != null) {
-            requests.put(request.getId(), request);
-        }
-        String status = requests.isEmpty() ? "Submission failed. Could not generate request." : "Processing";
-        String setId = UUID.randomUUID().toString();
+        Details details = createDetailsFromRequestParameters(requestParameters);
+        String status = details == null ? "Submission failed. Could not generate details." : "Processing";
+        String requestId = UUID.randomUUID().toString();
         Random rng = new Random();
         Long seed = ((long) (rng.nextDouble() * (1000L)));
-        return RequestSet.builder()
-                .requests(requests)
+        return Request.builder()
+                .details(details)
                 .status(status)
-                .id(setId)
+                .id(requestId)
                 .seed(seed)
                 .problemClass(enumGenerationService.getProblemClass(requestParameters.getProblemClass()))
                 .algorithm(enumGenerationService.getAlgorithm(requestParameters.getAlgorithm()))
@@ -118,7 +112,7 @@ public class GenerationService {
                 .build();
     }
 
-    private Request createRequestFromRequestParameters(RequestParameters params) {
+    private Details createDetailsFromRequestParameters(RequestParameters params) {
         Topology topo = topologyService.getTopologyById(params.getTopologyId());
         if(topo == null){
             return null;
@@ -138,8 +132,7 @@ public class GenerationService {
                 nfa.getTotalNumFailsAllowed(), nfa.getPairNumFailsAllowedMap(), nfa.getSrcNumFailsAllowedMap(),
                 nfa.getDstNumFailsAllowedMap());
 
-        return Request.builder()
-                .id(UUID.randomUUID().toString())
+        return Details.builder()
                 .sources(sources)
                 .destinations(destinations)
                 .pairs(pairs)
@@ -195,23 +188,18 @@ public class GenerationService {
                 .build();
     }
 
-    public Map<String, Request> createRequestsFromParameters(SimulationParameters params) {
-        Map<String, Request> requests = new HashMap<>();
+    public Details createDetailsFromParameters(SimulationParameters params) {
         Topology topo = topologyService.getTopologyById(params.getTopologyId());
         if(topo == null){
-            return requests;
+            return null;
         }
 
         Random rng = new Random(params.getSeed());
+        return createDetails(params, topo, rng);
 
-        for(int i = 0; i < params.getNumRequests(); i++){
-            Request r = createRequest(params, topo, i, rng);
-            requests.put(r.getId(), r);
-        }
-        return requests;
     }
 
-    public Request createRequest(SimulationParameters params, Topology topo, Integer index, Random rng){
+    public Details createDetails(SimulationParameters params, Topology topo, Random rng){
 
         Set<Node> sources = selectionService.pickSources(topo.getNodes(), params.getNumSources(), rng);
         Set<Node> destinations = selectionService.pickDestinations(topo.getNodes(), params.getNumDestinations(), rng,
@@ -238,8 +226,7 @@ public class GenerationService {
         Connections connectionsCollection = assignConnections(params, sortedPairs, sortedSources, sortedDests, rng);
 
 
-        return Request.builder()
-                .id(String.valueOf(index))
+        return Details.builder()
                 .sources(sources)
                 .destinations(destinations)
                 .connections(connectionsCollection)

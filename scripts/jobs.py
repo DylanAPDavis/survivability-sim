@@ -98,32 +98,32 @@ def build_request(seed=1, topo="NSFnet", problem="Combined", objective="TotalCos
 def create_orig_run_jobs(seed):
     jobs = []
     # SD7
-    jobs += build_request(problem="Flex", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Link", f_size=21, nfa=1)
+    '''jobs += build_request(problem="Flex", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Link", f_size=21, nfa=1)'''
     jobs += build_request(problem="Flex", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Link", f_size=21, nfa=2)
-    jobs += build_request(problem="Flex", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Node", f_size=14, nfa=1,
+    '''jobs += build_request(problem="Flex", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Node", f_size=14, nfa=1,
                           s_fail=1.0, d_fail=1.0)
     jobs += build_request(problem="Flex", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Node", f_size=14, nfa=2,
                           s_fail=1.0, d_fail=1.0)
     jobs += build_request(problem="Flex", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Both", f_size=35, nfa=1,
-                          s_fail=1.0, d_fail=1.0)
+                          s_fail=1.0, d_fail=1.0)'''
     # SD14
-    jobs += build_request(problem="Flex", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Link", f_size=21, nfa=1,
-                          overlap=1.0)
+    '''jobs += build_request(problem="Flex", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Link", f_size=21, nfa=1,
+                          overlap=1.0)'''
     jobs += build_request(problem="Flex", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Link", f_size=21, nfa=2,
                           overlap=1.0)
-    jobs += build_request(problem="Flex", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Node", f_size=14, nfa=1,
+    '''jobs += build_request(problem="Flex", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Node", f_size=14, nfa=1,
                           s_fail=1.0, d_fail=1.0, overlap=1.0)
     jobs += build_request(problem="Flex", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Node", f_size=14, nfa=2,
                           s_fail=1.0, d_fail=1.0, overlap=1.0)
     jobs += build_request(problem="Flex", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Both", f_size=35, nfa=1,
-                          s_fail=1.0, d_fail=1.0, overlap=1.0)
+                          s_fail=1.0, d_fail=1.0, overlap=1.0)'''
 
     # SD7
-    jobs += build_request(problem="FlowSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Link", f_size=21, nfa=1,
-                          min_range=[0,0], max_range=[2,2])
+    '''jobs += build_request(problem="FlowSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Link", f_size=21, nfa=1,
+                          min_range=[0,0], max_range=[2,2])'''
     jobs += build_request(problem="FlowSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Link", f_size=21, nfa=2,
                           min_range=[0,0], max_range=[2,2])
-    jobs += build_request(problem="FlowSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Node", f_size=14, nfa=1,
+    '''jobs += build_request(problem="FlowSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Node", f_size=14, nfa=1,
                           s_fail=1.0, d_fail=1.0, min_range=[0,0], max_range=[2,2])
     jobs += build_request(problem="FlowSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Node", f_size=14, nfa=2,
                           s_fail=1.0, d_fail=1.0, min_range=[0,0], max_range=[2,2])
@@ -139,29 +139,29 @@ def create_orig_run_jobs(seed):
     jobs += build_request(problem="FlowSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Node", f_size=14, nfa=2,
                           s_fail=1.0, d_fail=1.0, overlap=1.0, min_range=[0,0], max_range=[2,2])
     jobs += build_request(problem="FlowSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Both", f_size=35, nfa=1,
-                          s_fail=1.0, d_fail=1.0, overlap=1.0, min_range=[0,0], max_range=[2,2])
+                          s_fail=1.0, d_fail=1.0, overlap=1.0, min_range=[0,0], max_range=[2,2])'''
 
     # SD7
-    jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Link", f_size=21, nfa=1,
-                          min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
+    '''jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Link", f_size=21, nfa=1,
+                          min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])'''
     jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Link", f_size=21, nfa=2,
                           min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
-    jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Node", f_size=14, nfa=1,
+    '''jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Node", f_size=14, nfa=1,
                           s_fail=1.0, d_fail=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
     jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Node", f_size=14, nfa=2,
                           s_fail=1.0, d_fail=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
     jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=7, num_d=7, num_c=14, fail_type="Both", f_size=35, nfa=1,
-                          s_fail=1.0, d_fail=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
+                          s_fail=1.0, d_fail=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])'''
     # SD14
-    jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Link", f_size=21, nfa=1,
-                          overlap=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
+    '''jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Link", f_size=21, nfa=1,
+                          overlap=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])'''
     jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Link", f_size=21, nfa=2,
                           overlap=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
-    jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Node", f_size=14, nfa=1,
-                          s_fail=1.0, d_fail=1.0, overlap=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
+    '''jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Node", f_size=14, nfa=1,
+                          s_fail=1.0, d_fail=1.0, overlap=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])'''
     jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Node", f_size=14, nfa=2,
                           s_fail=1.0, d_fail=1.0, overlap=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
-    jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Both", f_size=35, nfa=1,
-                          s_fail=1.0, d_fail=1.0, overlap=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])
+    '''jobs += build_request(problem="EndpointSharedF", seed=seed, num_s=14, num_d=14, num_c=14, fail_type="Both", f_size=35, nfa=1,
+                          s_fail=1.0, d_fail=1.0, overlap=1.0, min_src_range=[0,0], max_src_range=[2,2], min_dst_range=[0,0], max_dst_range=[2,2])'''
 
     return jobs

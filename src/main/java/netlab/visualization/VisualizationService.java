@@ -1,8 +1,8 @@
 package netlab.visualization;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.submission.request.Details;
 import netlab.submission.request.Request;
-import netlab.submission.request.RequestSet;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.Path;
 import netlab.topology.elements.SourceDestPair;
@@ -17,13 +17,13 @@ import java.util.Map;
 public class VisualizationService {
 
 
-    public void visualize(RequestSet requestSet){
+    public void visualize(Request request){
         try {
             File htmlTemplateFile = new File(System.getProperty("user.dir") + "/src/main/java/netlab/visualization/visualizerTemplate.html");
-            for(String requestId : requestSet.getRequests().keySet()) {
-                Request request = requestSet.getRequests().get(requestId);
+            for(String requestId : request.getDetails().keySet()) {
+                Details details = request.getDetails().get(requestId);
                 String htmlString = FileUtils.readFileToString(htmlTemplateFile);
-                String data = requestSetToJson(request);
+                String data = requestSetToJson(details);
                 htmlString = htmlString.replace("/* JAVA Put the data here! */", data);
                 File newHtmlFile = new File(System.getProperty("user.dir") + "/results/visuals/" + requestId+ ".html");
                 FileUtils.writeStringToFile(newHtmlFile, htmlString);
@@ -33,10 +33,10 @@ public class VisualizationService {
         }
     }
 
-    private String requestSetToJson(Request request) {
+    private String requestSetToJson(Details details) {
         String data = "var data=[";
-        Map<SourceDestPair, Map<String, Path>> chosenPaths = request.getChosenPaths();
-        for(SourceDestPair pair : request.getPairs()) {
+        Map<SourceDestPair, Map<String, Path>> chosenPaths = details.getChosenPaths();
+        for(SourceDestPair pair : details.getPairs()) {
             Map<String, Path> pathMap = chosenPaths.get(pair);
             if(chosenPaths.get(pair).size() > 0) {
                 data += "{";

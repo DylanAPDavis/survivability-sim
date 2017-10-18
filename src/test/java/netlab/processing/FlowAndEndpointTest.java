@@ -1,12 +1,12 @@
 package netlab.processing;
 
 import netlab.TestConfiguration;
-import netlab.analysis.analyzed.AnalyzedSet;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.analyzed.RequestMetrics;
 import netlab.analysis.services.AnalysisService;
 import netlab.storage.services.StorageService;
+import netlab.submission.request.Request;
 import netlab.submission.request.RequestParameters;
-import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
 import netlab.topology.elements.Node;
@@ -39,10 +39,10 @@ public class FlowAndEndpointTest {
 
     @Test
     public void zeroMinOneMaxOneSourceOneDestOneC(){
-        RequestSet r1 = createSet("Endpoint", 1, 1, 1, Arrays.asList(0,0),
+        Request r1 = createSet("Endpoint", 1, 1, 1, Arrays.asList(0,0),
                 Arrays.asList(1,1), 0.0) ;
         analyze(r1, 1, true);
-        RequestSet r2 = createSet("Flow", 1, 1, 1, Arrays.asList(0,0),
+        Request r2 = createSet("Flow", 1, 1, 1, Arrays.asList(0,0),
                 Arrays.asList(1,1), 0.0) ;
         analyze(r2, 1, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
@@ -50,10 +50,10 @@ public class FlowAndEndpointTest {
 
     @Test
     public void zeroMinOneMaxOneSourceOneDestTwoC(){
-        RequestSet r1 = createSet("Endpoint", 1, 1, 2, Arrays.asList(0,0),
+        Request r1 = createSet("Endpoint", 1, 1, 2, Arrays.asList(0,0),
                 Arrays.asList(1,1), 0.0) ;
         analyze(r1, 0, false);
-        RequestSet r2 = createSet("Flow", 1, 1, 2, Arrays.asList(0,0),
+        Request r2 = createSet("Flow", 1, 1, 2, Arrays.asList(0,0),
                 Arrays.asList(1,1), 0.0) ;
         analyze(r2, 0, false);
         analyzeMultiSet(Arrays.asList(r1, r2));
@@ -61,10 +61,10 @@ public class FlowAndEndpointTest {
 
     @Test
     public void oneMinOneMaxOneSourceOneDestTwoC(){
-        RequestSet r1 = createSet("Endpoint", 1, 1, 2, Arrays.asList(1,1),
+        Request r1 = createSet("Endpoint", 1, 1, 2, Arrays.asList(1,1),
                 Arrays.asList(1,1), 0.0) ;
         analyze(r1, 0, false);
-        RequestSet r2 = createSet("Flow", 1, 1, 2, Arrays.asList(1,1),
+        Request r2 = createSet("Flow", 1, 1, 2, Arrays.asList(1,1),
                 Arrays.asList(1,1), 0.0) ;
         analyze(r2, 0, false);
         analyzeMultiSet(Arrays.asList(r1, r2));
@@ -72,10 +72,10 @@ public class FlowAndEndpointTest {
 
     @Test
     public void zeroMinTwoMaxOneSourceOneDestTwoC(){
-        RequestSet r1 = createSet("Endpoint", 1, 1, 2, Arrays.asList(0,0),
+        Request r1 = createSet("Endpoint", 1, 1, 2, Arrays.asList(0,0),
                 Arrays.asList(2,2), 0.0) ;
         analyze(r1, 2, true);
-        RequestSet r2 = createSet("Flow", 1, 1, 2, Arrays.asList(0,0),
+        Request r2 = createSet("Flow", 1, 1, 2, Arrays.asList(0,0),
                 Arrays.asList(2,2), 0.0) ;
         analyze(r2, 2, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
@@ -83,10 +83,10 @@ public class FlowAndEndpointTest {
 
     @Test
     public void zeroMinOneMaxOneSourceTwoDestOneC(){
-        RequestSet r1 = createSet("Endpoint", 1, 2, 1, Arrays.asList(0,0),
+        Request r1 = createSet("Endpoint", 1, 2, 1, Arrays.asList(0,0),
                 Arrays.asList(1,1), 0.0) ;
         analyze(r1, 1, true);
-        RequestSet r2 = createSet("Flow", 1, 2, 1, Arrays.asList(0,0),
+        Request r2 = createSet("Flow", 1, 2, 1, Arrays.asList(0,0),
                 Arrays.asList(1,1), 0.0) ;
         analyze(r2, 1, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
@@ -108,7 +108,7 @@ public class FlowAndEndpointTest {
         Map<String, Integer> dstMaxNumC = new HashMap<>();
         dstMaxNumC.put("Atlanta", 1);
         dstMaxNumC.put("Princeton", 0);
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 1, true);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -117,7 +117,7 @@ public class FlowAndEndpointTest {
         Map<List<String>, Integer> pairMaxNumC = new HashMap<>();
         pairMaxNumC.put(Arrays.asList("Seattle", "Atlanta"), 1);
         pairMaxNumC.put(Arrays.asList("Seattle", "Princeton"), 0);
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 1, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -138,7 +138,7 @@ public class FlowAndEndpointTest {
         Map<String, Integer> dstMaxNumC = new HashMap<>();
         dstMaxNumC.put("Atlanta", 1);
         dstMaxNumC.put("Princeton", 0);
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 0, false);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -147,7 +147,7 @@ public class FlowAndEndpointTest {
         Map<List<String>, Integer> pairMaxNumC = new HashMap<>();
         pairMaxNumC.put(Arrays.asList("Seattle", "Atlanta"), 1);
         pairMaxNumC.put(Arrays.asList("Seattle", "Princeton"), 0);
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 0, false);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -168,7 +168,7 @@ public class FlowAndEndpointTest {
         Map<String, Integer> dstMaxNumC = new HashMap<>();
         dstMaxNumC.put("Atlanta", 1);
         dstMaxNumC.put("Princeton", 1);
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 2, true);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -177,11 +177,11 @@ public class FlowAndEndpointTest {
         Map<List<String>, Integer> pairMaxNumC = new HashMap<>();
         pairMaxNumC.put(Arrays.asList("Seattle", "Atlanta"), 1);
         pairMaxNumC.put(Arrays.asList("Seattle", "Princeton"), 1);
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 2, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
         /*assert(storageService.storeRequestSet(r2, true));
-        RequestSet loadedR2 = storageService.retrieveRequestSet(r2.getId(), true);
+        Request loadedR2 = storageService.retrieveRequestSet(r2.getId(), true);
         assert(loadedR2 != null);*/
     }
 
@@ -207,7 +207,7 @@ public class FlowAndEndpointTest {
         dstMaxNumC.put("Atlanta", 0);
         dstMaxNumC.put("Princeton", 1);
         dstMaxNumC.put("Champaign", 0);
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 1, true);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -230,7 +230,7 @@ public class FlowAndEndpointTest {
         pairMaxNumC.put(Arrays.asList("Houston", "Atlanta"), 0);
         pairMaxNumC.put(Arrays.asList("Houston", "Princeton"), 1);
         pairMaxNumC.put(Arrays.asList("Houston", "Champaign"), 0);
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 1, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -276,7 +276,7 @@ public class FlowAndEndpointTest {
         srcMaxNumC.put("Princeton", 1);
         Map<String, Integer> dstMinNumC= new HashMap<>();
         Map<String, Integer> dstMaxNumC = new HashMap<>();
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 0, false);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -296,7 +296,7 @@ public class FlowAndEndpointTest {
         pairMaxNumC.put(Arrays.asList("College Park", "Champaign"), 1);
         pairMaxNumC.put(Arrays.asList("Ithaca", "Champaign"), 1);
         pairMaxNumC.put(Arrays.asList("Princeton", "Champaign"), 1);
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 0, false);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -326,7 +326,7 @@ public class FlowAndEndpointTest {
         srcMaxNumC.put("Princeton", 1);
         Map<String, Integer> dstMinNumC= new HashMap<>();
         Map<String, Integer> dstMaxNumC = new HashMap<>();
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 14, true);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -345,7 +345,7 @@ public class FlowAndEndpointTest {
         pairMaxNumC.put(Arrays.asList("College Park", "Champaign"), 1);
         pairMaxNumC.put(Arrays.asList("Ithaca", "Champaign"), 1);
         pairMaxNumC.put(Arrays.asList("Princeton", "Champaign"), 1);
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 14, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -375,7 +375,7 @@ public class FlowAndEndpointTest {
         dstMaxNumC.put("College Park", 1);
         dstMaxNumC.put("Ithaca", 1);
         dstMaxNumC.put("Princeton", 1);
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 0, false);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -394,7 +394,7 @@ public class FlowAndEndpointTest {
         pairMaxNumC.put(Arrays.asList("Champaign", "College Park"), 1);
         pairMaxNumC.put(Arrays.asList("Champaign", "Ithaca"), 1);
         pairMaxNumC.put(Arrays.asList("Champaign", "Princeton"), 1);
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 0, false);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -424,7 +424,7 @@ public class FlowAndEndpointTest {
         dstMaxNumC.put("College Park", 1);
         dstMaxNumC.put("Ithaca", 1);
         dstMaxNumC.put("Princeton", 1);
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 14, true);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -443,7 +443,7 @@ public class FlowAndEndpointTest {
         pairMaxNumC.put(Arrays.asList("Champaign", "College Park"), 1);
         pairMaxNumC.put(Arrays.asList("Champaign", "Ithaca"), 1);
         pairMaxNumC.put(Arrays.asList("Champaign", "Princeton"), 1);
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 14, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -488,7 +488,7 @@ public class FlowAndEndpointTest {
         dstMaxNumC.put("College Park", 1);
         dstMaxNumC.put("Ithaca", 1);
         dstMaxNumC.put("Princeton", 1);
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 14, true);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -498,7 +498,7 @@ public class FlowAndEndpointTest {
                 pairMaxNumC.put(Arrays.asList(source, dest), 1);
             }
         }
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 14, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -571,7 +571,7 @@ public class FlowAndEndpointTest {
         dstMaxNumC.put("College Park", 13);
         dstMaxNumC.put("Ithaca", 13);
         dstMaxNumC.put("Princeton", 13);
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 182, true);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -586,7 +586,7 @@ public class FlowAndEndpointTest {
                     pairMaxNumC.put(Arrays.asList(source, dest), 13);
             }
         }
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 182, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -659,7 +659,7 @@ public class FlowAndEndpointTest {
         dstMaxNumC.put("College Park", 2);
         dstMaxNumC.put("Ithaca", 2);
         dstMaxNumC.put("Princeton", 2);
-        RequestSet r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
+        Request r1 = createSetWithEndpoints(sources, destinations, srcMinNumC, srcMaxNumC, dstMinNumC, dstMaxNumC, numC);
         analyze(r1, 28, true);
         // Flow
         Map<List<String>, Integer> pairMinNumC = new HashMap<>();
@@ -674,15 +674,15 @@ public class FlowAndEndpointTest {
                 pairMaxNumC.put(Arrays.asList(source, dest), 2);
             }
         }
-        RequestSet r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
+        Request r2 = createSetWithPairs(sources, destinations, pairMinNumC, pairMaxNumC, numC);
         analyze(r2, 28, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
 
 
 
-    private RequestSet createSetWithPairs(Set<String> sources, Set<String> destinations, Map<List<String>, Integer> pairMinNumConnections,
-                                          Map<List<String>, Integer> pairMaxNumConnections, Integer numConnections){
+    private Request createSetWithPairs(Set<String> sources, Set<String> destinations, Map<List<String>, Integer> pairMinNumConnections,
+                                       Map<List<String>, Integer> pairMaxNumConnections, Integer numConnections){
 
         RequestParameters params = RequestParameters.builder()
                 .topologyId("NSFnet")
@@ -695,14 +695,14 @@ public class FlowAndEndpointTest {
                 .pairMaxNumConnectionsMap(pairMaxNumConnections)
                 .numConnections(numConnections)
                 .build();
-        RequestSet rs = generationService.generateFromRequestParams(params);
+        Request rs = generationService.generateFromRequestParams(params);
         processingService.processRequestSet(rs);
         return rs;
     }
 
-    private RequestSet createSetWithEndpoints(Set<String> sources, Set<String> destinations, Map<String, Integer> srcMinNumConnections,
-                                          Map<String, Integer> srcMaxNumConnections, Map<String, Integer> dstMinNumConnections,
-                                              Map<String, Integer> dstMaxNumConnections, Integer numConnections){
+    private Request createSetWithEndpoints(Set<String> sources, Set<String> destinations, Map<String, Integer> srcMinNumConnections,
+                                           Map<String, Integer> srcMaxNumConnections, Map<String, Integer> dstMinNumConnections,
+                                           Map<String, Integer> dstMaxNumConnections, Integer numConnections){
 
         RequestParameters params = RequestParameters.builder()
                 .topologyId("NSFnet")
@@ -717,13 +717,13 @@ public class FlowAndEndpointTest {
                 .destMaxNumConnectionsMap(dstMaxNumConnections)
                 .numConnections(numConnections)
                 .build();
-        RequestSet rs = generationService.generateFromRequestParams(params);
+        Request rs = generationService.generateFromRequestParams(params);
         processingService.processRequestSet(rs);
         return rs;
     }
 
-    private RequestSet createSet(String problemClass, int numSources, int numDestinations, int numConns, List<Integer> minConns,
-                                List<Integer> maxConns, double percentSrcAlsoDest){
+    private Request createSet(String problemClass, int numSources, int numDestinations, int numConns, List<Integer> minConns,
+                              List<Integer> maxConns, double percentSrcAlsoDest){
         return solve(1L, "NSFnet", 1, "ServiceILP", problemClass, "LinksUsed", numSources, numDestinations, 0,
                 new ArrayList<>(), "Both", 0.0, new ArrayList<>(), numConns, minConns, maxConns,
                 0, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, 0.0, 0.0);
@@ -731,24 +731,24 @@ public class FlowAndEndpointTest {
     }
 
 
-    private void analyzeMultiSet(List<RequestSet> requestSets) {
-        RequestSet rs1 = requestSets.get(0);
-        Map<SourceDestPair, Map<String, Path>> chosenPaths1 = rs1.getRequests().values().iterator().next().getChosenPaths();
+    private void analyzeMultiSet(List<Request> requests) {
+        Request rs1 = requests.get(0);
+        Map<SourceDestPair, Map<String, Path>> chosenPaths1 = rs1.getDetails().values().iterator().next().getChosenPaths();
         Integer numLinkUsages1 = chosenPaths1.values().stream().map(Map::values).flatMap(Collection::stream).map(p -> p.getLinks().size()).reduce(0, (p1, p2) -> p1 + p2);
-        for(RequestSet rs : requestSets){
-            Map<SourceDestPair, Map<String, Path>> chosenPaths = rs.getRequests().values().iterator().next().getChosenPaths();
+        for(Request rs : requests){
+            Map<SourceDestPair, Map<String, Path>> chosenPaths = rs.getDetails().values().iterator().next().getChosenPaths();
             Integer numLinkUsages = chosenPaths.values().stream().map(Map::values).flatMap(Collection::stream).map(p -> p.getLinks().size()).reduce(0, (p1, p2) -> p1 + p2);
             assert(Objects.equals(numLinkUsages, numLinkUsages1));
         }
     }
 
-    private void analyze(RequestSet requestSet, int numExpectedPaths, boolean survivable){
-        AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
-        for(RequestMetrics rm : analyzedSet.getRequestMetrics().values()){
+    private void analyze(Request request, int numExpectedPaths, boolean survivable){
+        Analysis analysis = analysisService.analyzeRequestSet(request);
+        for(RequestMetrics rm : analysis.getRequestMetrics().values()){
             assert(rm.getIsSurvivable() == survivable);
             assert(rm.getNumPaths() == numExpectedPaths);
         }
-        assert(requestSet.getRequests().values().stream()
+        assert(request.getDetails().values().stream()
                 .allMatch(r ->
                         r.getChosenPaths().keySet().stream()
                                 .filter(pair -> pair.getSrc().equals(pair.getDst()))
@@ -757,21 +757,21 @@ public class FlowAndEndpointTest {
     }
 
 
-    private RequestSet solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                             String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
-                             List<Integer> minMaxFailures, String failureClass, Double failureProb,
-                             List<Double> minMaxFailureProb, Integer numConnections,
-                             List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
-                             Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
-                             Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                             double percentDstFail){
+    private Request solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
+                          String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
+                          List<Integer> minMaxFailures, String failureClass, Double failureProb,
+                          List<Double> minMaxFailureProb, Integer numConnections,
+                          List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
+                          Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
+                          Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
+                          double percentDstFail){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        RequestSet requestSet = generationService.generateFromSimParams(params);
-        processingService.processRequestSet(requestSet);
-        return requestSet;
+        Request request = generationService.generateFromSimParams(params);
+        processingService.processRequestSet(request);
+        return request;
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

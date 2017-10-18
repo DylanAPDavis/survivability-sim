@@ -4,9 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Connections;
+import netlab.submission.request.Details;
 import netlab.submission.request.Failures;
 import netlab.submission.request.NumFailsAllowed;
-import netlab.submission.request.Request;
 import netlab.topology.elements.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,12 +29,12 @@ public class PartialBhandariService {
     }
 
 
-    public Request solve(Request request, ProblemClass problemClass, Objective objective, Topology topology, String requestSetId) {
+    public Details solve(Details details, ProblemClass problemClass, Objective objective, Topology topology, String requestSetId) {
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
-        Set<SourceDestPair> pairs = request.getPairs();
-        Failures failCollection = request.getFailures();
-        NumFailsAllowed nfaCollection = request.getNumFailsAllowed();
-        Connections connCollection = request.getConnections();
+        Set<SourceDestPair> pairs = details.getPairs();
+        Failures failCollection = details.getFailures();
+        NumFailsAllowed nfaCollection = details.getNumFailsAllowed();
+        Connections connCollection = details.getConnections();
         long startTime = System.nanoTime();
         switch(problemClass){
             /*case Flex:
@@ -51,10 +51,10 @@ public class PartialBhandariService {
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
         log.info("Solution took: " + duration + " seconds");
-        request.setChosenPaths(paths);
-        request.setRunningTimeSeconds(duration);
-        request.setIsFeasible(paths.values().stream().noneMatch(Map::isEmpty));
-        return request;
+        details.setChosenPaths(paths);
+        details.setRunningTimeSeconds(duration);
+        details.setIsFeasible(paths.values().stream().noneMatch(Map::isEmpty));
+        return details;
     }
 
     /**

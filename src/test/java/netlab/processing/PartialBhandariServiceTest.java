@@ -2,14 +2,11 @@ package netlab.processing;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.TestConfiguration;
-import netlab.processing.disjointpaths.BhandariService;
+import netlab.submission.request.Details;
 import netlab.submission.request.Request;
-import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
-import netlab.submission.services.FailureGenerationService;
 import netlab.submission.services.GenerationService;
 import netlab.topology.elements.*;
-import netlab.topology.services.TopologyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,26 +34,26 @@ public class PartialBhandariServiceTest {
 
     @Test
     public void halfNodeFailTest(){
-        RequestSet requestSet = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
+        Request request = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
                 "TotalCost", 1, 1, 6, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
-        processingService.processRequestSet(requestSet);
-        Map<SourceDestPair, Map<String, Path>> pathMap = requestSet.getRequests().values().iterator().next().getChosenPaths();
-        log.info("Failure set: " + requestSet.getRequests().values().iterator().next().getFailures().getFailureSet());
+        processingService.processRequestSet(request);
+        Map<SourceDestPair, Map<String, Path>> pathMap = request.getDetails().values().iterator().next().getChosenPaths();
+        log.info("Failure set: " + request.getDetails().values().iterator().next().getFailures().getFailureSet());
         printMap(pathMap);
     }
 
     @Test
     public void halfLinkFailTest(){
-        RequestSet requestSet = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
+        Request request = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
                 "TotalCost", 1, 1, 10, new ArrayList<>(), "Link", 1.0,
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
-        processingService.processRequestSet(requestSet);
-        Request request = requestSet.getRequests().values().iterator().next();
-        Map<SourceDestPair, Map<String, Path>> pathMap = request.getChosenPaths();
-        printFailureSet(request.getFailures().getFailureSet());
+        processingService.processRequestSet(request);
+        Details details = request.getDetails().values().iterator().next();
+        Map<SourceDestPair, Map<String, Path>> pathMap = details.getChosenPaths();
+        printFailureSet(details.getFailures().getFailureSet());
         printMap(pathMap);
     }
 
@@ -83,20 +80,20 @@ public class PartialBhandariServiceTest {
         }).collect(Collectors.joining(", ")));
     }
 
-    private RequestSet createRequestSet(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                                         String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
-                                         List<Integer> minMaxFailures, String failureClass, Double failureProb,
-                                         List<Double> minMaxFailureProb, Integer numConnections,
-                                         List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
-                                         Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
-                                         Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                         double percentDstFail){
+    private Request createRequestSet(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
+                                     String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
+                                     List<Integer> minMaxFailures, String failureClass, Double failureProb,
+                                     List<Double> minMaxFailureProb, Integer numConnections,
+                                     List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
+                                     Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
+                                     Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
+                                     double percentDstFail){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        RequestSet requestSet = generationService.generateFromSimParams(params);
-        return requestSet;
+        Request request = generationService.generateFromSimParams(params);
+        return request;
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

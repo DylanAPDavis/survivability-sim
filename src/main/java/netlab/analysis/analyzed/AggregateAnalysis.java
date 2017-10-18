@@ -16,7 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AggregateAnalyzedSet implements Serializable {
+public class AggregateAnalysis implements Serializable {
 
     private List<String> requestSetIds;
     private List<Long> seeds;

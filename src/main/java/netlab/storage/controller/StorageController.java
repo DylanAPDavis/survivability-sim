@@ -1,14 +1,11 @@
 package netlab.storage.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import netlab.analysis.analyzed.AggregationParameters;
-import netlab.analysis.analyzed.AnalyzedSet;
-import netlab.analysis.services.AnalysisService;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.services.HashingService;
 import netlab.storage.services.FailureAdditionService;
 import netlab.storage.services.StorageService;
 import netlab.submission.request.Request;
-import netlab.submission.request.RequestSet;
 import netlab.submission.request.SimulationParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -36,20 +33,20 @@ public class StorageController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/storage/raw/{requestSetId}/{useAwes}")
-    public RequestSet getRequestSet(@PathVariable String requestSetId, @PathVariable Boolean useAws){
+    public Request getRequestSet(@PathVariable String requestSetId, @PathVariable Boolean useAws){
 
         return storageService.retrieveRequestSet(requestSetId, useAws);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/storage/analyzed/{requestSetId}/{useAwes}")
-    public AnalyzedSet getAnalyzedSet(@PathVariable String requestSetId, @PathVariable Boolean useAws){
+    public Analysis getAnalyzedSet(@PathVariable String requestSetId, @PathVariable Boolean useAws){
 
         return storageService.retrieveAnalyzedSet(requestSetId, useAws);
     }
 
     @RequestMapping(value = "/storage/analyzed/sets", method= RequestMethod.POST)
     @ResponseBody
-    public List<AnalyzedSet> getAnalyzedSets(SimulationParameters params){
+    public List<Analysis> getAnalyzedSets(SimulationParameters params){
         //TODO: Retrieve items from local DB if it is up
         if(!params.getUseAws()){
             log.info("Feature only supported when using AWS!");
@@ -65,7 +62,7 @@ public class StorageController {
         List<SimulationParameters> matchingParams = storageService.queryForSeed(seed);
 
 
-        // 2. From those, get the zero failure parameters & requests
+        // 2. From those, get the zero failure parameters & details
         List<SimulationParameters> zeroFailureParams = matchingParams.parallelStream()
                 .filter(p -> !p.getGenerated())
                 .filter(SimulationParameters::getIgnoreFailures)

@@ -1,19 +1,13 @@
 package netlab.submission.request;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import netlab.submission.enums.Algorithm;
-import netlab.submission.enums.ProblemClass;
-import netlab.topology.elements.Node;
-import netlab.topology.elements.Path;
-import netlab.topology.elements.SourceDestPair;
+import netlab.submission.enums.*;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Data
 @Builder
@@ -21,22 +15,34 @@ import java.util.Set;
 @AllArgsConstructor
 public class Request implements Serializable {
 
+    private Details details;
+
     private String id;
 
-    private Set<Node> sources;
-    private Set<Node> destinations;
+    private Long seed;
 
-    private Failures failures;
-    private NumFailsAllowed numFailsAllowed;
-    private Connections connections;
+    private String status;
 
-    private Set<SourceDestPair> pairs;
+    private String topologyId;
 
-    private Map<SourceDestPair, Map<String, Path>> chosenPaths;
+    private FailureClass failureClass;
 
-    private double runningTimeSeconds;
+    private Algorithm algorithm;
 
-    private Boolean isFeasible;
+    private ProblemClass problemClass;
 
-    private Boolean ignoreFailures;
+    private Objective objective;
+
+    private Double percentSrcAlsoDest;
+
+    private Double percentSrcFail;
+
+    private Double percentDestFail;
+
+    private boolean sdn;
+
+    private boolean useAws;
+
+    private Integer numThreads;
+
 }

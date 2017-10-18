@@ -7,18 +7,12 @@ import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.enums.ProcessingType;
+import netlab.submission.request.Details;
 import netlab.submission.request.Request;
-import netlab.submission.request.RequestSet;
-import netlab.topology.elements.Path;
-import netlab.topology.elements.SourceDestPair;
 import netlab.topology.elements.Topology;
 import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -38,27 +32,19 @@ public class ProcessingService {
         this.partialBhandariService = partialBhandariService;
     }
 
-    public RequestSet processRequestSet(RequestSet requestSet) {
-        Topology topo = topoService.getTopologyById(requestSet.getTopologyId());
-        if(requestSet.getProcessingType().equals(ProcessingType.Solo)){
-           for(Request r : requestSet.getRequests().values()){
-               r = processRequest(r, requestSet.getAlgorithm(), requestSet.getProblemClass(), requestSet.getObjective(),
-                       topo, requestSet.getId(), requestSet.isUseAws(), requestSet.isSdn(), requestSet.getNumThreads());
-               requestSet.getRequests().put(r.getId(), r);
-           }
-        }
-
-        return requestSet;
-    }
-
-    private Request processRequest(Request request, Algorithm algorithm, ProblemClass problemClass, Objective objective,
-                                Topology topology, String requestSetId, Boolean useAws, Boolean sdn, Integer numThreads){
-        switch(algorithm){
+    public Request processRequest(Request request) {
+        Topology topo = topoService.getTopologyById(request.getTopologyId());
+        Details details = request.getDetails();
+        switch(request.getAlgorithm()){
             case ServiceILP:
-                return amplService.solve(request, problemClass, objective, topology, requestSetId, numThreads);
+                details = amplService.solve(details, request.getProblemClass(), request.getObjective(),
+                        topo, request.getId(), request.getNumThreads());
             case PartialBhandari:
-                return partialBhandariService.solve(request, problemClass, objective, topology, requestSetId);
+                details = partialBhandariService.solve(details, request.getProblemClass(), request.getObjective(),
+                        topo, request.getId());
         }
+        request.setDetails(details);
         return request;
     }
+
 }

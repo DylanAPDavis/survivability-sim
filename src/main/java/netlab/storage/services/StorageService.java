@@ -1,21 +1,17 @@
 package netlab.storage.services;
 
 import lombok.extern.slf4j.Slf4j;
-import netlab.analysis.analyzed.AnalyzedSet;
-import netlab.processing.ProcessingService;
+import netlab.analysis.analyzed.Analysis;
 import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
-import netlab.submission.request.RequestSet;
+import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
-import netlab.submission.services.GenerationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,19 +27,19 @@ public class StorageService {
         this.dynamoInterface = dynamoInterface;
     }
 
-    public boolean storeRequestSet(RequestSet requestSet, boolean useAws) {
-        File outputFile = createFile(requestSet.getId(), "raw");
+    public boolean storeRequestSet(Request request, boolean useAws) {
+        File outputFile = createFile(request.getId(), "raw");
         if(useAws){
-            writeLocal(requestSet, outputFile);
-            return s3Interface.uploadToRaw(outputFile, requestSet.getId());
+            writeLocal(request, outputFile);
+            return s3Interface.uploadToRaw(outputFile, request.getId());
         }
         else {
-            return writeLocal(requestSet, outputFile);
+            return writeLocal(request, outputFile);
         }
     }
 
-    public RequestSet retrieveRequestSet(String requestSetId, boolean useAws){
-        RequestSet rs = null;
+    public Request retrieveRequestSet(String requestSetId, boolean useAws){
+        Request rs = null;
         File f = new File(System.getProperty("user.dir") + "/results/raw/" + requestSetId);
         if(!f.exists() && useAws){
             f = s3Interface.downloadFromRaw(f, requestSetId);
@@ -54,19 +50,19 @@ public class StorageService {
         return rs;
     }
 
-    public boolean storeAnalyzedSet(AnalyzedSet analyzedSet, boolean useAws){
-        File outputFile = createFile(analyzedSet.getRequestSetId(), "analyzed");
+    public boolean storeAnalyzedSet(Analysis analysis, boolean useAws){
+        File outputFile = createFile(analysis.getRequestSetId(), "analyzed");
         if(useAws){
-            writeLocal(analyzedSet, outputFile);
-            return s3Interface.uploadToAnalyzed(outputFile, analyzedSet.getRequestSetId());
+            writeLocal(analysis, outputFile);
+            return s3Interface.uploadToAnalyzed(outputFile, analysis.getRequestSetId());
         }
         else {
-            return writeLocal(analyzedSet, outputFile);
+            return writeLocal(analysis, outputFile);
         }
     }
 
-    public AnalyzedSet retrieveAnalyzedSet(String requestSetId, boolean useAws){
-        AnalyzedSet as = null;
+    public Analysis retrieveAnalyzedSet(String requestSetId, boolean useAws){
+        Analysis as = null;
         File f = new File(System.getProperty("user.dir") + "/results/analyzed/" + requestSetId);
         if(!f.exists() && useAws){
             f = s3Interface.downloadFromAnalyzed(f, requestSetId);
@@ -94,11 +90,11 @@ public class StorageService {
     }
 
 
-    public List<AnalyzedSet> getAnalyzedSets(SimulationParameters params){
+    public List<Analysis> getAnalyzedSets(SimulationParameters params){
         List<String> requestSetIds = dynamoInterface.getRequestSetIds(params);
-        List<AnalyzedSet> sets = new ArrayList<>();
+        List<Analysis> sets = new ArrayList<>();
         for(String id : requestSetIds){
-            AnalyzedSet set = retrieveAnalyzedSet(id, params.getUseAws());
+            Analysis set = retrieveAnalyzedSet(id, params.getUseAws());
             if(set != null){
                 sets.add(set);
             }
@@ -119,12 +115,12 @@ public class StorageService {
 
     // Private subfunctions
 
-    private RequestSet readRequestSetLocal(File file){
-        return (RequestSet) readLocal(file);
+    private Request readRequestSetLocal(File file){
+        return (Request) readLocal(file);
     }
 
-    private AnalyzedSet readAnalyzedSetLocal(File file){
-        return (AnalyzedSet) readLocal(file);
+    private Analysis readAnalyzedSetLocal(File file){
+        return (Analysis) readLocal(file);
     }
 
     private Object readLocal(File file){

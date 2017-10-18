@@ -1,14 +1,14 @@
 package netlab.analysis.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import netlab.analysis.analyzed.AggregateAnalyzedSet;
+import netlab.analysis.analyzed.AggregateAnalysis;
 import netlab.analysis.analyzed.AggregationParameters;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.analyzed.AnalysisParameters;
-import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.services.AnalysisService;
 import netlab.analysis.services.HashingService;
 import netlab.storage.services.StorageService;
-import netlab.submission.request.RequestSet;
+import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -36,16 +36,16 @@ public class AnalysisController {
 
     @RequestMapping(value = "/analyze", method = RequestMethod.POST)
     @ResponseBody
-    public AnalyzedSet analyzeRequestSet(AnalysisParameters params){
-        RequestSet requestSet = storageService.retrieveRequestSet(params.getRequestSetId(), params.getUseAws());
+    public Analysis analyzeRequestSet(AnalysisParameters params){
+        Request request = storageService.retrieveRequestSet(params.getRequestSetId(), params.getUseAws());
 
-        AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
+        Analysis analysis = analysisService.analyzeRequestSet(request);
 
         // Store the analyzed set
-        storageService.storeAnalyzedSet(analyzedSet, params.getUseAws());
+        storageService.storeAnalyzedSet(analysis, params.getUseAws());
 
         // Return the request set ID
-        return analyzedSet;
+        return analysis;
     }
 
     @RequestMapping(value="/analyze_seed", method = RequestMethod.POST)
@@ -58,14 +58,14 @@ public class AnalysisController {
                     .filter(SimulationParameters::getUseAws)
                     .map(SimulationParameters::getRequestSetId)
                     .forEach( id -> {
-                        AnalyzedSet analyzedSet = storageService.retrieveAnalyzedSet(id, true);
-                        if(analyzedSet == null) {
-                            RequestSet requestSet = storageService.retrieveRequestSet(id, true);
-                            if(requestSet != null) {
-                                analyzedSet = analysisService.analyzeRequestSet(requestSet);
-                                storageService.storeAnalyzedSet(analyzedSet, true);
+                        Analysis analysis = storageService.retrieveAnalyzedSet(id, true);
+                        if(analysis == null) {
+                            Request request = storageService.retrieveRequestSet(id, true);
+                            if(request != null) {
+                                analysis = analysisService.analyzeRequestSet(request);
+                                storageService.storeAnalyzedSet(analysis, true);
                             } else{
-                                System.out.println("Request Set ID: " + id + " does not exist!");
+                                System.out.println("Details Set ID: " + id + " does not exist!");
                             }
                         }
                     });
@@ -76,10 +76,10 @@ public class AnalysisController {
 
     @RequestMapping(value = "/analyze/aggregate", method = RequestMethod.POST)
     @ResponseBody
-    public AggregateAnalyzedSet aggregateAnalyzedSets(SimulationParameters params){
+    public AggregateAnalysis aggregateAnalyzedSets(SimulationParameters params){
 
-        List<AnalyzedSet> analyzedSets = storageService.getAnalyzedSets(params);
-        return analysisService.aggregateAnalyzedSets(analyzedSets);
+        List<Analysis> analyses = storageService.getAnalyzedSets(params);
+        return analysisService.aggregateAnalyzedSets(analyses);
     }
 
 
@@ -104,15 +104,15 @@ public class AnalysisController {
                 e.printStackTrace();
             }
         }
-        List<AggregateAnalyzedSet> aggregateSets = new ArrayList<>();
+        List<AggregateAnalysis> aggregateSets = new ArrayList<>();
         List<SimulationParameters> primaryParamList = paramsBySeed.get(0);
         for(SimulationParameters primaryParams : primaryParamList){
             List<SimulationParameters> paramsToBeAnalyzed = paramMap.get(makeHash(primaryParams));
-            List<AnalyzedSet> analyzedSets = paramsToBeAnalyzed.stream()
+            List<Analysis> analyses = paramsToBeAnalyzed.stream()
                     .map(p -> storageService.retrieveAnalyzedSet(p.getRequestSetId(), true))
                     .collect(Collectors.toList());
-            AggregateAnalyzedSet aggregateAnalyzedSet = analysisService.aggregateAnalyzedSets(analyzedSets);
-            aggregateSets.add(aggregateAnalyzedSet);
+            AggregateAnalysis aggregateAnalysis = analysisService.aggregateAnalyzedSets(analyses);
+            aggregateSets.add(aggregateAnalysis);
         }
 
         return analysisService.aggregateSeeds(agParams, primaryParamList, aggregateSets);

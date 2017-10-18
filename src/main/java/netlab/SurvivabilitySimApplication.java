@@ -70,7 +70,7 @@ public class SurvivabilitySimApplication {
 		// If they provided simulation parameters, just run the simulation, output results, and shutdown
 		if(simParams != null){
 			String requestId = subCon.submitRequestSet(simParams);
-			log.info("Request Set ID: " + requestId);
+			log.info("Details Set ID: " + requestId);
 			// If you're not analyzing the request, close the context and shut down the simulator
 			if(analysisParams == null) {
 				ctx.close();
@@ -86,13 +86,13 @@ public class SurvivabilitySimApplication {
 			System.exit(0);
 		}
 
-		// If they provided a seed for rerunning incomplete params, resubmit those requests
+		// If they provided a seed for rerunning incomplete params, resubmit those details
 		if(rerunSeed != null){
 			List<SimulationParameters> params = storCon.getParameters(rerunSeed);
 			params = params.stream().filter(p -> !p.getCompleted()).collect(Collectors.toList());
 			for(SimulationParameters param : params){
 				subCon.submitRequestSet(param);
-				log.info("Request Set ID: " + param.getRequestSetId());
+				log.info("Details Set ID: " + param.getRequestSetId());
 			}
 			ctx.close();
 			System.exit(0);

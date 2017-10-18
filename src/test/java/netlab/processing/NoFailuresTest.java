@@ -1,9 +1,9 @@
 package netlab.processing;
 
 import netlab.TestConfiguration;
-import netlab.analysis.analyzed.AnalyzedSet;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.services.AnalysisService;
-import netlab.submission.request.RequestSet;
+import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
 import netlab.topology.elements.Path;
@@ -199,19 +199,19 @@ public class NoFailuresTest {
     }
 
     private void solveAndAnalyzeSrcDestOverlap(Integer numSources, Integer numDestinations, Integer numConnections, Double percentSrcAlsoDest){
-        RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
+        Request rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
                 "TotalCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, 0.0, 0.0);
         analyze(rs1, numConnections, true);
         // Endpoint
-        RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
+        Request rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
                 "TotalCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, 0.0, 0.0);
         analyze(rs2, numConnections, true);
         // Flow
-        RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
+        Request rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
                 "TotalCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, 0.0, 0.0);
@@ -221,19 +221,19 @@ public class NoFailuresTest {
 
     private void solveAndAnalyze(Integer numSources, Integer numDestinations, Integer numConnections){
         // Flex
-        RequestSet rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
+        Request rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
                 "TotalCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         analyze(rs1, numConnections, true);
         // Endpoint
-        RequestSet rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
+        Request rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
                 "TotalCost",numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         analyze(rs2, numConnections, true);
         // Flow
-        RequestSet rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
+        Request rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
                 "TotalCost", numSources, numDestinations, 0, new ArrayList<>(), "Both", 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), 0, new ArrayList<>(), "Solo",
                 false, false, 0.0, 0.0, 0.0);
@@ -241,43 +241,43 @@ public class NoFailuresTest {
         analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
     }
 
-    private void analyzeMultiSet(List<RequestSet> requestSets) {
-        RequestSet rs1 = requestSets.get(0);
-        Map<SourceDestPair, Map<String, Path>> chosenPaths1 = rs1.getRequests().values().iterator().next().getChosenPaths();
+    private void analyzeMultiSet(List<Request> requests) {
+        Request rs1 = requests.get(0);
+        Map<SourceDestPair, Map<String, Path>> chosenPaths1 = rs1.getDetails().values().iterator().next().getChosenPaths();
         Integer numLinkUsages1 = chosenPaths1.values().stream().map(Map::values).flatMap(Collection::stream).map(p -> p.getLinks().size()).reduce(0, (p1, p2) -> p1 + p2);
-        for(RequestSet rs : requestSets){
-            Map<SourceDestPair, Map<String, Path>> chosenPaths = rs.getRequests().values().iterator().next().getChosenPaths();
+        for(Request rs : requests){
+            Map<SourceDestPair, Map<String, Path>> chosenPaths = rs.getDetails().values().iterator().next().getChosenPaths();
             Integer numLinkUsages = chosenPaths.values().stream().map(Map::values).flatMap(Collection::stream).map(p -> p.getLinks().size()).reduce(0, (p1, p2) -> p1 + p2);
             assert(Objects.equals(numLinkUsages, numLinkUsages1));
         }
     }
 
-    private void analyze(RequestSet requestSet, int numExpectedPaths, boolean survivable){
-        AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
-        assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getIsSurvivable() == survivable));
-        assert(analyzedSet.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getNumPaths() == numExpectedPaths));
-        assert(requestSet.getRequests().values().stream()
+    private void analyze(Request request, int numExpectedPaths, boolean survivable){
+        Analysis analysis = analysisService.analyzeRequestSet(request);
+        assert(analysis.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getIsSurvivable() == survivable));
+        assert(analysis.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getNumPaths() == numExpectedPaths));
+        assert(request.getDetails().values().stream()
                 .allMatch(r ->
                         r.getChosenPaths().keySet().stream()
                                 .filter(pair -> pair.getSrc().equals(pair.getDst()))
                                 .allMatch(p -> r.getChosenPaths().get(p).values().size() == 0)));
     }
 
-    private RequestSet solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                             String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
-                             List<Integer> minMaxFailures, String failureClass, Double failureProb,
-                             List<Double> minMaxFailureProb, Integer numConnections,
-                             List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
-                             Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
-                             Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                             double percentDstFail){
+    private Request solve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
+                          String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
+                          List<Integer> minMaxFailures, String failureClass, Double failureProb,
+                          List<Double> minMaxFailureProb, Integer numConnections,
+                          List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
+                          Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
+                          Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
+                          double percentDstFail){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        RequestSet requestSet = generationService.generateFromSimParams(params);
-        processingService.processRequestSet(requestSet);
-        return requestSet;
+        Request request = generationService.generateFromSimParams(params);
+        processingService.processRequestSet(request);
+        return request;
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

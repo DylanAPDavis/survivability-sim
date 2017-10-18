@@ -2,10 +2,10 @@ package netlab.processing;
 
 
 import netlab.TestConfiguration;
-import netlab.analysis.analyzed.AnalyzedSet;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.analyzed.RequestMetrics;
 import netlab.analysis.services.AnalysisService;
-import netlab.submission.request.RequestSet;
+import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
 import org.junit.Test;
@@ -37,11 +37,11 @@ public class ProcessingAndAnalysisTest {
                 3, 3, null, Arrays.asList(1, 1), "Both", 1.0, new ArrayList<>(),
                 9, Arrays.asList(0, 0), Arrays.asList(1,2), null, Arrays.asList(1, 2), "Solo",
                 false, false, 0.0, 0.0, 0.0);
-        RequestSet requestSet = generationService.generateFromSimParams(params);
-        processingService.processRequestSet(requestSet);
-        AnalyzedSet analyzedSet = analysisService.analyzeRequestSet(requestSet);
-        assert(analyzedSet.getRequestMetrics().values().stream().allMatch(RequestMetrics::getIsSurvivable));
-        //System.out.println(analyzedSet);
+        Request request = generationService.generateFromSimParams(params);
+        processingService.processRequestSet(request);
+        Analysis analysis = analysisService.analyzeRequestSet(request);
+        assert(analysis.getRequestMetrics().values().stream().allMatch(RequestMetrics::getIsSurvivable));
+        //System.out.println(analysis);
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

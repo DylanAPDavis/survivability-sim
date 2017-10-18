@@ -117,7 +117,7 @@ public class S3Interface {
                 System.out.println("HTTP Status Code: " + ase.getStatusCode());
                 System.out.println("AWS Error Code:   " + ase.getErrorCode());
                 System.out.println("Error Type:       " + ase.getErrorType());
-                System.out.println("Request ID:       " + ase.getRequestId());
+                System.out.println("Details ID:       " + ase.getRequestId());
                 return false;
             } catch (AmazonClientException ace) {
                 System.out.println("Caught an AmazonClientException.");

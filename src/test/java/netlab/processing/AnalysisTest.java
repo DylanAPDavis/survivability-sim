@@ -1,9 +1,9 @@
 package netlab.processing;
 
 import netlab.TestConfiguration;
-import netlab.analysis.analyzed.AnalyzedSet;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.services.AnalysisService;
-import netlab.submission.request.RequestSet;
+import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
 import org.junit.Test;
@@ -34,9 +34,9 @@ public class AnalysisTest {
     public void allFeasibleNoFailures(){
         List<Integer> minConns = Arrays.asList(1, 1);
         List<Integer> maxConns = Arrays.asList(1, 2);
-        RequestSet rs = createSetWithGenService("Flex", 3, 3, 2, minConns, maxConns, 0,
+        Request rs = createSetWithGenService("Flex", 3, 3, 2, minConns, maxConns, 0,
                 0, "Both", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -45,9 +45,9 @@ public class AnalysisTest {
     public void allFeasibleFlexFailures(){
         Integer numFails = 10;
         Integer nfa = 2;
-        RequestSet rs = createSetWithGenService("Flex", 3, 3, 2, new ArrayList<>(),
+        Request rs = createSetWithGenService("Flex", 3, 3, 2, new ArrayList<>(),
                 new ArrayList<>(), numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -58,9 +58,9 @@ public class AnalysisTest {
         Integer nfa = 1;
         List<Integer> minConns = Arrays.asList(1, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
-        RequestSet rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -71,9 +71,9 @@ public class AnalysisTest {
         Integer nfa = 1;
         List<Integer> minConns = Arrays.asList(1, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
-        RequestSet rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -84,9 +84,9 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Integer numFails = 10;
         Integer nfa = 1;
-        RequestSet rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -97,9 +97,9 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Integer numFails = 10;
         Integer nfa = 1;
-        RequestSet rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -111,9 +111,9 @@ public class AnalysisTest {
         List<Integer> maxConns = new ArrayList<>();
         Integer numFails = 10;
         Integer nfa = 3;
-        RequestSet rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.9);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -124,9 +124,9 @@ public class AnalysisTest {
         Integer nfa = 2;
         List<Integer> minConns = Arrays.asList(0, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
-        RequestSet rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.9);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -137,9 +137,9 @@ public class AnalysisTest {
         Integer nfa = 2;
         List<Integer> minConns = Arrays.asList(0, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
-        RequestSet rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.9);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -150,9 +150,9 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(2,3);
         Integer numFails = 10;
         Integer nfa = 2;
-        RequestSet rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.5);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -163,9 +163,9 @@ public class AnalysisTest {
         Integer nfa = 3;
         List<Integer> minConns = Arrays.asList(2, 2);
         List<Integer> maxConns = Arrays.asList(4, 4);
-        RequestSet rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.8);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -177,9 +177,9 @@ public class AnalysisTest {
         List<Integer> maxConns = new ArrayList<>();
         Integer numFails = 14;
         Integer nfa = 14;
-        RequestSet rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Node", 0.0, 1.0, 1.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
@@ -190,9 +190,9 @@ public class AnalysisTest {
         Integer nfa = 14;
         List<Integer> minConns = Arrays.asList(0, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
-        RequestSet rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
@@ -203,9 +203,9 @@ public class AnalysisTest {
         Integer nfa = 14;
         List<Integer> minConns = Arrays.asList(0, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
-        RequestSet rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
@@ -216,9 +216,9 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(2,3);
         Integer numFails = 14;
         Integer nfa = 14;
-        RequestSet rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 1.0, 1.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
@@ -229,46 +229,46 @@ public class AnalysisTest {
         Integer nfa = 14;
         List<Integer> minConns = Arrays.asList(2, 2);
         List<Integer> maxConns = Arrays.asList(4, 4);
-        RequestSet rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
+        Request rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
 
     @Test
     public void exceptionTest(){
-        RequestSet rs = createSetAndSolve(1L, "NSFnet", 1, "ServiceILP", "Flow",
+        Request rs = createSetAndSolve(1L, "NSFnet", 1, "ServiceILP", "Flow",
                 "TotalCost", 1, 7, 35, new ArrayList<>(), "Both",
                 1.0, new ArrayList<>(), 7, Arrays.asList(1,1), Arrays.asList(1,1), 2,
                 new ArrayList<>(), "Solo", false, false, 1.0, 1.0, 1.0);
-        AnalyzedSet as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequestSet(rs);
     }
 
-    private RequestSet createSetWithGenService(String problemClass, int numSources, int numDestinations, int numConns,
-                                               List<Integer> minConns, List<Integer> maxConns, Integer numFails,
-                                               Integer nfa, String failureClass, double percentSrcAlsoDest, double percentSrcFail,
-                                               double percentDstFail, int numRequests) {
+    private Request createSetWithGenService(String problemClass, int numSources, int numDestinations, int numConns,
+                                            List<Integer> minConns, List<Integer> maxConns, Integer numFails,
+                                            Integer nfa, String failureClass, double percentSrcAlsoDest, double percentSrcFail,
+                                            double percentDstFail, int numRequests) {
         return createSetAndSolve(1L, "NSFnet", numRequests, "ServiceILP", problemClass, "LinksUsed", numSources, numDestinations, numFails,
                 new ArrayList<>(), failureClass, 0.0, new ArrayList<>(), numConns, minConns, maxConns,
                 nfa, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
     }
 
-    private RequestSet createSetAndSolve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                                         String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
-                                         List<Integer> minMaxFailures, String failureClass, Double failureProb,
-                                         List<Double> minMaxFailureProb, Integer numConnections,
-                                         List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
-                                         Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
-                                         Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                         double percentDstFail){
+    private Request createSetAndSolve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
+                                      String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
+                                      List<Integer> minMaxFailures, String failureClass, Double failureProb,
+                                      List<Double> minMaxFailureProb, Integer numConnections,
+                                      List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
+                                      Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
+                                      Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
+                                      double percentDstFail){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        RequestSet requestSet = generationService.generateFromSimParams(params);
-        processingService.processRequestSet(requestSet);
-        return requestSet;
+        Request request = generationService.generateFromSimParams(params);
+        processingService.processRequestSet(request);
+        return request;
     }
 
     private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,

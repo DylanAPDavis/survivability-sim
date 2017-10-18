@@ -1,14 +1,13 @@
 package netlab.processing;
 
 import netlab.TestConfiguration;
-import netlab.analysis.analyzed.AggregateAnalyzedSet;
+import netlab.analysis.analyzed.AggregateAnalysis;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.analyzed.AnalysisParameters;
-import netlab.analysis.analyzed.AnalyzedSet;
 import netlab.analysis.controller.AnalysisController;
 import netlab.storage.controller.StorageController;
 import netlab.submission.controller.SubmissionController;
 import netlab.submission.request.SimulationParameters;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,7 +15,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -45,8 +43,8 @@ public class SubmissionAnalysisControllerTest {
 
         // Get all the analyzed sets back from AWS
         params = SimulationParameters.builder().useAws(true).objective("TotalCost").build();
-        List<AnalyzedSet> analyzedSets = storageController.getAnalyzedSets(params);
-        assert(analyzedSets.size()>=1);
+        List<Analysis> analyses = storageController.getAnalyzedSets(params);
+        assert(analyses.size()>=1);
     }
 
     //@Test
@@ -60,8 +58,8 @@ public class SubmissionAnalysisControllerTest {
         AnalysisParameters analysisParameters = AnalysisParameters.builder().requestSetId(requestSetId).useAws(true).build();
         analysisController.analyzeRequestSet(analysisParameters);
         params = SimulationParameters.builder().useAws(true).objective("TotalCost").build();
-        List<AnalyzedSet> analyzedSets = storageController.getAnalyzedSets(params);
-        assert(analyzedSets.size()>=1);
+        List<Analysis> analyses = storageController.getAnalyzedSets(params);
+        assert(analyses.size()>=1);
     }
 
     //@Test
@@ -71,7 +69,7 @@ public class SubmissionAnalysisControllerTest {
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, 0.0,
                 0.0, 0.0);
-        AggregateAnalyzedSet aas = analysisController.aggregateAnalyzedSets(params);
+        AggregateAnalysis aas = analysisController.aggregateAnalyzedSets(params);
         System.out.println(aas);
     }
 

@@ -5,7 +5,7 @@ import com.ampl.*;
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
-import netlab.submission.request.Request;
+import netlab.submission.request.Details;
 import netlab.topology.elements.*;
 import org.springframework.stereotype.Service;
 
@@ -23,14 +23,14 @@ public class AmplService {
 
     private String modelDirectory = "linear-programs/models";
 
-    public Request solve(Request request, ProblemClass problemClass, Objective objective, Topology topology,
+    public Details solve(Details details, ProblemClass problemClass, Objective objective, Topology topology,
                          String requestSetId, Integer numThreads){
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         Environment env = new Environment(System.getProperty("user.dir") + "/linear-programs/ampl/");
         AMPL ampl = new AMPL(env);
         double duration = 0.0;
         try {
-            ampl = assignValues(request, problemClass, objective, topology, requestSetId, numThreads, ampl);
+            ampl = assignValues(details, problemClass, objective, topology, requestSetId, numThreads, ampl);
             long startTime = System.nanoTime();
             ampl.solve();
             long endTime = System.nanoTime();
@@ -39,12 +39,12 @@ public class AmplService {
             com.ampl.Objective obj = ampl.getObjective(objective.getCode());
             String result = obj.result();
             if(result.toLowerCase().contains("solved")){
-                request.setIsFeasible(true);
+                details.setIsFeasible(true);
                 DataFrame flows = ampl.getData("L");
-                paths = translateFlowsIntoPaths(flows, request.getPairs(), topology);
+                paths = translateFlowsIntoPaths(flows, details.getPairs(), topology);
             }
             else{
-                paths = request.getPairs().stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
+                paths = details.getPairs().stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -52,13 +52,13 @@ public class AmplService {
         finally{
             ampl.close();
         }
-        request.setChosenPaths(paths);
-        request.setRunningTimeSeconds(duration);
-        return request;
+        details.setChosenPaths(paths);
+        details.setRunningTimeSeconds(duration);
+        return details;
     }
 
-    private AMPL assignValues(Request request, ProblemClass problemClass, Objective objective, Topology topology,
-                              String requestSetId, Integer numThreads, AMPL ampl) throws IOException{
+    private AMPL assignValues(Details details, ProblemClass problemClass, Objective objective, Topology topology,
+                              String requestId, Integer numThreads, AMPL ampl) throws IOException{
         /*if(problemClass.equals(ProblemClass.Flex)){
             ampl.read(modelDirectory + "/flex.mod");
         }
@@ -84,8 +84,8 @@ public class AmplService {
         ampl.setOption("solver", "gurobi");
         ampl.eval("option gurobi_options \'threads " + numThreads + "\';");
 
-        List<String> dataLines = createDataLines(request, topology, problemClass);
-        java.nio.file.Path file = Paths.get(requestSetId + "_" + request.getId() + ".dat");
+        List<String> dataLines = createDataLines(details, topology, problemClass);
+        java.nio.file.Path file = Paths.get(requestId + ".dat");
         try {
             // Create the empty file with default permissions, etc.
             Files.createFile(file);
@@ -97,7 +97,7 @@ public class AmplService {
             System.err.format("createFile error: %s%n", x);
         }
         Files.write(file, dataLines);
-        ampl.readData(requestSetId + "_" + request.getId() + ".dat");
+        ampl.readData(requestId + ".dat");
 
         Files.delete(file);
 
@@ -108,80 +108,80 @@ public class AmplService {
         return ampl;
     }
 
-    private List<String> createDataLines(Request request, Topology topology, ProblemClass problemClass) {
+    private List<String> createDataLines(Details details, Topology topology, ProblemClass problemClass) {
         List<String> dataLines = new ArrayList<>();
         // Topology
         dataLines.addAll(createTopologyLines(topology));
 
         // S
-        dataLines.add(createNodeSetLine(request.getSources(), "S"));
+        dataLines.add(createNodeSetLine(details.getSources(), "S"));
 
         // D
-        dataLines.add(createNodeSetLine(request.getDestinations(), "D"));
+        dataLines.add(createNodeSetLine(details.getDestinations(), "D"));
 
         // I_max
-        int iMaxNum = request.getConnections().getNumConnections() * (request.getNumFailsAllowed().getTotalNumFailsAllowed() + 1);
+        int iMaxNum = details.getConnections().getNumConnections() * (details.getNumFailsAllowed().getTotalNumFailsAllowed() + 1);
         String iMax = String.format("param I_max := %d;", iMaxNum);
         dataLines.add(iMax);
 
         // C_total
-        String cTotal = "param c_total := " + request.getConnections().getNumConnections() + ";";
+        String cTotal = "param c_total := " + details.getConnections().getNumConnections() + ";";
         dataLines.add(cTotal);
 
         // Reach min/max src/dest
-        String reachMinS = "param reachMinS := " + request.getConnections().getReachMinS() + ";";
+        String reachMinS = "param reachMinS := " + details.getConnections().getReachMinS() + ";";
         dataLines.add(reachMinS);
-        String reachMaxS = "param reachMaxS := " + request.getConnections().getReachMaxS() + ";";
+        String reachMaxS = "param reachMaxS := " + details.getConnections().getReachMaxS() + ";";
         dataLines.add(reachMaxS);
-        String reachMinD = "param reachMinD := " + request.getConnections().getReachMinD() + ";";
+        String reachMinD = "param reachMinD := " + details.getConnections().getReachMinD() + ";";
         dataLines.add(reachMinD);
-        String reachMaxD = "param reachMaxD := " + request.getConnections().getReachMaxD() + ";";
+        String reachMaxD = "param reachMaxD := " + details.getConnections().getReachMaxD() + ";";
         dataLines.add(reachMaxD);
 
         // Flex/Endpoint/Flow level params
         if(problemClass.equals(ProblemClass.Flex)){
-            dataLines.addAll(createFlexParamsLines(request));
+            dataLines.addAll(createFlexParamsLines(details));
         }
         if(problemClass.equals(ProblemClass.Endpoint) || problemClass.equals(ProblemClass.EndpointSharedF)){
-            dataLines.addAll(createEndpointParamsLines(request, problemClass));
+            dataLines.addAll(createEndpointParamsLines(details, problemClass));
         }
         if(problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF)){
-            dataLines.addAll(createPairParamsLines(request, problemClass));
+            dataLines.addAll(createPairParamsLines(details, problemClass));
         }
         if(problemClass.equals(ProblemClass.Combined)){
-            dataLines.addAll(createCombinedParamsLines(request, problemClass));
+            dataLines.addAll(createCombinedParamsLines(details, problemClass));
         }
 
         return dataLines;
     }
 
 
-    private List<String> createFlexParamsLines(Request request){
+    private List<String> createFlexParamsLines(Details details){
         List<String> flexLines = new ArrayList<>();
-        List<List<Failure>> failureGroups = request.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : request.getFailures().getFailureGroups();
+        List<List<Failure>> failureGroups = details.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : details.getFailures().getFailureGroups();
         String numGroups = "param NumGroups := " + failureGroups.size() + ";";
         flexLines.add(numGroups);
         flexLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flex, null, null, false));
         return flexLines;
     }
 
-    private List<String> createEndpointParamsLines(Request request, ProblemClass problemClass){
+    private List<String> createEndpointParamsLines(Details details, ProblemClass problemClass){
         List<String> endpointLines = new ArrayList<>();
-        Map<Node, Integer> srcMinMap = request.getConnections().getSrcMinConnectionsMap();
-        Map<Node, Integer> srcMaxMap = request.getConnections().getSrcMaxConnectionsMap();
-        Map<Node, Integer> dstMinMap = request.getConnections().getDstMinConnectionsMap();
-        Map<Node, Integer> dstMaxMap = request.getConnections().getDstMaxConnectionsMap();
+        Map<Node, Integer> srcMinMap = details.getConnections().getSrcMinConnectionsMap();
+        Map<Node, Integer> srcMaxMap = details.getConnections().getSrcMaxConnectionsMap();
+        Map<Node, Integer> dstMinMap = details.getConnections().getDstMinConnectionsMap();
+        Map<Node, Integer> dstMaxMap = details.getConnections().getDstMaxConnectionsMap();
 
-        Map<Node, List<List<Failure>>> srcFailGroupsMap = request.getFailures().getSrcFailureGroupsMap();
-        Map<Node, List<List<Failure>>> dstFailGroupsMap = request.getFailures().getDstFailureGroupsMap();
-        List<List<Failure>> requestFailureGroups = request.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : request.getFailures().getFailureGroups();
+        Map<Node, List<List<Failure>>> srcFailGroupsMap = details.getFailures().getSrcFailureGroupsMap();
+        Map<Node, List<List<Failure>>> dstFailGroupsMap = details.getFailures().getDstFailureGroupsMap();
+        List<List<Failure>> requestFailureGroups = details.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : details.getFailures().getFailureGroups();
 
-        Set<Node> sources = request.getSources();
-        Set<Node> destinations = request.getDestinations();
+        Set<Node> sources = details.getSources();
+        Set<Node> destinations = details.getDestinations();
 
         boolean printFailsGroupPerMember = problemClass.equals(ProblemClass.Endpoint);
-        endpointLines.addAll(createParamsForMemberGroup(sources, srcMinMap, srcMaxMap, srcFailGroupsMap, true, printFailsGroupPerMember, request.getIgnoreFailures()));
-        endpointLines.addAll(createParamsForMemberGroup(destinations, dstMinMap, dstMaxMap, dstFailGroupsMap, false, printFailsGroupPerMember, request.getIgnoreFailures()));
+        endpointLines.addAll(createParamsForMemberGroup(sources, srcMinMap, srcMaxMap, srcFailGroupsMap, true, printFailsGroupPerMember, details.getIgnoreFailures()));
+        endpointLines.addAll(createParamsForMemberGroup(destinations, dstMinMap, dstMaxMap, dstFailGroupsMap, false, printFailsGroupPerMember, details.getIgnoreFailures()));
         // If you're solving the EndpointSharedF problem, just print one FG set and one NumGroups param
         if(problemClass.equals(ProblemClass.EndpointSharedF)){
             String numGroups = "param NumGroups := " + requestFailureGroups.size() + ";";
@@ -226,17 +226,17 @@ public class AmplService {
         return memberLines;
     }
 
-    private List<String> createPairParamsLines(Request request, ProblemClass problemClass){
+    private List<String> createPairParamsLines(Details details, ProblemClass problemClass){
         List<String> pairLines = new ArrayList<>();
         String cMin = "param c_min_sd := ";
         String cMax = "param c_max_sd := ";
         String numGroups = "param NumGroups := ";
-        Map<SourceDestPair, Integer> pairMinMap = request.getConnections().getPairMinConnectionsMap();
-        Map<SourceDestPair, Integer> pairMaxMap = request.getConnections().getPairMaxConnectionsMap();
-        Map<SourceDestPair, List<List<Failure>>> pairFailGroupsMap = request.getFailures().getPairFailureGroupsMap();
+        Map<SourceDestPair, Integer> pairMinMap = details.getConnections().getPairMinConnectionsMap();
+        Map<SourceDestPair, Integer> pairMaxMap = details.getConnections().getPairMaxConnectionsMap();
+        Map<SourceDestPair, List<List<Failure>>> pairFailGroupsMap = details.getFailures().getPairFailureGroupsMap();
         List<String> fgLines = new ArrayList<>();
         if(problemClass.equals(ProblemClass.FlowSharedF)){
-            List<List<Failure>> requestFailureGroups = request.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : request.getFailures().getFailureGroups();
+            List<List<Failure>> requestFailureGroups = details.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : details.getFailures().getFailureGroups();
             numGroups += requestFailureGroups.size();
             fgLines = createFailureGroupLines(requestFailureGroups, ProblemClass.FlowSharedF, null, null, false);
         }
@@ -244,7 +244,7 @@ public class AmplService {
             if(!pair.getSrc().equals(pair.getDst())) {
                 Integer min = pairMinMap.get(pair);
                 Integer max = pairMaxMap.get(pair);
-                List<List<Failure>> failureGroups = request.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : pairFailGroupsMap.get(pair);
+                List<List<Failure>> failureGroups = details.getIgnoreFailures() ? Collections.singletonList(new ArrayList<>()) : pairFailGroupsMap.get(pair);
                 cMin += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + min;
                 cMax += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + max;
                 if(problemClass.equals(ProblemClass.Flow)) {
@@ -268,14 +268,14 @@ public class AmplService {
     /**
      * Create print lines for Combined model - takes C and F/FG params for Flex, adds in cMin and cMax params for both
      * endpoint and flow models.
-     * @param request
+     * @param details
      * @param problemClass
      * @return
      */
-    private List<String> createCombinedParamsLines(Request request, ProblemClass problemClass) {
-        List<String> lines = createFlexParamsLines(request);
-        lines.addAll(createEndpointParamsLines(request, problemClass));
-        lines.addAll(createPairParamsLines(request, problemClass));
+    private List<String> createCombinedParamsLines(Details details, ProblemClass problemClass) {
+        List<String> lines = createFlexParamsLines(details);
+        lines.addAll(createEndpointParamsLines(details, problemClass));
+        lines.addAll(createPairParamsLines(details, problemClass));
         return lines;
     }
 
