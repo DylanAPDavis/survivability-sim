@@ -91,7 +91,7 @@ public class DynamoInterface {
         eav.put(":val1", new AttributeValue().withS(requestSetId));
 
         DynamoDBQueryExpression<SimulationParameters> queryExpression = new DynamoDBQueryExpression<SimulationParameters>()
-                .withKeyConditionExpression("requestSetId = :val1").withExpressionAttributeValues(eav)
+                .withKeyConditionExpression("requestId = :val1").withExpressionAttributeValues(eav)
                 .withConsistentRead(false);
 
         return mapper.query(SimulationParameters.class, queryExpression);

@@ -253,7 +253,7 @@ public class NoFailuresTest {
     }
 
     private void analyze(Request request, int numExpectedPaths, boolean survivable){
-        Analysis analysis = analysisService.analyzeRequestSet(request);
+        Analysis analysis = analysisService.analyzeRequest(request);
         assert(analysis.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getIsSurvivable() == survivable));
         assert(analysis.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getNumPaths() == numExpectedPaths));
         assert(request.getDetails().values().stream()

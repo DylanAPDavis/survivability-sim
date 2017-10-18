@@ -14,7 +14,7 @@ import java.util.*;
 @DynamoDBTable(tableName="TestsMeta")
 public class SimulationParameters {
 
-    @DynamoDBHashKey(attributeName="requestSetId")
+    @DynamoDBHashKey(attributeName="requestId")
     private String requestSetId;
 
     @DynamoDBIndexRangeKey(attributeName="seed", localSecondaryIndexName="seed-index")

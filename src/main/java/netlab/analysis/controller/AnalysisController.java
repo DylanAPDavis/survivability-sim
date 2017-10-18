@@ -39,7 +39,7 @@ public class AnalysisController {
     public Analysis analyzeRequestSet(AnalysisParameters params){
         Request request = storageService.retrieveRequestSet(params.getRequestSetId(), params.getUseAws());
 
-        Analysis analysis = analysisService.analyzeRequestSet(request);
+        Analysis analysis = analysisService.analyzeRequest(request);
 
         // Store the analyzed set
         storageService.storeAnalyzedSet(analysis, params.getUseAws());
@@ -62,7 +62,7 @@ public class AnalysisController {
                         if(analysis == null) {
                             Request request = storageService.retrieveRequestSet(id, true);
                             if(request != null) {
-                                analysis = analysisService.analyzeRequestSet(request);
+                                analysis = analysisService.analyzeRequest(request);
                                 storageService.storeAnalyzedSet(analysis, true);
                             } else{
                                 System.out.println("Details Set ID: " + id + " does not exist!");
@@ -130,7 +130,7 @@ public class AnalysisController {
 
     /*
     public Optional<SimulationParameters> findMatchingSimParams(SimulationParameters searchParams, List<SimulationParameters> candidates){
-        // Filter by everything except requestSetId and submittedDate
+        // Filter by everything except requestId and submittedDate
         return candidates.parallelStream()
                 .filter(p -> p.getCompleted().equals(searchParams.getCompleted()))
                 .filter(p -> p.getGenerated().equals(searchParams.getGenerated()))

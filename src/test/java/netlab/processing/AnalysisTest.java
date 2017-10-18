@@ -36,7 +36,7 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(1, 2);
         Request rs = createSetWithGenService("Flex", 3, 3, 2, minConns, maxConns, 0,
                 0, "Both", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -47,7 +47,7 @@ public class AnalysisTest {
         Integer nfa = 2;
         Request rs = createSetWithGenService("Flex", 3, 3, 2, new ArrayList<>(),
                 new ArrayList<>(), numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -60,7 +60,7 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -73,7 +73,7 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -86,7 +86,7 @@ public class AnalysisTest {
         Integer nfa = 1;
         Request rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -99,7 +99,7 @@ public class AnalysisTest {
         Integer nfa = 1;
         Request rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 1.0);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -113,7 +113,7 @@ public class AnalysisTest {
         Integer nfa = 3;
         Request rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.9);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -126,7 +126,7 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.9);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -139,7 +139,7 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.9);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -152,7 +152,7 @@ public class AnalysisTest {
         Integer nfa = 2;
         Request rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.5);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -165,7 +165,7 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.8);
         assert(as.getPercentSurvivableForFeasible() == 1.0);
     }
@@ -179,7 +179,7 @@ public class AnalysisTest {
         Integer nfa = 14;
         Request rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Node", 0.0, 1.0, 1.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
@@ -192,7 +192,7 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
@@ -205,7 +205,7 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
@@ -218,7 +218,7 @@ public class AnalysisTest {
         Integer nfa = 14;
         Request rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Both", 0.0, 1.0, 1.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
@@ -231,7 +231,7 @@ public class AnalysisTest {
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
                 maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         assert(as.getPercentFeasible() == 0.0);
         assert(as.getPercentSurvivableForFeasible() == 0.0);
     }
@@ -242,7 +242,7 @@ public class AnalysisTest {
                 "TotalCost", 1, 7, 35, new ArrayList<>(), "Both",
                 1.0, new ArrayList<>(), 7, Arrays.asList(1,1), Arrays.asList(1,1), 2,
                 new ArrayList<>(), "Solo", false, false, 1.0, 1.0, 1.0);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
     }
 
     private Request createSetWithGenService(String problemClass, int numSources, int numDestinations, int numConns,

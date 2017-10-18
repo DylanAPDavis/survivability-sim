@@ -105,7 +105,7 @@ public class SurvivabilitySimApplication {
 				"--sim={JSON representation of SimulationParameter Class} " +
 				"--rerun_incomplete={seed} " +
 				"--rerun_params={JSON representation of AggregationParameters Class}" +
-				"--analyze={requestSetId='id', useAws=true/false}";
+				"--analyze={requestId='id', useAws=true/false}";
 		String message = "Provided Startup Arguments: ";
 		for (String arg : args) {
 			message += arg + ", ";

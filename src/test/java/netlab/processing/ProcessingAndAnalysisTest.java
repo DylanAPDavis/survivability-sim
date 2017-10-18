@@ -39,7 +39,7 @@ public class ProcessingAndAnalysisTest {
                 false, false, 0.0, 0.0, 0.0);
         Request request = generationService.generateFromSimParams(params);
         processingService.processRequestSet(request);
-        Analysis analysis = analysisService.analyzeRequestSet(request);
+        Analysis analysis = analysisService.analyzeRequest(request);
         assert(analysis.getRequestMetrics().values().stream().allMatch(RequestMetrics::getIsSurvivable));
         //System.out.println(analysis);
     }

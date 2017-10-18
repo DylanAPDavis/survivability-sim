@@ -27,7 +27,7 @@ public class FailureAdditionService {
     public String createNewParamsAndSets(List<SimulationParameters> zeroFailureParams, Map<String, List<SimulationParameters>> matchingMap){
         String lastId = "";
         for(SimulationParameters zeroParam : zeroFailureParams){
-            //System.out.println("Working on: " + zeroParam.getRequestSetId());
+            //System.out.println("Working on: " + zeroParam.getRequestId());
             lastId = zeroParam.getRequestSetId();
             List<SimulationParameters> matchingParameters = matchingMap.get(hashSimParams(zeroParam));
             //System.out.println("Got matching params");

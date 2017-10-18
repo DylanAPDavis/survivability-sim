@@ -5,7 +5,7 @@ default_len = 2
 
 def run_analysis(request_set_id, use_aws):
     params = {
-        "requestSetId": request_set_id,
+        "requestId": request_set_id,
         "useAws": use_aws
     }
     launch_simulator(loop=True, sim_params={}, analysis_params=params, port_num="0", use_web_server="false")
@@ -13,7 +13,7 @@ def run_analysis(request_set_id, use_aws):
 
 
 def print_usage_message():
-    message = "Usage: requestSetId useAws"
+    message = "Usage: requestId useAws"
     print(message)
 
 

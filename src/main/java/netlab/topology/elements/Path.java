@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,6 +49,16 @@ public class Path implements Serializable {
     public String toString(){
         //return this.links.stream().map(l -> String.format("(%s, %s)", l.getOrigin().getId(), l.getTarget().getId())).collect(joining(" "));
         return this.nodes.stream().map(Node::getId).collect(joining(", "));
+    }
+
+    public boolean containsFailures(Collection<Failure> failures){
+        for(Failure failure : failures){
+            String failureId = failure.getNode() != null ? failure.getNode().getId() : failure.getLink().getId();
+            if(linkIds.contains(failureId) || nodeIds.contains(failureId)){
+                return true;
+            }
+        }
+        return false;
     }
 
 }

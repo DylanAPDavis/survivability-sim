@@ -148,7 +148,7 @@ public class FailuresTest {
       "percentSrcFail": 0,
       "problemClass": "Flex",
       "processingType": "Solo",
-      "requestSetId": "82d9af34-c801-4786-adae-640e7165997d",
+      "requestId": "82d9af34-c801-4786-adae-640e7165997d",
       "sdn": 0,
       "seed": 1,
       "submittedDate": "2017-06-16T19:41:02.193Z",
@@ -191,7 +191,7 @@ public class FailuresTest {
     }
 
     private void analyze(Request request, int numExpectedPaths, boolean survivable, boolean feasible){
-        Analysis analysis = analysisService.analyzeRequestSet(request);
+        Analysis analysis = analysisService.analyzeRequest(request);
         assert(analysis.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getIsSurvivable() == survivable));
         //assert(analysis.getRequestMetrics().values().stream().allMatch(rsm -> rsm.getNumPaths() == numExpectedPaths));
         assert(request.getDetails().values().stream()

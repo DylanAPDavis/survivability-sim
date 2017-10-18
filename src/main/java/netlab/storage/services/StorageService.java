@@ -51,10 +51,10 @@ public class StorageService {
     }
 
     public boolean storeAnalyzedSet(Analysis analysis, boolean useAws){
-        File outputFile = createFile(analysis.getRequestSetId(), "analyzed");
+        File outputFile = createFile(analysis.getRequestId(), "analyzed");
         if(useAws){
             writeLocal(analysis, outputFile);
-            return s3Interface.uploadToAnalyzed(outputFile, analysis.getRequestSetId());
+            return s3Interface.uploadToAnalyzed(outputFile, analysis.getRequestId());
         }
         else {
             return writeLocal(analysis, outputFile);

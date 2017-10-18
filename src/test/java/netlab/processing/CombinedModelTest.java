@@ -64,7 +64,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -98,7 +98,7 @@ public class CombinedModelTest {
         verify(rsCombined, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        Analysis asCombined = analysisService.analyzeRequestSet(rsCombined);
+        Analysis asCombined = analysisService.analyzeRequest(rsCombined);
         testSolution(rsCombined, asCombined, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
 
 
@@ -108,7 +108,7 @@ public class CombinedModelTest {
                 failureClass, numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rsFlex = processingService.processRequestSet(rsFlex);
-        Analysis asFlex = analysisService.analyzeRequestSet(rsFlex);
+        Analysis asFlex = analysisService.analyzeRequest(rsFlex);
         testSolution(rsFlex, asFlex, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
 
         System.out.println("------------------------------");
@@ -117,7 +117,7 @@ public class CombinedModelTest {
                 failureClass, numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, largeMaxSrcConnectionsRange,
                 minDstConnectionsRange, largeMaxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rsFlow = processingService.processRequestSet(rsFlow);
-        Analysis asFlow = analysisService.analyzeRequestSet(rsFlow);
+        Analysis asFlow = analysisService.analyzeRequest(rsFlow);
         testSolution(rsFlow, asFlow, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
 
 
@@ -130,7 +130,7 @@ public class CombinedModelTest {
         verify(rsCombinedFlow, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, largeMaxSrcConnectionsRange,
                 minDstConnectionsRange, largeMaxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        Analysis asCombinedFlow = analysisService.analyzeRequestSet(rsCombinedFlow);
+        Analysis asCombinedFlow = analysisService.analyzeRequest(rsCombinedFlow);
         testSolution(rsCombinedFlow, asCombinedFlow, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
 
 
@@ -140,7 +140,7 @@ public class CombinedModelTest {
                 failureClass, numConnections, minConnectionsRange, largeMaxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rsEndpoint = processingService.processRequestSet(rsEndpoint);
-        Analysis asEndpoint = analysisService.analyzeRequestSet(rsEndpoint);
+        Analysis asEndpoint = analysisService.analyzeRequest(rsEndpoint);
         testSolution(rsEndpoint, asEndpoint, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
 
         System.out.println("------------------------------");
@@ -152,7 +152,7 @@ public class CombinedModelTest {
         verify(rsCombinedEndpoint, numSources, numDestinations, fSetSize, failureClass, numConnections,
                 minConnectionsRange, largeMaxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
-        Analysis asCombinedEndpoint = analysisService.analyzeRequestSet(rsCombinedEndpoint);
+        Analysis asCombinedEndpoint = analysisService.analyzeRequest(rsCombinedEndpoint);
         testSolution(rsCombinedEndpoint, asCombinedEndpoint, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
 
     }
@@ -183,7 +183,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -213,7 +213,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -243,7 +243,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -273,7 +273,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -303,7 +303,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
 
     }
@@ -334,7 +334,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
 
     }
@@ -365,7 +365,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -395,7 +395,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -425,7 +425,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -460,7 +460,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -495,7 +495,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -530,7 +530,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -565,7 +565,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -600,7 +600,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -635,7 +635,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -670,7 +670,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -705,7 +705,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -735,7 +735,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -765,7 +765,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -795,7 +795,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -825,7 +825,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -855,7 +855,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 
@@ -885,7 +885,7 @@ public class CombinedModelTest {
                 minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange, maxSrcConnectionsRange,
                 minDstConnectionsRange, maxDstConnectionsRange, numFailsAllowed, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         rs = processingService.processRequestSet(rs);
-        Analysis as = analysisService.analyzeRequestSet(rs);
+        Analysis as = analysisService.analyzeRequest(rs);
         testSolution(rs, as, survivable, numConnections, minConnectionsRange, minSrcConnectionsRange, minDstConnectionsRange);
     }
 

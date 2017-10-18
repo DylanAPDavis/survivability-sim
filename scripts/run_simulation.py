@@ -22,7 +22,7 @@ def run_sim(args):
     run_analysis = args[-1].lower() == "true"
     if run_analysis:
         analyze_params = {
-            "requestSetId": param_dict["requestSetId"],
+            "requestId": param_dict["requestId"],
             "useAws": param_dict["useAws"]
         }
     
@@ -71,7 +71,7 @@ def build_param_dict(args):
             "useAws": args[31].lower() == "true",
             "ignoreFailures": args[32].lower() == "true",
             "numThreads": ast.literal_eval(args[33]),
-            "requestSetId": args[34]
+            "requestId": args[34]
         }
     except Exception as e:
         print(traceback.format_exc())
@@ -87,7 +87,7 @@ def print_usage_message():
     message += " reachMinSources, reachMaxSources, reachMinDestinations, reachMaxDestinations"
     message += " failureSetSize minMaxFailures[min, max] failureClass failureProb minMaxFailureProb[min, max]"
     message += " numFailsAllowed minMaxFailsAllowed[min, max] processingType percentSrcAlsoDest"
-    message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures numThreads requestSetId analyzeAfterRun"
+    message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures numThreads requestId analyzeAfterRun"
     print(message)
 
 
