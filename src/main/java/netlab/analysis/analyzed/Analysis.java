@@ -29,10 +29,10 @@ public class Analysis implements Serializable {
     private Objective objective;
     private FailureClass failureClass;
 
-    private Boolean isSurvivable;
     private Boolean isFeasible;
     private Double runningTime;
     private Double totalCost;
+    private Double totalLinksUsed;
     private Double totalPaths;
     private Double averagePrimaryHops;
     private Double averagePrimaryCost;

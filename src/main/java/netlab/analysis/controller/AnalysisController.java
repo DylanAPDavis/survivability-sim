@@ -56,7 +56,7 @@ public class AnalysisController {
             seedParams.stream()
                     .filter(SimulationParameters::getCompleted)
                     .filter(SimulationParameters::getUseAws)
-                    .map(SimulationParameters::getRequestSetId)
+                    .map(SimulationParameters::getRequestId)
                     .forEach( id -> {
                         Analysis analysis = storageService.retrieveAnalyzedSet(id, true);
                         if(analysis == null) {
@@ -79,7 +79,7 @@ public class AnalysisController {
     public AggregateAnalysis aggregateAnalyzedSets(SimulationParameters params){
 
         List<Analysis> analyses = storageService.getAnalyzedSets(params);
-        return analysisService.aggregateAnalyzedSets(analyses);
+        return analysisService.aggregateAnalyses(analyses);
     }
 
 
@@ -109,9 +109,9 @@ public class AnalysisController {
         for(SimulationParameters primaryParams : primaryParamList){
             List<SimulationParameters> paramsToBeAnalyzed = paramMap.get(makeHash(primaryParams));
             List<Analysis> analyses = paramsToBeAnalyzed.stream()
-                    .map(p -> storageService.retrieveAnalyzedSet(p.getRequestSetId(), true))
+                    .map(p -> storageService.retrieveAnalyzedSet(p.getRequestId(), true))
                     .collect(Collectors.toList());
-            AggregateAnalysis aggregateAnalysis = analysisService.aggregateAnalyzedSets(analyses);
+            AggregateAnalysis aggregateAnalysis = analysisService.aggregateAnalyses(analyses);
             aggregateSets.add(aggregateAnalysis);
         }
 
@@ -122,9 +122,9 @@ public class AnalysisController {
     private String makeHash(SimulationParameters p) {
         return hashingService.hash(p.getTopologyId(), p.getAlgorithm(), p.getProblemClass(), p.getObjective(),
                 String.valueOf(p.getPercentSrcAlsoDest()), p.getFailureClass(), String.valueOf(p.getFailureSetSize()),
-                String.valueOf(p.getNumFailsAllowed()), String.valueOf(p.getPercentSrcFail()),
-                String.valueOf(p.getPercentDestFail()), String.valueOf(p.getIgnoreFailures()), String.valueOf(p.getNumConnections()),
-                String.valueOf(p.getMinConnectionsRange()), String.valueOf(p.getMaxConnectionsRange()),
+                String.valueOf(p.getNumFailureEvents()), String.valueOf(p.getPercentSrcFail()),
+                String.valueOf(p.getPercentDstFail()), String.valueOf(p.getIgnoreFailures()), String.valueOf(p.getMinConnections()),
+                String.valueOf(p.getMinPairConnections()), String.valueOf(p.getMaxPairConnections()),
                 String.valueOf(p.getNumSources()), String.valueOf(p.getNumDestinations()));
     }
 
@@ -141,9 +141,9 @@ public class AnalysisController {
                 .filter(p -> p.getNumRequests().equals(searchParams.getNumRequests()))
                 .filter(p -> p.getNumSources().equals(searchParams.getNumSources()))
                 .filter(p -> p.getNumDestinations().equals(searchParams.getNumDestinations()))
-                .filter(p -> p.getNumConnections().equals(searchParams.getNumConnections()))
-                .filter(p -> p.getMinConnectionsRange().equals(searchParams.getMinConnectionsRange()))
-                .filter(p -> p.getMaxConnectionsRange().equals(searchParams.getMaxConnectionsRange()))
+                .filter(p -> p.getMinConnections().equals(searchParams.getMinConnections()))
+                .filter(p -> p.getMinPairConnections().equals(searchParams.getMinPairConnections()))
+                .filter(p -> p.getMaxPairConnections().equals(searchParams.getMaxPairConnections()))
                 .filter(p -> p.getProcessingType().equals(searchParams.getProcessingType()))
                 .filter(p -> p.getPercentSrcAlsoDest().equals(searchParams.getPercentSrcAlsoDest()))
                 .filter(p -> p.getSdn().equals(searchParams.getSdn()))
@@ -153,10 +153,10 @@ public class AnalysisController {
                 .filter(p -> p.getFailureClass().equals(searchParams.getFailureClass()))
                 .filter(p -> p.getFailureProb().equals(searchParams.getFailureProb()))
                 .filter(p -> p.getMinMaxFailureProb().equals(searchParams.getMinMaxFailureProb()))
-                .filter(p -> p.getNumFailsAllowed().equals(searchParams.getNumFailsAllowed()))
+                .filter(p -> p.getNumFailureEvents().equals(searchParams.getNumFailureEvents()))
                 .filter(p -> p.getMinMaxFailsAllowed().equals(searchParams.getMinMaxFailsAllowed()))
                 .filter(p -> p.getPercentSrcFail().equals(searchParams.getPercentSrcFail()))
-                .filter(p -> p.getPercentDestFail().equals(searchParams.getPercentDestFail()))
+                .filter(p -> p.getPercentDstFail().equals(searchParams.getPercentDstFail()))
                 .filter(p -> p.getIgnoreFailures().equals(searchParams.getIgnoreFailures()))
                 .findFirst();
     }*/

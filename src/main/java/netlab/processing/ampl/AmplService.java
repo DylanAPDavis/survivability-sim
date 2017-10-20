@@ -129,13 +129,13 @@ public class AmplService {
         dataLines.add(cTotal);
 
         // Reach min/max src/dest
-        String reachMinS = "param reachMinS := " + details.getConnections().getReachMinS() + ";";
+        String reachMinS = "param useMinS := " + details.getConnections().getReachMinS() + ";";
         dataLines.add(reachMinS);
-        String reachMaxS = "param reachMaxS := " + details.getConnections().getReachMaxS() + ";";
+        String reachMaxS = "param useMaxS := " + details.getConnections().getReachMaxS() + ";";
         dataLines.add(reachMaxS);
-        String reachMinD = "param reachMinD := " + details.getConnections().getReachMinD() + ";";
+        String reachMinD = "param useMinD := " + details.getConnections().getReachMinD() + ";";
         dataLines.add(reachMinD);
-        String reachMaxD = "param reachMaxD := " + details.getConnections().getReachMaxD() + ";";
+        String reachMaxD = "param useMaxD := " + details.getConnections().getReachMaxD() + ";";
         dataLines.add(reachMaxD);
 
         // Flex/Endpoint/Flow level params

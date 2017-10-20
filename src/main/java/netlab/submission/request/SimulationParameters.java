@@ -15,28 +15,18 @@ import java.util.*;
 public class SimulationParameters {
 
     @DynamoDBHashKey(attributeName="requestId")
-    private String requestSetId;
+    private String requestId;
 
     @DynamoDBIndexRangeKey(attributeName="seed", localSecondaryIndexName="seed-index")
     private Long seed;
 
     private Calendar submittedDate;
-
     private Boolean completed;
 
-    // Keeps track of if the request was generated using failure set of another request
-    private Boolean generated;
-
     private String topologyId;
-
     private String problemClass;
-
     private String objective;
-
     private String algorithm;
-
-    private Integer numRequests;
-
     // S
     private Integer numSources;
     // D
@@ -44,93 +34,81 @@ public class SimulationParameters {
 
     // F - Total size of the failure set (shared by all connections)
     private Integer failureSetSize;
-    // Alternatively, give a random number between values at index 0 and index 1
-    private List<Integer> minMaxFailures;
+    // Type of elements in F (Link, Node, or Both)
     private String failureClass;
-    // Failure probability - pick one field
+    // Failure probability -- apply to all elements
     private Double failureProb;
-    private List<Double> minMaxFailureProb;
+    // Failure Scenario -- apply unique probability to each element of a unique failure set
+    private String failureScenario;
+    // Number of failureSet that will occur
+    private Integer numFailureEvents;
 
     // C - total number of connections
-    private Integer numConnections;
-    // Alternatively, give a random number between values at index 0 and index 1
-    private List<Integer> minConnectionsRange;
-    private List<Integer> maxConnectionsRange;
-    // Optional, random number between values at index 0 and index 1 for src connections and dst connections
-    private List<Integer> minSrcConnectionsRange;
-    private List<Integer> maxSrcConnectionsRange;
-    private List<Integer> minDstConnectionsRange;
-    private List<Integer> maxDstConnectionsRange;
+    private Integer minConnections;
+    // Establish min and max connections between each SD pair
+    private Integer minPairConnections;
+    private Integer maxPairConnections;
+    // Establish min and max connections from each source and to each destination
+    private Integer minSrcConnections;
+    private Integer maxSrcConnections;
+    private Integer minDstConnections;
+    private Integer maxDstConnections;
 
-    // Number of failureSet that will occur
-    private Integer numFailsAllowed;
-    // Alternatively, give a random number between values at index 0 and index 1
-    private List<Integer> minMaxFailsAllowed;
-
-    private String processingType;
+    private Integer useMinS;
+    private Integer useMaxS;
+    private Integer useMinD;
+    private Integer useMaxD;
 
     private Double percentSrcAlsoDest;
-
     private Double percentSrcFail;
-
-    private Double percentDestFail;
-
-    private Boolean sdn;
+    private Double percentDstFail;
 
     private Boolean useAws;
-
     private Boolean ignoreFailures;
+    private Boolean combineSrcTraffic;
+    private Boolean combineDstTraffic;
 
     private Integer numThreads;
-
-    private Integer reachMinS;
-    private Integer reachMaxS;
-    private Integer reachMinD;
-    private Integer reachMaxD;
 
     public SimulationParameters clone(){
         try{
             return (SimulationParameters) super.clone();
         } catch (Exception e){
             return SimulationParameters.builder()
-                    .requestSetId(requestSetId)
+                    .requestId(requestId)
                     .seed(seed)
                     .submittedDate(submittedDate)
                     .completed(completed)
-                    .generated(generated)
                     .topologyId(topologyId)
                     .problemClass(problemClass)
                     .objective(objective)
                     .algorithm(algorithm)
-                    .numRequests(numRequests)
                     .numSources(numSources)
                     .numDestinations(numDestinations)
                     .failureSetSize(failureSetSize)
-                    .minMaxFailures(new ArrayList<>(minMaxFailures))
                     .failureClass(failureClass)
                     .failureProb(failureProb)
-                    .minMaxFailureProb(new ArrayList<>(minMaxFailureProb))
-                    .numConnections(numConnections)
-                    .minConnectionsRange(new ArrayList<>(minConnectionsRange))
-                    .maxConnectionsRange(new ArrayList<>(maxConnectionsRange))
-                    .minSrcConnectionsRange(new ArrayList<>(minSrcConnectionsRange))
-                    .maxSrcConnectionsRange(new ArrayList<>(maxSrcConnectionsRange))
-                    .minDstConnectionsRange(new ArrayList<>(minDstConnectionsRange))
-                    .maxDstConnectionsRange(new ArrayList<>(maxDstConnectionsRange))
-                    .numFailsAllowed(numFailsAllowed)
-                    .minMaxFailsAllowed(new ArrayList<>(minMaxFailsAllowed))
-                    .processingType(processingType)
+                    .failureScenario(failureScenario)
+                    .numFailureEvents(numFailureEvents)
+                    .minConnections(minConnections)
+                    .minPairConnections(minPairConnections)
+                    .maxPairConnections(maxPairConnections)
+                    .minSrcConnections(minSrcConnections)
+                    .maxSrcConnections(maxSrcConnections)
+                    .minDstConnections(minDstConnections)
+                    .maxDstConnections(maxDstConnections)
+                    .useMinS(useMinS)
+                    .useMaxS(useMaxS)
+                    .useMinD(useMinD)
+                    .useMaxD(useMaxD)
                     .percentSrcAlsoDest(percentSrcAlsoDest)
                     .percentSrcFail(percentSrcFail)
-                    .percentDestFail(percentDestFail)
-                    .sdn(sdn)
+                    .percentDstFail(percentDstFail)
                     .useAws(useAws)
                     .ignoreFailures(ignoreFailures)
+                    .combineSrcTraffic(combineSrcTraffic)
+                    .combineDstTraffic(combineDstTraffic)
                     .numThreads(numThreads)
-                    .reachMinS(reachMinS)
-                    .reachMaxS(reachMaxS)
-                    .reachMinD(reachMinD)
-                    .reachMaxD(reachMaxD)
                     .build();
         }
     }

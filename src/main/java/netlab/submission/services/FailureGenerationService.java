@@ -166,7 +166,7 @@ public class FailureGenerationService {
         ProblemClass problemClass = enumGenerationService.getProblemClass(params.getProblemClass());
 
         // Cut params
-        Integer numFails = params.getNumFailsAllowed();
+        Integer numFails = params.getNumFailureEvents();
         List<List<Failure>> failureGroups = new ArrayList<>();
 
         List<Integer> minMaxFails = params.getMinMaxFailsAllowed();
@@ -253,7 +253,7 @@ public class FailureGenerationService {
         // Otherwise, use min/max, unless that field isn't set.
         // Create failureSet
         Set<Node> srcDstFailures = selectionService.choosePercentageSubsetNodes(new HashSet<>(sources), params.getPercentSrcFail(), rng);
-        srcDstFailures.addAll(selectionService.choosePercentageSubsetNodes(new HashSet<>(destinations), params.getPercentDestFail(), rng));
+        srcDstFailures.addAll(selectionService.choosePercentageSubsetNodes(new HashSet<>(destinations), params.getPercentDstFail(), rng));
 
         Integer failureSetSize = numFailures != null ? numFailures : 0;
 

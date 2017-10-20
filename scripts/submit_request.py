@@ -12,10 +12,10 @@ def submit(args):
         print(args)
         message = "Usage: seed topologyId numRequests algorithm problemClass objective numSources numDestinations"
         message += " failureSetSize failureSetSizeRange[min, max] failureClass failureProb failureProbRange[min, max]"
-        message += " numConnections minConnectionsRange[min, max] maxConnectionsRange[min, max]"
-        message += " minSrcConnectionsRange[min, max] maxSrcConnectionsRange[min, max]"
-        message += " minDstConnectionsRange[min, max] maxDstConnectionsRange[min, max]"
-        message += " numFailsAllowed numFailsAllowedRange[min, max] processingType percentSrcAlsoDest"
+        message += " minConnections minPairConnections[min, max] maxPairConnections[min, max]"
+        message += " minSrcConnections[min, max] maxSrcConnections[min, max]"
+        message += " minDstConnections[min, max] maxDstConnections[min, max]"
+        message += " numFailureEvents numFailsAllowedRange[min, max] processingType percentSrcAlsoDest"
         message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures numThreads portNum(optional)"
         print(message)
         sys.exit(-1)
@@ -36,14 +36,14 @@ def submit(args):
         'failureClass': args[10],
         'failureProb': args[11],
         'minMaxFailureProb': args[12],
-        'numConnections': args[13],
-        'minConnectionsRange': args[14],
-        'maxConnectionsRange': args[15],
-        'minSrcConnectionsRange': args[16],
-        'maxSrcConnectionsRange': args[17],
-        'minDstConnectionsRange': args[18],
-        'maxDstConnectionsRange': args[19],
-        'numFailsAllowed': args[20],
+        'minConnections': args[13],
+        'minPairConnections': args[14],
+        'maxPairConnections': args[15],
+        'minSrcConnections': args[16],
+        'maxSrcConnections': args[17],
+        'minDstConnections': args[18],
+        'maxDstConnections': args[19],
+        'numFailureEvents': args[20],
         'minMaxFailsAllowed': args[21],
         'processingType': args[22],
         'percentSrcAlsoDest': args[23],

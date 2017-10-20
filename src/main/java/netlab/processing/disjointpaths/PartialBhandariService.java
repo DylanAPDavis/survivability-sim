@@ -39,7 +39,7 @@ public class PartialBhandariService {
         switch(problemClass){
             /*case Flex:
                 paths = pathsForFlex(pairs, failCollection.getFailureSet(),
-                        nfaCollection.getTotalNumFailsAllowed(), connCollection.getNumConnections(),
+                        nfaCollection.getTotalNumFailsAllowed(), connCollection.getMinConnections(),
                         failCollection.getFailureGroups(), topology);*/
             case Combined:
                 paths = pathsForCombined(pairs, failCollection, nfaCollection, connCollection, topology);
@@ -313,7 +313,7 @@ public class PartialBhandariService {
 
         /*
     private Map<SourceDestPair,Map<String,Path>> pathsForFlex(Set<SourceDestPair> pairs, Set<Failure> failureSet,
-                                                              Integer totalNumFailsAllowed, Integer numConnections,
+                                                              Integer totalNumFailsAllowed, Integer minConnections,
                                                               List<List<Failure>> failureGroups, Topology topo) {
 
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
@@ -327,7 +327,7 @@ public class PartialBhandariService {
         boolean sufficientPathsEstablished = false;
         for(SourceDestPair pair : sortedPairs){
             List<Path> paths = findPaths(topo, pair.getSrc(), pair.getDst(),
-                    numConnections, totalNumFailsAllowed, nodesCanFail, failureSet);
+                    minConnections, totalNumFailsAllowed, nodesCanFail, failureSet);
             // For each new path, figure out if adding it will get you any closer to goal
             // Will not get you closer if it will be disconnected by X failures shared by an existing path
             int id = 0;
@@ -344,7 +344,7 @@ public class PartialBhandariService {
                 pathMap.get(pair).put(String.valueOf(id), newPath);
                 id++;
                 totalChosenPaths++;
-                sufficientPathsEstablished = determineSufficientPaths(failureToPathMap, numConnections, totalChosenPaths);
+                sufficientPathsEstablished = determineSufficientPaths(failureToPathMap, minConnections, totalChosenPaths);
                 if(sufficientPathsEstablished){
                     break;
                 }
@@ -354,9 +354,9 @@ public class PartialBhandariService {
             }
         }
         if(!sufficientPathsEstablished){
-            totalChosenPaths = augmentPathMap(pathMap, failureToPathMap, pathToFailureGroupMap, numConnections, totalChosenPaths);
+            totalChosenPaths = augmentPathMap(pathMap, failureToPathMap, pathToFailureGroupMap, minConnections, totalChosenPaths);
         }
-        return determineSufficientPaths(failureToPathMap, numConnections, totalChosenPaths) ?
+        return determineSufficientPaths(failureToPathMap, minConnections, totalChosenPaths) ?
                 pathMap : pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
 
     }*/

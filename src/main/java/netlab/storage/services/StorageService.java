@@ -107,7 +107,7 @@ public class StorageService {
         Boolean deleteRecords = dynamoInterface.deleteRecords(matchingParams);
         Boolean deleteRequests = false;
         if(deleteRecords) {
-            List<String> requestSetIds = matchingParams.stream().map(SimulationParameters::getRequestSetId).collect(Collectors.toList());
+            List<String> requestSetIds = matchingParams.stream().map(SimulationParameters::getRequestId).collect(Collectors.toList());
             deleteRequests = s3Interface.deleteFromRaw(requestSetIds);
         }
         return deleteRecords && deleteRequests;

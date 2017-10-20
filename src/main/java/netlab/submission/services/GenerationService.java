@@ -49,9 +49,9 @@ public class GenerationService {
         if(details == null){
             status = "Submission failed. Could not generate details.";
         }
-        String setId = params.getRequestSetId() != null && !params.getRequestSetId().isEmpty()
-                ? params.getRequestSetId() : hashParams(params);
-        params.setRequestSetId(setId);
+        String setId = params.getRequestId() != null && !params.getRequestId().isEmpty()
+                ? params.getRequestId() : hashParams(params);
+        params.setRequestId(setId);
         return Request.builder()
                 .details(details)
                 .status(status)
@@ -59,12 +59,11 @@ public class GenerationService {
                 .seed(params.getSeed())
                 .problemClass(enumGenerationService.getProblemClass(params.getProblemClass()))
                 .algorithm(enumGenerationService.getAlgorithm(params.getAlgorithm()))
-                .processingType(enumGenerationService.getProcessingType(params.getProcessingType()))
                 .objective(enumGenerationService.getObjective(params.getObjective()))
                 .failureClass(enumGenerationService.getFailureClass(params.getFailureClass()))
                 .percentSrcAlsoDest(params.getPercentSrcAlsoDest())
                 .percentSrcFail(params.getPercentSrcFail())
-                .percentDestFail(params.getPercentDestFail())
+                .percentDestFail(params.getPercentDstFail())
                 .sdn(params.getSdn())
                 .useAws(params.getUseAws())
                 .topologyId(params.getTopologyId())
@@ -75,14 +74,14 @@ public class GenerationService {
     private String hashParams(SimulationParameters params) {
         return hashingService.hash(params.getSeed(), params.getTopologyId(), params.getProblemClass(), params.getObjective(),
                 params.getAlgorithm(),
-                params.getNumRequests(), params.getNumSources(), params.getNumDestinations(), params.getNumConnections(),
-                params.getMinConnectionsRange(), params.getMaxConnectionsRange(), params.getMinSrcConnectionsRange(),
-                params.getMaxSrcConnectionsRange(), params.getMinDstConnectionsRange(), params.getMaxDstConnectionsRange(),
-                params.getReachMinS(), params.getReachMaxS(), params.getReachMinD(), params.getReachMaxD(),
+                params.getNumRequests(), params.getNumSources(), params.getNumDestinations(), params.getMinConnections(),
+                params.getMinPairConnections(), params.getMaxPairConnections(), params.getMinSrcConnections(),
+                params.getMaxSrcConnections(), params.getMinDstConnections(), params.getMaxDstConnections(),
+                params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(),
                 params.getFailureSetSize(), params.getMinMaxFailures(), params.getFailureClass(), params.getFailureProb(),
-                params.getMinMaxFailureProb(), params.getNumFailsAllowed(), params.getMinMaxFailsAllowed(),
+                params.getMinMaxFailureProb(), params.getNumFailureEvents(), params.getMinMaxFailsAllowed(),
                 params.getProcessingType(), params.getPercentSrcAlsoDest(), params.getPercentSrcFail(),
-                params.getPercentDestFail(), params.getSdn(), params.getUseAws(), params.getIgnoreFailures(), params.getNumThreads());
+                params.getPercentDstFail(), params.getSdn(), params.getUseAws(), params.getIgnoreFailures(), params.getNumThreads());
     }
 
     public Request generateFromRequestParams(RequestParameters requestParameters) {
@@ -100,7 +99,6 @@ public class GenerationService {
                 .problemClass(enumGenerationService.getProblemClass(requestParameters.getProblemClass()))
                 .algorithm(enumGenerationService.getAlgorithm(requestParameters.getAlgorithm()))
                 .objective(enumGenerationService.getObjective(requestParameters.getObjective()))
-                .processingType(ProcessingType.Solo)
                 .failureClass(FailureClass.Both)
                 .percentSrcAlsoDest(-1.0)
                 .percentSrcFail(-1.0)
@@ -242,14 +240,14 @@ public class GenerationService {
     private Connections assignConnections(SimulationParameters params, List<SourceDestPair> pairs, List<Node> sources,
                                           List<Node> destinations, Random rng){
         // Connection params
-        Integer numConnections = params.getNumConnections();
-        List<Integer> minConnectionsRange = params.getMinConnectionsRange();
-        List<Integer> maxConnectionsRange = params.getMaxConnectionsRange();
+        Integer numConnections = params.getMinConnections();
+        List<Integer> minConnectionsRange = params.getMinPairConnections();
+        List<Integer> maxConnectionsRange = params.getMaxPairConnections();
 
-        List<Integer> minSrcConnectionsRange = params.getMinSrcConnectionsRange();
-        List<Integer> maxSrcConnectionsRange = params.getMaxSrcConnectionsRange();
-        List<Integer> minDstConnectionsRange = params.getMinDstConnectionsRange();
-        List<Integer> maxDstConnectionsRange = params.getMaxDstConnectionsRange();
+        List<Integer> minSrcConnectionsRange = params.getMinSrcConnections();
+        List<Integer> maxSrcConnectionsRange = params.getMaxSrcConnections();
+        List<Integer> minDstConnectionsRange = params.getMinDstConnections();
+        List<Integer> maxDstConnectionsRange = params.getMaxDstConnections();
 
         // GENERATE VALUES FOR PAIRS
         Integer minForMinConn = minConnectionsRange.size() > 0 ? minConnectionsRange.get(0) : 0;
@@ -289,10 +287,10 @@ public class GenerationService {
                 .srcMaxConnectionsMap(srcMaxConnectionsMap)
                 .dstMinConnectionsMap(dstMinConnectionsMap)
                 .dstMaxConnectionsMap(dstMaxConnectionsMap)
-                .reachMinS(params.getReachMinS())
-                .reachMaxS(params.getReachMaxS())
-                .reachMinD(params.getReachMinD())
-                .reachMaxD(params.getReachMaxD())
+                .reachMinS(params.getUseMinS())
+                .reachMaxS(params.getUseMaxS())
+                .reachMinD(params.getUseMinD())
+                .reachMaxD(params.getUseMaxD())
                 .build();
     }
 

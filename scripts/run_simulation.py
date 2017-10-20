@@ -45,28 +45,28 @@ def build_param_dict(args):
             "numRequests": ast.literal_eval(args[5]),
             "numSources": ast.literal_eval(args[6]),
             "numDestinations": ast.literal_eval(args[7]),
-            "numConnections": ast.literal_eval(args[8]),
-            "minConnectionsRange": ast.literal_eval(args[9]),
-            "maxConnectionsRange": ast.literal_eval(args[10]),
-            "minSrcConnectionsRange": ast.literal_eval(args[11]),
-            "maxSrcConnectionsRange": ast.literal_eval(args[12]),
-            "minDstConnectionsRange": ast.literal_eval(args[13]),
-            "maxDstConnectionsRange": ast.literal_eval(args[14]),
-            "reachMinS": ast.literal_eval(args[15]),
-            "reachMaxS": ast.literal_eval(args[16]),
-            "reachMinD": ast.literal_eval(args[17]),
-            "reachMaxD": ast.literal_eval(args[18]),
+            "minConnections": ast.literal_eval(args[8]),
+            "minPairConnections": ast.literal_eval(args[9]),
+            "maxPairConnections": ast.literal_eval(args[10]),
+            "minSrcConnections": ast.literal_eval(args[11]),
+            "maxSrcConnections": ast.literal_eval(args[12]),
+            "minDstConnections": ast.literal_eval(args[13]),
+            "maxDstConnections": ast.literal_eval(args[14]),
+            "useMinS": ast.literal_eval(args[15]),
+            "useMaxS": ast.literal_eval(args[16]),
+            "useMinD": ast.literal_eval(args[17]),
+            "useMaxD": ast.literal_eval(args[18]),
             "failureSetSize": ast.literal_eval(args[19]),
             "minMaxFailures": ast.literal_eval(args[20]),
             "failureClass": args[21],
             "failureProb": ast.literal_eval(args[22]),
             "minMaxFailureProb": ast.literal_eval(args[23]),
-            "numFailsAllowed": ast.literal_eval(args[24]),
+            "numFailureEvents": ast.literal_eval(args[24]),
             "minMaxFailsAllowed": ast.literal_eval(args[25]),
             "processingType": args[26],
             "percentSrcAlsoDest": ast.literal_eval(args[27]),
             "percentSrcFail": ast.literal_eval(args[28]),
-            "percentDestFail": ast.literal_eval(args[29]),
+            "percentDstFail": ast.literal_eval(args[29]),
             "sdn": args[30].lower() == "true",
             "useAws": args[31].lower() == "true",
             "ignoreFailures": args[32].lower() == "true",
@@ -81,12 +81,12 @@ def build_param_dict(args):
 
 def print_usage_message():
     message = "Usage: seed topologyId problemClass objective algorithm numRequests numSources numDestinations"
-    message += " numConnections minConnectionsRange[min, max] maxConnectionsRange[min, max]"
-    message += " minSrcConnectionsRange[min, max] maxSrcConnectionsRange[min, max]"
-    message += " minDstConnectionsRange[min, max] maxDstConnectionsRange[min, max]"
+    message += " minConnections minPairConnections[min, max] maxPairConnections[min, max]"
+    message += " minSrcConnections[min, max] maxSrcConnections[min, max]"
+    message += " minDstConnections[min, max] maxDstConnections[min, max]"
     message += " reachMinSources, reachMaxSources, reachMinDestinations, reachMaxDestinations"
     message += " failureSetSize minMaxFailures[min, max] failureClass failureProb minMaxFailureProb[min, max]"
-    message += " numFailsAllowed minMaxFailsAllowed[min, max] processingType percentSrcAlsoDest"
+    message += " numFailureEvents minMaxFailsAllowed[min, max] processingType percentSrcAlsoDest"
     message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures numThreads requestId analyzeAfterRun"
     print(message)
 

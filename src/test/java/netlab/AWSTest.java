@@ -133,7 +133,7 @@ public class AWSTest {
         //        Arrays.asList(1.0, 1.0, 0.0, 0.0714), Arrays.asList(14.0, 1.0, 1.0, 1.0), Arrays.asList(14.0, 2.0, 1.0, 1.0)));
         failureMap.put("Node", Arrays.asList(Arrays.asList(14.0, 1.0, 1.0, 1.0), Arrays.asList(14.0, 2.0, 1.0, 1.0)));
         failureMap.put("Both", Collections.singletonList(Arrays.asList(35.0, 1.0, 1.0, 1.0)));
-        //List<Integer> numConnections = Arrays.asList(1, 7, 14);
+        //List<Integer> minConnections = Arrays.asList(1, 7, 14);
         List<Integer> numConnections = Arrays.asList(14);
         //List<List<Integer>> minConnectionRanges = Arrays.asList(new ArrayList<>(), Arrays.asList(0,0), Arrays.asList(1,1));
         List<List<Integer>> minConnectionRanges = Arrays.asList(new ArrayList<>(), Arrays.asList(0,0));

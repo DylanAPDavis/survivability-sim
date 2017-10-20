@@ -213,42 +213,42 @@ public class DefaultValueService {
         if(params.getFailureClass() == null){
             params.setFailureClass("Both");
         }
-        if(params.getNumConnections() == null || params.getNumConnections() < 0){
-            params.setNumConnections(0);
+        if(params.getMinConnections() == null || params.getMinConnections() < 0){
+            params.setMinConnections(0);
         }
-        if(params.getMinConnectionsRange() == null){
-            params.setMinConnectionsRange(new ArrayList<>());
+        if(params.getMinPairConnections() == null){
+            params.setMinPairConnections(new ArrayList<>());
         }
-        if(params.getMaxConnectionsRange() == null){
-            params.setMaxConnectionsRange(new ArrayList<>());
+        if(params.getMaxPairConnections() == null){
+            params.setMaxPairConnections(new ArrayList<>());
         }
-        if(params.getMinSrcConnectionsRange() == null){
-            params.setMinSrcConnectionsRange(new ArrayList<>());
+        if(params.getMinSrcConnections() == null){
+            params.setMinSrcConnections(new ArrayList<>());
         }
-        if(params.getMaxSrcConnectionsRange() == null){
-            params.setMaxSrcConnectionsRange(new ArrayList<>());
+        if(params.getMaxSrcConnections() == null){
+            params.setMaxSrcConnections(new ArrayList<>());
         }
-        if(params.getMinDstConnectionsRange() == null){
-            params.setMinDstConnectionsRange(new ArrayList<>());
+        if(params.getMinDstConnections() == null){
+            params.setMinDstConnections(new ArrayList<>());
         }
-        if(params.getMaxDstConnectionsRange() == null){
-            params.setMaxDstConnectionsRange(new ArrayList<>());
+        if(params.getMaxDstConnections() == null){
+            params.setMaxDstConnections(new ArrayList<>());
         }
-        if(params.getReachMinS() == null){
-            params.setReachMinS(0);
+        if(params.getUseMinS() == null){
+            params.setUseMinS(0);
         }
-        if(params.getReachMaxS() == null){
-            params.setReachMaxS(params.getNumSources());
+        if(params.getUseMaxS() == null){
+            params.setUseMaxS(params.getNumSources());
         }
-        if(params.getReachMinD() == null){
-            params.setReachMinD(0);
+        if(params.getUseMinD() == null){
+            params.setUseMinD(0);
         }
-        if(params.getReachMaxD() == null){
-            params.setReachMaxD(params.getNumDestinations());
+        if(params.getUseMaxD() == null){
+            params.setUseMaxD(params.getNumDestinations());
         }
 
-        if(params.getNumFailsAllowed() == null || params.getNumFailsAllowed() < 0){
-            params.setNumFailsAllowed(0);
+        if(params.getNumFailureEvents() == null || params.getNumFailureEvents() < 0){
+            params.setNumFailureEvents(0);
         }
         if(params.getMinMaxFailsAllowed() == null){
             params.setMinMaxFailsAllowed(new ArrayList<>());
@@ -283,11 +283,11 @@ public class DefaultValueService {
             params.setPercentSrcFail(1.0);
         }
 
-        if(params.getPercentDestFail() == null || params.getPercentDestFail() < 0.0){
-            params.setPercentDestFail(0.0);
+        if(params.getPercentDstFail() == null || params.getPercentDstFail() < 0.0){
+            params.setPercentDstFail(0.0);
         }
-        else if(params.getPercentDestFail() > 1.0){
-            params.setPercentDestFail(1.0);
+        else if(params.getPercentDstFail() > 1.0){
+            params.setPercentDstFail(1.0);
         }
         if(params.getIgnoreFailures() == null){
             params.setIgnoreFailures(false);

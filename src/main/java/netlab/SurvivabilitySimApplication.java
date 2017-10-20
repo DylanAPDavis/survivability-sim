@@ -92,7 +92,7 @@ public class SurvivabilitySimApplication {
 			params = params.stream().filter(p -> !p.getCompleted()).collect(Collectors.toList());
 			for(SimulationParameters param : params){
 				subCon.submitRequestSet(param);
-				log.info("Details Set ID: " + param.getRequestSetId());
+				log.info("Details Set ID: " + param.getRequestId());
 			}
 			ctx.close();
 			System.exit(0);

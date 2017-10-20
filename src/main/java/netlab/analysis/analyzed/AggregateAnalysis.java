@@ -27,15 +27,22 @@ public class AggregateAnalysis implements Serializable {
 
     private Integer numRequests;
 
+    private Double totalFeasible;
+    private Double percentFeasible;
+
     private Double runningTime;
     private Double totalCost;
+    private Double totalLinksUsed;
     private Double totalPaths;
     private Double averagePrimaryHops;
+    private Double averagePrimaryCost;
 
     // After failure simulation
     private Double averagePrimaryHopsPostFailure;
+    private Double averagePrimaryCostPostFailure;
     private Double pathsSevered;
-    private Double pathsRemaining;
-    private Double connectionsDisrupted;
+    private Double pathsIntact;
+    private Double connectionsSevered;
+    private Double connectionsIntact;
 
 }
