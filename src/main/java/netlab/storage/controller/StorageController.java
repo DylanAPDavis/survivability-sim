@@ -28,21 +28,21 @@ public class StorageController {
         this.hashingService = hashingService;
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/storage/raw/{requestSetId}/{useAwes}")
-    public Request getRequestSet(@PathVariable String requestSetId, @PathVariable Boolean useAws){
+    @RequestMapping(method = RequestMethod.GET, value = "/storage/raw/{requestId}/{useAws}")
+    public Request getRequest(@PathVariable String requestSetId, @PathVariable Boolean useAws){
 
         return storageService.retrieveRequestSet(requestSetId, useAws);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/storage/analyzed/{requestSetId}/{useAwes}")
-    public Analysis getAnalyzedSet(@PathVariable String requestSetId, @PathVariable Boolean useAws){
+    @RequestMapping(method = RequestMethod.GET, value = "/storage/analyzed/{requestId}/{useAws}")
+    public Analysis getAnalysis(@PathVariable String requestSetId, @PathVariable Boolean useAws){
 
         return storageService.retrieveAnalyzedSet(requestSetId, useAws);
     }
 
-    @RequestMapping(value = "/storage/analyzed/sets", method= RequestMethod.POST)
+    @RequestMapping(value = "/storage/analyzed/match", method= RequestMethod.POST)
     @ResponseBody
-    public List<Analysis> getAnalyzedSets(SimulationParameters params){
+    public List<Analysis> getMatchingAnalysis(SimulationParameters params){
         //TODO: Retrieve items from local DB if it is up
         if(!params.getUseAws()){
             log.info("Feature only supported when using AWS!");

@@ -7,9 +7,9 @@ import java.util.Optional;
 
 
 public enum FailureClass {
-    Node("Node"),
-    Link("Link"),
-    Both("Both");
+    Node("node"),
+    Link("link"),
+    Both("both");
 
     private String code;
 
@@ -30,8 +30,9 @@ public enum FailureClass {
     }
 
     public static Optional<FailureClass> get(String code) {
-        if (lookup.containsKey(code)) {
-            return Optional.of(lookup.get(code));
+        String lookupCode = code.toLowerCase();
+        if (lookup.containsKey(lookupCode)) {
+            return Optional.of(lookup.get(lookupCode));
         } else {
             return Optional.empty();
         }

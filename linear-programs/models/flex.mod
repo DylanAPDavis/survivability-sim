@@ -40,10 +40,10 @@ set GroupIndices := 1..NumGroups;
 set FG {g in GroupIndices} within AllPairs default {};
 
 # MIN AND MAX PARAMS FOR NUMBER OF SRCS/DESTINATIONS
-param reachMinS >= 0 integer default 0;
-param reachMaxS >= 0 integer default card(S);
-param reachMinD >= 0 integer default 0;
-param reachMaxD >= 0 integer default card(D);
+param useMinS >= 0 integer default 0;
+param useMaxS >= 0 integer default card(S);
+param useMinD >= 0 integer default 0;
+param useMaxD >= 0 integer default card(D);
 
 
 # VARIABLES

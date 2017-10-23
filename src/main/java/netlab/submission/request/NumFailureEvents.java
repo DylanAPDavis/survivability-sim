@@ -14,10 +14,10 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NumFailsAllowed implements Serializable {
-    private Integer totalNumFailsAllowed;
-    private Map<SourceDestPair, Integer> pairNumFailsAllowedMap;
+public class NumFailureEvents implements Serializable {
+    private Integer totalNumFailureEvents;
+    private Map<SourceDestPair, Integer> pairNumFailureEvents;
 
-    private Map<Node, Integer> srcNumFailsAllowedMap;
-    private Map<Node, Integer> dstNumFailsAllowedMap;
+    private Map<Node, Integer> srcNumFailureEvents;
+    private Map<Node, Integer> dstNumFailureEvents;
 }

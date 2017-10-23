@@ -25,49 +25,38 @@ public class RequestParameters {
 
     private String algorithm;
 
-    // F - Total size of the failure set (shared by all connections)
+    // F - Failure set (shared by all connections)
     private Set<String> failures;
-    private Map<List<String>, Set<String>> pairFailureMap;
-    private Map<String, Set<String>> sourceFailureMap;
-    private Map<String, Set<String>> destFailureMap;
 
-    // Failure probability - pick one field
+    // Failure probability map
     private Map<String, Double> failureProbabilityMap;
-    private Map<List<String>, Map<String, Double>> pairFailureProbabilityMap;
-    private Map<String, Map<String, Double>> sourceFailureProbabilityMap;
-    private Map<String, Map<String, Double>> destFailureProbabilityMap;
+
+    // Number of failures that will occur
+    private Integer numFailureEvents;
 
     // C - total number of connections
     private Integer numConnections;
-    // Alternatively, give a random number between values at index 0 and index 1
+
     private Map<List<String>, Integer> pairNumConnectionsMap;
     private Map<List<String>, Integer> pairMinNumConnectionsMap;
     private Map<List<String>, Integer> pairMaxNumConnectionsMap;
+
     private Map<String, Integer> sourceNumConnectionsMap;
     private Map<String, Integer> sourceMinNumConnectionsMap;
     private Map<String, Integer> sourceMaxNumConnectionsMap;
+
     private Map<String, Integer> destNumConnectionsMap;
     private Map<String, Integer> destMinNumConnectionsMap;
     private Map<String, Integer> destMaxNumConnectionsMap;
 
-    private Integer reachMinSources;
-    private Integer reachMaxSources;
-    private Integer reachMinDestinations;
-    private Integer reachMaxDestinations;
+    private Integer useMinS;
+    private Integer useMaxS;
+    private Integer useMinD;
+    private Integer useMaxD;
 
-    // Number of failureSet that will occur
-    private Integer numFailsAllowed;
-    // Alternatively, give a random number between values at index 0 and index 1
-    private Map<List<String>, Integer> pairNumFailsAllowedMap;
-    private Map<String, Integer> sourceNumFailsAllowedMap;
-    private Map<String, Integer> destNumFailsAllowedMap;
-
-    private Boolean sdn;
-
-    private Boolean useAws;
+    public String trafficCombinationType;
 
     private Boolean ignoreFailures;
-
     private Integer numThreads;
 
 }

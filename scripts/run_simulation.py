@@ -84,7 +84,7 @@ def print_usage_message():
     message += " minConnections minPairConnections[min, max] maxPairConnections[min, max]"
     message += " minSrcConnections[min, max] maxSrcConnections[min, max]"
     message += " minDstConnections[min, max] maxDstConnections[min, max]"
-    message += " reachMinSources, reachMaxSources, reachMinDestinations, reachMaxDestinations"
+    message += " useMinS, useMaxS, useMinD, useMaxD"
     message += " failureSetSize minMaxFailures[min, max] failureClass failureProb minMaxFailureProb[min, max]"
     message += " numFailureEvents minMaxFailsAllowed[min, max] processingType percentSrcAlsoDest"
     message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures numThreads requestId analyzeAfterRun"

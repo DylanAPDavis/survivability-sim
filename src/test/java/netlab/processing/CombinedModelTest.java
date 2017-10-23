@@ -978,11 +978,11 @@ public class CombinedModelTest {
         assert(failures.getPairFailureGroupsMap().values().stream().noneMatch(fails -> fails.size() > 0));
         assert(failures.getSrcFailureGroupsMap().values().stream().noneMatch(fails -> fails.size() > 0));
         assert(failures.getDstFailureGroupsMap().values().stream().noneMatch(fails -> fails.size() > 0));
-        NumFailsAllowed nfa = r.getNumFailsAllowed();
-        assert(nfa.getTotalNumFailsAllowed() == numFailsAllowed);
-        assert(nfa.getPairNumFailsAllowedMap().values().stream().noneMatch(fa -> fa.equals(0)));
-        assert(nfa.getSrcNumFailsAllowedMap().values().stream().noneMatch(fa -> fa.equals(0)));
-        assert(nfa.getDstNumFailsAllowedMap().values().stream().noneMatch(fa -> fa.equals(0)));
+        NumFailureEvents nfa = r.getNumFailureEvents();
+        assert(nfa.getTotalNumFailureEvents() == numFailsAllowed);
+        assert(nfa.getPairNumFailureEvents().values().stream().noneMatch(fa -> fa.equals(0)));
+        assert(nfa.getSrcNumFailureEvents().values().stream().noneMatch(fa -> fa.equals(0)));
+        assert(nfa.getDstNumFailureEvents().values().stream().noneMatch(fa -> fa.equals(0)));
         assert(rs.getPercentSrcFail() == percentSrcFail);
         assert(rs.getPercentDestFail() == percentDstFail);
         assert(rs.getPercentSrcAlsoDest() == percentSrcAlsoDest);

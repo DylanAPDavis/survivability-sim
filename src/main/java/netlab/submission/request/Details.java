@@ -25,7 +25,7 @@ public class Details implements Serializable {
     private Set<Node> destinations;
 
     private Failures failures;
-    private NumFailsAllowed numFailsAllowed;
+    private NumFailureEvents numFailureEvents;
     private Connections connections;
 
     private Set<SourceDestPair> pairs;
@@ -35,6 +35,4 @@ public class Details implements Serializable {
     private double runningTimeSeconds;
 
     private Boolean isFeasible;
-
-    private Boolean ignoreFailures;
 }

@@ -23,28 +23,18 @@ public class DefaultValueService {
             params.setDestinations(new HashSet<>());
         }
         if(params.getProblemClass() == null){
-            params.setProblemClass("Flow");
+            params.setProblemClass("combined");
         }
         if(params.getObjective() == null){
-            params.setObjective("LinkCost");
+            params.setObjective("linksused");
         }
         if(params.getAlgorithm() == null){
-            params.setAlgorithm("ServiceILP");
+            params.setAlgorithm("ilp");
         }
-
 
         // F - Total size of the failure set (shared by all connections)
         if(params.getFailures() == null){
             params.setFailures(new HashSet<>());
-        }
-        if(params.getPairFailureMap() == null){
-            params.setPairFailureMap(new HashMap<>());
-        }
-        if(params.getSourceFailureMap() == null){
-            params.setSourceFailureMap(new HashMap<>());
-        }
-        if(params.getDestFailureMap() == null){
-            params.setDestFailureMap(new HashMap<>());
         }
 
         // Failure probability - pick one field
@@ -56,35 +46,10 @@ public class DefaultValueService {
                 probMap.put(fail, Math.min(1.0, probMap.get(fail)));
             }
         }
-        if(params.getPairFailureProbabilityMap() == null){
-            params.setPairFailureProbabilityMap(new HashMap<>());
-        }else{
-            Map<List<String>, Map<String, Double>> probMap = params.getPairFailureProbabilityMap();
-            for(List<String> pair : probMap.keySet()) {
-                for (String fail : probMap.get(pair).keySet()) {
-                    probMap.get(pair).put(fail, Math.min(1.0, probMap.get(pair).get(fail)));
-                }
-            }
-        }
-        if(params.getSourceFailureProbabilityMap() == null){
-            params.setSourceFailureProbabilityMap(new HashMap<>());
-        }else{
-            Map<String, Map<String, Double>> probMap = params.getSourceFailureProbabilityMap();
-            for(String member : probMap.keySet()) {
-                for (String fail : probMap.get(member).keySet()) {
-                    probMap.get(member).put(fail, Math.min(1.0, probMap.get(member).get(fail)));
-                }
-            }
-        }
-        if(params.getDestFailureProbabilityMap() == null){
-            params.setDestFailureProbabilityMap(new HashMap<>());
-        }else{
-            Map<String, Map<String, Double>> probMap = params.getDestFailureProbabilityMap();
-            for(String member : probMap.keySet()) {
-                for (String fail : probMap.get(member).keySet()) {
-                    probMap.get(member).put(fail, Math.min(1.0, probMap.get(member).get(fail)));
-                }
-            }
+
+        // Number of failures that will occur
+        if(params.getNumFailureEvents() == null || params.getNumFailureEvents() < 0){
+            params.setNumFailureEvents(0);
         }
 
         // C - total number of connections
@@ -125,45 +90,29 @@ public class DefaultValueService {
             params.setDestMaxNumConnectionsMap(new HashMap<>());
         }
 
-        // Reachability - reach min/max sources/dests
-        if(params.getReachMinSources() == null){
-            params.setReachMinSources(0);
+        // Reachability - use min/max sources/dests
+        if(params.getUseMinS() == null){
+            params.setUseMinS(0);
         }
-        if(params.getReachMaxSources() == null){
-            params.setReachMaxSources(params.getSources().size());
+        if(params.getUseMaxS() == null){
+            params.setUseMaxS(params.getSources().size());
         }
-        if(params.getReachMinDestinations() == null){
-            params.setReachMinDestinations(0);
+        if(params.getUseMinD() == null){
+            params.setUseMinD(0);
         }
-        if(params.getReachMaxDestinations() == null){
-            params.setReachMaxDestinations(params.getDestinations().size());
-        }
-
-        // Number of failureSet that will occur
-        if(params.getNumFailsAllowed() == null || params.getNumFailsAllowed() < 0){
-            params.setNumFailsAllowed(0);
-        }
-        if(params.getPairNumFailsAllowedMap() == null){
-            params.setPairNumFailsAllowedMap(new HashMap<>());
-        }
-        if(params.getSourceNumFailsAllowedMap() == null){
-            params.setSourceNumFailsAllowedMap(new HashMap<>());
-        }
-        if(params.getDestNumFailsAllowedMap() == null){
-            params.setDestNumFailsAllowedMap(new HashMap<>());
+        if(params.getUseMaxD() == null){
+            params.setUseMaxD(params.getDestinations().size());
         }
 
-        if(params.getSdn() == null){
-            params.setSdn(false);
+        if(params.getTrafficCombinationType() == null){
+            params.setTrafficCombinationType("none");
         }
-        if(params.getUseAws() == null){
-            params.setUseAws(false);
-        }
+
         if(params.getIgnoreFailures() == null){
             params.setIgnoreFailures(false);
         }
         if(params.getNumThreads() == null){
-            params.setNumThreads(6);
+            params.setNumThreads(8);
         }
         return params;
     }
@@ -179,9 +128,6 @@ public class DefaultValueService {
         if(params.getCompleted() == null || params.getCompleted()){
             params.setCompleted(false);
         }
-        if(params.getGenerated() == null || params.getGenerated()){
-            params.setGenerated(false);
-        }
         if(params.getTopologyId() == null){
             params.setTopologyId("NSFnet");
         }
@@ -192,47 +138,53 @@ public class DefaultValueService {
             params.setNumDestinations(0);
         }
         if(params.getProblemClass() == null){
-            params.setProblemClass("Flow");
+            params.setProblemClass("combined");
         }
         if(params.getObjective() == null){
-            params.setObjective("TotalCost");
+            params.setObjective("linksused");
         }
         if(params.getAlgorithm() == null){
-            params.setObjective("ServiceILP");
+            params.setAlgorithm("ilp");
         }
-        if(params.getNumRequests() == null || params.getNumRequests() < 0){
-            params.setNumRequests(0);
-        }
+
 
         if(params.getFailureSetSize() == null || params.getFailureSetSize() < 0){
             params.setFailureSetSize(0);
         }
-        if(params.getMinMaxFailures() == null){
-            params.setMinMaxFailures(new ArrayList<>());
-        }
         if(params.getFailureClass() == null){
-            params.setFailureClass("Both");
+            params.setFailureClass("both");
         }
+        if(params.getFailureProb() == null || params.getFailureProb() < 0 || params.getFailureProb() > 1){
+            params.setFailureProb(1.0);
+        }
+        if(params.getFailureScenario() == null){
+            params.setFailureScenario("default");
+        }
+        if(params.getNumFailureEvents() == null || params.getNumFailureEvents() < 0){
+            params.setNumFailureEvents(0);
+        }
+
+
         if(params.getMinConnections() == null || params.getMinConnections() < 0){
             params.setMinConnections(0);
         }
         if(params.getMinPairConnections() == null){
-            params.setMinPairConnections(new ArrayList<>());
+            params.setMinPairConnections(0);
         }
         if(params.getMaxPairConnections() == null){
-            params.setMaxPairConnections(new ArrayList<>());
+            params.setMaxPairConnections(params.getMinConnections());
         }
         if(params.getMinSrcConnections() == null){
-            params.setMinSrcConnections(new ArrayList<>());
+            params.setMinSrcConnections(0);
         }
         if(params.getMaxSrcConnections() == null){
-            params.setMaxSrcConnections(new ArrayList<>());
+            params.setMaxSrcConnections(params.getMinConnections());
         }
         if(params.getMinDstConnections() == null){
-            params.setMinDstConnections(new ArrayList<>());
+            params.setMinDstConnections(0);
         }
         if(params.getMaxDstConnections() == null){
-            params.setMaxDstConnections(new ArrayList<>());
+            params.setMaxDstConnections(params.getMinConnections());
         }
         if(params.getUseMinS() == null){
             params.setUseMinS(0);
@@ -247,24 +199,10 @@ public class DefaultValueService {
             params.setUseMaxD(params.getNumDestinations());
         }
 
-        if(params.getNumFailureEvents() == null || params.getNumFailureEvents() < 0){
-            params.setNumFailureEvents(0);
+        if(params.getTrafficCombinationType() == null){
+            params.setTrafficCombinationType("none");
         }
-        if(params.getMinMaxFailsAllowed() == null){
-            params.setMinMaxFailsAllowed(new ArrayList<>());
-        }
-        if(params.getFailureProb() == null || params.getFailureProb() < 0 || params.getFailureProb() > 1){
-            params.setFailureProb(1.0);
-        }
-        if(params.getMinMaxFailureProb() == null){
-            params.setMinMaxFailureProb(new ArrayList<>());
-        }
-        if(params.getProcessingType() == null){
-            params.setProcessingType("Solo");
-        }
-        if(params.getSdn() == null){
-            params.setSdn(false);
-        }
+
         if(params.getUseAws() == null){
             params.setUseAws(false);
         }

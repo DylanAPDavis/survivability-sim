@@ -3,10 +3,7 @@ package netlab.processing.disjointpaths;
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
-import netlab.submission.request.Connections;
-import netlab.submission.request.Details;
-import netlab.submission.request.Failures;
-import netlab.submission.request.NumFailsAllowed;
+import netlab.submission.request.*;
 import netlab.topology.elements.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,30 +13,31 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class PartialBhandariService {
+public class FlexBhandariService {
 
     private BhandariService bhandariService;
 
     private BellmanFordService bellmanFordService;
 
     @Autowired
-    public PartialBhandariService(BhandariService bhandariService, BellmanFordService bellmanFordService){
+    public FlexBhandariService(BhandariService bhandariService, BellmanFordService bellmanFordService){
         this.bhandariService = bhandariService;
         this.bellmanFordService = bellmanFordService;
     }
 
 
-    public Details solve(Details details, ProblemClass problemClass, Objective objective, Topology topology, String requestSetId) {
+    public Details solve(Request request, Topology topology) {
+        Details details = request.getDetails();
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         Set<SourceDestPair> pairs = details.getPairs();
         Failures failCollection = details.getFailures();
-        NumFailsAllowed nfaCollection = details.getNumFailsAllowed();
+        NumFailureEvents nfaCollection = details.getNumFailureEvents();
         Connections connCollection = details.getConnections();
         long startTime = System.nanoTime();
-        switch(problemClass){
+        switch(request.getProblemClass()){
             /*case Flex:
                 paths = pathsForFlex(pairs, failCollection.getFailureSet(),
-                        nfaCollection.getTotalNumFailsAllowed(), connCollection.getMinConnections(),
+                        nfaCollection.getTotalNumFailureEvents(), connCollection.getMinConnections(),
                         failCollection.getFailureGroups(), topology);*/
             case Combined:
                 paths = pathsForCombined(pairs, failCollection, nfaCollection, connCollection, topology);
@@ -72,7 +70,7 @@ public class PartialBhandariService {
      * @return
      */
     private Map<SourceDestPair,Map<String,Path>> pathsForCombined(Set<SourceDestPair> pairs, Failures failCollection,
-                                                                  NumFailsAllowed nfaCollection,
+                                                                  NumFailureEvents nfaCollection,
                                                                   Connections connCollection, Topology topo) {
 
         // Get relevant parameters from input
@@ -83,13 +81,13 @@ public class PartialBhandariService {
         Map<Node, Integer> srcMaxConnMap = connCollection.getSrcMaxConnectionsMap();
         Map<Node, Integer> dstMinConnMap = connCollection.getSrcMinConnectionsMap();
         Map<Node, Integer> dstMaxConnMap = connCollection.getSrcMaxConnectionsMap();
-        Integer reachMinS = connCollection.getReachMinS();
-        Integer reachMaxS = connCollection.getReachMaxS();
-        Integer reachMinD = connCollection.getReachMinD();
-        Integer reachMaxD = connCollection.getReachMaxD();
+        Integer reachMinS = connCollection.getUseMinS();
+        Integer reachMaxS = connCollection.getUseMaxS();
+        Integer reachMinD = connCollection.getUseMinD();
+        Integer reachMaxD = connCollection.getUseMaxD();
         Set<Failure> failureSet = failCollection.getFailureSet();
         List<List<Failure>> failureGroups = failCollection.getFailureGroups();
-        Integer totalNumFailsAllowed = nfaCollection.getTotalNumFailsAllowed();
+        Integer totalNumFailsAllowed = nfaCollection.getTotalNumFailureEvents();
 
         // Build a map of paths and failures associated with those paths.
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
@@ -313,7 +311,7 @@ public class PartialBhandariService {
 
         /*
     private Map<SourceDestPair,Map<String,Path>> pathsForFlex(Set<SourceDestPair> pairs, Set<Failure> failureSet,
-                                                              Integer totalNumFailsAllowed, Integer minConnections,
+                                                              Integer totalNumFailureEvents, Integer minConnections,
                                                               List<List<Failure>> failureGroups, Topology topo) {
 
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
@@ -327,7 +325,7 @@ public class PartialBhandariService {
         boolean sufficientPathsEstablished = false;
         for(SourceDestPair pair : sortedPairs){
             List<Path> paths = findPaths(topo, pair.getSrc(), pair.getDst(),
-                    minConnections, totalNumFailsAllowed, nodesCanFail, failureSet);
+                    minConnections, totalNumFailureEvents, nodesCanFail, failureSet);
             // For each new path, figure out if adding it will get you any closer to goal
             // Will not get you closer if it will be disconnected by X failures shared by an existing path
             int id = 0;

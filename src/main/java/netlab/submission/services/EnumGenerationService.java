@@ -12,8 +12,12 @@ public class EnumGenerationService {
         return Algorithm.get(alg).orElse(Algorithm.ServiceILP);
     }
 
-    public ProcessingType getProcessingType(String type){
-        return ProcessingType.get(type).orElse(ProcessingType.Solo);
+    public TrafficCombinationType getTrafficCombinationType(String type){
+        return TrafficCombinationType.get(type).orElse(TrafficCombinationType.None);
+    }
+
+    public FailureScenario getFailureScenario(String scenario){
+        return FailureScenario.get(scenario).orElse(FailureScenario.Default);
     }
 
     public FailureClass getFailureClass(String fClass){
@@ -21,7 +25,7 @@ public class EnumGenerationService {
     }
 
     public ProblemClass getProblemClass(String problemClass) {
-        return ProblemClass.get(problemClass).orElse(ProblemClass.Flex);
+        return ProblemClass.get(problemClass).orElse(ProblemClass.Combined);
     }
 
     public Objective getObjective(String objective) {

@@ -21,11 +21,13 @@ public class Request implements Serializable {
 
     private Long seed;
 
-    private String status;
+    private boolean completed;
 
     private String topologyId;
 
     private FailureClass failureClass;
+
+    private FailureScenario failureScenario;
 
     private Algorithm algorithm;
 
@@ -33,15 +35,17 @@ public class Request implements Serializable {
 
     private Objective objective;
 
+    private TrafficCombinationType trafficCombinationType;
+
     private Double percentSrcAlsoDest;
 
     private Double percentSrcFail;
 
     private Double percentDestFail;
 
-    private boolean sdn;
-
     private boolean useAws;
+
+    private boolean ignoreFailures;
 
     private Integer numThreads;
 

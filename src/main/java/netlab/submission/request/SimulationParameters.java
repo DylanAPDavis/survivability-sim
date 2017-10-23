@@ -15,60 +15,60 @@ import java.util.*;
 public class SimulationParameters {
 
     @DynamoDBHashKey(attributeName="requestId")
-    private String requestId;
+    public String requestId;
 
     @DynamoDBIndexRangeKey(attributeName="seed", localSecondaryIndexName="seed-index")
-    private Long seed;
+    public Long seed;
 
-    private Calendar submittedDate;
-    private Boolean completed;
+    public Calendar submittedDate;
+    public Boolean completed;
 
-    private String topologyId;
-    private String problemClass;
-    private String objective;
-    private String algorithm;
+    public String topologyId;
+    public String problemClass;
+    public String objective;
+    public String algorithm;
     // S
-    private Integer numSources;
+    public Integer numSources;
     // D
-    private Integer numDestinations;
+    public Integer numDestinations;
 
     // F - Total size of the failure set (shared by all connections)
-    private Integer failureSetSize;
+    public Integer failureSetSize;
     // Type of elements in F (Link, Node, or Both)
-    private String failureClass;
+    public String failureClass;
     // Failure probability -- apply to all elements
-    private Double failureProb;
+    public Double failureProb;
     // Failure Scenario -- apply unique probability to each element of a unique failure set
-    private String failureScenario;
+    public String failureScenario;
     // Number of failureSet that will occur
-    private Integer numFailureEvents;
+    public Integer numFailureEvents;
 
     // C - total number of connections
-    private Integer minConnections;
+    public Integer minConnections;
     // Establish min and max connections between each SD pair
-    private Integer minPairConnections;
-    private Integer maxPairConnections;
+    public Integer minPairConnections;
+    public Integer maxPairConnections;
     // Establish min and max connections from each source and to each destination
-    private Integer minSrcConnections;
-    private Integer maxSrcConnections;
-    private Integer minDstConnections;
-    private Integer maxDstConnections;
+    public Integer minSrcConnections;
+    public Integer maxSrcConnections;
+    public Integer minDstConnections;
+    public Integer maxDstConnections;
 
-    private Integer useMinS;
-    private Integer useMaxS;
-    private Integer useMinD;
-    private Integer useMaxD;
+    public Integer useMinS;
+    public Integer useMaxS;
+    public Integer useMinD;
+    public Integer useMaxD;
 
-    private Double percentSrcAlsoDest;
-    private Double percentSrcFail;
-    private Double percentDstFail;
+    public String trafficCombinationType;
 
-    private Boolean useAws;
-    private Boolean ignoreFailures;
-    private Boolean combineSrcTraffic;
-    private Boolean combineDstTraffic;
+    public Double percentSrcAlsoDest;
+    public Double percentSrcFail;
+    public Double percentDstFail;
 
-    private Integer numThreads;
+    public Boolean useAws;
+    public Boolean ignoreFailures;
+
+    public Integer numThreads;
 
     public SimulationParameters clone(){
         try{
@@ -106,8 +106,7 @@ public class SimulationParameters {
                     .percentDstFail(percentDstFail)
                     .useAws(useAws)
                     .ignoreFailures(ignoreFailures)
-                    .combineSrcTraffic(combineSrcTraffic)
-                    .combineDstTraffic(combineDstTraffic)
+                    .trafficCombinationType(trafficCombinationType)
                     .numThreads(numThreads)
                     .build();
         }

@@ -20,14 +20,12 @@ public class VisualizationService {
     public void visualize(Request request){
         try {
             File htmlTemplateFile = new File(System.getProperty("user.dir") + "/src/main/java/netlab/visualization/visualizerTemplate.html");
-            for(String requestId : request.getDetails().keySet()) {
-                Details details = request.getDetails().get(requestId);
-                String htmlString = FileUtils.readFileToString(htmlTemplateFile);
-                String data = requestSetToJson(details);
-                htmlString = htmlString.replace("/* JAVA Put the data here! */", data);
-                File newHtmlFile = new File(System.getProperty("user.dir") + "/results/visuals/" + requestId+ ".html");
-                FileUtils.writeStringToFile(newHtmlFile, htmlString);
-            }
+            Details details = request.getDetails();
+            String htmlString = FileUtils.readFileToString(htmlTemplateFile);
+            String data = requestSetToJson(details);
+            htmlString = htmlString.replace("/* JAVA Put the data here! */", data);
+            File newHtmlFile = new File(System.getProperty("user.dir") + "/results/visuals/" + request.getId()+ ".html");
+            FileUtils.writeStringToFile(newHtmlFile, htmlString);
         } catch(Exception ex) {
             System.out.println("Error creating result visualization:" + ex.getMessage());
         }

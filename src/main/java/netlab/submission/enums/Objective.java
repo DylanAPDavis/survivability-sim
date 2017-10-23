@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public enum Objective {
-    LinksUsed("LinksUsed"),
-    Connections("Connections"),
-    TotalCost("TotalCost");
+    LinksUsed("linksused"),
+    Connections("connections"),
+    TotalCost("totalcost");
 
     private String code;
 
@@ -30,8 +30,9 @@ public enum Objective {
     }
 
     public static Optional<Objective> get(String code) {
-        if (lookup.containsKey(code)) {
-            return Optional.of(lookup.get(code));
+        String lookupCode = code.toLowerCase();
+        if (lookup.containsKey(lookupCode)) {
+            return Optional.of(lookup.get(lookupCode));
         } else {
             return Optional.empty();
         }

@@ -45,68 +45,54 @@ public class GenerationService {
 
         params = defaultValueService.assignDefaults(params);
         Details details = createDetailsFromParameters(params);
-        String status = "Processing";
-        if(details == null){
-            status = "Submission failed. Could not generate details.";
-        }
         String setId = params.getRequestId() != null && !params.getRequestId().isEmpty()
-                ? params.getRequestId() : hashParams(params);
+                ? params.getRequestId() : hashingService.createRequestId(params);
         params.setRequestId(setId);
         return Request.builder()
                 .details(details)
-                .status(status)
+                .completed(params.getCompleted())
                 .id(setId)
                 .seed(params.getSeed())
                 .problemClass(enumGenerationService.getProblemClass(params.getProblemClass()))
                 .algorithm(enumGenerationService.getAlgorithm(params.getAlgorithm()))
                 .objective(enumGenerationService.getObjective(params.getObjective()))
                 .failureClass(enumGenerationService.getFailureClass(params.getFailureClass()))
+                .failureScenario(enumGenerationService.getFailureScenario(params.getFailureScenario()))
+                .trafficCombinationType(enumGenerationService.getTrafficCombinationType(params.getTrafficCombinationType()))
                 .percentSrcAlsoDest(params.getPercentSrcAlsoDest())
                 .percentSrcFail(params.getPercentSrcFail())
                 .percentDestFail(params.getPercentDstFail())
-                .sdn(params.getSdn())
                 .useAws(params.getUseAws())
+                .ignoreFailures(params.getIgnoreFailures())
                 .topologyId(params.getTopologyId())
                 .numThreads(params.getNumThreads())
                 .build();
     }
 
-    private String hashParams(SimulationParameters params) {
-        return hashingService.hash(params.getSeed(), params.getTopologyId(), params.getProblemClass(), params.getObjective(),
-                params.getAlgorithm(),
-                params.getNumRequests(), params.getNumSources(), params.getNumDestinations(), params.getMinConnections(),
-                params.getMinPairConnections(), params.getMaxPairConnections(), params.getMinSrcConnections(),
-                params.getMaxSrcConnections(), params.getMinDstConnections(), params.getMaxDstConnections(),
-                params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(),
-                params.getFailureSetSize(), params.getMinMaxFailures(), params.getFailureClass(), params.getFailureProb(),
-                params.getMinMaxFailureProb(), params.getNumFailureEvents(), params.getMinMaxFailsAllowed(),
-                params.getProcessingType(), params.getPercentSrcAlsoDest(), params.getPercentSrcFail(),
-                params.getPercentDstFail(), params.getSdn(), params.getUseAws(), params.getIgnoreFailures(), params.getNumThreads());
-    }
 
-    public Request generateFromRequestParams(RequestParameters requestParameters) {
-        requestParameters = defaultValueService.assignDefaults(requestParameters);
-        Details details = createDetailsFromRequestParameters(requestParameters);
-        String status = details == null ? "Submission failed. Could not generate details." : "Processing";
+    public Request generateFromRequestParams(RequestParameters params) {
+        params = defaultValueService.assignDefaults(params);
+        Details details = createDetailsFromRequestParameters(params);
         String requestId = UUID.randomUUID().toString();
         Random rng = new Random();
         Long seed = ((long) (rng.nextDouble() * (1000L)));
         return Request.builder()
                 .details(details)
-                .status(status)
+                .completed(false)
                 .id(requestId)
                 .seed(seed)
-                .problemClass(enumGenerationService.getProblemClass(requestParameters.getProblemClass()))
-                .algorithm(enumGenerationService.getAlgorithm(requestParameters.getAlgorithm()))
-                .objective(enumGenerationService.getObjective(requestParameters.getObjective()))
+                .problemClass(enumGenerationService.getProblemClass(params.getProblemClass()))
+                .algorithm(enumGenerationService.getAlgorithm(params.getAlgorithm()))
+                .objective(enumGenerationService.getObjective(params.getObjective()))
                 .failureClass(FailureClass.Both)
+                .failureScenario(FailureScenario.Default)
+                .trafficCombinationType(enumGenerationService.getTrafficCombinationType(params.getTrafficCombinationType()))
                 .percentSrcAlsoDest(-1.0)
                 .percentSrcFail(-1.0)
                 .percentDestFail(-1.0)
-                .sdn(requestParameters.getSdn())
-                .useAws(requestParameters.getUseAws())
-                .topologyId(requestParameters.getTopologyId())
-                .numThreads(requestParameters.getNumThreads())
+                .useAws(false)
+                .topologyId(params.getTopologyId())
+                .numThreads(params.getNumThreads())
                 .build();
     }
 
@@ -125,10 +111,10 @@ public class GenerationService {
         Set<SourceDestPair> pairs = createPairs(sources, destinations);
 
         Connections conns = makeConnectionsFromRequestParams(params, pairs, sources, destinations);
-        NumFailsAllowed nfa = failureGenerationService.makeNumFailsAllowedFromRequestParams(params, pairs, sources, destinations);
+        NumFailureEvents nfe = failureGenerationService.makeNumFailureEventsFromRequestParams(params, pairs, sources, destinations);
         Failures fails = failureGenerationService.makeFailuresFromRequestParams(params, pairs, sources, destinations, nodeIdMap, linkIdMap,
-                nfa.getTotalNumFailsAllowed(), nfa.getPairNumFailsAllowedMap(), nfa.getSrcNumFailsAllowedMap(),
-                nfa.getDstNumFailsAllowedMap());
+                nfe.getTotalNumFailureEvents(), nfe.getPairNumFailureEvents(), nfe.getSrcNumFailureEvents(),
+                nfe.getDstNumFailureEvents());
 
         return Details.builder()
                 .sources(sources)
@@ -136,11 +122,10 @@ public class GenerationService {
                 .pairs(pairs)
                 .connections(conns)
                 .failures(fails)
-                .numFailsAllowed(nfa)
+                .numFailureEvents(nfe)
                 .chosenPaths(null)
                 .isFeasible(false)
                 .runningTimeSeconds(0L)
-                .ignoreFailures(params.getIgnoreFailures())
                 .build();
     }
 
@@ -173,10 +158,10 @@ public class GenerationService {
 
         return Connections.builder()
                 .numConnections(params.getNumConnections())
-                .reachMinS(params.getReachMinSources())
-                .reachMaxS(params.getReachMaxSources())
-                .reachMinD(params.getReachMinDestinations())
-                .reachMaxD(params.getReachMaxDestinations())
+                .useMinS(params.getUseMinS())
+                .useMaxS(params.getUseMaxS())
+                .useMinD(params.getUseMinD())
+                .useMaxD(params.getUseMaxD())
                 .pairMinConnectionsMap(pairMinConnectionsMap)
                 .pairMaxConnectionsMap(pairMaxConnectionsMap)
                 .srcMinConnectionsMap(srcMinConnectionsMap)
@@ -217,7 +202,7 @@ public class GenerationService {
         Failures failureCollection = failureGenerationService.assignFailureSets(params, sortedSources, sortedDests, sortedPairs, topo, rng);
 
         // Determine number of cuts
-        NumFailsAllowed numFailsAllowedCollection = failureGenerationService.assignNumFails(params, sortedPairs, sortedSources, sortedDests, failureCollection, rng);
+        NumFailureEvents numFailureEventsCollection = failureGenerationService.assignNumFails(params, sortedPairs, sortedSources, sortedDests, failureCollection, rng);
 
 
         // Determine number of connections
@@ -229,11 +214,10 @@ public class GenerationService {
                 .destinations(destinations)
                 .connections(connectionsCollection)
                 .failures(failureCollection)
-                .numFailsAllowed(numFailsAllowedCollection)
+                .numFailureEvents(numFailureEventsCollection)
                 .pairs(pairs)
                 .runningTimeSeconds(0L)
                 .isFeasible(false)
-                .ignoreFailures(params.getIgnoreFailures())
                 .build();
     }
 
@@ -241,43 +225,22 @@ public class GenerationService {
                                           List<Node> destinations, Random rng){
         // Connection params
         Integer numConnections = params.getMinConnections();
-        List<Integer> minConnectionsRange = params.getMinPairConnections();
-        List<Integer> maxConnectionsRange = params.getMaxPairConnections();
+        Integer minPairConnections = params.getMinPairConnections();
+        Integer maxPairConnections = params.getMaxPairConnections();
+        Integer minSrcConnections = params.getMinSrcConnections();
+        Integer maxSrcConnections = params.getMaxSrcConnections();
+        Integer minDstConnections = params.getMinDstConnections();
+        Integer maxDstConnections = params.getMaxDstConnections();
 
-        List<Integer> minSrcConnectionsRange = params.getMinSrcConnections();
-        List<Integer> maxSrcConnectionsRange = params.getMaxSrcConnections();
-        List<Integer> minDstConnectionsRange = params.getMinDstConnections();
-        List<Integer> maxDstConnectionsRange = params.getMaxDstConnections();
-
-        // GENERATE VALUES FOR PAIRS
-        Integer minForMinConn = minConnectionsRange.size() > 0 ? minConnectionsRange.get(0) : 0;
-        Integer maxForMinConn = minConnectionsRange.size() > 0 ? minConnectionsRange.get(minConnectionsRange.size()-1): 0;
-        Integer minForMaxConn = maxConnectionsRange.size() > 0 ? maxConnectionsRange.get(0) : numConnections;
-        Integer maxForMaxConn = maxConnectionsRange.size() > 0 ? maxConnectionsRange.get(maxConnectionsRange.size()-1) : numConnections;
-        // Give random min/max num of connections per pair
-        // If src = dst for a pair, both numbers are 0
         Map<SourceDestPair, Integer> pairMinConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
-                p -> p.getSrc() == p.getDst() ? 0 : selectionService.randomInt(minForMinConn, maxForMinConn, rng)));
+                p -> p.getSrc() == p.getDst() ? 0 : minPairConnections));
         Map<SourceDestPair, Integer> pairMaxConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p,
-                p -> p.getSrc() == p.getDst() ? 0 : selectionService.randomInt(minForMaxConn, maxForMaxConn, rng)));
+                p -> p.getSrc() == p.getDst() ? 0 : maxPairConnections));
 
-        // GENERATE VALUES FOR SOURCES & DESTINATIONS
-        int minForSrcMin = minSrcConnectionsRange.size() > 0 ? minSrcConnectionsRange.get(0) : 0;
-        int maxForSrcMin = minSrcConnectionsRange.size() > 0 ? minSrcConnectionsRange.get(minSrcConnectionsRange.size() -1) : 0;
-
-        int minForSrcMax = maxSrcConnectionsRange.size() > 0 ? maxSrcConnectionsRange.get(0) : numConnections;
-        int maxForSrcMax = maxSrcConnectionsRange.size() > 0 ? maxSrcConnectionsRange.get(maxSrcConnectionsRange.size() - 1) : numConnections;
-
-        int minForDstMin = minDstConnectionsRange.size() > 0 ? minDstConnectionsRange.get(0) : 0;
-        int maxForDstMin = minDstConnectionsRange.size() > 0 ? minDstConnectionsRange.get(minDstConnectionsRange.size() -1) : 0;
-
-        int minForDstMax = maxDstConnectionsRange.size() > 0 ? maxDstConnectionsRange.get(0) : numConnections;
-        int maxForDstMax = maxDstConnectionsRange.size() > 0 ? maxDstConnectionsRange.get(maxDstConnectionsRange.size() -1) : numConnections;
-
-        Map<Node, Integer> srcMinConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForSrcMin, maxForSrcMin, rng)));
-        Map<Node, Integer> srcMaxConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> selectionService.randomInt(minForSrcMax, maxForSrcMax, rng)));
-        Map<Node, Integer> dstMinConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> selectionService.randomInt(minForDstMin, maxForDstMin, rng)));
-        Map<Node, Integer> dstMaxConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> selectionService.randomInt(minForDstMax, maxForDstMax, rng)));
+        Map<Node, Integer> srcMinConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> minSrcConnections));
+        Map<Node, Integer> srcMaxConnectionsMap = sources.stream().collect(Collectors.toMap(s -> s, s -> maxSrcConnections));
+        Map<Node, Integer> dstMinConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> minDstConnections));
+        Map<Node, Integer> dstMaxConnectionsMap = destinations.stream().collect(Collectors.toMap(d -> d, d -> maxDstConnections));
 
         return Connections.builder()
                 .numConnections(numConnections)
@@ -287,10 +250,10 @@ public class GenerationService {
                 .srcMaxConnectionsMap(srcMaxConnectionsMap)
                 .dstMinConnectionsMap(dstMinConnectionsMap)
                 .dstMaxConnectionsMap(dstMaxConnectionsMap)
-                .reachMinS(params.getUseMinS())
-                .reachMaxS(params.getUseMaxS())
-                .reachMinD(params.getUseMinD())
-                .reachMaxD(params.getUseMaxD())
+                .useMinS(params.getUseMinS())
+                .useMaxS(params.getUseMaxS())
+                .useMinD(params.getUseMinD())
+                .useMaxD(params.getUseMaxD())
                 .build();
     }
 

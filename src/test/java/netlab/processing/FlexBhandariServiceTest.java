@@ -24,7 +24,7 @@ import static java.util.stream.Collectors.joining;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
 @Slf4j
-public class PartialBhandariServiceTest {
+public class FlexBhandariServiceTest {
 
     @Autowired
     private GenerationService generationService;

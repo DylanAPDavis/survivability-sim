@@ -16,10 +16,12 @@ import netlab.submission.request.SimulationParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.lang.reflect.*;
 
 @Controller
 public class DynamoInterface {
@@ -112,62 +114,130 @@ public class DynamoInterface {
 
     public Map<String, AttributeValue> createExpressionAttributeValueMap(SimulationParameters params){
         Map<String, AttributeValue> eav = new HashMap<>();
-        if(params.getRequestId() != null) {eav.put("requestSetId", new AttributeValue().withS(params.getRequestId()));}
-        if(params.getSeed() != null) {eav.put("seed", new AttributeValue().withN(Long.toString(params.getSeed())));}
-        if(params.getCompleted() != null) {eav.put("completed", new AttributeValue().withN(String.valueOf(params.getCompleted() ? 1 : 0)));}
-        if(params.getGenerated() != null) {eav.put("generated", new AttributeValue().withN(String.valueOf(params.getGenerated() ? 1 : 0)));}
-        if(params.getTopologyId() != null) {eav.put("topologyId", new AttributeValue().withS(params.getTopologyId()));}
-        if(params.getProblemClass() != null) {eav.put("problemClass", new AttributeValue().withS(params.getProblemClass()));}
-        if(params.getObjective() != null) {eav.put("objective", new AttributeValue().withS(params.getObjective()));}
-        if(params.getAlgorithm() != null) {eav.put("algorithm", new AttributeValue().withS(params.getAlgorithm()));}
-        if(params.getNumRequests() != null) {eav.put("numRequests", new AttributeValue().withN(Integer.toString(params.getNumRequests())));}
-        if(params.getNumSources() != null) {eav.put("numSources", new AttributeValue().withN(Integer.toString(params.getNumSources())));}
-        if(params.getNumDestinations() != null) {eav.put("numDestinations", new AttributeValue().withN(Integer.toString(params.getNumDestinations())));}
-        if(params.getFailureSetSize() != null) {eav.put("failureSetSize", new AttributeValue().withN(Integer.toString(params.getFailureSetSize())));}
-        if(params.getMinMaxFailures() != null && !params.getMinMaxFailures().isEmpty()) {
-            eav.put("minMaxFailures", new AttributeValue().withNS(params.getMinMaxFailures().stream().map(Object::toString).collect(Collectors.toList())));
-        }
-        if(params.getFailureClass() != null) {eav.put("failureClass", new AttributeValue().withS(params.getFailureClass()));}
-        if(params.getFailureProb() != null) {eav.put("failureProb", new AttributeValue().withN(Double.toString(params.getFailureProb())));}
-        if(params.getMinMaxFailureProb() != null  && !params.getMinMaxFailureProb().isEmpty()) {
-            eav.put("minMaxFailureProb", new AttributeValue().withNS(params.getMinMaxFailureProb().stream().map(Object::toString).collect(Collectors.toList())));
-        }
-        if(params.getMinPairConnections() != null  && !params.getMinPairConnections().isEmpty()) {
-            eav.put("minConnectionsRange", new AttributeValue().withNS(params.getMinPairConnections().stream().map(Object::toString).collect(Collectors.toList())));
-        }
-        if(params.getMaxPairConnections() != null  && !params.getMaxPairConnections().isEmpty()) {
-            eav.put("maxConnectionsRange", new AttributeValue().withNS(params.getMaxPairConnections().stream().map(Object::toString).collect(Collectors.toList())));
-        }
-        if(params.getMinSrcConnections() != null  && !params.getMinSrcConnections().isEmpty()) {
-            eav.put("minSrcConnectionsRange", new AttributeValue().withNS(params.getMinSrcConnections().stream().map(Object::toString).collect(Collectors.toList())));
-        }
-        if(params.getMaxSrcConnections() != null  && !params.getMaxSrcConnections().isEmpty()) {
-            eav.put("maxSrcConnectionsRange", new AttributeValue().withNS(params.getMaxSrcConnections().stream().map(Object::toString).collect(Collectors.toList())));
-        }
-        if(params.getMinDstConnections() != null  && !params.getMinDstConnections().isEmpty()) {
-            eav.put("minDstConnectionsRange", new AttributeValue().withNS(params.getMinDstConnections().stream().map(Object::toString).collect(Collectors.toList())));
-        }
-        if(params.getMaxDstConnections() != null  && !params.getMaxDstConnections().isEmpty()) {
-            eav.put("maxDstConnectionsRange", new AttributeValue().withNS(params.getMaxDstConnections().stream().map(Object::toString).collect(Collectors.toList())));
-        }
-        if(params.getUseMinS() != null) {eav.put("reachMinS", new AttributeValue().withN(Integer.toString(params.getUseMinS())));}
-        if(params.getUseMaxS() != null) {eav.put("reachMaxS", new AttributeValue().withN(Integer.toString(params.getUseMaxS())));}
-        if(params.getUseMinD() != null) {eav.put("reachMinD", new AttributeValue().withN(Integer.toString(params.getUseMinD())));}
-        if(params.getUseMaxD() != null) {eav.put("reachMaxD", new AttributeValue().withN(Integer.toString(params.getUseMaxD())));}
 
-        if(params.getNumFailureEvents() != null) {eav.put("numFailsAllowed", new AttributeValue().withN(Integer.toString(params.getNumFailureEvents())));}
-        if(params.getMinMaxFailsAllowed() != null  && !params.getMinMaxFailsAllowed().isEmpty()) {
-            eav.put("minMaxFailsAllowed", new AttributeValue().withNS(params.getMinMaxFailsAllowed().stream().map(Object::toString).collect(Collectors.toList())));
+        Class c = params.getClass();
+        Field[] fields = c.getDeclaredFields();
+        for(Field field : fields){
+            String name = field.getName();
+            Type type = field.getType();
+            try {
+                Object value = field.get(params);
+                if(type.getTypeName().equals("java.lang.String")){
+                    if(value != null){
+                        eav.put(name, new AttributeValue().withS(value.toString()));
+                    }
+                }
+                if(type.getTypeName().equals("java.lang.Boolean")){
+                    if(value != null){
+                        eav.put(name, new AttributeValue().withN(String.valueOf((boolean)value ? 1 : 0)));
+                    }
+                }
+                if(type.getTypeName().equals("java.lang.Integer")) {
+                    if(value != null){
+                        eav.put(name, new AttributeValue().withN(Integer.toString((int)value)));
+                    }
+                }
+                if(type.getTypeName().equals("java.lang.Long")) {
+                    if(value != null){
+                        eav.put(name, new AttributeValue().withN(Long.toString((long)value)));
+                    }
+                }
+                if(type.getTypeName().equals("java.lang.Double")) {
+                    if(value != null){
+                        eav.put(name, new AttributeValue().withN(Double.toString((double)value)));
+                    }
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return eav;
+
+        /*
+
+        if(params.getRequestId() != null) {
+            eav.put("requestSetId", new AttributeValue().withS(params.getRequestId()));
+        }
+        if(params.getSeed() != null) {
+            eav.put("seed", new AttributeValue().withN(Long.toString(params.getSeed())));
+        }
+        if(params.getCompleted() != null) {
+            eav.put("completed", new AttributeValue().withN(String.valueOf(params.getCompleted() ? 1 : 0)));
+        }
+        if(params.getTopologyId() != null) {
+            eav.put("topologyId", new AttributeValue().withS(params.getTopologyId()));
+        }
+        if(params.getProblemClass() != null) {
+            eav.put("problemClass", new AttributeValue().withS(params.getProblemClass()));
+        }
+        if(params.getObjective() != null) {
+            eav.put("objective", new AttributeValue().withS(params.getObjective()));
+        }
+        if(params.getAlgorithm() != null) {
+            eav.put("algorithm", new AttributeValue().withS(params.getAlgorithm()));
+        }
+        if(params.getNumSources() != null) {
+            eav.put("numSources", new AttributeValue().withN(Integer.toString(params.getNumSources())));
+        }
+        if(params.getNumDestinations() != null) {
+            eav.put("numDestinations", new AttributeValue().withN(Integer.toString(params.getNumDestinations())));
+        }
+        if(params.getFailureSetSize() != null) {
+            eav.put("failureSetSize", new AttributeValue().withN(Integer.toString(params.getFailureSetSize())));
+        }
+        if(params.getFailureClass() != null) {
+            eav.put("failureClass", new AttributeValue().withS(params.getFailureClass()));
+        }
+        if(params.getFailureScenario() != null) {
+            eav.put("failureScenarion", new AttributeValue().withS(params.getFailureScenario()));
+        }
+        if(params.getFailureProb() != null) {
+            eav.put("failureProb", new AttributeValue().withN(Double.toString(params.getFailureProb())));
+        }
+        if(params.getNumFailureEvents() != null) {
+            eav.put("numFailureEvents", new AttributeValue().withN(Integer.toString(params.getNumFailureEvents())));
         }
 
-        if(params.getProcessingType() != null) {eav.put("processingType", new AttributeValue().withS(params.getProcessingType()));}
-        if(params.getPercentSrcAlsoDest() != null) {eav.put("percentSrcAlsoDest", new AttributeValue().withN(Double.toString(params.getPercentSrcAlsoDest())));}
-        if(params.getPercentSrcFail() != null) {eav.put("percentSrcFail", new AttributeValue().withN(Double.toString(params.getPercentSrcFail())));}
-        if(params.getPercentDstFail() != null) {eav.put("percentDestFail", new AttributeValue().withN(Double.toString(params.getPercentDstFail())));}
-        if(params.getSdn() != null) {eav.put("sdn", new AttributeValue().withN(String.valueOf(params.getSdn() ? 1 : 0)));}
+        if(params.getMinPairConnections() != null) {
+            eav.put("minPairConnections", new AttributeValue().withN(Integer.toString(params.getMinPairConnections())));
+        }
+        if(params.getMaxPairConnections() != null) {
+            eav.put("maxPairConnections", new AttributeValue().withN(Integer.toString(params.getMaxPairConnections())));
+        }
+        if(params.getMinSrcConnections() != null) {
+            eav.put("minSrcConnections", new AttributeValue().withN(Integer.toString(params.getMinSrcConnections())));
+        }
+        if(params.getMaxSrcConnections() != null) {
+            eav.put("maxSrcConnections", new AttributeValue().withN(Integer.toString(params.getMaxSrcConnections())));
+        }
+        if(params.getMinDstConnections() != null) {
+            eav.put("minDstConnections", new AttributeValue().withN(Integer.toString(params.getMinDstConnections())));
+        }
+        if(params.getMaxDstConnections() != null) {
+            eav.put("maxDstConnections", new AttributeValue().withN(Integer.toString(params.getMaxDstConnections())));
+        }
+        if(params.getUseMinS() != null) {eav.put("useMinS", new AttributeValue().withN(Integer.toString(params.getUseMinS())));}
+        if(params.getUseMaxS() != null) {eav.put("useMaxS", new AttributeValue().withN(Integer.toString(params.getUseMaxS())));}
+        if(params.getUseMinD() != null) {eav.put("useMinD", new AttributeValue().withN(Integer.toString(params.getUseMinD())));}
+        if(params.getUseMaxD() != null) {eav.put("useMaxD", new AttributeValue().withN(Integer.toString(params.getUseMaxD())));}
+        if(params.getTrafficCombinationType() != null) {
+            eav.put("trafficCombinationType", new AttributeValue().withS(params.getTrafficCombinationType()));
+        }
+
+
+        if(params.getPercentSrcAlsoDest() != null) {
+            eav.put("percentSrcAlsoDest", new AttributeValue().withN(Double.toString(params.getPercentSrcAlsoDest())));}
+        if(params.getPercentSrcFail() != null) {eav.put("percentSrcFail", new AttributeValue().withN(Double.toString(params.getPercentSrcFail())));
+        }
+        if(params.getPercentDstFail() != null) {
+            eav.put("percentDestFail", new AttributeValue().withN(Double.toString(params.getPercentDstFail())));
+        }
+
         if(params.getUseAws() != null) {eav.put("useAws", new AttributeValue().withN(String.valueOf(params.getUseAws() ? 1 : 0)));}
         if(params.getNumThreads() != null) {eav.put("numThreads", new AttributeValue().withN(Integer.toString(params.getNumThreads())));}
+
         return eav;
+        */
     }
 
 

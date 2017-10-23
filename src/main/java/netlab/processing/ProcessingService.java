@@ -2,11 +2,7 @@ package netlab.processing;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ampl.AmplService;
-import netlab.processing.disjointpaths.PartialBhandariService;
-import netlab.submission.enums.Algorithm;
-import netlab.submission.enums.Objective;
-import netlab.submission.enums.ProblemClass;
-import netlab.submission.enums.ProcessingType;
+import netlab.processing.disjointpaths.FlexBhandariService;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.Topology;
@@ -21,15 +17,15 @@ public class ProcessingService {
 
     private AmplService amplService;
 
-    private PartialBhandariService partialBhandariService;
+    private FlexBhandariService flexBhandariService;
 
     private TopologyService topoService;
 
     @Autowired
-    public ProcessingService(TopologyService topologyService, AmplService amplService, PartialBhandariService partialBhandariService) {
+    public ProcessingService(TopologyService topologyService, AmplService amplService, FlexBhandariService flexBhandariService) {
         this.topoService = topologyService;
         this.amplService = amplService;
-        this.partialBhandariService = partialBhandariService;
+        this.flexBhandariService = flexBhandariService;
     }
 
     public Request processRequest(Request request) {
@@ -37,11 +33,9 @@ public class ProcessingService {
         Details details = request.getDetails();
         switch(request.getAlgorithm()){
             case ServiceILP:
-                details = amplService.solve(details, request.getProblemClass(), request.getObjective(),
-                        topo, request.getId(), request.getNumThreads());
-            case PartialBhandari:
-                details = partialBhandariService.solve(details, request.getProblemClass(), request.getObjective(),
-                        topo, request.getId());
+                details = amplService.solve(request, topo);
+            case FlexBhandari:
+                details = flexBhandariService.solve(request, topo);
         }
         request.setDetails(details);
         return request;

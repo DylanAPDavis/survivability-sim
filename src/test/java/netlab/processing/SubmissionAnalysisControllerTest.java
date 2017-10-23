@@ -43,7 +43,7 @@ public class SubmissionAnalysisControllerTest {
 
         // Get all the analyzed sets back from AWS
         params = SimulationParameters.builder().useAws(true).objective("TotalCost").build();
-        List<Analysis> analyses = storageController.getAnalyzedSets(params);
+        List<Analysis> analyses = storageController.getMatchingAnalysis(params);
         assert(analyses.size()>=1);
     }
 
@@ -58,7 +58,7 @@ public class SubmissionAnalysisControllerTest {
         AnalysisParameters analysisParameters = AnalysisParameters.builder().requestSetId(requestSetId).useAws(true).build();
         analysisController.analyzeRequestSet(analysisParameters);
         params = SimulationParameters.builder().useAws(true).objective("TotalCost").build();
-        List<Analysis> analyses = storageController.getAnalyzedSets(params);
+        List<Analysis> analyses = storageController.getMatchingAnalysis(params);
         assert(analyses.size()>=1);
     }
 

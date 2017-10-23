@@ -46,10 +46,10 @@ set GroupIndices := 1..NumGroups;
 set FG {g in GroupIndices} within AllPairs default {};
 
 # MIN AND MAX PARAMS FOR NUMBER OF SRCS/DESTINATIONS
-param reachMinS >= 0 integer default 0;
-param reachMaxS >= 0 integer default card(S);
-param reachMinD >= 0 integer default 0;
-param reachMaxD >= 0 integer default card(D);
+param useMinS >= 0 integer default 0;
+param useMaxS >= 0 integer default card(S);
+param useMinD >= 0 integer default 0;
+param useMaxD >= 0 integer default card(D);
 
 var connSurvivesFromS{s in S, g in GroupIndices} binary;
 var connSurvivesToD{d in D, g in GroupIndices} binary;
@@ -133,16 +133,16 @@ subject to connSurvivesToD_2{d in D, g in GroupIndices}:
    connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
 
 subject to minSrcsReached{g in GroupIndices}:
-    sum{s in S} connSurvivesFromS[s,g] >= reachMinS;
+    sum{s in S} connSurvivesFromS[s,g] >= useMinS;
 
 subject to minDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] >= reachMinD;
+    sum{d in D} connSurvivesToD[d,g] >= useMinD;
 
 subject to maxSrcsReached{g in GroupIndices}:
-    sum{s in S} connSurvivesFromS[s,g] <= reachMaxS;
+    sum{s in S} connSurvivesFromS[s,g] <= useMaxS;
 
 subject to maxDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] <= reachMaxD;
+    sum{d in D} connSurvivesToD[d,g] <= useMaxD;
 
 # END SRC/DEST REACHABILITY CONSTRAINTS
 

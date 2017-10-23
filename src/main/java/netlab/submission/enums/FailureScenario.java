@@ -6,13 +6,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public enum Algorithm {
-    ServiceILP("ilp"),
-    FlexBhandari("flexbhandari");
+public enum FailureScenario {
+    Default("default"),
+    AllLinks("alllinks"),
+    AllNodes("allnodes"),
+    Network("network"),
+    Earthquake("earthquake"),
+    Hurricane("hurricane");
 
     private String code;
 
-    Algorithm(String code) {
+    FailureScenario(String code) {
         this.code = code;
     }
 
@@ -20,15 +24,15 @@ public enum Algorithm {
         return this.code;
     }
 
-    private static final Map<String, Algorithm> lookup = new HashMap<>();
+    private static final Map<String, FailureScenario> lookup = new HashMap<>();
 
     static {
-        for (Algorithm pc : EnumSet.allOf(Algorithm.class)) {
-            lookup.put(pc.getCode(), pc);
+        for (FailureScenario fs : EnumSet.allOf(FailureScenario.class)) {
+            lookup.put(fs.getCode(), fs);
         }
     }
 
-    public static Optional<Algorithm> get(String code) {
+    public static Optional<FailureScenario> get(String code) {
         String lookupCode = code.toLowerCase();
         if (lookup.containsKey(lookupCode)) {
             return Optional.of(lookup.get(lookupCode));

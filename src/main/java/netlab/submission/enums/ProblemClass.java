@@ -7,12 +7,12 @@ import java.util.Map;
 import java.util.Optional;
 
 public enum ProblemClass {
-    Flex("Flex"),
-    Endpoint("Endpoint"),
-    Flow("Flow"),
-    EndpointSharedF("EndpointSharedF"),
-    FlowSharedF("FlowSharedF"),
-    Combined("Combined");
+    Flex("flex"),
+    Endpoint("endpoint"),
+    Flow("flow"),
+    EndpointSharedF("endpointsharedf"),
+    FlowSharedF("flowsharedf"),
+    Combined("combined");
 
     private String code;
 
@@ -33,8 +33,9 @@ public enum ProblemClass {
     }
 
     public static Optional<ProblemClass> get(String code) {
-        if (lookup.containsKey(code)) {
-            return Optional.of(lookup.get(code));
+        String lookupCode = code.toLowerCase();
+        if (lookup.containsKey(lookupCode)) {
+            return Optional.of(lookup.get(lookupCode));
         } else {
             return Optional.empty();
         }
