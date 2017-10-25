@@ -31,6 +31,9 @@ public class DefaultValueService {
         if(params.getAlgorithm() == null){
             params.setAlgorithm("ilp");
         }
+        if(params.getRoutingType() == null){
+            params.setRoutingType("default");
+        }
 
         // F - Total size of the failure set (shared by all connections)
         if(params.getFailures() == null){
@@ -145,6 +148,9 @@ public class DefaultValueService {
         }
         if(params.getAlgorithm() == null){
             params.setAlgorithm("ilp");
+        }
+        if(params.getRoutingType() == null){
+            params.setRoutingType("default");
         }
 
 

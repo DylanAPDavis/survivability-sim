@@ -25,6 +25,8 @@ public class RequestParameters {
 
     private String algorithm;
 
+    private String routingType;
+
     // F - Failure set (shared by all connections)
     private Set<String> failures;
 

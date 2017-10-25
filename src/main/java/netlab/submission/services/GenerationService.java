@@ -59,6 +59,7 @@ public class GenerationService {
                 .failureClass(enumGenerationService.getFailureClass(params.getFailureClass()))
                 .failureScenario(enumGenerationService.getFailureScenario(params.getFailureScenario()))
                 .trafficCombinationType(enumGenerationService.getTrafficCombinationType(params.getTrafficCombinationType()))
+                .routingType(enumGenerationService.getRoutingType(params.getRoutingType()))
                 .percentSrcAlsoDest(params.getPercentSrcAlsoDest())
                 .percentSrcFail(params.getPercentSrcFail())
                 .percentDestFail(params.getPercentDstFail())
@@ -87,6 +88,7 @@ public class GenerationService {
                 .failureClass(FailureClass.Both)
                 .failureScenario(FailureScenario.Default)
                 .trafficCombinationType(enumGenerationService.getTrafficCombinationType(params.getTrafficCombinationType()))
+                .routingType(enumGenerationService.getRoutingType(params.getRoutingType()))
                 .percentSrcAlsoDest(-1.0)
                 .percentSrcFail(-1.0)
                 .percentDestFail(-1.0)
@@ -132,6 +134,11 @@ public class GenerationService {
     private Connections makeConnectionsFromRequestParams(RequestParameters params, Set<SourceDestPair> pairs,
                                                          Set<Node> sources, Set<Node> destinations){
 
+        RoutingType routingType = enumGenerationService.getRoutingType(params.getRoutingType());
+        if(routingType != RoutingType.Default){
+            return makeConnectionsFromRoutingType(pairs, sources, destinations, params.getUseMinS(), params.getUseMaxS(),
+                    params.getUseMinD(), params.getUseMaxD(), routingType);
+        }
         // Map for pairs
         Map<SourceDestPair, Integer> pairMinConnectionsMap = params.getPairNumConnectionsMap().size() > 0 ?
                 selectionService.makePairIntegerMap(pairs, params.getPairNumConnectionsMap(), 0) :
@@ -171,6 +178,13 @@ public class GenerationService {
                 .build();
     }
 
+    private Connections makeConnectionsFromRoutingType(Collection<SourceDestPair> pairs, Collection<Node> sources,
+                                                       Collection<Node> destinations, Integer useMinS, Integer useMaxS,
+                                                       Integer useMinD, Integer useMaxD, RoutingType routingType) {
+        // Using the Routing Type and the other parameters, build a Connections object to store min/maxes
+
+    }
+
     public Details createDetailsFromParameters(SimulationParameters params) {
         Topology topo = topologyService.getTopologyById(params.getTopologyId());
         if(topo == null){
@@ -206,7 +220,7 @@ public class GenerationService {
 
 
         // Determine number of connections
-        Connections connectionsCollection = assignConnections(params, sortedPairs, sortedSources, sortedDests, rng);
+        Connections connectionsCollection = assignConnections(params, sortedPairs, sortedSources, sortedDests);
 
 
         return Details.builder()
@@ -221,8 +235,13 @@ public class GenerationService {
                 .build();
     }
 
-    private Connections assignConnections(SimulationParameters params, List<SourceDestPair> pairs, List<Node> sources,
-                                          List<Node> destinations, Random rng){
+    private Connections assignConnections(SimulationParameters params, Collection<SourceDestPair> pairs, Collection<Node> sources,
+                                          Collection<Node> destinations){
+        RoutingType routingType = enumGenerationService.getRoutingType(params.getRoutingType());
+        if(routingType != RoutingType.Default){
+            return makeConnectionsFromRoutingType(pairs, sources, destinations, params.getUseMinS(), params.getUseMaxS(),
+                    params.getUseMinD(), params.getUseMaxD(), routingType);
+        }
         // Connection params
         Integer numConnections = params.getMinConnections();
         Integer minPairConnections = params.getMinPairConnections();

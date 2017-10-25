@@ -37,6 +37,8 @@ public class Request implements Serializable {
 
     private TrafficCombinationType trafficCombinationType;
 
+    private RoutingType routingType;
+
     private Double percentSrcAlsoDest;
 
     private Double percentSrcFail;

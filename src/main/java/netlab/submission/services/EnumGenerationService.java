@@ -16,6 +16,10 @@ public class EnumGenerationService {
         return TrafficCombinationType.get(type).orElse(TrafficCombinationType.None);
     }
 
+    public RoutingType getRoutingType(String type){
+        return RoutingType.get(type).orElse(RoutingType.Default);
+    }
+
     public FailureScenario getFailureScenario(String scenario){
         return FailureScenario.get(scenario).orElse(FailureScenario.Default);
     }
