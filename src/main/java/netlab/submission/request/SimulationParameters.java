@@ -27,6 +27,9 @@ public class SimulationParameters {
     public String problemClass;
     public String objective;
     public String algorithm;
+
+    // Can be used to override other connection parameters
+    public String routingType;
     // S
     public Integer numSources;
     // D

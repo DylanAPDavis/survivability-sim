@@ -30,6 +30,34 @@ public class HashingService {
                 params.getPercentDstFail(), params.getIgnoreFailures(), params.getNumThreads());
     }
 
+    public String makeAggregationHash(SimulationParameters params) {
+        return makeAggregationHash(params.getTopologyId(), params.getProblemClass(), params.getObjective(),
+                params.getAlgorithm(), params.getNumSources(), params.getNumDestinations(), params.getMinConnections(),
+                params.getMinPairConnections(), params.getMaxPairConnections(), params.getMinSrcConnections(),
+                params.getMaxSrcConnections(), params.getMinDstConnections(), params.getMaxDstConnections(),
+                params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(), params.getTrafficCombinationType(),
+                params.getFailureSetSize(), params.getFailureClass(), params.getFailureProb(), params.getFailureScenario(),
+                params.getNumFailureEvents(), params.getPercentSrcAlsoDest(), params.getPercentSrcFail(),
+                params.getPercentDstFail(), params.getIgnoreFailures(), params.getNumThreads());
+    }
+
+    public String makeAggregationHash(String topologyId, String problemClass, String objective, String algorithm,
+                                       Integer numSources, Integer numDestinations, Integer minC, Integer minPC,
+                                       Integer maxPC, Integer minSC, Integer maxSC, Integer minDC, Integer maxDC,
+                                       Integer useMinS, Integer useMaxS, Integer useMinD, Integer useMaxD, String trafficCombo,
+                                       Integer fSetSize, String failureClass, Double failureProb, String failScenario,
+                                       Integer numFailEvents, Double percentSrcAlsoDest, Double percentSrcFail,
+                                       Double percentDstFail, Boolean ignoreFailures, Integer numThreads) {
+
+        return hash(topologyId, problemClass, objective, algorithm,
+                numSources, numDestinations, minC, minPC,
+                maxPC, minSC, maxSC, minDC, maxDC,
+                useMinS, useMaxS, useMinD, useMaxD, trafficCombo,
+                fSetSize, failureClass, failureProb, failScenario,
+                numFailEvents, percentSrcAlsoDest, percentSrcFail,
+                percentDstFail, ignoreFailures, numThreads);
+    }
+
     public String[] unhash(String hashString){
         return hashString.split("_");
     }
