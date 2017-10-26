@@ -182,7 +182,79 @@ public class GenerationService {
                                                        Collection<Node> destinations, Integer useMinS, Integer useMaxS,
                                                        Integer useMinD, Integer useMaxD, RoutingType routingType) {
         // Using the Routing Type and the other parameters, build a Connections object to store min/maxes
+        switch(routingType){
+            case Unicast:
+                // 1 connection, 1 conns per pair, 1 conns per src, 1conns per dest, 1 srcs connected, 1 dests connected
+                return buildConnections(pairs, sources, destinations, 1, 1, 1, 1, 1,
+                        1, 1, 1, 1, 1, 1);
+            case Anycast:
+                // 1 connections, 0/1 conns per pair, 1 conns per src, 0/1 conns per dest, 1 srcs connected, 1 dst connected
+                return buildConnections(pairs, sources, destinations, 1, 0, 1, 1, 1,
+                        0, 1, 1, 1, 1, 1);
+            case Manycast:
+                // useMinD connections, 0/1 per pair, minD/maxD per src, 0/1 per dest, 1 src connected, useMinD/useMaxD dsts connected
+                return buildConnections(pairs, sources, destinations, useMinD, 0, 1, useMinD, useMaxD,
+                        0, 1, 1, 1, useMinD, useMaxD);
+            case Multicast:
+                // |D| connections, 1 per pair, |D| per src, 1 per dst, 1 src connected, |D| dsts connected
+                return buildConnections(pairs, sources, destinations, destinations.size(), 1, 1, destinations.size(), destinations.size(),
+                        1, 1, 1, 1, destinations.size(), destinations.size());
+            case ManyToOne:
+                // useMinS connections, 0/1 per pair, 0/1 per src, useMinS/useMaxS per dst, useMinS/useMaxS src connected, 1 dsts connected
+                return buildConnections(pairs, sources, destinations, useMinS, 0, 1, 0, 1,
+                        useMinS, useMaxS, useMinS, useMaxS, 1, 1);
+            case ManyToMany:
+                // max(useMinS, useMinD) connections, 0/1 per pair, 0/1 per src, 0/1 per dst, useMinS/useMaxS src connected, useMinD/useMaxD dsts connected
+                return buildConnections(pairs, sources, destinations, Math.max(useMinS, useMinD), 0, 1, 0, 1,
+                        0, 1, useMinS, useMaxS, useMinD, useMaxD);
+            case Broadcast:
+                // |pairs| connections, 1/1 per pair, 0/|D| per src, 0/|S| per dst, |S| src connected, |D| dsts connected
+                return buildConnections(pairs, sources, destinations, pairs.size(), 1, 1, 1, destinations.size(),
+                        1, sources.size(), sources.size(), sources.size(), destinations.size(), destinations.size());
+            default:
+                return null;
+        }
 
+    }
+
+    public Connections buildConnections(Collection<SourceDestPair> pairs, Collection<Node> sources,
+                                        Collection<Node> destinations, int numC, int minPerPair, int maxPerPair,
+                                        int minPerSource, int maxPerSource, int minPerDest, int maxPerDest,
+                                        int useMinS, int useMaxS, int useMinD, int useMaxD){
+        Integer numConnections = numC;
+        Map<SourceDestPair, Integer> pairMinConnectionsMap = new HashMap<>();
+        Map<SourceDestPair, Integer> pairMaxConnectionsMap = new HashMap<>();
+        for(SourceDestPair pair : pairs){
+            pairMinConnectionsMap.put(pair, minPerPair);
+            pairMaxConnectionsMap.put(pair, maxPerPair);
+        }
+        Map<Node, Integer> srcMinConnectionsMap = new HashMap<>();
+        Map<Node, Integer> srcMaxConnectionsMap = new HashMap<>();
+        for(Node source : sources){
+            srcMinConnectionsMap.put(source, minPerSource);
+            srcMaxConnectionsMap.put(source, maxPerSource);
+        }
+        Map<Node, Integer> dstMinConnectionsMap = new HashMap<>();
+        Map<Node, Integer> dstMaxConnectionsMap = new HashMap<>();
+        for(Node dest : destinations){
+            dstMinConnectionsMap.put(dest, minPerDest);
+            dstMaxConnectionsMap.put(dest, maxPerDest);
+        }
+
+
+        return Connections.builder()
+                .numConnections(numConnections)
+                .useMinS(useMinS)
+                .useMaxS(useMaxS)
+                .useMinD(useMinD)
+                .useMaxD(useMaxD)
+                .pairMinConnectionsMap(pairMinConnectionsMap)
+                .pairMaxConnectionsMap(pairMaxConnectionsMap)
+                .srcMinConnectionsMap(srcMinConnectionsMap)
+                .srcMaxConnectionsMap(srcMaxConnectionsMap)
+                .dstMinConnectionsMap(dstMinConnectionsMap)
+                .dstMaxConnectionsMap(dstMaxConnectionsMap)
+                .build();
     }
 
     public Details createDetailsFromParameters(SimulationParameters params) {

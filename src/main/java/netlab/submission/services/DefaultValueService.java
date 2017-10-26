@@ -3,6 +3,7 @@ package netlab.submission.services;
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.SimulationParameters;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -10,6 +11,13 @@ import java.util.*;
 @Service
 @Slf4j
 public class DefaultValueService {
+
+    private RoutingParamAssignmentService routingParamAssignmentService;
+
+    @Autowired
+    public DefaultValueService(RoutingParamAssignmentService routingParamAssignmentService){
+        this.routingParamAssignmentService = routingParamAssignmentService;
+    }
 
 
     public RequestParameters assignDefaults(RequestParameters params) {
@@ -33,6 +41,11 @@ public class DefaultValueService {
         }
         if(params.getRoutingType() == null){
             params.setRoutingType("default");
+        }
+
+        // Fill in a bunch of default values if they've selected a non-default option
+        if(!params.getRoutingType().toLowerCase().equals("default")){
+            routingParamAssignmentService.provideRoutingValues(params);
         }
 
         // F - Total size of the failure set (shared by all connections)
@@ -120,6 +133,7 @@ public class DefaultValueService {
         return params;
     }
 
+
     public SimulationParameters assignDefaults(SimulationParameters params) {
         if(params.getSeed() == null){
             Random rng = new Random();
@@ -151,6 +165,9 @@ public class DefaultValueService {
         }
         if(params.getRoutingType() == null){
             params.setRoutingType("default");
+        }
+        if(!params.getRoutingType().toLowerCase().equals("default")){
+            routingParamAssignmentService.provideDefaultRoutingValues(params);
         }
 
 
@@ -242,5 +259,6 @@ public class DefaultValueService {
 
         return params;
     }
+
 
 }
