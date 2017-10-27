@@ -1,7 +1,11 @@
 package netlab.analysis.services;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.analyzed.FailureDescription;
+import netlab.analysis.analyzed.RoutingDescription;
+import netlab.submission.enums.Objective;
 import netlab.submission.request.SimulationParameters;
+import netlab.topology.elements.Topology;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -31,34 +35,26 @@ public class HashingService {
     }
 
     public String makeAggregationHash(SimulationParameters params) {
-        return makeAggregationHash(params.getTopologyId(), params.getProblemClass(), params.getObjective(),
+        return hash(params.getTopologyId(), params.getProblemClass(), params.getObjective(),
                 params.getAlgorithm(), params.getNumSources(), params.getNumDestinations(), params.getMinConnections(),
-                params.getMinPairConnections(), params.getMaxPairConnections(), params.getMinSrcConnections(),
-                params.getMaxSrcConnections(), params.getMinDstConnections(), params.getMaxDstConnections(),
                 params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(), params.getTrafficCombinationType(),
-                params.getFailureSetSize(), params.getFailureClass(), params.getFailureProb(), params.getFailureScenario(),
+                params.getFailureSetSize(), params.getFailureClass(), params.getFailureScenario(),
                 params.getNumFailureEvents(), params.getPercentSrcAlsoDest(), params.getPercentSrcFail(),
                 params.getPercentDstFail(), params.getIgnoreFailures(), params.getNumThreads());
     }
 
-    public String makeAggregationHash(String topologyId, String problemClass, String objective, String algorithm,
-                                       Integer numSources, Integer numDestinations, Integer minC, Integer minPC,
-                                       Integer maxPC, Integer minSC, Integer maxSC, Integer minDC, Integer maxDC,
-                                       Integer useMinS, Integer useMaxS, Integer useMinD, Integer useMaxD, String trafficCombo,
-                                       Integer fSetSize, String failureClass, Double failureProb, String failScenario,
-                                       Integer numFailEvents, Double percentSrcAlsoDest, Double percentSrcFail,
-                                       Double percentDstFail, Boolean ignoreFailures, Integer numThreads) {
-
-        return hash(topologyId, problemClass, objective, algorithm,
-                numSources, numDestinations, minC, minPC,
-                maxPC, minSC, maxSC, minDC, maxDC,
-                useMinS, useMaxS, useMinD, useMaxD, trafficCombo,
-                fSetSize, failureClass, failureProb, failScenario,
-                numFailEvents, percentSrcAlsoDest, percentSrcFail,
-                percentDstFail, ignoreFailures, numThreads);
+    public String makeAggregationHash(Topology topology, Integer threads, Objective objective,
+                                      FailureDescription fd, RoutingDescription rd) {
+        return hash(topology.getId(), rd.getProblemClass(), objective, rd.getAlgorithm(), rd.getNumSources(), rd.getNumDestinations(),
+                rd.getMinConnections(), rd.getUseMinS(), rd.getUseMaxS(), rd.getUseMinD(), rd.getUseMaxD(), rd.getTrafficCombinationType(),
+                fd.getFailureSetSize(), fd.getFailureClass(), fd.getFailureScenario(), fd.getNumFailureEvents(),
+                rd.getPercentSrcAlsoDest(), fd.getPercentSrcFail(), fd.getPercentDstFail(), fd.getIgnoreFailures(),
+                threads);
     }
 
     public String[] unhash(String hashString){
         return hashString.split("_");
     }
+
+
 }

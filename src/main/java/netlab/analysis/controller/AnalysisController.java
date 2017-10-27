@@ -5,6 +5,7 @@ import netlab.analysis.analyzed.AggregateAnalysis;
 import netlab.analysis.analyzed.AggregationParameters;
 import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.analyzed.AnalysisParameters;
+import netlab.analysis.services.AggregationAnalysisService;
 import netlab.analysis.services.AnalysisService;
 import netlab.analysis.services.HashingService;
 import netlab.storage.services.StorageService;
@@ -24,13 +25,16 @@ import java.util.stream.Collectors;
 public class AnalysisController {
 
     @Autowired
-    private AnalysisController(AnalysisService analysisService, StorageService storageService, HashingService hashingService){
+    private AnalysisController(AnalysisService analysisService, AggregationAnalysisService aggregationAnalysisService,
+                               StorageService storageService, HashingService hashingService){
         this.analysisService = analysisService;
+        this.aggregationAnalysisService = aggregationAnalysisService;
         this.storageService = storageService;
         this.hashingService = hashingService;
     }
 
     private AnalysisService analysisService;
+    private AggregationAnalysisService aggregationAnalysisService;
     private StorageService storageService;
     private HashingService hashingService;
 
@@ -79,7 +83,7 @@ public class AnalysisController {
     public AggregateAnalysis aggregateAnalyzedSets(SimulationParameters params){
 
         List<Analysis> analyses = storageService.getAnalyzedSets(params);
-        return analysisService.aggregateAnalyses(analyses);
+        return aggregationAnalysisService.aggregateAnalyses(analyses);
     }
 
 
@@ -111,11 +115,11 @@ public class AnalysisController {
             List<Analysis> analyses = paramsToBeAnalyzed.stream()
                     .map(p -> storageService.retrieveAnalyzedSet(p.getRequestId(), true))
                     .collect(Collectors.toList());
-            AggregateAnalysis aggregateAnalysis = analysisService.aggregateAnalyses(analyses);
+            AggregateAnalysis aggregateAnalysis = aggregationAnalysisService.aggregateAnalyses(analyses);
             aggregateSets.add(aggregateAnalysis);
         }
 
-        return analysisService.aggregateSeeds(agParams, primaryParamList, aggregateSets);
+        return aggregationAnalysisService.aggregateSeeds(agParams, primaryParamList, aggregateSets);
 
     }
 
