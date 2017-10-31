@@ -67,6 +67,11 @@ param useMinD >= 0 integer default 0;
 param useMaxD >= 0 integer default card(D);
 
 
+# Traffic combination
+param combineSourceTraffic binary default 0;
+param combineDestTraffic binary default 0;
+
+
 # VARIABLES
 
 # C - connection number (i) from node s to node d
@@ -74,6 +79,15 @@ var C{(s,d) in SD, i in I} binary;
 
 # L - Link flow on (u, v) used by Connection (s, d, i)
 var L{(s,d) in SD, i in I, u in V, v in V} binary;
+
+# There is at least one link flow coming from source s
+var L_s{s in S, u in V, v in V} binary;
+
+# There is at least one link flow going to destination d
+var L_d{d in D, u in V, v in V} binary;
+
+# There is at least one link flow between pair (s,d)
+var L_sd{(s,d) in SD, u in V, v in V} binary;
 
 # NC - Node v is in Connection (s,d,i)
 var NC{(s,d) in SD, i in I, v in V} binary;
@@ -129,14 +143,17 @@ var Num_Conn_src{s in S} = sum{d in D, i in I: s != d} C[s,d,i];
 var Num_Conn_dst{d in D} = sum{s in S, i in I: s != d} C[s,d,i];
 # END ENDPOINT VARIABLES
 
+
+# OBJECTIVE VARIABLES
+
 # Number of connections total
 var Num_Conns_Total = sum{(s,d) in SD} Num_Conn[s,d];
 
 # Number of link usages
-var Num_Links_Used = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
+var Num_Links_Used >= 0 integer;
 
 # Total weight of all used links
-var Total_Weight = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
+var Total_Weight >= 0 integer;
 
 
 # OBJECTIVE
@@ -149,6 +166,34 @@ minimize Connections:
 
 minimize TotalCost:
 	Total_Weight;
+
+
+# Objective definition constraints
+# LINKS USED
+subject to linksUsed_combineTraffic_SourceOnly:
+    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v];
+
+subject to linksUsed_combineTraffic_DestOnly:
+    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{d in D, u in V, v in V} L_d[d,u,v];
+
+subject to linksUsed_doNotCombineTraffic:
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
+
+subject to linksUsed_combineBothTraffic:
+    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v];
+
+# TOTAL WEIGHT
+subject to totalWeight_combineTraffic_SourceOnly:
+    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v] * Weight[u,v];
+
+subject to totalWeight_combineTraffic_DestOnly:
+    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{d in D, u in V, v in V} L_d[d,u,v] * Weight[u,v];
+
+subject to totalWeight_doNotCombineTraffic:
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
+
+subject to totalWeight_combineBothTraffic:
+    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v] * Weight[u,v];
 
 ## Connection Constraints
 
@@ -256,6 +301,28 @@ subject to nodeInConnection_A{(s,d) in SD, i in I, v in V}:
 
 subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 	NC[s,d,i,v] * card(V)^4 >= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
+
+
+
+### L_s, L_d, L_sd definition constraints
+subject to flowOnLinkFromSource_A{s in S, u in V, v in V}:
+	L_s[s,u,v] <= sum{d in D, i in I} L[s,d,i,u,v];
+
+subject to flowOnLinkFromSource_B{s in S, u in V, v in V}:
+	L_s[s,u,v] * card(V)^4 >= sum{d in D, i in I} L[s,d,i,u,v];
+
+subject to flowOnLinkToDestination_A{d in D, u in V, v in V}:
+	L_d[d,u,v] <= sum{s in S, i in I} L[s,d,i,u,v];
+
+subject to flowOnLinkToDestination_B{d in D, u in V, v in V}:
+	L_d[d,u,v] * card(V)^4 >= sum{s in S, i in I} L[s,d,i,u,v];
+
+subject to flowOnLinkBetweenPair_A{(s,d) in SD, u in V, v in V}:
+	L_sd[s,d,u,v] <= sum{i in I} L[s,d,i,u,v];
+
+subject to flowOnLinkBetweenPair_B{(s,d) in SD, u in V, v in V}:
+	L_sd[s,d,u,v] * card(V)^4 >= sum{i in I} L[s,d,i,u,v];
+
 
 
 ## Failure Constraints
