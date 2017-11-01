@@ -108,9 +108,9 @@ public class RoutingParamAssignmentService {
                 pairMinNumConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
                 pairMaxNumConnectionsMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> 1));
                 srcMinNumConnectionsMap = sources.stream().collect(Collectors.toMap(p -> p, p -> 0));
-                srcMaxNumConnectionsMap = sources.stream().collect(Collectors.toMap(p -> p, p -> 1));
+                srcMaxNumConnectionsMap = sources.stream().collect(Collectors.toMap(p -> p, p -> destinations.size()));
                 destMinNumConnectionsMap = destinations.stream().collect(Collectors.toMap(p -> p, p -> 0));
-                destMaxNumConnectionsMap = destinations.stream().collect(Collectors.toMap(p -> p, p -> 1));
+                destMaxNumConnectionsMap = destinations.stream().collect(Collectors.toMap(p -> p, p -> sources.size()));
                 useMinS = useMinS == null || useMinS < 1 ? sources.size() : useMinS;
                 useMaxS = useMaxS == null || useMaxS > sources.size() ? sources.size() : useMaxS;
                 useMinD = useMinD == null || useMinD < 1 ? destinations.size() : useMinD;
@@ -257,9 +257,9 @@ public class RoutingParamAssignmentService {
                 minPairConnections = 0;
                 maxPairConnections = 1;
                 minSrcConnections = 0;
-                maxSrcConnections = 1;
+                maxSrcConnections = numD;
                 minDstConnections = 0;
-                maxDstConnections = 1;
+                maxDstConnections = numS;
                 useMinS = useMinS == null || useMinS < 1 ? numS : useMinS;
                 useMaxS = useMaxS == null || useMaxS > numS ? numS : useMaxS;
                 useMinD = useMinD == null || useMinD < 1 ? numD : useMinD;

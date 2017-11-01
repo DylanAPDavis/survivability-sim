@@ -1,6 +1,7 @@
 package netlab.processing.shortestPaths;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.submission.enums.RoutingType;
 import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
@@ -10,10 +11,7 @@ import netlab.topology.elements.SourceDestPair;
 import netlab.topology.elements.Topology;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -22,70 +20,121 @@ public class ShortestPathService {
 
     public Details solve(Request request, Topology topo){
         Details details = request.getDetails();
-        Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
+        Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
         Connections connections = details.getConnections();
         // Requirements
-        Integer reqNumConnections = connections.getNumConnections();
         Integer useMinS = connections.getUseMinS();
         Integer useMaxS = connections.getUseMaxS();
         Integer useMinD = connections.getUseMinD();
         Integer useMaxD = connections.getUseMaxD();
 
-        Map<SourceDestPair, Integer> pairMinConnectionsMap = connections.getPairMinConnectionsMap();
-        Map<SourceDestPair, Integer> pairMaxConnectionsMap = connections.getPairMaxConnectionsMap();
-
-        Map<Node, Integer> srcMinConnectionsMap = connections.getSrcMinConnectionsMap();
-        Map<Node, Integer> srcMaxConnectionsMap = connections.getSrcMaxConnectionsMap();
-
-        Map<Node, Integer> dstMinConnectionsMap = connections.getDstMinConnectionsMap();
-        Map<Node, Integer> dstMaxConnectionsMap = connections.getDstMaxConnectionsMap();
-
-        // Variables for tracking completion
-        int numConnections = 0;
-        int numSUsed = 0;
-        int numDUsed = 0;
-        Map<SourceDestPair, Integer> pairConnectionsMap = pairMinConnectionsMap.keySet()
-                .stream()
-                .collect(Collectors.toMap(p -> p, p -> 0));
-        Map<Node, Integer> srcConnectionsMap = srcMinConnectionsMap.keySet()
-                .stream()
-                .collect(Collectors.toMap(s -> s, s -> 0));
-        Map<Node, Integer> dstConnectionsMap = dstMaxConnectionsMap.keySet()
-                .stream()
-                .collect(Collectors.toMap(d -> d, d -> 0));
-
-        boolean allSatisfied = false;
-
-        // Need to add connections as we go through the pairs
-        // Possibility all pairs may have a min of 0, so you need to add connections even when not "needed"
-        // The variables that will influence this are minConnections, useMin/MaxS and useMin/MaxD
-        // Get the set of pairs, sources, and dests that have a minimum > 0
-        Set<Node> sourcesWithMin = srcMinConnectionsMap.keySet().stream()
-                .filter(s -> srcMinConnectionsMap.get(s) > 0)
-                .collect(Collectors.toSet());
-        Set<Node> destsWithMin = dstMinConnectionsMap.keySet().stream()
-                .filter(d -> dstMinConnectionsMap.get(d) > 0)
-                .collect(Collectors.toSet());
-        Set<SourceDestPair> pairsWithMin = pairMinConnectionsMap.keySet().stream()
-                .filter(p -> pairMinConnectionsMap.get(p) > 0)
-                .collect(Collectors.toSet());
+        Set<SourceDestPair> pairs = details.getPairs();
         long startTime = System.nanoTime();
-        while(!allSatisfied) {
-            if(sourcesWithMin.isEmpty() && destsWithMin.isEmpty() && pairsWithMin.isEmpty()){
-
-            }
-            else{
-                
-            }
-            allSatisfied = testSatisfication(reqNumConnections, useMinS, useMaxS, useMinD, useMaxD, pairMinConnectionsMap,
-                    pairMaxConnectionsMap, srcMinConnectionsMap, srcMaxConnectionsMap, dstMinConnectionsMap, dstMaxConnectionsMap,
-                    numConnections, numSUsed, numDUsed, pairConnectionsMap, srcConnectionsMap, dstConnectionsMap);
+        switch(request.getRoutingType()){
+            case Unicast:
+                SourceDestPair pair = pairs.iterator().next();
+                Path path = findShortestPath(pair, topo);
+                if(!path.getLinks().isEmpty()){
+                    Map<String, Path> idMap = new HashMap<>();
+                    idMap.put("1", path);
+                    pathMap.put(pair, idMap);
+                }
+                break;
+            default:
+                pathMap = findPaths(request.getRoutingType(), pairs, details.getSources(), details.getDestinations(), topo, useMinS, useMaxS,
+                        useMinD, useMaxD);
+                break;
         }
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
-        details.setChosenPaths(paths);
+        details.setChosenPaths(pathMap);
         details.setRunningTimeSeconds(duration);
         return details;
+    }
+
+    private Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Set<SourceDestPair> pairs,
+                                                           Set<Node> sources, Set<Node> destinations, Topology topo,
+                                                           Integer useMinS, Integer useMaxS, Integer useMinD, Integer useMaxD) {
+        Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
+        Map<Node, Set<Path>> usedSources = new HashMap<>();
+        Map<Node, Set<Path>> usedDestinations = new HashMap<>();
+
+        Map<Path, SourceDestPair> potentialPathMap = new HashMap<>();
+        List<Path> potentialPaths = new ArrayList<>();
+        for(SourceDestPair pair : pairs){
+            Path sp = findShortestPath(pair, topo);
+            potentialPaths.add(sp);
+            potentialPathMap.put(sp, pair);
+        }
+
+        // If you're doing Broadcast or Multicast, you're done
+        if(routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Multicast)){
+            return formatPathMap(potentialPathMap);
+        }
+
+
+        // Sort the paths by weight
+        potentialPaths = potentialPaths.stream().sorted(Comparator.comparingLong(Path::getTotalWeight)).collect(Collectors.toList());
+        // Pick a subset of the paths to satisfy the min constraints
+        for(Path path : potentialPaths){
+            SourceDestPair pair = potentialPathMap.get(path);
+            if(!usedSources.containsKey(pair.getSrc()) || !usedDestinations.containsKey(pair.getDst())) {
+                usedSources.get(pair.getSrc()).add(path);
+                usedDestinations.get(pair.getDst()).add(path);
+                pathMap.get(pair).put(String.valueOf(pathMap.get(pair).size() + 1), path);
+            }
+            if(usedSources.size() >= useMinS && usedDestinations.size() >= useMinD){
+                break;
+            }
+        }
+
+
+        if(routingType.equals(RoutingType.ManyToMany)){
+            // Prune out potentially unneeded paths
+            for(Node src : usedSources.keySet()){
+                // If this source has more than one path, some could potentially be removed
+                if(usedSources.get(src).size() > 1){
+                    // Get the connected destinations
+                    Set<Path> srcPaths = usedSources.get(src);
+                    int pathsRemaining = srcPaths.size();
+                    for(Path srcPath : srcPaths){
+                        Node dest = srcPath.getNodes().get(srcPath.getNodes().size()-1);
+                        if(usedDestinations.get(dest).size() > 1){
+                            // If they do have more than one path, we now know that both this source and this dest
+                            // are the endpoints for multiple paths.
+                            // This means we can remove the path
+                            usedSources.get(src).remove(srcPath);
+                            usedDestinations.get(dest).remove(srcPath);
+                            pathsRemaining--;
+                            potentialPathMap.remove(srcPath);
+                        }
+                        // If there's just one path left for this source, move on to the next one
+                        if(pathsRemaining == 1){
+                            break;
+                        }
+                    }
+                }
+            }
+            return formatPathMap(potentialPathMap);
+        }
+
+        return pathMap;
+    }
+
+    private Map<SourceDestPair,Map<String,Path>> formatPathMap(Map<Path, SourceDestPair> potentialPathMap) {
+        Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
+        for(Path path : potentialPathMap.keySet()){
+            SourceDestPair pair = potentialPathMap.get(path);
+            Map<String, Path> mapForPair = pathMap.getOrDefault(pair, new HashMap<>());
+            String id = String.valueOf(mapForPair.size() + 1);
+            mapForPair.put(id, path);
+            pathMap.put(pair, mapForPair);
+        }
+        return pathMap;
+    }
+
+    public Path findShortestPath(SourceDestPair pair, Topology topo){
+
     }
 
     // Confirm that you've met all requirements
