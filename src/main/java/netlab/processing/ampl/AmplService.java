@@ -141,6 +141,28 @@ public class AmplService {
         String reachMaxD = "param useMaxD := " + details.getConnections().getUseMaxD() + ";";
         dataLines.add(reachMaxD);
 
+        // Traffic Combination
+        String combineSourceTraffic = "param combineSourceTraffic := ";
+        String combineDestTraffic = "param combineDestTraffic := ";
+        switch(request.getTrafficCombinationType()){
+            case None:
+                combineSourceTraffic += "0;";
+                combineDestTraffic += "0;";
+                break;
+            case Source:
+                combineSourceTraffic += "1";
+                break;
+            case Destination:
+                combineDestTraffic += "1";
+                break;
+            case Both:
+                combineSourceTraffic += "1";
+                combineDestTraffic += "1";
+                break;
+        }
+        dataLines.add(combineSourceTraffic);
+        dataLines.add(combineDestTraffic);
+
         // Flex/Endpoint/Flow level params
         if(problemClass.equals(ProblemClass.Flex)){
             dataLines.addAll(createFlexParamsLines(details, ignoreF));

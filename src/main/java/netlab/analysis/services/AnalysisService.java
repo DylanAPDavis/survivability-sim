@@ -3,10 +3,7 @@ package netlab.analysis.services;
 import com.opencsv.CSVWriter;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.*;
-import netlab.submission.enums.Algorithm;
-import netlab.submission.enums.FailureClass;
-import netlab.submission.enums.Objective;
-import netlab.submission.enums.ProblemClass;
+import netlab.submission.enums.*;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
 import netlab.topology.services.TopologyService;
@@ -63,6 +60,13 @@ public class AnalysisService {
         Double numberOfPrimaryPathsPostFailure = 0.0;
 
         List<Failure> chosenFailures = chooseFailuresBasedOnProb(failureGroups);
+
+
+        //Map for storing number of times a source/dest/pair sends a connection over a link
+        Map<Link, Set<Node>> sourceLinkMap = new HashMap<>();
+        Map<Link, Set<Node>> destLinkMap = new HashMap<>();
+        Map<Link, Set<SourceDestPair>> pairLinkMap = new HashMap<>();
+
         for(SourceDestPair pair : chosenPaths.keySet()){
             // Sort in ascending order -> total path weight
             List<Path> pathsForPair = sortPathsByWeight(chosenPaths.get(pair).values());
@@ -79,6 +83,16 @@ public class AnalysisService {
             double numPathsIntact = 0.0;
             List<Path> intactPaths = new ArrayList<>();
             for(Path path : pathsForPair){
+                List<Link> links = path.getLinks();
+                for(Link link : links){
+                    sourceLinkMap.putIfAbsent(link, new HashSet<>());
+                    destLinkMap.putIfAbsent(link, new HashSet<>());
+                    pairLinkMap.putIfAbsent(link, new HashSet<>());
+
+                    sourceLinkMap.get(link).add(pair.getSrc());
+                    destLinkMap.get(link).add(pair.getDst());
+                    pairLinkMap.get(link).add(pair);
+                }
                 totalCost += path.getTotalWeight();
                 totalPaths++;
                 totalLinksUsed += path.getLinks().size();
@@ -115,7 +129,8 @@ public class AnalysisService {
         averagePrimaryHopsPostFailure = totalPrimaryHopsPostFailure / numberOfPrimaryPathsPostFailure;
 
 
-        return Analysis.builder()
+
+        Analysis analysis =  Analysis.builder()
                 .requestId(request.getId())
                 .seed(request.getSeed())
                 .problemClass(request.getProblemClass())
@@ -136,6 +151,40 @@ public class AnalysisService {
                 .connectionsSevered(connectionsSevered)
                 .connectionsIntact(connectionsIntact)
                 .build();
+
+        if(!request.getTrafficCombinationType().equals(TrafficCombinationType.None)){
+            adjustLinksUsedTotalCost(analysis, sourceLinkMap, destLinkMap, pairLinkMap, request.getTrafficCombinationType());
+        }
+
+        return analysis;
+    }
+
+    private void adjustLinksUsedTotalCost(Analysis analysis, Map<Link, Set<Node>> sourceLinkMap,
+                                          Map<Link, Set<Node>> destLinkMap,
+                                          Map<Link, Set<SourceDestPair>> pairLinkMap,
+                                          TrafficCombinationType trafficCombinationType) {
+        Double totalCost = 0.0;
+        Double totalLinksUsed = 0.0;
+
+        for(Link link : sourceLinkMap.keySet()){
+            int count = 0;
+            switch(trafficCombinationType){
+                case Source:
+                    count = sourceLinkMap.get(link).size();
+                    break;
+                case Destination:
+                    count = destLinkMap.get(link).size();
+                    break;
+                case Both:
+                    count = pairLinkMap.get(link).size();
+                    break;
+            }
+            totalLinksUsed += count;
+            totalCost += link.getWeight() * count;
+        }
+
+        analysis.setTotalCost(totalCost);
+        analysis.setTotalLinksUsed(totalLinksUsed);
     }
 
     private List<Path> sortPathsByWeight(Collection<Path> paths){

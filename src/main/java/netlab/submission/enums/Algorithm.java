@@ -8,7 +8,12 @@ import java.util.Optional;
 
 public enum Algorithm {
     ServiceILP("ilp"),
-    FlexBhandari("flexbhandari");
+    FlexBhandari("flexbhandari"),
+    ShortestPath("shortestPath"),
+    MinimumSteinerTree("minimumsteinertree"),
+    Bhandari("bhandari"),
+    OverlappingTrees("overlappingtrees"),
+    PCycles("pcycles");
 
     private String code;
 
