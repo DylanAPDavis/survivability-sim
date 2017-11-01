@@ -6,7 +6,6 @@ import netlab.analysis.analyzed.AggregationParameters;
 import netlab.analysis.analyzed.FailureDescription;
 import netlab.analysis.analyzed.RoutingDescription;
 import netlab.analysis.controller.AnalysisController;
-import netlab.analysis.services.AnalysisService;
 import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
 import netlab.storage.controller.StorageController;
@@ -25,10 +24,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -100,7 +95,7 @@ public class AWSTest {
         List<Topology> topologies = Arrays.asList(topologyService.getTopologyById("NSFnet"));
         List<RoutingDescription> routingDescriptions = new ArrayList<>();
         RoutingDescription survivableUnicast = new RoutingDescription(RoutingType.Unicast, 1, 1,
-                Algorithm.ServiceILP, ProblemClass.Combined,1,  1, 1, 1, 1,
+                Algorithm.ILP, ProblemClass.Combined,1,  1, 1, 1, 1,
                 TrafficCombinationType.None, 0.0);
         routingDescriptions.add(survivableUnicast);
         List<FailureDescription> failureDescriptions = new ArrayList<>();

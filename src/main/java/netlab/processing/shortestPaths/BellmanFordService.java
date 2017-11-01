@@ -1,4 +1,4 @@
-package netlab.processing.disjointpaths;
+package netlab.processing.shortestPaths;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.topology.elements.Link;

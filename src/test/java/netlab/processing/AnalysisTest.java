@@ -238,7 +238,7 @@ public class AnalysisTest {
 
     @Test
     public void exceptionTest(){
-        Request rs = createSetAndSolve(1L, "NSFnet", 1, "ServiceILP", "Flow",
+        Request rs = createSetAndSolve(1L, "NSFnet", 1, "ILP", "Flow",
                 "TotalCost", 1, 7, 35, new ArrayList<>(), "Both",
                 1.0, new ArrayList<>(), 7, Arrays.asList(1,1), Arrays.asList(1,1), 2,
                 new ArrayList<>(), "Solo", false, false, 1.0, 1.0, 1.0);
@@ -249,7 +249,7 @@ public class AnalysisTest {
                                             List<Integer> minConns, List<Integer> maxConns, Integer numFails,
                                             Integer nfa, String failureClass, double percentSrcAlsoDest, double percentSrcFail,
                                             double percentDstFail, int numRequests) {
-        return createSetAndSolve(1L, "NSFnet", numRequests, "ServiceILP", problemClass, "LinksUsed", numSources, numDestinations, numFails,
+        return createSetAndSolve(1L, "NSFnet", numRequests, "ILP", problemClass, "LinksUsed", numSources, numDestinations, numFails,
                 new ArrayList<>(), failureClass, 0.0, new ArrayList<>(), numConns, minConns, maxConns,
                 nfa, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
     }

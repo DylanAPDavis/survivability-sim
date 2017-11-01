@@ -995,7 +995,7 @@ public class CombinedModelTest {
                                              Integer reachMinS, Integer reachMaxS, Integer reachMinD, Integer reachMaxD,
                                              int numFailsAllowed, double percentSrcAlsoDest, double percentSrcFail,
                                              double percentDstFail){
-        return createRequestSet(3L, "NSFnet", 1, "ServiceILP", problemClass,
+        return createRequestSet(3L, "NSFnet", 1, "ILP", problemClass,
                 "TotalCost", numSources, numDestinations, fSetSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange,
                 maxSrcConnectionsRange, minDstConnectionsRange, maxDstConnectionsRange,
@@ -1009,7 +1009,7 @@ public class CombinedModelTest {
                                              List<Integer> minDstConnectionsRange, List<Integer> maxDstConnectionsRange,
                                              int numFailsAllowed, double percentSrcAlsoDest, double percentSrcFail,
                                              double percentDstFail){
-        return createRequestSet(3L, "NSFnet", 1, "ServiceILP", problemClass,
+        return createRequestSet(3L, "NSFnet", 1, "ILP", problemClass,
                 "TotalCost", numSources, numDestinations, fSetSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, minConnectionsRange, maxConnectionsRange, minSrcConnectionsRange,
                 maxSrcConnectionsRange, minDstConnectionsRange, maxDstConnectionsRange,

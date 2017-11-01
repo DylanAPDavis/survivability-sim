@@ -7,13 +7,13 @@ import java.util.Map;
 import java.util.Optional;
 
 public enum Algorithm {
-    ServiceILP("ilp"),
+    ILP("ilp"),
     FlexBhandari("flexbhandari"),
-    ShortestPath("shortestPath"),
+    ShortestPath("shortestpath"),
     MinimumSteinerTree("minimumsteinertree"),
     Bhandari("bhandari"),
     OverlappingTrees("overlappingtrees"),
-    PCycles("pcycles");
+    Pcycles("pcycles");
 
     private String code;
 

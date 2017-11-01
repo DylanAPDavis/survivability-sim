@@ -33,7 +33,7 @@ public class ProcessingAndAnalysisTest {
     public void solve(){
 
         String problemClass = "Flow";
-        SimulationParameters params = makeParameters(2L, "NSFnet", 1, "ServiceILP", problemClass,
+        SimulationParameters params = makeParameters(2L, "NSFnet", 1, "ILP", problemClass,
                 3, 3, null, Arrays.asList(1, 1), "Both", 1.0, new ArrayList<>(),
                 9, Arrays.asList(0, 0), Arrays.asList(1,2), null, Arrays.asList(1, 2), "Solo",
                 false, false, 0.0, 0.0, 0.0);

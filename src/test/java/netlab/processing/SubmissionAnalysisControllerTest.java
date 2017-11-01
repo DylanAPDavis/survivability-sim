@@ -32,7 +32,7 @@ public class SubmissionAnalysisControllerTest {
 
     //@Test
     public void submitTest1(){
-        SimulationParameters params = makeParameters(1L, false, "NSFnet", 5, "ServiceILP",
+        SimulationParameters params = makeParameters(1L, false, "NSFnet", 5, "ILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, 0.0,
@@ -49,7 +49,7 @@ public class SubmissionAnalysisControllerTest {
 
     //@Test
     public void submitTest2(){
-        SimulationParameters params = makeParameters(2L, false, "NSFnet", 5, "ServiceILP",
+        SimulationParameters params = makeParameters(2L, false, "NSFnet", 5, "ILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, 0.0,
@@ -64,7 +64,7 @@ public class SubmissionAnalysisControllerTest {
 
     //@Test
     public void aggregateTest(){
-        SimulationParameters params = makeParameters(null, true, "NSFnet", 5, "ServiceILP",
+        SimulationParameters params = makeParameters(null, true, "NSFnet", 5, "ILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, 0.0,

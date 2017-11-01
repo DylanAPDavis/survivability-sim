@@ -574,7 +574,7 @@ public class FlowAndEndpointFailuresTest {
         RequestParameters params = RequestParameters.builder()
                 .topologyId("NSFnet")
                 .problemClass("Flow")
-                .algorithm("ServiceILP")
+                .algorithm("ILP")
                 .objective("LinksUsed")
                 .sources(sources)
                 .destinations(destinations)
@@ -596,7 +596,7 @@ public class FlowAndEndpointFailuresTest {
         RequestParameters params = RequestParameters.builder()
                 .topologyId("NSFnet")
                 .problemClass("FlowSharedF")
-                .algorithm("ServiceILP")
+                .algorithm("ILP")
                 .objective("LinksUsed")
                 .sources(sources)
                 .destinations(destinations)
@@ -620,7 +620,7 @@ public class FlowAndEndpointFailuresTest {
         RequestParameters params = RequestParameters.builder()
                 .topologyId("NSFnet")
                 .problemClass("Endpoint")
-                .algorithm("ServiceILP")
+                .algorithm("ILP")
                 .objective("LinksUsed")
                 .sources(sources)
                 .destinations(destinations)
@@ -645,7 +645,7 @@ public class FlowAndEndpointFailuresTest {
         RequestParameters params = RequestParameters.builder()
                 .topologyId("NSFnet")
                 .problemClass("EndpointSharedF")
-                .algorithm("ServiceILP")
+                .algorithm("ILP")
                 .objective("LinksUsed")
                 .sources(sources)
                 .destinations(destinations)
@@ -674,7 +674,7 @@ public class FlowAndEndpointFailuresTest {
                                             List<Integer> minMaxFails, List<Integer> minMaxFailsAllowed,
                                             double percentSrcAlsoDest, double percentSrcFail, double percentDstFail,
                                             boolean ignoreFailures){
-        return createSetAndSolve(1L, "NSFnet", 1, "ServiceILP", problemClass,
+        return createSetAndSolve(1L, "NSFnet", 1, "ILP", problemClass,
                 "LinksUsed", numSources, numDestinations, 0, minMaxFails, "Both",
                 0.0, new ArrayList<>(), numConns, minConns, maxConns, minSrcConns, maxSrcConns, minDstConns, maxDstConns,
                 0, minMaxFailsAllowed, "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail, ignoreFailures);
@@ -688,7 +688,7 @@ public class FlowAndEndpointFailuresTest {
                                             List<Integer> minDstConns, List<Integer> maxDstConns, Integer numFails,
                                             Integer nfa, String failureClass, double percentSrcAlsoDest, double percentSrcFail,
                                             double percentDstFail, boolean ignoreFailures) {
-        return createSetAndSolve(1L, "NSFnet", 1, "ServiceILP", problemClass, "LinksUsed",
+        return createSetAndSolve(1L, "NSFnet", 1, "ILP", problemClass, "LinksUsed",
                 numSources, numDestinations, numFails, new ArrayList<>(), failureClass, 0.0, new ArrayList<>(),
                 numConns, minConns, maxConns, minSrcConns, maxSrcConns, minDstConns, maxDstConns, nfa, new ArrayList<>(),
                 "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail, ignoreFailures);

@@ -107,17 +107,17 @@ public class FailuresTest {
 
     @Test
     public void manyFailureRequests(){
-        Request rs1 = solve(2L, "NSFnet", 10, "ServiceILP", "Flex",
+        Request rs1 = solve(2L, "NSFnet", 10, "ILP", "Flex",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
                 false, false, .50, 0.0, 0.0);
         analyze(rs1, 5, true, true);
-        Request rs2 = solve(2L, "NSFnet", 10, "ServiceILP", "Endpoint",
+        Request rs2 = solve(2L, "NSFnet", 10, "ILP", "Endpoint",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
                 false, false, .50, 0.0, 0.0);
         analyze(rs2, 5, true, true);
-        Request rs3 = solve(2L, "NSFnet", 10, "ServiceILP", "Flow",
+        Request rs3 = solve(2L, "NSFnet", 10, "ILP", "Flow",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
                 false, false, .50, 0.0, 0.0);
@@ -126,7 +126,7 @@ public class FailuresTest {
 
     /*
         {
-      "algorithm": "ServiceILP",
+      "algorithm": "ILP",
       "completed": 0,
       "failureClass": "Node",
       "failureProb": 1,
@@ -159,7 +159,7 @@ public class FailuresTest {
 
     @Test
     public void failedOnClusterTest(){
-        Request rs1 = solve(1L, "NSFnet", 50, "ServiceILP", "Flex",
+        Request rs1 = solve(1L, "NSFnet", 50, "ILP", "Flex",
                 "LinksUsed", 1, 1, 1, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 1,  new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, false, 1.0, 0.0, 0.0);
@@ -170,19 +170,19 @@ public class FailuresTest {
                                                Integer fSize, Integer nfa, String failureClass,
                                                Double percentSrcAlsoDest, Double percentSrcFail,
                                                Double percentDstFail, Boolean survivable, Boolean feasible, Integer numPaths){
-        Request rs1 = solve(1L, "NSFnet", 1, "ServiceILP", "Flex",
+        Request rs1 = solve(1L, "NSFnet", 1, "ILP", "Flex",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         analyze(rs1, numPaths, survivable, feasible);
         // Endpoint
-        Request rs2 = solve(1L, "NSFnet", 1, "ServiceILP", "Endpoint",
+        Request rs2 = solve(1L, "NSFnet", 1, "ILP", "Endpoint",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         analyze(rs2, numPaths, survivable, feasible);
         // Flow
-        Request rs3 = solve(1L, "NSFnet", 1, "ServiceILP", "Flow",
+        Request rs3 = solve(1L, "NSFnet", 1, "ILP", "Flow",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
                 false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);

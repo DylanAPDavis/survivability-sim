@@ -1,6 +1,7 @@
 package netlab.processing.disjointpaths;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.processing.shortestPaths.BellmanFordService;
 import netlab.topology.elements.Failure;
 import netlab.topology.elements.Link;
 import netlab.topology.elements.Node;

@@ -687,7 +687,7 @@ public class FlowAndEndpointTest {
         RequestParameters params = RequestParameters.builder()
                 .topologyId("NSFnet")
                 .problemClass("Flow")
-                .algorithm("ServiceILP")
+                .algorithm("ILP")
                 .objective("LinksUsed")
                 .sources(sources)
                 .destinations(destinations)
@@ -707,7 +707,7 @@ public class FlowAndEndpointTest {
         RequestParameters params = RequestParameters.builder()
                 .topologyId("NSFnet")
                 .problemClass("Endpoint")
-                .algorithm("ServiceILP")
+                .algorithm("ILP")
                 .objective("LinksUsed")
                 .sources(sources)
                 .destinations(destinations)
@@ -724,7 +724,7 @@ public class FlowAndEndpointTest {
 
     private Request createSet(String problemClass, int numSources, int numDestinations, int numConns, List<Integer> minConns,
                               List<Integer> maxConns, double percentSrcAlsoDest){
-        return solve(1L, "NSFnet", 1, "ServiceILP", problemClass, "LinksUsed", numSources, numDestinations, 0,
+        return solve(1L, "NSFnet", 1, "ILP", problemClass, "LinksUsed", numSources, numDestinations, 0,
                 new ArrayList<>(), "Both", 0.0, new ArrayList<>(), numConns, minConns, maxConns,
                 0, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, 0.0, 0.0);
 

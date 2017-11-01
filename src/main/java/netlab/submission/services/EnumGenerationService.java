@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 public class EnumGenerationService {
 
     public Algorithm getAlgorithm(String alg){
-        return Algorithm.get(alg).orElse(Algorithm.ServiceILP);
+        return Algorithm.get(alg).orElse(Algorithm.ILP);
     }
 
     public TrafficCombinationType getTrafficCombinationType(String type){

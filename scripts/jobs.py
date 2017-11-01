@@ -52,7 +52,7 @@ class Job:
         self.request_set_id = "_".join(self.ordered_params).replace(" ", "")
 
 
-def build_request(seed=1, topo="NSFnet", problem="Combined", objective="TotalCost", algorithm="ServiceILP", num_r=1,
+def build_request(seed=1, topo="NSFnet", problem="Combined", objective="TotalCost", algorithm="ILP", num_r=1,
                   num_s=1, num_d=1, num_c=1, min_range=None, max_range=None, min_src_range=None, max_src_range=None,
                   min_dst_range=None, max_dst_range=None, reach_min_s=0, reach_max_s=None, reach_min_d=0,
                   reach_max_d=None, f_size=0, fail_range=None, fail_type="Both", fail_prob=1.0, prob_range=None,
