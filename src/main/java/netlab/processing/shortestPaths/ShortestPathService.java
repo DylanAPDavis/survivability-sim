@@ -5,10 +5,15 @@ import netlab.submission.enums.RoutingType;
 import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
-import netlab.topology.elements.Node;
-import netlab.topology.elements.Path;
-import netlab.topology.elements.SourceDestPair;
-import netlab.topology.elements.Topology;
+import netlab.topology.elements.*;
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+import org.jgrapht.graph.DefaultDirectedWeightedGraph;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedMultigraph;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -134,8 +139,32 @@ public class ShortestPathService {
     }
 
     public Path findShortestPath(SourceDestPair pair, Topology topo){
+        Node src = pair.getSrc();
+        Node dst = pair.getDst();
+        Set<Node> nodes = topo.getNodes();
+        Set<Link> links = topo.getLinks();
+        DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
+        for(Node node : nodes){
+            graph.addVertex(node);
+        }
+        Map<DefaultWeightedEdge, Link> edgeLinkMap = new HashMap<>();
+        for(Link link : links){
+            DefaultWeightedEdge e = graph.addEdge(link.getOrigin(), link.getTarget());
+            graph.setEdgeWeight(e, link.getWeight());
+            edgeLinkMap.put(e, link);
+        }
 
+        DijkstraShortestPath<Node, DefaultWeightedEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
+        GraphPath<Node, DefaultWeightedEdge> sp =  dijkstraAlg.getPath(src, dst);
+        List<DefaultWeightedEdge> edgeList = sp.getEdgeList();
+        List<Node> nodeList = sp.getVertexList();
+        return Path.builder()
+                .nodes(nodeList)
+                .links(edgeList.stream().map(edgeLinkMap::get).collect(Collectors.toList()))
+                .build();
     }
+
+
 
     // Confirm that you've met all requirements
     private boolean testSatisfication(Integer reqNumConnections, Integer useMinS, Integer useMaxS, Integer useMinD,
