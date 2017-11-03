@@ -2,6 +2,7 @@ package netlab.processing.shortestPaths;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.enums.RoutingType;
+import netlab.submission.enums.TrafficCombinationType;
 import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
@@ -29,16 +30,14 @@ public class ShortestPathService {
         Connections connections = details.getConnections();
         // Requirements
         Integer useMinS = connections.getUseMinS();
-        Integer useMaxS = connections.getUseMaxS();
         Integer useMinD = connections.getUseMinD();
-        Integer useMaxD = connections.getUseMaxD();
 
         Set<SourceDestPair> pairs = details.getPairs();
         long startTime = System.nanoTime();
         switch(request.getRoutingType()){
             case Unicast:
                 SourceDestPair pair = pairs.iterator().next();
-                Path path = findShortestPath(pair, topo);
+                Path path = findShortestPath(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None);
                 if(!path.getLinks().isEmpty()){
                     Map<String, Path> idMap = new HashMap<>();
                     idMap.put("1", path);
@@ -46,8 +45,7 @@ public class ShortestPathService {
                 }
                 break;
             default:
-                pathMap = findPaths(request.getRoutingType(), pairs, details.getSources(), details.getDestinations(), topo, useMinS, useMaxS,
-                        useMinD, useMaxD);
+                pathMap = findPaths(request.getRoutingType(), pairs, topo, useMinS, useMinD, request.getTrafficCombinationType());
                 break;
         }
         long endTime = System.nanoTime();
@@ -57,9 +55,8 @@ public class ShortestPathService {
         return details;
     }
 
-    private Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Set<SourceDestPair> pairs,
-                                                           Set<Node> sources, Set<Node> destinations, Topology topo,
-                                                           Integer useMinS, Integer useMaxS, Integer useMinD, Integer useMaxD) {
+    private Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Set<SourceDestPair> pairs, Topology topo,
+                                                           Integer useMinS, Integer useMinD, TrafficCombinationType trafficCombinationType) {
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
         Map<Node, Set<Path>> usedSources = new HashMap<>();
         Map<Node, Set<Path>> usedDestinations = new HashMap<>();
@@ -67,7 +64,7 @@ public class ShortestPathService {
         Map<Path, SourceDestPair> potentialPathMap = new HashMap<>();
         List<Path> potentialPaths = new ArrayList<>();
         for(SourceDestPair pair : pairs){
-            Path sp = findShortestPath(pair, topo);
+            Path sp = findShortestPath(pair, topo, usedSources, usedDestinations, trafficCombinationType);
             potentialPaths.add(sp);
             potentialPathMap.put(sp, pair);
         }
@@ -138,7 +135,8 @@ public class ShortestPathService {
         return pathMap;
     }
 
-    public Path findShortestPath(SourceDestPair pair, Topology topo){
+    public Path findShortestPath(SourceDestPair pair, Topology topo, Map<Node, Set<Path>> srcPathsMap,
+                                 Map<Node, Set<Path>> dstPathsMap, TrafficCombinationType trafficCombinationType){
         Node src = pair.getSrc();
         Node dst = pair.getDst();
         Set<Node> nodes = topo.getNodes();
@@ -147,10 +145,20 @@ public class ShortestPathService {
         for(Node node : nodes){
             graph.addVertex(node);
         }
+
+        Set<Path> zeroCostPaths = trafficCombinationType.equals(TrafficCombinationType.Source)
+                || trafficCombinationType.equals(TrafficCombinationType.Both) ?
+                srcPathsMap.getOrDefault(src, new HashSet<>()) : new HashSet<>();
+        zeroCostPaths.addAll(trafficCombinationType.equals(TrafficCombinationType.Destination) || trafficCombinationType.equals(TrafficCombinationType.Both) ?
+                dstPathsMap.getOrDefault(dst, new HashSet<>()) : new HashSet<>());
+        Set<Link> zeroCostLinks = zeroCostPaths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
+
         Map<DefaultWeightedEdge, Link> edgeLinkMap = new HashMap<>();
         for(Link link : links){
             DefaultWeightedEdge e = graph.addEdge(link.getOrigin(), link.getTarget());
-            graph.setEdgeWeight(e, link.getWeight());
+            Long weight = !trafficCombinationType.equals(TrafficCombinationType.None) && zeroCostLinks.contains(link) ?
+                    0 : link.getWeight();
+            graph.setEdgeWeight(e, weight);
             edgeLinkMap.put(e, link);
         }
 
