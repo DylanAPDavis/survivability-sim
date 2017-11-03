@@ -23,8 +23,6 @@ public class ProcessingService {
 
     private ShortestPathService shortestPathService;
 
-    private SteinerTreeService steinerTreeService;
-
     private BhandariService bhandariService;
 
     private OverlappingTreeService overlappingTreeService;
@@ -35,14 +33,12 @@ public class ProcessingService {
 
     @Autowired
     public ProcessingService(TopologyService topologyService, AmplService amplService, FlexBhandariService flexBhandariService,
-                             ShortestPathService shortestPathService, SteinerTreeService steinerTreeService,
-                             BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
+                             ShortestPathService shortestPathService,  BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
                              PCycleService pCycleService) {
         this.topoService = topologyService;
         this.amplService = amplService;
         this.flexBhandariService = flexBhandariService;
         this.shortestPathService = shortestPathService;
-        this.steinerTreeService = steinerTreeService;
         this.bhandariService = bhandariService;
         this.overlappingTreeService = overlappingTreeService;
         this.pCycleService = pCycleService;
@@ -60,9 +56,6 @@ public class ProcessingService {
                 break;
             case ShortestPath:
                 details = shortestPathService.solve(request, topo);
-                break;
-            case MinimumSteinerTree:
-                details = steinerTreeService.solve(request, topo);
                 break;
             case Bhandari:
                 details = bhandariService.solve(request, topo);

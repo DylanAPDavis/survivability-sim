@@ -10,7 +10,6 @@ public enum Algorithm {
     ILP("ilp"),
     FlexBhandari("flexbhandari"),
     ShortestPath("shortestpath"),
-    MinimumSteinerTree("minimumsteinertree"),
     Bhandari("bhandari"),
     OverlappingTrees("overlappingtrees"),
     Pcycles("pcycles");

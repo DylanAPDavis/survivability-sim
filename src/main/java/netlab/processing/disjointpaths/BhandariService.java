@@ -2,10 +2,14 @@ package netlab.processing.disjointpaths;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.shortestPaths.BellmanFordService;
-import netlab.topology.elements.Failure;
-import netlab.topology.elements.Link;
-import netlab.topology.elements.Node;
-import netlab.topology.elements.Topology;
+import netlab.submission.enums.FailureClass;
+import netlab.submission.enums.RoutingType;
+import netlab.submission.enums.TrafficCombinationType;
+import netlab.submission.request.Connections;
+import netlab.submission.request.Details;
+import netlab.submission.request.Request;
+import netlab.topology.elements.*;
+import org.jgrapht.graph.DefaultWeightedEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +25,139 @@ public class BhandariService {
     @Autowired
     public BhandariService(BellmanFordService bellmanFordService){
         this.bellmanFordService = bellmanFordService;
+    }
+
+    public Details solve(Request request, Topology topo){
+        Details details = request.getDetails();
+        Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
+        Connections connections = details.getConnections();
+        // Requirements
+        Integer useMinS = connections.getUseMinS();
+        Integer useMinD = connections.getUseMinD();
+
+        Set<SourceDestPair> pairs = details.getPairs();
+
+        Integer numFailEvents = details.getNumFailureEvents().getTotalNumFailureEvents();
+        FailureClass failureClass = request.getFailureClass();
+        Set<Failure> failures = details.getFailures().getFailureSet();
+        long startTime = System.nanoTime();
+        switch(request.getRoutingType()){
+            case Unicast:
+                SourceDestPair pair = pairs.iterator().next();
+                List<Path> paths = findPathSet(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None,
+                        numFailEvents, failureClass, failures);
+                if(!paths.isEmpty()){
+                    Map<String, Path> idMap = new HashMap<>();
+                    int id = 1;
+                    for(Path path : paths) {
+                        idMap.put(String.valueOf(id), path);
+                        id++;
+                    }
+                    pathMap.put(pair, idMap);
+                }
+                break;
+            default:
+                pathMap = findPaths(request.getRoutingType(), pairs, topo, useMinS, useMinD, request.getTrafficCombinationType(),
+                        numFailEvents, failureClass, failures);
+                break;
+        }
+        long endTime = System.nanoTime();
+        double duration = (endTime - startTime)/1e9;
+        details.setChosenPaths(pathMap);
+        details.setRunningTimeSeconds(duration);
+        return details;
+    }
+
+    private Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Set<SourceDestPair> pairs,
+                                                           Topology topo, Integer useMinS, Integer useMinD,
+                                                           TrafficCombinationType trafficCombinationType,
+                                                           Integer numFailEvents, FailureClass failureClass,
+                                                           Set<Failure> failures) {
+        Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
+        Map<Node, Set<Path>> usedSources = new HashMap<>();
+        Map<Node, Set<Path>> usedDestinations = new HashMap<>();
+
+        Map<Path, SourceDestPair> potentialPathMap = new HashMap<>();
+        List<Path> potentialPaths = new ArrayList<>();
+        for(SourceDestPair pair : pairs){
+            List<Path> sps = findPathSet(pair, topo, usedSources, usedDestinations, trafficCombinationType, numFailEvents, failureClass, failures);
+            potentialPaths.addAll(sps);
+            for(Path sp : sps) {
+                potentialPathMap.put(sp, pair);
+            }
+        }
+
+        // If you're doing Broadcast or Multicast, you're done
+        if(routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Multicast)){
+            return formatPathMap(potentialPathMap);
+        }
+
+
+        // Sort the paths by weight
+        potentialPaths = potentialPaths.stream().sorted(Comparator.comparingLong(Path::getTotalWeight)).collect(Collectors.toList());
+        // Pick a subset of the paths to satisfy the min constraints
+        for(Path path : potentialPaths){
+            SourceDestPair pair = potentialPathMap.get(path);
+            if(!usedSources.containsKey(pair.getSrc()) || !usedDestinations.containsKey(pair.getDst())) {
+                usedSources.get(pair.getSrc()).add(path);
+                usedDestinations.get(pair.getDst()).add(path);
+                pathMap.get(pair).put(String.valueOf(pathMap.get(pair).size() + 1), path);
+            }
+            boolean sufficientS = usedSources.keySet().stream().map(usedSources::get).filter(paths -> paths.size() == numFailEvents+1).count() >= useMinS;
+            boolean sufficientD = usedDestinations.keySet().stream().map(usedDestinations::get).filter(paths -> paths.size() == numFailEvents+1).count() >= useMinD;
+            if(sufficientS && sufficientD){
+                break;
+            }
+        }
+
+
+        return pathMap;
+    }
+
+    private List<Path> findPathSet(SourceDestPair pair, Topology topo, Map<Node, Set<Path>> srcPathsMap,
+                                   Map<Node, Set<Path>> dstPathsMap, TrafficCombinationType trafficType, Integer numFailEvents,
+                                   FailureClass failureClass, Set<Failure> failures) {
+
+        Node src = pair.getSrc();
+        Node dst = pair.getDst();
+        boolean nodesFail = failureClass.equals(FailureClass.Node) || failureClass.equals(FailureClass.Both);
+
+        // Modify link weights if you're combining traffic
+        Set<Path> zeroCostPaths = trafficType.equals(TrafficCombinationType.Source)
+                || trafficType.equals(TrafficCombinationType.Both) ?
+                srcPathsMap.getOrDefault(src, new HashSet<>()) : new HashSet<>();
+        zeroCostPaths.addAll(trafficType.equals(TrafficCombinationType.Destination) || trafficType.equals(TrafficCombinationType.Both) ?
+                dstPathsMap.getOrDefault(dst, new HashSet<>()) : new HashSet<>());
+        Set<Link> zeroCostLinks = zeroCostPaths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
+
+        // Modify weights if you're combining traffic
+        Set<Link> modifiedLinks = new HashSet<>();
+        Map<Link, Link> originalLinkMap = new HashMap<>();
+        for(Link link : topo.getLinks()){
+            Long weight = !trafficType.equals(TrafficCombinationType.None) && zeroCostLinks.contains(link) ?
+                    0 : link.getWeight();
+            Link modifiedLink = Link.builder().id(link.getId()).origin(link.getOrigin()).target(link.getTarget()).weight(weight).build();
+            modifiedLinks.add(modifiedLink);
+            if(!Objects.equals(weight, link.getWeight())){
+                originalLinkMap.put(modifiedLink, link);
+            }
+        }
+
+        Topology modifiedTopo = new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
+
+        List<List<Link>> linkLists = computeDisjointPaths(modifiedTopo, src, dst, 1, numFailEvents, nodesFail,
+                failures, false);
+
+        return convertToPaths(linkLists, originalLinkMap);
+    }
+
+    private List<Path> convertToPaths(List<List<Link>> pathLinks, Map<Link, Link> originalLinkMap){
+        List<Path> paths = new ArrayList<>();
+        for(List<Link> links : pathLinks){
+            links = links.stream().map(link -> originalLinkMap.getOrDefault(link, link)).collect(Collectors.toList());
+            paths.add(new Path(links));
+        }
+        return paths;
     }
 
 
@@ -296,6 +433,19 @@ public class BhandariService {
 
     private void logPath(List<Link> path, String title){
         log.info(title + ": " + path.stream().map(e -> "(" + e.getOrigin().getId() + ", " + e.getTarget().getId() + ")").collect(Collectors.toList()).toString());
+    }
+
+
+    private Map<SourceDestPair,Map<String,Path>> formatPathMap(Map<Path, SourceDestPair> potentialPathMap) {
+        Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
+        for(Path path : potentialPathMap.keySet()){
+            SourceDestPair pair = potentialPathMap.get(path);
+            Map<String, Path> mapForPair = pathMap.getOrDefault(pair, new HashMap<>());
+            String id = String.valueOf(mapForPair.size() + 1);
+            mapForPair.put(id, path);
+            pathMap.put(pair, mapForPair);
+        }
+        return pathMap;
     }
 
 }
