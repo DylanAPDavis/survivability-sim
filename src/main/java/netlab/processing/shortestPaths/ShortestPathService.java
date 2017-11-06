@@ -61,7 +61,7 @@ public class ShortestPathService {
         return details;
     }
 
-    private Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Set<SourceDestPair> pairs, Topology topo,
+    public Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Set<SourceDestPair> pairs, Topology topo,
                                                            Integer useMinS, Integer useMinD, TrafficCombinationType trafficCombinationType) {
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
         Map<Node, Set<Path>> usedSources = new HashMap<>();
