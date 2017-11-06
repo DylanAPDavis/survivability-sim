@@ -1,20 +1,15 @@
 package netlab.processing.shortestPaths;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.processing.pathmapping.PathMappingService;
 import netlab.submission.enums.RoutingType;
 import netlab.submission.enums.TrafficCombinationType;
 import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
-import org.jgrapht.DirectedGraph;
-import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
-import org.jgrapht.graph.DefaultDirectedWeightedGraph;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.DirectedMultigraph;
-import org.jgrapht.graph.DirectedWeightedMultigraph;
+import netlab.topology.services.TopologyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -23,6 +18,17 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class ShortestPathService {
+
+    private BellmanFordService bellmanFordService;
+    private TopologyService topologyService;
+    private PathMappingService pathMappingService;
+
+    @Autowired
+    public ShortestPathService(BellmanFordService bellmanFordService, TopologyService topologyService, PathMappingService pathMappingService){
+        this.bellmanFordService = bellmanFordService;
+        this.topologyService = topologyService;
+        this.pathMappingService = pathMappingService;
+    }
 
     public Details solve(Request request, Topology topo){
         Details details = request.getDetails();
@@ -71,7 +77,7 @@ public class ShortestPathService {
 
         // If you're doing Broadcast or Multicast, you're done
         if(routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Multicast)){
-            return formatPathMap(potentialPathMap);
+            return pathMappingService.formatPathMap(potentialPathMap);
         }
 
 
@@ -117,61 +123,24 @@ public class ShortestPathService {
                     }
                 }
             }
-            return formatPathMap(potentialPathMap);
+            return pathMappingService.formatPathMap(potentialPathMap);
         }
 
-        return pathMap;
-    }
-
-    private Map<SourceDestPair,Map<String,Path>> formatPathMap(Map<Path, SourceDestPair> potentialPathMap) {
-        Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
-        for(Path path : potentialPathMap.keySet()){
-            SourceDestPair pair = potentialPathMap.get(path);
-            Map<String, Path> mapForPair = pathMap.getOrDefault(pair, new HashMap<>());
-            String id = String.valueOf(mapForPair.size() + 1);
-            mapForPair.put(id, path);
-            pathMap.put(pair, mapForPair);
-        }
         return pathMap;
     }
 
     public Path findShortestPath(SourceDestPair pair, Topology topo, Map<Node, Set<Path>> srcPathsMap,
-                                 Map<Node, Set<Path>> dstPathsMap, TrafficCombinationType trafficCombinationType){
+                                 Map<Node, Set<Path>> dstPathsMap, TrafficCombinationType trafficType){
+
         Node src = pair.getSrc();
         Node dst = pair.getDst();
-        Set<Node> nodes = topo.getNodes();
-        Set<Link> links = topo.getLinks();
-        DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
-        for(Node node : nodes){
-            graph.addVertex(node);
-        }
 
-        Set<Path> zeroCostPaths = trafficCombinationType.equals(TrafficCombinationType.Source)
-                || trafficCombinationType.equals(TrafficCombinationType.Both) ?
-                srcPathsMap.getOrDefault(src, new HashSet<>()) : new HashSet<>();
-        zeroCostPaths.addAll(trafficCombinationType.equals(TrafficCombinationType.Destination) || trafficCombinationType.equals(TrafficCombinationType.Both) ?
-                dstPathsMap.getOrDefault(dst, new HashSet<>()) : new HashSet<>());
-        Set<Link> zeroCostLinks = zeroCostPaths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
+        Topology modifiedTopo = topologyService.adjustWeightsUsingTrafficCombination(topo, trafficType, src, dst,
+                srcPathsMap, dstPathsMap);
+        List<Link> pathLinks = bellmanFordService.shortestPath(modifiedTopo, src, dst);
 
-        Map<DefaultWeightedEdge, Link> edgeLinkMap = new HashMap<>();
-        for(Link link : links){
-            DefaultWeightedEdge e = graph.addEdge(link.getOrigin(), link.getTarget());
-            Long weight = !trafficCombinationType.equals(TrafficCombinationType.None) && zeroCostLinks.contains(link) ?
-                    0 : link.getWeight();
-            graph.setEdgeWeight(e, weight);
-            edgeLinkMap.put(e, link);
-        }
-
-        DijkstraShortestPath<Node, DefaultWeightedEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
-        GraphPath<Node, DefaultWeightedEdge> sp =  dijkstraAlg.getPath(src, dst);
-        List<DefaultWeightedEdge> edgeList = sp.getEdgeList();
-        List<Node> nodeList = sp.getVertexList();
-        return Path.builder()
-                .nodes(nodeList)
-                .links(edgeList.stream().map(edgeLinkMap::get).collect(Collectors.toList()))
-                .build();
+        return pathMappingService.convertToPath(pathLinks, topo.getLinkIdMap());
     }
-
 
 
     // Confirm that you've met all requirements

@@ -1,6 +1,7 @@
 package netlab.processing.disjointpaths;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.processing.pathmapping.PathMappingService;
 import netlab.processing.shortestPaths.BellmanFordService;
 import netlab.submission.enums.FailureClass;
 import netlab.submission.enums.RoutingType;
@@ -9,7 +10,7 @@ import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
-import org.jgrapht.graph.DefaultWeightedEdge;
+import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +22,14 @@ import java.util.stream.Collectors;
 public class BhandariService {
 
     private BellmanFordService bellmanFordService;
+    private TopologyService topologyService;
+    private PathMappingService pathMappingService;
 
     @Autowired
-    public BhandariService(BellmanFordService bellmanFordService){
+    public BhandariService(BellmanFordService bellmanFordService, TopologyService topologyService, PathMappingService pathMappingService){
         this.bellmanFordService = bellmanFordService;
+        this.topologyService = topologyService;
+        this.pathMappingService = pathMappingService;
     }
 
     public Details solve(Request request, Topology topo){
@@ -89,7 +94,7 @@ public class BhandariService {
 
         // If you're doing Broadcast or Multicast, you're done
         if(routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Multicast)){
-            return formatPathMap(potentialPathMap);
+            return pathMappingService.formatPathMap(potentialPathMap);
         }
 
 
@@ -122,43 +127,16 @@ public class BhandariService {
         Node dst = pair.getDst();
         boolean nodesFail = failureClass.equals(FailureClass.Node) || failureClass.equals(FailureClass.Both);
 
-        // Modify link weights if you're combining traffic
-        Set<Path> zeroCostPaths = trafficType.equals(TrafficCombinationType.Source)
-                || trafficType.equals(TrafficCombinationType.Both) ?
-                srcPathsMap.getOrDefault(src, new HashSet<>()) : new HashSet<>();
-        zeroCostPaths.addAll(trafficType.equals(TrafficCombinationType.Destination) || trafficType.equals(TrafficCombinationType.Both) ?
-                dstPathsMap.getOrDefault(dst, new HashSet<>()) : new HashSet<>());
-        Set<Link> zeroCostLinks = zeroCostPaths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
 
-        // Modify weights if you're combining traffic
-        Set<Link> modifiedLinks = new HashSet<>();
-        Map<Link, Link> originalLinkMap = new HashMap<>();
-        for(Link link : topo.getLinks()){
-            Long weight = !trafficType.equals(TrafficCombinationType.None) && zeroCostLinks.contains(link) ?
-                    0 : link.getWeight();
-            Link modifiedLink = Link.builder().id(link.getId()).origin(link.getOrigin()).target(link.getTarget()).weight(weight).build();
-            modifiedLinks.add(modifiedLink);
-            if(!Objects.equals(weight, link.getWeight())){
-                originalLinkMap.put(modifiedLink, link);
-            }
-        }
-
-        Topology modifiedTopo = new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
+        Topology modifiedTopo = topologyService.adjustWeightsUsingTrafficCombination(topo, trafficType, src, dst,
+                srcPathsMap, dstPathsMap);
 
         List<List<Link>> linkLists = computeDisjointPaths(modifiedTopo, src, dst, 1, numFailEvents, nodesFail,
                 failures, false);
 
-        return convertToPaths(linkLists, originalLinkMap);
+        return pathMappingService.convertToPaths(linkLists, topo.getLinkIdMap());
     }
 
-    private List<Path> convertToPaths(List<List<Link>> pathLinks, Map<Link, Link> originalLinkMap){
-        List<Path> paths = new ArrayList<>();
-        for(List<Link> links : pathLinks){
-            links = links.stream().map(link -> originalLinkMap.getOrDefault(link, link)).collect(Collectors.toList());
-            paths.add(new Path(links));
-        }
-        return paths;
-    }
 
 
     public List<List<Link>> computeDisjointPaths(Topology topo, Node src, Node dst, Integer numC, Integer numPaths,
@@ -276,7 +254,7 @@ public class BhandariService {
         return modifiedPaths;
     }
 
-    Topology makeNodeFailTopo(Topology topo) {
+    private Topology makeNodeFailTopo(Topology topo) {
         // For each node n, create an "n-incoming" node and "n-outgoing" node, and connect them with an internal link
         // Connect all incoming edges to n to the new incoming ndoe, and all outgoing edges from n from the new outgoing node
         Set<Node> originalNodes = topo.getNodes();
@@ -435,17 +413,5 @@ public class BhandariService {
         log.info(title + ": " + path.stream().map(e -> "(" + e.getOrigin().getId() + ", " + e.getTarget().getId() + ")").collect(Collectors.toList()).toString());
     }
 
-
-    private Map<SourceDestPair,Map<String,Path>> formatPathMap(Map<Path, SourceDestPair> potentialPathMap) {
-        Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
-        for(Path path : potentialPathMap.keySet()){
-            SourceDestPair pair = potentialPathMap.get(path);
-            Map<String, Path> mapForPair = pathMap.getOrDefault(pair, new HashMap<>());
-            String id = String.valueOf(mapForPair.size() + 1);
-            mapForPair.put(id, path);
-            pathMap.put(pair, mapForPair);
-        }
-        return pathMap;
-    }
 
 }
