@@ -38,9 +38,8 @@ public class ProcessingAndAnalysisTest {
                 9, Arrays.asList(0, 0), Arrays.asList(1,2), null, Arrays.asList(1, 2), "Solo",
                 false, false, 0.0, 0.0, 0.0);
         Request request = generationService.generateFromSimParams(params);
-        processingService.processRequestSet(request);
+        processingService.processRequest(request);
         Analysis analysis = analysisService.analyzeRequest(request);
-        assert(analysis.getRequestMetrics().values().stream().allMatch(RequestMetrics::getIsSurvivable));
         //System.out.println(analysis);
     }
 
@@ -55,27 +54,19 @@ public class ProcessingAndAnalysisTest {
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
-                .numRequests(numRequests)
                 .algorithm(alg)
                 .problemClass(problemClass)
                 .numSources(numSources)
                 .numDestinations(numDestinations)
                 .failureSetSize(fSetSize)
-                .minMaxFailures(minMaxFailures)
                 .failureClass(failureClass)
                 .failureProb(failureProb)
-                .minMaxFailureProb(minMaxFailureProb)
-                .numConnections(numConnections)
-                .minConnectionsRange(minConnectionsRange)
-                .maxConnectionsRange(maxConnectionsRange)
-                .numFailsAllowed(numFails)
-                .minMaxFailsAllowed(minMaxFails)
-                .processingType(processingType)
-                .sdn(sdn)
+                .minConnections(numConnections)
+                .numFailureEvents(numFails)
                 .useAws(useAws)
                 .percentSrcAlsoDest(percentSrcAlsoDest)
                 .percentSrcFail(percentSrcFail)
-                .percentDestFail(percentDstFail)
+                .percentDstFail(percentDstFail)
                 .build();
     }
 }

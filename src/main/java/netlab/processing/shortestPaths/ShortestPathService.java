@@ -8,6 +8,7 @@ import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
+import netlab.topology.services.TopologyAdjustmentService;
 import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,14 @@ import java.util.stream.Collectors;
 public class ShortestPathService {
 
     private BellmanFordService bellmanFordService;
-    private TopologyService topologyService;
+    private TopologyAdjustmentService topologyAdjustmentService;
     private PathMappingService pathMappingService;
 
     @Autowired
-    public ShortestPathService(BellmanFordService bellmanFordService, TopologyService topologyService, PathMappingService pathMappingService){
+    public ShortestPathService(BellmanFordService bellmanFordService, TopologyAdjustmentService topologyAdjustmentService,
+                               PathMappingService pathMappingService){
         this.bellmanFordService = bellmanFordService;
-        this.topologyService = topologyService;
+        this.topologyAdjustmentService = topologyAdjustmentService;
         this.pathMappingService = pathMappingService;
     }
 
@@ -38,7 +40,7 @@ public class ShortestPathService {
         Integer useMinS = connections.getUseMinS();
         Integer useMinD = connections.getUseMinD();
 
-        List<SourceDestPair> pairs = topologyService.sortPairsByPathCost(details.getPairs(), topo);
+        List<SourceDestPair> pairs = topologyAdjustmentService.sortPairsByPathCost(details.getPairs(), topo);
         long startTime = System.nanoTime();
         switch(request.getRoutingType()){
             case Unicast:
@@ -136,7 +138,7 @@ public class ShortestPathService {
         Node src = pair.getSrc();
         Node dst = pair.getDst();
 
-        Topology modifiedTopo = topologyService.adjustWeightsUsingTrafficCombination(topo, trafficType, src, dst,
+        Topology modifiedTopo = topologyAdjustmentService.adjustWeightsUsingTrafficCombination(topo, trafficType, src, dst,
                 srcPathsMap, dstPathsMap);
         List<Link> pathLinks = bellmanFordService.shortestPath(modifiedTopo, src, dst);
 

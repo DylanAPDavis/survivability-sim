@@ -10,7 +10,7 @@ import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
-import netlab.topology.services.TopologyService;
+import netlab.topology.services.TopologyAdjustmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,11 +22,11 @@ import java.util.stream.Collectors;
 public class BhandariService {
 
     private BellmanFordService bellmanFordService;
-    private TopologyService topologyService;
+    private TopologyAdjustmentService topologyService;
     private PathMappingService pathMappingService;
 
     @Autowired
-    public BhandariService(BellmanFordService bellmanFordService, TopologyService topologyService, PathMappingService pathMappingService){
+    public BhandariService(BellmanFordService bellmanFordService, TopologyAdjustmentService topologyService, PathMappingService pathMappingService){
         this.bellmanFordService = bellmanFordService;
         this.topologyService = topologyService;
         this.pathMappingService = pathMappingService;

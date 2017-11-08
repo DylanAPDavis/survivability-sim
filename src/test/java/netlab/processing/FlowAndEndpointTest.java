@@ -696,7 +696,7 @@ public class FlowAndEndpointTest {
                 .numConnections(numConnections)
                 .build();
         Request rs = generationService.generateFromRequestParams(params);
-        processingService.processRequestSet(rs);
+        processingService.processRequest(rs);
         return rs;
     }
 
@@ -718,7 +718,7 @@ public class FlowAndEndpointTest {
                 .numConnections(numConnections)
                 .build();
         Request rs = generationService.generateFromRequestParams(params);
-        processingService.processRequestSet(rs);
+        processingService.processRequest(rs);
         return rs;
     }
 
@@ -733,10 +733,10 @@ public class FlowAndEndpointTest {
 
     private void analyzeMultiSet(List<Request> requests) {
         Request rs1 = requests.get(0);
-        Map<SourceDestPair, Map<String, Path>> chosenPaths1 = rs1.getDetails().values().iterator().next().getChosenPaths();
+        Map<SourceDestPair, Map<String, Path>> chosenPaths1 = rs1.getDetails().getChosenPaths();
         Integer numLinkUsages1 = chosenPaths1.values().stream().map(Map::values).flatMap(Collection::stream).map(p -> p.getLinks().size()).reduce(0, (p1, p2) -> p1 + p2);
         for(Request rs : requests){
-            Map<SourceDestPair, Map<String, Path>> chosenPaths = rs.getDetails().values().iterator().next().getChosenPaths();
+            Map<SourceDestPair, Map<String, Path>> chosenPaths = rs.getDetails().getChosenPaths();
             Integer numLinkUsages = chosenPaths.values().stream().map(Map::values).flatMap(Collection::stream).map(p -> p.getLinks().size()).reduce(0, (p1, p2) -> p1 + p2);
             assert(Objects.equals(numLinkUsages, numLinkUsages1));
         }
@@ -744,15 +744,6 @@ public class FlowAndEndpointTest {
 
     private void analyze(Request request, int numExpectedPaths, boolean survivable){
         Analysis analysis = analysisService.analyzeRequest(request);
-        for(RequestMetrics rm : analysis.getRequestMetrics().values()){
-            assert(rm.getIsSurvivable() == survivable);
-            assert(rm.getNumPaths() == numExpectedPaths);
-        }
-        assert(request.getDetails().values().stream()
-                .allMatch(r ->
-                        r.getChosenPaths().keySet().stream()
-                                .filter(pair -> pair.getSrc().equals(pair.getDst()))
-                                .allMatch(p -> r.getChosenPaths().get(p).values().size() == 0)));
 
     }
 
@@ -770,7 +761,7 @@ public class FlowAndEndpointTest {
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
                 numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
         Request request = generationService.generateFromSimParams(params);
-        processingService.processRequestSet(request);
+        processingService.processRequest(request);
         return request;
     }
 
@@ -785,28 +776,20 @@ public class FlowAndEndpointTest {
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
-                .numRequests(numRequests)
                 .algorithm(alg)
                 .problemClass(problemClass)
                 .objective(objective)
                 .numSources(numSources)
                 .numDestinations(numDestinations)
                 .failureSetSize(fSetSize)
-                .minMaxFailures(minMaxFailures)
                 .failureClass(failureClass)
                 .failureProb(failureProb)
-                .minMaxFailureProb(minMaxFailureProb)
-                .numConnections(numConnections)
-                .minConnectionsRange(minConnectionsRange)
-                .maxConnectionsRange(maxConnectionsRange)
-                .numFailsAllowed(numFails)
-                .minMaxFailsAllowed(minMaxFails)
-                .processingType(processingType)
-                .sdn(sdn)
+                .minConnections(numConnections)
+                .numFailureEvents(numFails)
                 .useAws(useAws)
                 .percentSrcAlsoDest(percentSrcAlsoDest)
                 .percentSrcFail(percentSrcFail)
-                .percentDestFail(percentDstFail)
+                .percentDstFail(percentDstFail)
                 .build();
     }
 }

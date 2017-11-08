@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import netlab.processing.shortestPaths.BellmanFordService;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
-import netlab.topology.services.TopologyService;
+import netlab.topology.services.TopologyAdjustmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +19,10 @@ public class FlexBhandariService {
 
     private BellmanFordService bellmanFordService;
 
-    private TopologyService topologyService;
+    private TopologyAdjustmentService topologyService;
 
     @Autowired
-    public FlexBhandariService(BhandariService bhandariService, BellmanFordService bellmanFordService, TopologyService topologyService){
+    public FlexBhandariService(BhandariService bhandariService, BellmanFordService bellmanFordService, TopologyAdjustmentService topologyService){
         this.bhandariService = bhandariService;
         this.bellmanFordService = bellmanFordService;
         this.topologyService = topologyService;

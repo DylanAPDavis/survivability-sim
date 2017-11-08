@@ -9,7 +9,7 @@ import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
-import netlab.topology.services.TopologyService;
+import netlab.topology.services.TopologyAdjustmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +21,10 @@ public class OverlappingTreeService {
 
     private ShortestPathService shortestPathService;
     private PathMappingService pathMappingService;
-    private TopologyService topologyService;
+    private TopologyAdjustmentService topologyService;
 
     @Autowired
-    public OverlappingTreeService(ShortestPathService shortestPathService, PathMappingService pathMappingService, TopologyService topologyService) {
+    public OverlappingTreeService(ShortestPathService shortestPathService, PathMappingService pathMappingService, TopologyAdjustmentService topologyService) {
         this.shortestPathService = shortestPathService;
         this.pathMappingService = pathMappingService;
         this.topologyService = topologyService;

@@ -38,9 +38,9 @@ public class FlexBhandariServiceTest {
                 "TotalCost", 1, 1, 6, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
-        processingService.processRequestSet(request);
-        Map<SourceDestPair, Map<String, Path>> pathMap = request.getDetails().values().iterator().next().getChosenPaths();
-        log.info("Failure set: " + request.getDetails().values().iterator().next().getFailures().getFailureSet());
+        processingService.processRequest(request);
+        Map<SourceDestPair, Map<String, Path>> pathMap = request.getDetails().getChosenPaths();
+        log.info("Failure set: " + request.getDetails().getFailures().getFailureSet());
         printMap(pathMap);
     }
 
@@ -50,8 +50,8 @@ public class FlexBhandariServiceTest {
                 "TotalCost", 1, 1, 10, new ArrayList<>(), "Link", 1.0,
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
-        processingService.processRequestSet(request);
-        Details details = request.getDetails().values().iterator().next();
+        processingService.processRequest(request);
+        Details details = request.getDetails();
         Map<SourceDestPair, Map<String, Path>> pathMap = details.getChosenPaths();
         printFailureSet(details.getFailures().getFailureSet());
         printMap(pathMap);
@@ -107,28 +107,20 @@ public class FlexBhandariServiceTest {
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
-                .numRequests(numRequests)
                 .algorithm(alg)
                 .problemClass(problemClass)
                 .objective(objective)
                 .numSources(numSources)
                 .numDestinations(numDestinations)
                 .failureSetSize(fSetSize)
-                .minMaxFailures(minMaxFailures)
                 .failureClass(failureClass)
                 .failureProb(failureProb)
-                .minMaxFailureProb(minMaxFailureProb)
-                .numConnections(numConnections)
-                .minConnectionsRange(minConnectionsRange)
-                .maxConnectionsRange(maxConnectionsRange)
-                .numFailsAllowed(numFails)
-                .minMaxFailsAllowed(minMaxFailsAllowed)
-                .processingType(processingType)
-                .sdn(sdn)
+                .minConnections(numConnections)
+                .numFailureEvents(numFails)
                 .useAws(useAws)
                 .percentSrcAlsoDest(percentSrcAlsoDest)
                 .percentSrcFail(percentSrcFail)
-                .percentDestFail(percentDstFail)
+                .percentDstFail(percentDstFail)
                 .build();
     }
 }
