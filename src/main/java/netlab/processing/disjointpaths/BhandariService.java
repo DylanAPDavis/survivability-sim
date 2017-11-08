@@ -40,52 +40,57 @@ public class BhandariService {
         Integer useMinS = connections.getUseMinS();
         Integer useMinD = connections.getUseMinD();
 
-        Set<SourceDestPair> pairs = details.getPairs();
+        // Get sorted pairs
+        List<SourceDestPair> pairs = topologyService.sortPairsByPathCost(details.getPairs(), topo);
 
         Integer numFailEvents = details.getNumFailureEvents().getTotalNumFailureEvents();
         FailureClass failureClass = request.getFailureClass();
         Set<Failure> failures = details.getFailures().getFailureSet();
         long startTime = System.nanoTime();
-        switch(request.getRoutingType()){
-            case Unicast:
-                SourceDestPair pair = pairs.iterator().next();
-                List<Path> paths = findPathSet(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None,
-                        numFailEvents, failureClass, failures);
-                if(!paths.isEmpty()){
-                    Map<String, Path> idMap = new HashMap<>();
-                    int id = 1;
-                    for(Path path : paths) {
-                        idMap.put(String.valueOf(id), path);
-                        id++;
-                    }
-                    pathMap.put(pair, idMap);
+        if(request.getRoutingType().equals(RoutingType.Unicast)){
+            SourceDestPair pair = pairs.iterator().next();
+            List<Path> paths = findPathSet(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None,
+                    numFailEvents, failureClass, failures);
+            if(!paths.isEmpty()){
+                Map<String, Path> idMap = new HashMap<>();
+                int id = 1;
+                for(Path path : paths) {
+                    idMap.put(String.valueOf(id), path);
+                    id++;
                 }
-                break;
-            default:
-                pathMap = findPaths(request.getRoutingType(), pairs, topo, useMinS, useMinD, request.getTrafficCombinationType(),
-                        numFailEvents, failureClass, failures);
-                break;
+                pathMap.put(pair, idMap);
+                details.setIsFeasible(true);
+            }
+            else{
+                details.setIsFeasible(false);
+            }
+            details.setChosenPaths(pathMap);
+        }
+        else{
+            details = findPaths(details, request.getRoutingType(), pairs, topo, useMinS, useMinD, request.getTrafficCombinationType(),
+                    numFailEvents, failureClass, failures);
         }
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
-        details.setChosenPaths(pathMap);
         details.setRunningTimeSeconds(duration);
         return details;
     }
 
-    private Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Set<SourceDestPair> pairs,
-                                                           Topology topo, Integer useMinS, Integer useMinD,
-                                                           TrafficCombinationType trafficCombinationType,
-                                                           Integer numFailEvents, FailureClass failureClass,
-                                                           Set<Failure> failures) {
+    private Details findPaths(Details details, RoutingType routingType, Collection<SourceDestPair> pairs,
+                              Topology topo, Integer useMinS, Integer useMinD, TrafficCombinationType trafficCombinationType,
+                              Integer numFailEvents, FailureClass failureClass, Set<Failure> failures) {
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
         Map<Node, Set<Path>> usedSources = new HashMap<>();
         Map<Node, Set<Path>> usedDestinations = new HashMap<>();
 
+        boolean feasible = true;
         Map<Path, SourceDestPair> potentialPathMap = new HashMap<>();
         List<Path> potentialPaths = new ArrayList<>();
         for(SourceDestPair pair : pairs){
             List<Path> sps = findPathSet(pair, topo, usedSources, usedDestinations, trafficCombinationType, numFailEvents, failureClass, failures);
+            if(sps.size() != numFailEvents + 1){
+                feasible = false;
+            }
             potentialPaths.addAll(sps);
             for(Path sp : sps) {
                 potentialPathMap.put(sp, pair);
@@ -94,29 +99,32 @@ public class BhandariService {
 
         // If you're doing Broadcast or Multicast, you're done
         if(routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Multicast)){
-            return pathMappingService.formatPathMap(potentialPathMap);
+            pathMap = pathMappingService.formatPathMap(potentialPathMap);
+        }
+        else {
+            // Sort the paths by weight
+            potentialPaths = potentialPaths.stream().sorted(Comparator.comparingLong(Path::getTotalWeight)).collect(Collectors.toList());
+            // Pick a subset of the paths to satisfy the min constraints
+            feasible = false;
+            for (Path path : potentialPaths) {
+                SourceDestPair pair = potentialPathMap.get(path);
+                if (!usedSources.containsKey(pair.getSrc()) || !usedDestinations.containsKey(pair.getDst())) {
+                    usedSources.get(pair.getSrc()).add(path);
+                    usedDestinations.get(pair.getDst()).add(path);
+                    pathMap.get(pair).put(String.valueOf(pathMap.get(pair).size() + 1), path);
+                }
+                boolean sufficientS = usedSources.keySet().stream().map(usedSources::get).filter(paths -> paths.size() == numFailEvents + 1).count() >= useMinS;
+                boolean sufficientD = usedDestinations.keySet().stream().map(usedDestinations::get).filter(paths -> paths.size() == numFailEvents + 1).count() >= useMinD;
+                if (sufficientS && sufficientD) {
+                    feasible = true;
+                    break;
+                }
+            }
         }
 
-
-        // Sort the paths by weight
-        potentialPaths = potentialPaths.stream().sorted(Comparator.comparingLong(Path::getTotalWeight)).collect(Collectors.toList());
-        // Pick a subset of the paths to satisfy the min constraints
-        for(Path path : potentialPaths){
-            SourceDestPair pair = potentialPathMap.get(path);
-            if(!usedSources.containsKey(pair.getSrc()) || !usedDestinations.containsKey(pair.getDst())) {
-                usedSources.get(pair.getSrc()).add(path);
-                usedDestinations.get(pair.getDst()).add(path);
-                pathMap.get(pair).put(String.valueOf(pathMap.get(pair).size() + 1), path);
-            }
-            boolean sufficientS = usedSources.keySet().stream().map(usedSources::get).filter(paths -> paths.size() == numFailEvents+1).count() >= useMinS;
-            boolean sufficientD = usedDestinations.keySet().stream().map(usedDestinations::get).filter(paths -> paths.size() == numFailEvents+1).count() >= useMinD;
-            if(sufficientS && sufficientD){
-                break;
-            }
-        }
-
-
-        return pathMap;
+        details.setIsFeasible(feasible);
+        details.setChosenPaths(pathMap);
+        return details;
     }
 
     private List<Path> findPathSet(SourceDestPair pair, Topology topo, Map<Node, Set<Path>> srcPathsMap,

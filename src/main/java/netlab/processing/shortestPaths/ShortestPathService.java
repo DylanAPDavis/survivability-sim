@@ -38,7 +38,7 @@ public class ShortestPathService {
         Integer useMinS = connections.getUseMinS();
         Integer useMinD = connections.getUseMinD();
 
-        Set<SourceDestPair> pairs = details.getPairs();
+        List<SourceDestPair> pairs = topologyService.sortPairsByPathCost(details.getPairs(), topo);
         long startTime = System.nanoTime();
         switch(request.getRoutingType()){
             case Unicast:
@@ -58,10 +58,11 @@ public class ShortestPathService {
         double duration = (endTime - startTime)/1e9;
         details.setChosenPaths(pathMap);
         details.setRunningTimeSeconds(duration);
+        details.setIsFeasible(true);
         return details;
     }
 
-    public Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Set<SourceDestPair> pairs, Topology topo,
+    public Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Collection<SourceDestPair> pairs, Topology topo,
                                                            Integer useMinS, Integer useMinD, TrafficCombinationType trafficCombinationType) {
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
         Map<Node, Set<Path>> usedSources = new HashMap<>();

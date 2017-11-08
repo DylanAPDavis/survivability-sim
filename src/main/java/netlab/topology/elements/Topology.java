@@ -28,6 +28,8 @@ public class Topology {
 
     Map<Node, List<Link>> nodeOrderedLinkMap;
 
+    Map<SourceDestPair, Long> minimumPathCostMap;
+
     public Topology(String id, Set<Node> nodes, Set<Link> links){
         this.id = id;
         this.nodes = nodes;
@@ -37,6 +39,8 @@ public class Topology {
         nodeLinkMap = makeNodeLinkMap(nodes, links);
         nodeOrderedLinkMap = makeNodeOrderedLinkMap(nodes, links);
     }
+
+
 
     public void setLinks(Set<Link> links){
         this.links = links;
@@ -48,6 +52,10 @@ public class Topology {
         this.nodes = nodes;
         this.nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
         this.nodeOrderedLinkMap = makeNodeOrderedLinkMap(this.nodes, this.links);
+    }
+
+    public void copyPathCosts(Topology otherTopo){
+        this.minimumPathCostMap = otherTopo.getMinimumPathCostMap();
     }
 
     private Map<Node, Set<Link>> makeNodeLinkMap(Set<Node> nodes, Set<Link> links){

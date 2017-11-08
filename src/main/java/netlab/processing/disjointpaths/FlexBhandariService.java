@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import netlab.processing.shortestPaths.BellmanFordService;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
+import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,17 +19,23 @@ public class FlexBhandariService {
 
     private BellmanFordService bellmanFordService;
 
+    private TopologyService topologyService;
+
     @Autowired
-    public FlexBhandariService(BhandariService bhandariService, BellmanFordService bellmanFordService){
+    public FlexBhandariService(BhandariService bhandariService, BellmanFordService bellmanFordService, TopologyService topologyService){
         this.bhandariService = bhandariService;
         this.bellmanFordService = bellmanFordService;
+        this.topologyService = topologyService;
     }
 
 
     public Details solve(Request request, Topology topology) {
         Details details = request.getDetails();
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
-        Set<SourceDestPair> pairs = details.getPairs();
+
+        // Get sorted pairs
+        List<SourceDestPair> pairs = topologyService.sortPairsByPathCost(details.getPairs(), topology);
+
         Failures failCollection = details.getFailures();
         NumFailureEvents nfaCollection = details.getNumFailureEvents();
         Connections connCollection = details.getConnections();
@@ -68,7 +75,7 @@ public class FlexBhandariService {
      * @param topo
      * @return
      */
-    private Map<SourceDestPair,Map<String,Path>> pathsForCombined(Set<SourceDestPair> pairs, Failures failCollection,
+    private Map<SourceDestPair,Map<String,Path>> pathsForCombined(Collection<SourceDestPair> pairs, Failures failCollection,
                                                                   NumFailureEvents nfaCollection,
                                                                   Connections connCollection, Topology topo) {
 
@@ -99,8 +106,6 @@ public class FlexBhandariService {
         Map<List<Failure>, List<Path>> failureToPathMap = failureGroups.stream().collect(Collectors.toMap(f -> f, f -> new ArrayList<>()));
         Map<Path, List<List<Failure>>> pathToFailureGroupMap = new HashMap<>();
 
-        List<SourceDestPair> sortedPairs = sortPairsByPathCost(pairs, topo);
-
 
         //Modify the topology (if necessary) by removing nodes and replacing with incoming/outgoing nodes
         boolean nodesCanFail = failureSet.stream().anyMatch(f -> f.getNode() != null);
@@ -108,14 +113,14 @@ public class FlexBhandariService {
         int totalChosenPaths = 0;
         boolean sufficientPathsEstablished = false;
 
-        Map<SourceDestPair, Integer> pairNumEstablished = sortedPairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
+        Map<SourceDestPair, Integer> pairNumEstablished = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
         Map<Node, Integer> srcNumEstablished = srcMinConnMap.keySet().stream().collect(Collectors.toMap(s -> s, s -> 0));
         Map<Node, Integer> dstNumEstablished = dstMinConnMap.keySet().stream().collect(Collectors.toMap(d -> d, d -> 0));
 
         //TODO: Update number of paths established per pair, src, and dest.
         //TODO: Evaluate if you have enough total, src, dst, pair paths. (Include min/max reachability for src/dst).
 
-        for(SourceDestPair pair : sortedPairs){
+        for(SourceDestPair pair : pairs){
             List<Path> paths = findPaths(topo, pair, numConnections, totalChosenPaths, pairMinConnMap, pairMaxConnMap, srcMinConnMap,
                     srcMaxConnMap, dstMinConnMap, srcNumEstablished, dstNumEstablished, dstMaxConnMap,
                     totalNumFailsAllowed, nodesCanFail, failureSet);

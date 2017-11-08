@@ -2,6 +2,7 @@ package netlab.processing;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ampl.AmplService;
+import netlab.processing.cycles.PCycleService;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.disjointpaths.FlexBhandariService;
 import netlab.processing.overlappingtrees.OverlappingTreeService;

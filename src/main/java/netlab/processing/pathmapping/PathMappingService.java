@@ -63,4 +63,12 @@ public class PathMappingService {
         }
         return allPathsMap;
     }
+
+    public Integer countPaths(Map<SourceDestPair,Map<String,Path>> pathMap){
+        int count = 0;
+        for(Map<String, Path> idMap : pathMap.values()){
+            count += idMap.size();
+        }
+        return count;
+    }
 }

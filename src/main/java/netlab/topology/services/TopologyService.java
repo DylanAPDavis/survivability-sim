@@ -1,12 +1,10 @@
 package netlab.topology.services;
 
 
+import netlab.processing.shortestPaths.ShortestPathService;
 import netlab.submission.enums.TrafficCombinationType;
-import netlab.topology.elements.Link;
-import netlab.topology.elements.Node;
-import netlab.topology.elements.Path;
-import netlab.topology.elements.Topology;
-import org.joda.time.Hours;
+import netlab.topology.elements.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,13 +15,17 @@ public class TopologyService {
 
     Map<String, Topology> topologyIdMap;
 
-    public Topology getTopologyById(String id){
-        return topologyIdMap.getOrDefault(id, topologyIdMap.get("NSFnet"));
-    }
+    ShortestPathService shortestPathService;
 
-    public TopologyService(){
+    @Autowired
+    public TopologyService(ShortestPathService shortestPathService){
         topologyIdMap = new HashMap<>();
         topologyIdMap.put("NSFnet", makeNsfNet());
+        this.shortestPathService = shortestPathService;
+    }
+
+    public Topology getTopologyById(String id){
+        return topologyIdMap.getOrDefault(id, topologyIdMap.get("NSFnet"));
     }
 
     private Topology makeNsfNet() {
@@ -99,7 +101,27 @@ public class TopologyService {
         links.add(new Link(ithaca, annArbor, 800L));
         links.add(new Link(ithaca, pittsburgh, 500L));
         links.add(new Link(ithaca, collegePark, 300L));
-        return new Topology("NSFnet", nodes, links);
+        Topology topo = new Topology("NSFnet", nodes, links);
+        return populatePathCosts(topo);
+    }
+
+    public Topology populatePathCosts(Topology topo) {
+        List<SourceDestPair> pairs = new ArrayList<>();
+        Map<SourceDestPair, Long> pairCostMap = new HashMap<>();
+        Set<Node> nodes = topo.getNodes();
+        for(Node node : nodes){
+            for(Node otherNode : nodes){
+                if(!otherNode.getId().equals(node.getId())){
+                    SourceDestPair pair = new SourceDestPair(node, otherNode);
+                    Path shortestPath = shortestPathService.findShortestPath(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None);
+                    pairs.add(pair);
+                    pairCostMap.put(pair, shortestPath.getTotalWeight());
+                }
+            }
+        }
+        pairs.sort(Comparator.comparing(pairCostMap::get));
+        topo.setMinimumPathCostMap(pairCostMap);
+        return topo;
     }
 
 
@@ -126,7 +148,19 @@ public class TopologyService {
             modifiedLinks.add(modifiedLink);
         }
 
-        return new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
+        Topology newTopo = new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
+        newTopo.copyPathCosts(topo);
+        return newTopo;
+    }
+
+    public List<SourceDestPair> sortPairsByPathCost(Collection<SourceDestPair> pairs, Topology topo){
+        Map<SourceDestPair, Long> minimumPathCostMap = topo.getMinimumPathCostMap();
+        return pairs
+                .stream()
+                .sorted(Comparator.comparing(minimumPathCostMap::get))
+                .sorted(Comparator.comparing(p -> p.getSrc().getId()))
+                .sorted(Comparator.comparing(p -> p.getDst().getId()))
+                .collect(Collectors.toList());
     }
 
 }
