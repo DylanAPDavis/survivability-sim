@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.xml.transform.Source;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,8 @@ public class Topology {
 
     Map<Node, Set<Node>> neighborMap;
 
+    Map<SourceDestPair, List<Link>> neighborLinkMap;
+
     Map<SourceDestPair, Long> minimumPathCostMap;
 
     public Topology(String id, Set<Node> nodes, Set<Link> links){
@@ -41,20 +44,24 @@ public class Topology {
         nodeLinkMap = makeNodeLinkMap(nodes, links);
         nodeOrderedLinkMap = makeNodeOrderedLinkMap(nodes, links);
         neighborMap = makeNeighborMap(links);
+        neighborLinkMap = makeNeighborLinkMap(links);
     }
+
 
     public void setLinks(Set<Link> links){
         this.links = links;
-        this.nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
-        this.nodeOrderedLinkMap = makeNodeOrderedLinkMap(this.nodes, this.links);
+        nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
+        nodeOrderedLinkMap = makeNodeOrderedLinkMap(this.nodes, this.links);
         neighborMap = makeNeighborMap(this.links);
+        neighborLinkMap = makeNeighborLinkMap(this.links);
     }
 
     public void setNodes(Set<Node> nodes){
         this.nodes = nodes;
-        this.nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
-        this.nodeOrderedLinkMap = makeNodeOrderedLinkMap(this.nodes, this.links);
+        nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
+        nodeOrderedLinkMap = makeNodeOrderedLinkMap(this.nodes, this.links);
         neighborMap = makeNeighborMap(this.links);
+        neighborLinkMap = makeNeighborLinkMap(this.links);
     }
 
     public void copyPathCosts(Topology otherTopo){
@@ -89,6 +96,22 @@ public class Topology {
             Node target = link.getTarget();
             neighborMap.putIfAbsent(origin, new HashSet<>());
             neighborMap.get(origin).add(target);
+        }
+        return neighborMap;
+    }
+
+    private Map<SourceDestPair, List<Link>> makeNeighborLinkMap(Set<Link> links) {
+        Map<SourceDestPair, List<Link>> neighborMap = new HashMap<>();
+        for(Link link : links){
+            Node origin = link.getOrigin();
+            Node target = link.getTarget();
+            SourceDestPair pair = new SourceDestPair(origin, target);
+            neighborMap.putIfAbsent(pair, new ArrayList<>());
+            neighborMap.get(pair).add(link);
+        }
+        for(SourceDestPair pair : neighborMap.keySet()){
+            List<Link> sortedLinks = neighborMap.get(pair).stream().sorted(Comparator.comparing(Link::getWeight)).collect(Collectors.toList());
+            neighborMap.put(pair, sortedLinks);
         }
         return neighborMap;
     }
