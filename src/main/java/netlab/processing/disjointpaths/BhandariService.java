@@ -162,7 +162,7 @@ public class BhandariService {
         if(minimumCap < minPairC){
             minimumCap = minPairC;
         }
-        return computePaths(topo, src, dst, minimumCap, nfa, nodesCanFail, failureSet, defaultBehavior);
+        return computePaths(topo, src, dst, minimumCap + nfa, nodesCanFail, failureSet, defaultBehavior);
     }
 
     public List<List<Link>> computeDisjointPaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA,
@@ -172,10 +172,10 @@ public class BhandariService {
             return new ArrayList<>();
 
         // Bhandari's algorithm
-        return computePaths(topo, source, dest, numC, numFA, nodesCanFail, failures, defaultBehavior);
+        return computePaths(topo, source, dest, numC + numFA, nodesCanFail, failures, defaultBehavior);
     }
 
-    private List<List<Link>> computePaths(Topology topo, Node source, Node dest, Integer numC, Integer numFA,
+    private List<List<Link>> computePaths(Topology topo, Node source, Node dest, Integer numPaths,
                                           Boolean nodesCanFail, Set<Failure> failures, Boolean defaultBehavior){
 
         // Modify topology, source and dest if necessary to find node-disjoint paths
@@ -195,7 +195,7 @@ public class BhandariService {
         List<List<Link>> paths = new ArrayList<>();
         paths.add(shortestPath);
 
-        int k = numC;
+        int k = numPaths;
 
         if(k == 1){
             return paths;
@@ -228,15 +228,20 @@ public class BhandariService {
                     modifiedTopo.getLinks().add(reversedEdge);
                     // If this is a new failure link, increase the number of paths that you will have to get
                     // (Up until numC + numFA)
+                    /*
                     if(!alreadyConsideredFailureLinks.contains(pathEdge)){
                         pathCanFail = true;
                         alreadyConsideredFailureLinks.add(pathEdge);
                     }
+                    */
                 }
             }
+
+            /*
             if(pathCanFail && k < numC + numFA){
                 k++;
             }
+            */
 
             // Find the new shortest path
             List<Link> modShortestPath = bellmanFordService.shortestPath(modifiedTopo, src, dst);

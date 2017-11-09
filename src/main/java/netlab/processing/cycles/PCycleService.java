@@ -2,9 +2,15 @@ package netlab.processing.cycles;
 
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
+import netlab.processing.disjointpaths.BhandariService;
+import netlab.processing.pathmapping.PathMappingService;
+import netlab.submission.enums.FailureClass;
 import netlab.submission.request.Details;
+import netlab.submission.request.NumFailureEvents;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
+import netlab.topology.services.TopologyAdjustmentService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -13,6 +19,20 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class PCycleService {
+
+    TopologyAdjustmentService topologyAdjustmentService;
+
+    BhandariService bhandariService;
+
+    PathMappingService pathMappingService;
+
+    @Autowired
+    public PCycleService(TopologyAdjustmentService topologyAdjustmentService, BhandariService bhandariService,
+                         PathMappingService pathMappingService){
+        this.topologyAdjustmentService = topologyAdjustmentService;
+        this.bhandariService = bhandariService;
+        this.pathMappingService = pathMappingService;
+    }
 
 
     public Details solve(Request request, Topology topo) {
@@ -27,6 +47,7 @@ public class PCycleService {
         }
         else {
            pathMap = createPathsFromCycle(request, topo, hamiltonianCycle);
+           pathMap = addPathsForSurvivability(request, topo, pathMap);
         }
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
@@ -37,6 +58,7 @@ public class PCycleService {
         details.setRunningTimeSeconds(duration);
         return details;
     }
+
 
     public Map<SourceDestPair,Map<String,Path>> createPathsFromCycle(Request request, Topology topo,
                                                                       List<Node> hamiltonianCycle) {
@@ -68,7 +90,6 @@ public class PCycleService {
 
         return pathMap;
     }
-
     private List<Link> findPathFromNodes(SourceDestPair pair, List<Node> cycle, Map<SourceDestPair, List<Link>> neighborLinkMap) {
         List<Link> pathLinks = new ArrayList<>();
         Node src = pair.getSrc();
@@ -118,7 +139,6 @@ public class PCycleService {
         return links.get(0);
     }
 
-
     public List<Node> findHamiltonianCycle(Topology topo){
         Set<Node> nodes = topo.getNodes();
         Map<Node, Set<Node>> neighborMap = topo.getNeighborMap();
@@ -165,5 +185,36 @@ public class PCycleService {
 
         // If you reach this point, there's no way to build the cycle from the final node in the path
         return false;
+    }
+
+    private Map<SourceDestPair, Map<String,Path>> addPathsForSurvivability(Request request, Topology topo,
+                                                                          Map<SourceDestPair, Map<String, Path>> pathMap) {
+        NumFailureEvents nfe = request.getDetails().getNumFailureEvents();
+        boolean nodesCanFail = !request.getFailureClass().equals(FailureClass.Link);
+        Set<Failure> failureSet = request.getDetails().getFailures().getFailureSet();
+        // If you only need to survive one failure, the hamiltonian cycle accomplishes that goal
+        if(nfe.getTotalNumFailureEvents() <= 1){
+            return pathMap;
+        }
+
+        // Otherwise, increase cost of all links that are already used, then get a bhandari's solution that will try
+        // to avoid those links
+        Set<Path> originalPaths = pathMap.values().stream().map(Map::values).flatMap(Collection::stream).collect(Collectors.toSet());
+        Topology modifiedTopo = topologyAdjustmentService.adjustWeightsToMax(topo, originalPaths);
+        Set<SourceDestPair> pairs = request.getDetails().getPairs();
+        for(SourceDestPair pair : pairs){
+            // Add NFE - 1 disjoint paths
+            List<List<Link>> pathLinks = bhandariService.computeDisjointPaths(modifiedTopo, pair.getSrc(), pair.getDst(), 1,
+                    nfe.getTotalNumFailureEvents()-1, nodesCanFail, failureSet, false);
+            List<Path> paths = pathMappingService.convertToPaths(pathLinks, topo.getLinkIdMap());
+            // Add these new paths
+            Map<String, Path> pathIdMap = pathMap.get(pair);
+            for(Path path : paths){
+                pathIdMap.put(String.valueOf(pathIdMap.size() + 1), path);
+            }
+            pathMap.put(pair, pathIdMap);
+        }
+
+        return pathMap;
     }
 }

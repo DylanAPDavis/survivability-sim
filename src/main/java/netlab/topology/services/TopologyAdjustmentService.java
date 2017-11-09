@@ -26,18 +26,37 @@ public class TopologyAdjustmentService {
                 dstPathsMap.getOrDefault(dst, new HashSet<>()) : new HashSet<>());
         Set<Link> zeroCostLinks = zeroCostPaths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
 
-        // Modify weights if you're combining traffic
-        Set<Link> modifiedLinks = new HashSet<>();
-        for(Link link : topo.getLinks()){
-            Long weight = !trafficType.equals(TrafficCombinationType.None) && zeroCostLinks.contains(link) ?
-                    0 : link.getWeight();
-            Link modifiedLink = Link.builder().id(link.getId()).origin(link.getOrigin()).target(link.getTarget()).weight(weight).build();
-            modifiedLinks.add(modifiedLink);
-        }
+
+        Set<Link> modifiedLinks = modifyLinks(topo.getLinks(), !trafficType.equals(TrafficCombinationType.None), zeroCostLinks, 0L);
 
         Topology newTopo = new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
         newTopo.copyPathCosts(topo);
         return newTopo;
+    }
+
+    public Topology adjustWeightsToMax(Topology topo, Set<Path> paths){
+        Set<Link> pathLinks = paths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Set<Link> inverseLinks = pathLinks.stream()
+                .filter(l -> linkIdMap.containsKey(l.getTarget().getId() + "-" + l.getOrigin().getId()))
+                .map(l -> linkIdMap.get(l.getTarget().getId() + "-" + l.getOrigin().getId()))
+                .collect(Collectors.toSet());
+        pathLinks.addAll(inverseLinks);
+        Set<Link> modifiedLinks = modifyLinks(topo.getLinks(), true, pathLinks, Long.MAX_VALUE);
+        Topology newTopo = new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
+        newTopo.copyPathCosts(topo);
+        return newTopo;
+    }
+
+    public Set<Link> modifyLinks(Set<Link> links, boolean shouldModify, Set<Link> setToBeModified, Long newWeight){
+        Set<Link> modifiedLinks = new HashSet<>();
+        for(Link link : links){
+            Long weight = shouldModify && setToBeModified.contains(link) ?
+                    newWeight : link.getWeight();
+            Link modifiedLink = Link.builder().id(link.getId()).origin(link.getOrigin()).target(link.getTarget()).weight(weight).build();
+            modifiedLinks.add(modifiedLink);
+        }
+        return modifiedLinks;
     }
 
     public List<SourceDestPair> sortPairsByPathCost(Collection<SourceDestPair> pairs, Topology topo){
