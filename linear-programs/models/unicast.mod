@@ -95,10 +95,10 @@ subject to linksUsed_combineBothTraffic:
 
 # TOTAL WEIGHT
 subject to totalWeight_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{i in I, u in V, v in V} L[i,u,v] * Weight[u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{i in I, u in V, v in V} L[i,u,v] * Weight[u,v];
 
 subject to totalWeight_combineBothTraffic:
-    combineSourceTraffic == 1 or combineDestTraffic == 1 ==> Num_Links_Used >= sum{u in V, v in V} L_sd[u,v] * Weight[u,v];
+    combineSourceTraffic == 1 or combineDestTraffic == 1 ==> Total_Weight >= sum{u in V, v in V} L_sd[u,v] * Weight[u,v];
 
 ## Connection Constraints
 

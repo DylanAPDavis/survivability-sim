@@ -48,6 +48,8 @@ var C{d in D, i in I} binary;
 # L - Link flow on (u, v) used by Connection (s, d, i)
 var L{d in D, i in I, u in V, v in V} binary;
 
+# There is at least one link flow going from source s
+var L_s{u in V, v in V} binary;
 
 # There is at least one link flow going to destination d
 var L_d{d in D, u in V, v in V} binary;
@@ -62,24 +64,6 @@ var FG_Conn {d in D, i in I, g in GroupIndices} binary;
 var FG_Conn_include_endpoints {d in D, i in I, g in GroupIndices} binary;
 
 
-# INDICATOR VARIABLES -> Indicate if at least one connection is destroyed by removal of FG g
-
-# FLOW
-# At least one connection from (s,d) is disconnected by removal of FG[g]
-var FG_Conn_sd{(s,d) in SD, g in GroupIndices} binary;
-
-# At least one connection from (s,d) is disconnected by removal of any FG
-var FG_Conn_sd_any{(s,d) in SD} binary;
-
-# ENDPOINT
-
-# Sources
-# At least one connection from s is disconnected by removal of FG[g]
-var FG_Conn_s{s in S, g in GroupIndices} binary;
-
-# At least one connection from s is disconnected by removal of any FG
-var FG_Conn_s_any{s in S} binary;
-
 #Destinations
 # At least one connection to d is disconnected by removal of FG[g]
 var FG_Conn_d{d in D, g in GroupIndices} binary;
@@ -87,7 +71,6 @@ var FG_Conn_d{d in D, g in GroupIndices} binary;
 # At least one connection to d is disconnected by removal of any FG
 var FG_Conn_d_any{d in D} binary;
 
-var connSurvivesFromS{s in S, g in GroupIndices} binary;
 var connSurvivesToD{d in D, g in GroupIndices} binary;
 
 # END INDICATOR VARIABLES
@@ -95,22 +78,15 @@ var connSurvivesToD{d in D, g in GroupIndices} binary;
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {g in GroupIndices} >= 0 integer;
 
-# Number of connections
-var Num_Conn{(s,d) in SD} = sum{i in I} C[s,d,i];
-
-# ENDPOINT VARIABLES
-# Number of connections from a source s
-var Num_Conn_src{s in S} = sum{d in D, i in I: s != d} C[s,d,i];
-
 # Number of connections to a destination d
-var Num_Conn_dst{d in D} = sum{s in S, i in I: s != d} C[s,d,i];
+var Num_Conn_dst{d in D} = sum{i in I} C[d,i];
 # END ENDPOINT VARIABLES
 
 
 # OBJECTIVE VARIABLES
 
 # Number of connections total
-var Num_Conns_Total = sum{(s,d) in SD} Num_Conn[s,d];
+var Num_Conns_Total = sum{d in D} Num_Conn_dst[d];
 
 # Number of link usages
 var Num_Links_Used >= 0 integer;
@@ -134,158 +110,111 @@ minimize TotalCost:
 # Objective definition constraints
 # LINKS USED
 subject to linksUsed_combineTraffic_SourceOnly:
-    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v];
+    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{u in V, v in V} L_s[u,v];
 
 subject to linksUsed_combineTraffic_DestOnly:
     combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{d in D, u in V, v in V} L_d[d,u,v];
 
 subject to linksUsed_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{d in D, i in I, u in V, v in V} L[d,i,u,v];
 
 subject to linksUsed_combineBothTraffic:
-    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v];
+    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{u in V, v in V} L_s[u,v];
 
 # TOTAL WEIGHT
 subject to totalWeight_combineTraffic_SourceOnly:
-    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v] * Weight[u,v];
+    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Total_Weight >= sum{u in V, v in V} L_s[u,v] * Weight[u,v];
 
 subject to totalWeight_combineTraffic_DestOnly:
-    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{d in D, u in V, v in V} L_d[d,u,v] * Weight[u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Total_Weight >= sum{d in D, u in V, v in V} L_d[d,u,v] * Weight[u,v];
 
 subject to totalWeight_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{d in D, i in I, u in V, v in V} L[d,i,u,v] * Weight[u,v];
 
 subject to totalWeight_combineBothTraffic:
-    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v] * Weight[u,v];
+    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Total_Weight >= sum{u in V, v in V} L_s[u,v] * Weight[u,v];
 
 ## Connection Constraints
 
 subject to totalConnectionsNeeded{g in GroupIndices}:
 	Num_Conns_Total >= c_total + FG_Sum[g];
 
-# Flow Constraints
-subject to minNumConnectionsNeeded{(s,d) in SD, g in GroupIndices}:
-	Num_Conn[s,d] >= c_min_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
-
-subject to maxNumConnectionsNeededFails{(s,d) in SD, g in GroupIndices}:
-	FG_Conn_sd[s,d,g] == 1 ==> Num_Conn[s,d] <= c_max_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
-
-subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
-	FG_Conn_sd_any[s,d] == 0 ==> Num_Conn[s,d] <= c_max_sd[s,d];
-
-# ENDPOINT CONSTRAINTS
-
-# Source constraints
-subject to minNumConnectionsNeededSource{s in S, g in GroupIndices}:
-	Num_Conn_src[s] >= c_min_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
-
-subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices}:
-	FG_Conn_s[s,g] == 1 ==> Num_Conn_src[s] <= c_max_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
-
-subject to maxNumConnectionsNeededSourceNoFails{s in S}:
-	FG_Conn_s_any[s] == 0 ==> Num_Conn_src[s] <= c_max_s[s];
-
-# Destination Constraints
+subject to noSelfConnections{d in D}:
+	s == d ==> Num_Conn_dst[d] = 0;
 
 subject to minNumConnectionsNeededDest{d in D, g in GroupIndices}:
-	Num_Conn_dst[d] >= c_min_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+	Num_Conn_dst[d] >= 0 + sum{i in I: s != d} FG_Conn[d,i,g];
 
 subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices}:
-	FG_Conn_d[d,g] == 1 ==> Num_Conn_dst[d] <= c_max_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+	FG_Conn_d[d,g] == 1 ==> Num_Conn_dst[d] <= 1 + sum{i in I: s != d} FG_Conn[d,i,g];
 
 subject to maxNumConnectionsNeededDestNoFails{d in D}:
-	FG_Conn_d_any[d] == 0 ==> Num_Conn_dst[d] <= c_max_d[d];
+	FG_Conn_d_any[d] == 0 ==> Num_Conn_dst[d] <= 1;
 
-#END ENDPOINT CONSTRAINTS
-
-# SRC/DEST REACHABILITY CONSTRAINTS
-
-subject to connSurvivesFromS_1{s in S, g in GroupIndices}:
-   connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
-
-subject to connSurvivesFromS_2{s in S, g in GroupIndices}:
-   connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
 subject to connSurvivesToD_1{d in D, g in GroupIndices}:
-   connSurvivesToD[d,g] <= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+   connSurvivesToD[d,g] <= Num_Conn_dst[d] - sum{i in I: s != d} FG_Conn[d,i,g];
 
 subject to connSurvivesToD_2{d in D, g in GroupIndices}:
-   connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
-
-subject to minSrcsReached{g in GroupIndices}:
-    sum{s in S} connSurvivesFromS[s,g] >= useMinS;
+   connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{i in I: s != d} FG_Conn[d,i,g];
 
 subject to minDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] >= useMinD;
-
-subject to maxSrcsReached{g in GroupIndices}:
-    sum{s in S} connSurvivesFromS[s,g] <= useMaxS;
+    sum{d in D} connSurvivesToD[d,g] >= 1;
 
 subject to maxDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] <= useMaxD;
-
-# END SRC/DEST REACHABILITY CONSTRAINTS
+    sum{d in D} connSurvivesToD[d,g] <= 1;
 
 
 
-subject to noSelfConnections{(s,d) in SD: s == d}:
-	Num_Conn[s,d] = 0;
 
-subject to flowOnlyIfConnectionAndLinkExists{(s,d) in SD, i in I, u in V, v in V}:
-	L[s,d,i,u,v] <= A[u,v] * C[s,d,i];
+subject to flowOnlyIfConnectionAndLinkExists{d in D, i in I, u in V, v in V}:
+	L[d,i,u,v] <= A[u,v] * C[d,i];
 
-subject to intermediateFlow{(s,d) in SD, i in I, v in V: v != s and v != d}:
-	sum{u in V} L[s,d,i,u,v] - sum{w in V} L[s,d,i,v,w] = 0;
+subject to intermediateFlow{d in D, i in I, v in V: v != s and v != d}:
+	sum{u in V} L[d,i,u,v] - sum{w in V} L[d,i,v,w] = 0;
 
-subject to sourceFlow{(s,d) in SD, i in I}:
-	sum{u in V} L[s,d,i,u,s] - sum{w in V} L[s,d,i,s,w] = -1 * C[s,d,i];
+subject to sourceFlow{d in D, i in I}:
+	sum{u in V} L[d,i,u,s] - sum{w in V} L[d,i,s,w] = -1 * C[d,i];
 
-subject to destinationFlow{(s,d) in SD, i in I}:
-	sum{u in V} L[s,d,i,u,d] - sum{w in V} L[s,d,i,d,w] = C[s,d,i];
+subject to destinationFlow{d in D, i in I}:
+	sum{u in V} L[d,i,u,d] - sum{w in V} L[d,i,d,w] = C[d,i];
 
-subject to flowOnlyInConnection{(s,d) in SD, i in I, u in V, v in V}:
-	L[s,d,i,u,v] <= C[s,d,i];
+subject to flowOnlyInConnection{d in D, i in I, u in V, v in V}:
+	L[d,i,u,v] <= C[d,i];
 
-subject to noFlowIntoSource{(s,d) in SD, i in I, u in V}:
-	L[s,d,i,u,s] = 0;
+subject to noFlowIntoSource{d in D, i in I, u in V}:
+	L[d,i,u,s] = 0;
 
-subject to oneFlowFromNodeInConn{(s,d) in SD, i in I, u in V}:
-	sum{v in V} L[s,d,i,u,v] <= 1;
+subject to oneFlowFromNodeInConn{d in D, i in I, u in V}:
+	sum{v in V} L[d,i,u,v] <= 1;
 
-subject to oneFlowIntoNodeInConn{(s,d) in SD, i in I, v in V}:
-	sum{u in V} L[s,d,i,u,v] <= 1;
+subject to oneFlowIntoNodeInConn{d in D, i in I, v in V}:
+	sum{u in V} L[d,i,u,v] <= 1;
 
-subject to noReverseFlowIfForward{(s,d) in SD, i in I, u in V, v in V}:
-	L[s,d,i,u,v] + L[s,d,i,v,u] <= 1;
+subject to noReverseFlowIfForward{d in D, i in I, u in V, v in V}:
+	L[d,i,u,v] + L[d,i,v,u] <= 1;
 
 # Node is in a connection
-subject to nodeInConnection_A{(s,d) in SD, i in I, v in V}:
-	NC[s,d,i,v] <= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
+subject to nodeInConnection_A{d in D, i in I, v in V}:
+	NC[d,i,v] <= sum{u in V} L[d,i,u,v] + sum{w in V} L[d,i,v,w];
 
-subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
-	NC[s,d,i,v] * card(V)^4 >= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
+subject to nodeInConnection_B{d in D, i in I, v in V}:
+	NC[d,i,v] * card(V)^4 >= sum{u in V} L[d,i,u,v] + sum{w in V} L[d,i,v,w];
 
 
+### L_sd definition constraints
 
-### L_s, L_d, L_sd definition constraints
-subject to flowOnLinkFromSource_A{s in S, u in V, v in V}:
-	L_s[s,u,v] <= sum{d in D, i in I} L[s,d,i,u,v];
+subject to flowOnLinkToDest_A{d in D, u in V, v in V}:
+	L_d[d,u,v] <= sum{i in I} L[d,i,u,v];
 
-subject to flowOnLinkFromSource_B{s in S, u in V, v in V}:
-	L_s[s,u,v] * card(V)^4 >= sum{d in D, i in I} L[s,d,i,u,v];
+subject to flowOnLinkToDest_B{d in D, u in V, v in V}:
+	L_d[d,u,v] * card(V)^4 >= sum{i in I} L[d,i,u,v];
 
-subject to flowOnLinkToDestination_A{d in D, u in V, v in V}:
-	L_d[d,u,v] <= sum{s in S, i in I} L[s,d,i,u,v];
+subject to flowOnLinkFromSrc_A{u in V, v in V}:
+	L_s[u,v] <= sum{d in D, i in I} L[d,i,u,v];
 
-subject to flowOnLinkToDestination_B{d in D, u in V, v in V}:
-	L_d[d,u,v] * card(V)^4 >= sum{s in S, i in I} L[s,d,i,u,v];
-
-subject to flowOnLinkBetweenPair_A{(s,d) in SD, u in V, v in V}:
-	L_sd[s,d,u,v] <= sum{i in I} L[s,d,i,u,v];
-
-subject to flowOnLinkBetweenPair_B{(s,d) in SD, u in V, v in V}:
-	L_sd[s,d,u,v] * card(V)^4 >= sum{i in I} L[s,d,i,u,v];
-
+subject to flowOnLinkFromSrc_B{u in V, v in V}:
+	L_s[u,v] * card(V)^4 >= sum{d in D, i in I} L[d,i,u,v];
 
 
 ## Failure Constraints
@@ -293,68 +222,17 @@ subject to flowOnLinkBetweenPair_B{(s,d) in SD, u in V, v in V}:
 # Connection (s,d,i) fails or does not fail due to FG[g]
 
 # Number of failures caused by a link --> Number of connections that include that element. Exclude the src/dest of a connection.
-subject to groupCausesConnectionToFail_1{(s,d) in SD, i in I, g in GroupIndices}:
-	FG_Conn[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[s,d,i,v];
+subject to groupCausesConnectionToFail_1{d in D, i in I, g in GroupIndices}:
+	FG_Conn[d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[d,i,v];
 
-subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices}:
-	FG_Conn[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[s,d,i,v];
-
-# Track connections that fail due to the removal of a failure group - including the src/dest of a connection.
-subject to groupCausesConnectionToFailIncludeEndpoints_1{(s,d) in SD, i in I, g in GroupIndices}:
-	FG_Conn_include_endpoints[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
-
-subject to groupCausesConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g in GroupIndices}:
-	FG_Conn_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
-
-# Sum up the number of failed connections due to FG[g]
-subject to numFailsDueToGroup{g in GroupIndices}:
-	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn_include_endpoints[s,d,i,g];
-
-
-
-# Put limits on the number of connections between a pair  that can share a FG
-subject to connectionsBetweenPairDoNotShareFG{(s,d) in SD, g in GroupIndices}:
-    sum{i in I} FG_Conn[s,d,i,g] <= 1;
-
-
-# INDICATOR VARIABLE CONSTRAINTS
-
-# Flow pairs
-subject to atLeastOneConnFailsForSD_1{(s,d) in SD, g in GroupIndices}:
-    FG_Conn_sd[s,d,g] <= sum{i in I} FG_Conn[s,d,i,g];
-
-subject to atLeastOneConnFailsForSD_2{(s,d) in SD, g in GroupIndices}:
-    FG_Conn_sd[s,d,g] * card(V) ^ 4 >= sum{i in I} FG_Conn[s,d,i,g];
-
-# Any group G fails
-subject to atLeastOneConnFailsForSDAny_1{(s,d) in SD}:
-    FG_Conn_sd_any[s,d] <= sum{g in GroupIndices} FG_Conn_sd[s,d,g];
-
-subject to atLeastOneConnFailsForSDAny_2{(s,d) in SD}:
-    FG_Conn_sd_any[s,d] * card(V) ^ 4 >= sum{g in GroupIndices} FG_Conn_sd[s,d,g];
-
-
-# Endpoints
-
-subject to atLeastOneConnFailsForS_1{s in S, g in GroupIndices}:
-    FG_Conn_s[s,g] <= sum{i in I, d in D: s != d} FG_Conn[s,d,i,g];
-
-subject to atLeastOneConnFailsForS_2{s in S, g in GroupIndices}:
-    FG_Conn_s[s,g] * card(V) ^ 4 >= sum{i in I, d in D: s != d} FG_Conn[s,d,i,g];
-
-subject to atLeastOneConnFailsForSAny_1{s in S}:
-    FG_Conn_s_any[s] <= sum{g in GroupIndices} FG_Conn_s[s,g];
-
-subject to atLeastOneConnFailsForSAny_2{s in S}:
-    FG_Conn_s_any[s] * card(V) ^ 4 >= sum{g in GroupIndices} FG_Conn_s[s,g];
-
-
+subject to groupCausesConnectionToFail_2{d in D, i in I, g in GroupIndices}:
+	FG_Conn[d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[d,i,v];
 
 subject to atLeastOneConnFailsForD_1{d in D, g in GroupIndices}:
-    FG_Conn_d[d,g] <= sum{i in I, s in S: s != d} FG_Conn[s,d,i,g];
+    FG_Conn_d[d,g] <= sum{i in I: s != d} FG_Conn[d,i,g];
 
 subject to atLeastOneConnFailsForD_2{d in D, g in GroupIndices}:
-    FG_Conn_d[d,g] * card(V) ^ 4 >= sum{i in I, s in S: s != d} FG_Conn[s,d,i,g];
+    FG_Conn_d[d,g] * card(V) ^ 4 >= sum{i in I: s != d} FG_Conn[d,i,g];
 
 subject to atLeastOneConnFailsForDAny_1{d in D}:
     FG_Conn_d_any[d] <= sum{g in GroupIndices} FG_Conn_d[d,g];
@@ -362,8 +240,18 @@ subject to atLeastOneConnFailsForDAny_1{d in D}:
 subject to atLeastOneConnFailsForDAny_2{d in D}:
     FG_Conn_d_any[d] * card(V) ^ 4 >= sum{g in GroupIndices} FG_Conn_d[d,g];
 
+# Track connections that fail due to the removal of a failure group - including the src/dest of a connection.
+subject to groupCausesConnectionToFailIncludeEndpoints_1{d in D, i in I, g in GroupIndices}:
+	FG_Conn_include_endpoints[d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[d,i,v];
 
+subject to groupCausesConnectionToFailIncludeEndpoints_2{d in D, i in I, g in GroupIndices}:
+	FG_Conn_include_endpoints[d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[d,i,v];
 
+# Sum up the number of failed connections due to FG[g]
+subject to numFailsDueToGroup{g in GroupIndices}:
+	FG_Sum[g] = sum{d in D, i in I} FG_Conn_include_endpoints[d,i,g];
 
+# Put limits on the number of connections between a pair  that can share a FG
+subject to connectionsBetweenPairDoNotShareFG{d in D, g in GroupIndices}:
+    sum{i in I} FG_Conn[d,i,g] <= 1;
 
-#-------------------------------------------------------

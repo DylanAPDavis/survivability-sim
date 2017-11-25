@@ -184,16 +184,16 @@ subject to linksUsed_combineBothTraffic:
 
 # TOTAL WEIGHT
 subject to totalWeight_combineTraffic_SourceOnly:
-    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v] * Weight[u,v];
+    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Total_Weight >= sum{s in S, u in V, v in V} L_s[s,u,v] * Weight[u,v];
 
 subject to totalWeight_combineTraffic_DestOnly:
-    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{d in D, u in V, v in V} L_d[d,u,v] * Weight[u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Total_Weight >= sum{d in D, u in V, v in V} L_d[d,u,v] * Weight[u,v];
 
 subject to totalWeight_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
 
 subject to totalWeight_combineBothTraffic:
-    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v] * Weight[u,v];
+    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Total_Weight >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v] * Weight[u,v];
 
 ## Connection Constraints
 
