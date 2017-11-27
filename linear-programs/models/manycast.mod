@@ -40,6 +40,9 @@ set FG {g in GroupIndices} within AllPairs default {};
 param combineSourceTraffic binary default 0;
 param combineDestTraffic binary default 0;
 
+param useMinD default 1;
+param useMaxD default 1;
+
 # VARIABLES
 
 # C - connection number (i) from node s to node d
@@ -159,10 +162,10 @@ subject to connSurvivesToD_2{d in D, g in GroupIndices}:
    connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{i in I: s != d} FG_Conn[d,i,g];
 
 subject to minDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] >= 1;
+    sum{d in D} connSurvivesToD[d,g] >= useMinD;
 
 subject to maxDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] <= 1;
+    sum{d in D} connSurvivesToD[d,g] <= useMaxD;
 
 
 
