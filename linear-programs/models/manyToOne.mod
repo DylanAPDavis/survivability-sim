@@ -22,7 +22,8 @@ param Weight{u in V, v in V} integer default 0;
 set S;
 
 # D - Destinations
-param d;
+set D;
+param d symbolic in D;
 
 # c_total - Total number of connections needed after k failures
 param c_total >= 0 integer default 1;
@@ -49,7 +50,7 @@ param useMaxS default 1;
 var C{s in S, i in I} binary;
 
 # L - Link flow on (u, v) used by Connection (s, d, i)
-var L{s in S, d, i in I, u in V, v in V} binary;
+var L{s in S, d1 in D, i in I, u in V, v in V} binary;
 
 # There is at least one link flow going from source s
 var L_s{s in S, u in V, v in V} binary;
@@ -248,11 +249,11 @@ subject to atLeastOneConnFailsForSAny_2{s in S}:
 # Track connections that fail due to the removal of a failure group - including the src/dest of a connection.
 subject to groupCausesConnectionToFailIncludeEndpoints_1{s in S, i in I, g in GroupIndices}:
     FG_Conn_include_endpoints[s,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] +
-        sum{v in V: (v,v) in FG[g]} NC[s,i,v];
+        sum{v in V: v != d and (v,v) in FG[g]} NC[s,i,v];
 
 subject to groupCausesConnectionToFailIncludeEndpoints_2{s in S, i in I, g in GroupIndices}:
     FG_Conn_include_endpoints[s,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] +
-        sum{v in V: (v,v) in FG[g]} NC[s,i,v];
+        sum{v in V: v != d and (v,v) in FG[g]} NC[s,i,v];
 
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:
