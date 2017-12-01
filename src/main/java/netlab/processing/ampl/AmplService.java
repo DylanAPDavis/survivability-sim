@@ -5,6 +5,7 @@ import com.ampl.*;
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
+import netlab.submission.enums.RoutingType;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
@@ -77,7 +78,21 @@ public class AmplService {
         if(problemClass.equals(ProblemClass.Combined)){
             ampl.read(modelDirectory + "/combined.mod");
         }*/
-        ampl.read(modelDirectory + "/combined.mod");
+        switch(request.getRoutingType()){
+            case Unicast:
+                ampl.read(modelDirectory + "/unicast.mod");
+                break;
+            case Anycast:
+            case Multicast:
+            case Manycast:
+                ampl.read(modelDirectory + "/manycast.mod");
+                break;
+            case ManyToOne:
+                ampl.read(modelDirectory + "/manyToOne.mod");
+                break;
+            default:
+                ampl.read(modelDirectory + "/combined.mod");
+        }
 
         ampl.eval("objective " + request.getObjective().getCode()  + ";");
         ampl.setIntOption("omit_zero_rows", 1);
@@ -88,6 +103,7 @@ public class AmplService {
         java.nio.file.Path file = Paths.get(request.getId() + ".dat");
         try {
             // Create the empty file with default permissions, etc.
+            Files.deleteIfExists(file);
             Files.createFile(file);
         } catch (FileAlreadyExistsException x) {
             System.err.format("file named %s" +
@@ -116,10 +132,25 @@ public class AmplService {
         // Topology
         dataLines.addAll(createTopologyLines(topology));
 
-        // S
-        dataLines.add(createNodeSetLine(details.getSources(), "S"));
+        RoutingType routingType = request.getRoutingType();
+        boolean combinedRouting = routingType.equals(RoutingType.ManyToMany) || routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Default);
 
-        // D
+        switch(routingType){
+            case Unicast:
+                dataLines.add(createSingleNodeParamLine(details.getSources(), "s"));
+                dataLines.add(createSingleNodeParamLine(details.getDestinations(), "d"));
+                break;
+            case Anycast:
+            case Multicast:
+            case Manycast:
+                dataLines.add(createSingleNodeParamLine(details.getSources(), "s"));
+                break;
+            case ManyToOne:
+                dataLines.add(createSingleNodeParamLine(details.getDestinations(), "d"));
+                break;
+        }
+
+        dataLines.add(createNodeSetLine(details.getSources(), "S"));
         dataLines.add(createNodeSetLine(details.getDestinations(), "D"));
 
         // I_max
@@ -131,15 +162,26 @@ public class AmplService {
         String cTotal = "param c_total := " + details.getConnections().getNumConnections() + ";";
         dataLines.add(cTotal);
 
-        // Reach min/max src/dest
-        String reachMinS = "param useMinS := " + details.getConnections().getUseMinS() + ";";
-        dataLines.add(reachMinS);
-        String reachMaxS = "param useMaxS := " + details.getConnections().getUseMaxS() + ";";
-        dataLines.add(reachMaxS);
-        String reachMinD = "param useMinD := " + details.getConnections().getUseMinD() + ";";
-        dataLines.add(reachMinD);
-        String reachMaxD = "param useMaxD := " + details.getConnections().getUseMaxD() + ";";
-        dataLines.add(reachMaxD);
+        // Reach min/max src/dest if not doing Unicast
+        switch(routingType){
+            case Unicast:
+                break;
+            case Anycast:
+            case Multicast:
+            case Manycast:
+                dataLines.add("param useMinD := " + details.getConnections().getUseMinD() + ";");
+                dataLines.add("param useMaxD := " + details.getConnections().getUseMaxD() + ";");
+                break;
+            case ManyToOne:
+                dataLines.add("param useMinS := " + details.getConnections().getUseMinS() + ";");
+                dataLines.add("param useMaxS := " + details.getConnections().getUseMaxS() + ";");
+                break;
+            default:
+                dataLines.add("param useMinS := " + details.getConnections().getUseMinS() + ";");
+                dataLines.add("param useMaxS := " + details.getConnections().getUseMaxS() + ";");
+                dataLines.add("param useMinD := " + details.getConnections().getUseMinD() + ";");
+                dataLines.add("param useMaxD := " + details.getConnections().getUseMaxD() + ";");
+        }
 
         // Traffic Combination
         String combineSourceTraffic = "param combineSourceTraffic := ";
@@ -173,7 +215,7 @@ public class AmplService {
         if(problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF)){
             dataLines.addAll(createPairParamsLines(details, problemClass, ignoreF));
         }
-        if(problemClass.equals(ProblemClass.Combined)){
+        if(problemClass.equals(ProblemClass.Combined) && combinedRouting){
             dataLines.addAll(createCombinedParamsLines(details, problemClass, ignoreF));
         }
 
@@ -332,6 +374,10 @@ public class AmplService {
             fgLines.add(fg);
         }
         return fgLines;
+    }
+
+    private String createSingleNodeParamLine(Collection<Node> nodes, String paramName){
+        return "param " + paramName + " := '" + nodes.iterator().next().getId() +"';";
     }
 
     private String createNodeSetLine(Collection<Node> nodes, String setName){

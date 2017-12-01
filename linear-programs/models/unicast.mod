@@ -3,6 +3,9 @@
 # Set of Vertices
 set V;
 
+# All pairs of nodes
+set AllPairs = {V,V};
+
 # Maximum Number of Connections
 param I_max >= 0 integer;
 
@@ -15,11 +18,14 @@ param A{u in V, v in V} binary default 0;
 # Link cost
 param Weight{u in V, v in V} integer default 0;
 
+set S;
+set D;
+
 # S - Sources
-param s;
+param s symbolic in S;
 
 # D - Destinations
-param d;
+param d symbolic in D;
 
 # c_total - Total number of connections needed after k failures
 param c_total >= 0 integer default 1;
@@ -43,7 +49,7 @@ param combineDestTraffic binary default 0;
 var C{i in I} binary;
 
 # L - Link flow on (u, v) used by Connection (s, d, i)
-var L{i in I, u in V, v in V} binary;
+var L{s1 in S, d1 in D, i in I, u in V, v in V} binary;
 
 # There is at least one link flow between pair (s,d)
 var L_sd{u in V, v in V} binary;
@@ -75,27 +81,28 @@ var Total_Weight >= 0 integer;
 
 # OBJECTIVE
 
-minimize LinksUsed:
+
+minimize linksused:
 	Num_Links_Used;
 
-minimize Connections:
+minimize connections:
 	Num_Conns_Total;
 
-minimize TotalCost:
+minimize totalcost:
 	Total_Weight;
 
 
 # Objective definition constraints
 # LINKS USED
 subject to linksUsed_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{i in I, u in V, v in V} L[i,u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{i in I, u in V, v in V} L[s,d,i,u,v];
 
 subject to linksUsed_combineBothTraffic:
     combineSourceTraffic == 1 or combineDestTraffic == 1 ==> Num_Links_Used >= sum{u in V, v in V} L_sd[u,v];
 
 # TOTAL WEIGHT
 subject to totalWeight_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{i in I, u in V, v in V} L[i,u,v] * Weight[u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
 
 subject to totalWeight_combineBothTraffic:
     combineSourceTraffic == 1 or combineDestTraffic == 1 ==> Total_Weight >= sum{u in V, v in V} L_sd[u,v] * Weight[u,v];
@@ -109,47 +116,47 @@ subject to noSelfConnections:
 	s == d ==> Num_Conn = 0;
 
 subject to flowOnlyIfConnectionAndLinkExists{ i in I, u in V, v in V}:
-	L[i,u,v] <= A[u,v] * C[i];
+	L[s,d,i,u,v] <= A[u,v] * C[i];
 
 subject to intermediateFlow{i in I, v in V: v != s and v != d}:
-	sum{u in V} L[i,u,v] - sum{w in V} L[i,v,w] = 0;
+	sum{u in V} L[s,d,i,u,v] - sum{w in V} L[s,d,i,v,w] = 0;
 
 subject to sourceFlow{i in I}:
-	sum{u in V} L[i,u,s] - sum{w in V} L[i,s,w] = -1 * C[i];
+	sum{u in V} L[s,d,i,u,s] - sum{w in V} L[s,d,i,s,w] = -1 * C[i];
 
 subject to destinationFlow{ i in I}:
-	sum{u in V} L[i,u,d] - sum{w in V} L[i,d,w] = C[i];
+	sum{u in V} L[s,d,i,u,d] - sum{w in V} L[s,d,i,d,w] = C[i];
 
 subject to flowOnlyInConnection{i in I, u in V, v in V}:
-	L[i,u,v] <= C[i];
+	L[s,d,i,u,v] <= C[i];
 
 subject to noFlowIntoSource{i in I, u in V}:
-	L[i,u,s] = 0;
+	L[s,d,i,u,s] = 0;
 
 subject to oneFlowFromNodeInConn{i in I, u in V}:
-	sum{v in V} L[i,u,v] <= 1;
+	sum{v in V} L[s,d,i,u,v] <= 1;
 
 subject to oneFlowIntoNodeInConn{i in I, v in V}:
-	sum{u in V} L[i,u,v] <= 1;
+	sum{u in V} L[s,d,i,u,v] <= 1;
 
 subject to noReverseFlowIfForward{i in I, u in V, v in V}:
-	L[i,u,v] + L[i,v,u] <= 1;
+	L[s,d,i,u,v] + L[s,d,i,v,u] <= 1;
 
 # Node is in a connection
 subject to nodeInConnection_A{i in I, v in V}:
-	NC[i,v] <= sum{u in V} L[i,u,v] + sum{w in V} L[i,v,w];
+	NC[i,v] <= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
 
 subject to nodeInConnection_B{i in I, v in V}:
-	NC[i,v] * card(V)^4 >= sum{u in V} L[i,u,v] + sum{w in V} L[i,v,w];
+	NC[i,v] * card(V)^4 >= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
 
 
 ### L_sd definition constraints
 
 subject to flowOnLinkBetweenPair_A{ u in V, v in V}:
-	L_sd[u,v] <= sum{i in I} L[i,u,v];
+	L_sd[u,v] <= sum{i in I} L[s,d,i,u,v];
 
 subject to flowOnLinkBetweenPair_B{ u in V, v in V}:
-	L_sd[u,v] * card(V)^4 >= sum{i in I} L[i,u,v];
+	L_sd[u,v] * card(V)^4 >= sum{i in I} L[s,d,i,u,v];
 
 
 ## Failure Constraints
@@ -158,10 +165,10 @@ subject to flowOnLinkBetweenPair_B{ u in V, v in V}:
 
 # Number of failures caused by a link --> Number of connections that include that element. Exclude the src/dest of a connection.
 subject to groupCausesConnectionToFail_1{i in I, g in GroupIndices}:
-	FG_Conn[i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[i,v];
+	FG_Conn[i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[i,v];
 
 subject to groupCausesConnectionToFail_2{ i in I, g in GroupIndices}:
-	FG_Conn[i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[i,v];
+	FG_Conn[i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[i,v];
 
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:

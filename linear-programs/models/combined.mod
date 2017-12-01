@@ -158,13 +158,13 @@ var Total_Weight >= 0 integer;
 
 # OBJECTIVE
 
-minimize LinksUsed:
+minimize linksused:
 	Num_Links_Used;
 
-minimize Connections:
+minimize connections:
 	Num_Conns_Total;
 
-minimize TotalCost:
+minimize totalcost:
 	Total_Weight;
 
 

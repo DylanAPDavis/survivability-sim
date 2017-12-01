@@ -25,7 +25,7 @@ set S;
 param d;
 
 # c_total - Total number of connections needed after k failures
-param c_total >= 0 integer default card(SD);
+param c_total >= 0 integer default 1;
 
 # NumGroups - Number of k-sized failure groups
 param NumGroups default 1;
@@ -49,7 +49,7 @@ param useMaxS default 1;
 var C{s in S, i in I} binary;
 
 # L - Link flow on (u, v) used by Connection (s, d, i)
-var L{s in S, i in I, u in V, v in V} binary;
+var L{s in S, d, i in I, u in V, v in V} binary;
 
 # There is at least one link flow going from source s
 var L_s{s in S, u in V, v in V} binary;
@@ -100,17 +100,17 @@ var Total_Weight >= 0 integer;
 
 # OBJECTIVE
 
-minimize LinksUsed:
+
+minimize linksused:
     Num_Links_Used;
 
-minimize Connections:
+minimize connections:
     Num_Conns_Total;
 
-minimize TotalCost:
+minimize totalcost:
     Total_Weight;
 
-
-# Objective definition constraints
+        # Objective definition constraints
 # LINKS USED
 subject to linksUsed_combineTraffic_SourceOnly:
     combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v];
@@ -119,7 +119,7 @@ subject to linksUsed_combineTraffic_DestOnly:
     combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{u in V, v in V} L_d[u,v];
 
 subject to linksUsed_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, i in I, u in V, v in V} L[s,i,u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, i in I, u in V, v in V} L[s,d,i,u,v];
 
 subject to linksUsed_combineBothTraffic:
     combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v];
@@ -132,7 +132,7 @@ subject to totalWeight_combineTraffic_DestOnly:
     combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Total_Weight >= sum{u in V, v in V} L_d[u,v] * Weight[u,v];
 
 subject to totalWeight_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{s in S, i in I, u in V, v in V} L[s,i,u,v] * Weight[u,v];
+    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{s in S, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
 
 subject to totalWeight_combineBothTraffic:
     combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Total_Weight >= sum{s in S, u in V, v in V} L_s[s,u,v] * Weight[u,v];
@@ -171,53 +171,53 @@ subject to maxSrcsReached{g in GroupIndices}:
 
 
 subject to flowOnlyIfConnectionAndLinkExists{s in S, i in I, u in V, v in V}:
-    L[s,i,u,v] <= A[u,v] * C[s,i];
+    L[s,d,i,u,v] <= A[u,v] * C[s,i];
 
 subject to intermediateFlow{s in S, i in I, v in V: v != s and v != d}:
-    sum{u in V} L[s,i,u,v] - sum{w in V} L[s,i,v,w] = 0;
+    sum{u in V} L[s,d,i,u,v] - sum{w in V} L[s,d,i,v,w] = 0;
 
 subject to sourceFlow{s in S, i in I}:
-    sum{u in V} L[s,i,u,s] - sum{w in V} L[s,i,s,w] = -1 * C[s,i];
+    sum{u in V} L[s,d,i,u,s] - sum{w in V} L[s,d,i,s,w] = -1 * C[s,i];
 
 subject to destinationFlow{s in S, i in I}:
-    sum{u in V} L[s,i,u,d] - sum{w in V} L[s,i,d,w] = C[s,i];
+    sum{u in V} L[s,d,i,u,d] - sum{w in V} L[s,d,i,d,w] = C[s,i];
 
 subject to flowOnlyInConnection{s in S, i in I, u in V, v in V}:
-    L[s,i,u,v] <= C[s,i];
+    L[s,d,i,u,v] <= C[s,i];
 
 subject to noFlowIntoSource{s in S, i in I, u in V}:
-    L[s,i,u,s] = 0;
+    L[s,d,i,u,s] = 0;
 
 subject to oneFlowFromNodeInConn{s in S, i in I, u in V}:
-    sum{v in V} L[s,i,u,v] <= 1;
+    sum{v in V} L[s,d,i,u,v] <= 1;
 
 subject to oneFlowIntoNodeInConn{s in S, i in I, v in V}:
-    sum{u in V} L[s,i,u,v] <= 1;
+    sum{u in V} L[s,d,i,u,v] <= 1;
 
 subject to noReverseFlowIfForward{s in S, i in I, u in V, v in V}:
-    L[s,i,u,v] + L[s,i,v,u] <= 1;
+    L[s,d,i,u,v] + L[s,d,i,v,u] <= 1;
 
 # Node is in a connection
 subject to nodeInConnection_A{s in S, i in I, v in V}:
-    NC[s,i,v] <= sum{u in V} L[s,i,u,v] + sum{w in V} L[s,i,v,w];
+    NC[s,i,v] <= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
 
 subject to nodeInConnection_B{s in S, i in I, v in V}:
-    NC[s,i,v] * card(V)^4 >= sum{u in V} L[s,i,u,v] + sum{w in V} L[s,i,v,w];
+    NC[s,i,v] * card(V)^4 >= sum{u in V} L[s,d,i,u,v] + sum{w in V} L[s,d,i,v,w];
 
 
 ### L_sd definition constraints
 
 subject to flowOnLinkToDest_A{u in V, v in V}:
-    L_d[u,v] <= sum{s in S, i in I} L[s,i,u,v];
+    L_d[u,v] <= sum{s in S, i in I} L[s,d,i,u,v];
 
 subject to flowOnLinkToDest_B{u in V, v in V}:
-    L_d[u,v] * card(V)^4 >= sum{s in S, i in I} L[s,i,u,v];
+    L_d[u,v] * card(V)^4 >= sum{s in S, i in I} L[s,d,i,u,v];
 
 subject to flowOnLinkFromSrc_A{s in S, u in V, v in V}:
-    L_s[s,u,v] <= sum{i in I} L[s,i,u,v];
+    L_s[s,u,v] <= sum{i in I} L[s,d,i,u,v];
 
 subject to flowOnLinkFromSrc_B{s in S, u in V, v in V}:
-    L_s[s,u,v] * card(V)^4 >= sum{i in I} L[s,i,u,v];
+    L_s[s,u,v] * card(V)^4 >= sum{i in I} L[s,d,i,u,v];
 
 
 ## Failure Constraints
@@ -226,11 +226,11 @@ subject to flowOnLinkFromSrc_B{s in S, u in V, v in V}:
 
 # Number of failures caused by a link --> Number of connections that include that element. Exclude the src/dest of a connection.
 subject to groupCausesConnectionToFail_1{s in S, i in I, g in GroupIndices}:
-    FG_Conn[s,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,i,u,v] +
+    FG_Conn[s,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] +
         sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[s,i,v];
 
 subject to groupCausesConnectionToFail_2{s in S, i in I, g in GroupIndices}:
-    FG_Conn[s,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,i,u,v] +
+    FG_Conn[s,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] +
         sum{v in V: v != s and v != d and (v,v) in FG[g]} NC[s,i,v];
 
 subject to atLeastOneConnFailsForS_1{s in S, g in GroupIndices}:
@@ -247,11 +247,11 @@ subject to atLeastOneConnFailsForSAny_2{s in S}:
 
 # Track connections that fail due to the removal of a failure group - including the src/dest of a connection.
 subject to groupCausesConnectionToFailIncludeEndpoints_1{s in S, i in I, g in GroupIndices}:
-    FG_Conn_include_endpoints[s,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,i,u,v] +
+    FG_Conn_include_endpoints[s,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] +
         sum{v in V: (v,v) in FG[g]} NC[s,i,v];
 
 subject to groupCausesConnectionToFailIncludeEndpoints_2{s in S, i in I, g in GroupIndices}:
-    FG_Conn_include_endpoints[s,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,i,u,v] +
+    FG_Conn_include_endpoints[s,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] +
         sum{v in V: (v,v) in FG[g]} NC[s,i,v];
 
 # Sum up the number of failed connections due to FG[g]
