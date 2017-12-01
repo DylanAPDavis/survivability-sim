@@ -14,4 +14,8 @@ import java.io.Serializable;
 public class SourceDestPair implements Serializable {
     private Node src;
     private Node dst;
+
+    public String toString(){
+        return "(" + src.getId() + ", " + dst.getId() + ")";
+    }
 }

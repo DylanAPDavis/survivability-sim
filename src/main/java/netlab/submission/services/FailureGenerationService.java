@@ -304,7 +304,7 @@ public class FailureGenerationService {
         }
 
         return Failures.builder()
-                .failureSetSize(failureSetSize)
+                .failureSetSize(failures.size())
                 .failureSet(failures)
                 .pairFailuresMap(pairFailuresMap)
                 .srcFailuresMap(srcFailuresMap)

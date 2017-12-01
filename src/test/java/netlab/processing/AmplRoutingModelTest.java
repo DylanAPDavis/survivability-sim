@@ -5,6 +5,8 @@ import netlab.TestConfiguration;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
+import netlab.topology.elements.Path;
+import netlab.topology.elements.SourceDestPair;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -25,7 +28,7 @@ public class AmplRoutingModelTest {
     private ProcessingService processingService;
 
     @Test
-    public void UnicastTest(){
+    public void unicastTest(){
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
@@ -43,7 +46,69 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
-        log.info(request.toString());
+        System.out.println(outputPaths(request));
+    }
+
+    @Test
+    public void unicastLinkFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("alllinks")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        System.out.println(outputPaths(request));
+    }
+
+    @Test
+    public void unicastNodeFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("allnodes")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        System.out.println(outputPaths(request));
+    }
+
+    public String outputPaths(Request request){
+        StringBuilder pathBuilder = new StringBuilder();
+        Map<SourceDestPair, Map<String, Path>> pathMap = request.getDetails().getChosenPaths();
+        for(SourceDestPair pair : pathMap.keySet()){
+            Map<String, Path> pathIdMap = pathMap.get(pair);
+            if(pathIdMap.size() > 0){
+                pathBuilder.append(pair.toString());
+                pathBuilder.append(": \n");
+                for(String pathId : pathIdMap.keySet()){
+                    Path path = pathIdMap.get(pathId);
+                    pathBuilder.append(pathId);
+                    pathBuilder.append(": ");
+                    pathBuilder.append(path.toString());
+                    pathBuilder.append("\n");
+                }
+            }
+        }
+        return pathBuilder.toString();
     }
 
 

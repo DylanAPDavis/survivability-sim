@@ -133,7 +133,6 @@ public class AmplService {
         dataLines.addAll(createTopologyLines(topology));
 
         RoutingType routingType = request.getRoutingType();
-        boolean combinedRouting = routingType.equals(RoutingType.ManyToMany) || routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Default);
 
         switch(routingType){
             case Unicast:
@@ -215,8 +214,8 @@ public class AmplService {
         if(problemClass.equals(ProblemClass.Flow) || problemClass.equals(ProblemClass.FlowSharedF)){
             dataLines.addAll(createPairParamsLines(details, problemClass, ignoreF));
         }
-        if(problemClass.equals(ProblemClass.Combined) && combinedRouting){
-            dataLines.addAll(createCombinedParamsLines(details, problemClass, ignoreF));
+        if(problemClass.equals(ProblemClass.Combined)){
+            dataLines.addAll(createCombinedParamsLines(details, problemClass, routingType, ignoreF));
         }
 
         return dataLines;
@@ -339,10 +338,13 @@ public class AmplService {
      * @param problemClass
      * @return
      */
-    private List<String> createCombinedParamsLines(Details details, ProblemClass problemClass, boolean ignoreFailures) {
+    private List<String> createCombinedParamsLines(Details details, ProblemClass problemClass, RoutingType routingType, boolean ignoreFailures) {
         List<String> lines = createFlexParamsLines(details, ignoreFailures);
-        lines.addAll(createEndpointParamsLines(details, problemClass, ignoreFailures));
-        lines.addAll(createPairParamsLines(details, problemClass, ignoreFailures));
+        boolean combinedRouting = routingType.equals(RoutingType.ManyToMany) || routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Default);
+        if(combinedRouting) {
+            lines.addAll(createEndpointParamsLines(details, problemClass, ignoreFailures));
+            lines.addAll(createPairParamsLines(details, problemClass, ignoreFailures));
+        }
         return lines;
     }
 
