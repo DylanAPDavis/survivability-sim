@@ -34,6 +34,9 @@ param NumGroups default 1;
 # GroupIndices - Indexing set for all groups of failure elements of size k
 set GroupIndices := 1..NumGroups;
 
+# The number of failure events (k)
+param nfe default 0;
+
 # FG - Set of all failure groups of size k
 set FG {g in GroupIndices} within AllPairs default {};
 
@@ -77,6 +80,10 @@ var FG_Conn_d_any{d in D} binary;
 
 var connSurvivesToD{d in D, g in GroupIndices} binary;
 
+var destConnected{d in D} binary;
+
+var numDestsDisconnected{g in GroupIndices} >= 0 integer;
+
 # END INDICATOR VARIABLES
 
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
@@ -97,6 +104,8 @@ var Num_Links_Used >= 0 integer;
 
 # Total weight of all used links
 var Total_Weight >= 0 integer;
+
+var nddMoreThanNfe{g in GroupIndices} binary;
 
 
 # OBJECTIVE
@@ -156,20 +165,44 @@ subject to maxNumConnectionsNeededDestNoFails{d in D}:
 	FG_Conn_d_any[d] == 0 ==> Num_Conn_dst[d] <= 1;
 
 
+# Determine how many dests have to be connected
+
 subject to connSurvivesToD_1{d in D, g in GroupIndices}:
-   connSurvivesToD[d,g] <= Num_Conn_dst[d] - sum{i in I: s != d} FG_Conn[d,i,g];
+   connSurvivesToD[d,g] <= Num_Conn_dst[d] - sum{i in I: s != d} FG_Conn_include_endpoints[d,i,g];
 
 subject to connSurvivesToD_2{d in D, g in GroupIndices}:
-   connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{i in I: s != d} FG_Conn[d,i,g];
+   connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{i in I: s != d} FG_Conn_include_endpoints[d,i,g];
 
-subject to minDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] >= useMinD;
+subject to destConnected_1{d in D}:
+	destConnected[d] <= Num_Conn_dst[d];
 
-subject to maxDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] <= useMaxD;
+subject to destConnected_2{d in D}:
+	destConnected[d] * card(V)^4 >= Num_Conn_dst[d];
+
+subject to numDestsThatAreDisconnected{g in GroupIndices}:
+	numDestsDisconnected[g] = card(D) - sum{d in D} connSurvivesToD[d,g];
+
+subject to defineDisconnector_1{g in GroupIndices}:
+	numDestsDisconnected[g] >= nfe + 1 - card(V)^4 * (1-nddMoreThanNfe[g]);
+
+subject to defineDisconnector_2{g in GroupIndices}:
+	nfe >= numDestsDisconnected[g] - card(V)^4 * nddMoreThanNfe[g];
+
+subject to fewerDestsDisconnectedThanNFE_min{g in GroupIndices}:
+	nddMoreThanNfe[g] == 0 ==> sum{d in D} destConnected[d] >= useMinD + numDestsDisconnected[g];
+
+subject to moreDestsDisconnectedThanNFE_min{g in GroupIndices}:
+	nddMoreThanNfe[g] == 1 ==> sum{d in D} destConnected[d] >= useMinD + nfe;
+
+subject to fewerDestsDisconnectedThanNFE_max{g in GroupIndices}:
+	nddMoreThanNfe[g] == 0 ==> sum{d in D} destConnected[d] <= useMaxD + numDestsDisconnected[g];
+
+subject to moreDestsDisconnectedThanNFE_max{g in GroupIndices}:
+	nddMoreThanNfe[g] == 1 ==> sum{d in D} destConnected[d] <= useMaxD + nfe;
 
 
 
+# Flow constraints
 
 subject to flowOnlyIfConnectionAndLinkExists{d in D, i in I, u in V, v in V}:
 	L[s,d,i,u,v] <= A[u,v] * C[d,i];
@@ -253,7 +286,7 @@ subject to groupCausesConnectionToFailIncludeEndpoints_2{d in D, i in I, g in Gr
 
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:
-	FG_Sum[g] = sum{d in D, i in I} FG_Conn_include_endpoints[d,i,g];
+	FG_Sum[g] = sum{d in D, i in I} FG_Conn[d,i,g];
 
 # Put limits on the number of connections between a pair  that can share a FG
 subject to connectionsBetweenPairDoNotShareFG{d in D, g in GroupIndices}:

@@ -205,7 +205,7 @@ public class AmplRoutingModelTest {
     public void manycastNodeFailuresTest(){
 
         SimulationParameters params = SimulationParameters.builder()
-                .seed(1L)
+                .seed(2L)
                 .topologyId("NSFnet")
                 .algorithm("ilp")
                 .problemClass("combined")
