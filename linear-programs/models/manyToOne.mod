@@ -233,16 +233,16 @@ subject to nodeInConnection_B{s in S, i in I, v in V}:
 ### L_sd definition constraints
 
 subject to flowOnLinkToDest_A{u in V, v in V}:
-    L_d[u,v] <= sum{s in S, i in I} L[s,d,i,u,v];
+    L_d[u,v] <= sum{s in S, i in I: d != s} L[s,d,i,u,v];
 
 subject to flowOnLinkToDest_B{u in V, v in V}:
-    L_d[u,v] * card(V)^4 >= sum{s in S, i in I} L[s,d,i,u,v];
+    L_d[u,v] * card(V)^4 >= sum{s in S, i in I: d != s} L[s,d,i,u,v];
 
 subject to flowOnLinkFromSrc_A{s in S, u in V, v in V}:
-    L_s[s,u,v] <= sum{i in I} L[s,d,i,u,v];
+    L_s[s,u,v] <= sum{i in I: d != s} L[s,d,i,u,v];
 
 subject to flowOnLinkFromSrc_B{s in S, u in V, v in V}:
-    L_s[s,u,v] * card(V)^4 >= sum{i in I} L[s,d,i,u,v];
+    L_s[s,u,v] * card(V)^4 >= sum{i in I: d != s} L[s,d,i,u,v];
 
 
 ## Failure Constraints

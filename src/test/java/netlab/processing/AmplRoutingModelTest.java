@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -332,21 +334,129 @@ public class AmplRoutingModelTest {
         System.out.println(outputPaths(request));
     }
 
+    @Test
+    public void broadcastNoOverlap(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .sourceSubsetDestType("none")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(outputPaths(request));
+    }
+
+    @Test
+    public void broadcastHalfOverlap(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .sourceSubsetDestType("half")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(outputPaths(request));
+    }
+
+    @Test
+    public void broadcastFullOverlap(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .sourceSubsetDestType("all")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(outputPaths(request));
+    }
+
+    @Test
+    public void broadcastFullOverlapNodesFail(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .failureScenario("allnodes")
+                .sourceFailureType("prevent")
+                .destFailureType("prevent")
+                .numFailureEvents(1)
+                .sourceSubsetDestType("all")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(outputPaths(request));
+    }
+
 
     public String outputPaths(Request request){
-        StringBuilder pathBuilder = new StringBuilder();
         Map<SourceDestPair, Map<String, Path>> pathMap = request.getDetails().getChosenPaths();
+        Map<String, Map<SourceDestPair, List<String>>> stringsPerSource = new HashMap<>();
+        StringBuilder pathBuilder = new StringBuilder();
         for(SourceDestPair pair : pathMap.keySet()){
             Map<String, Path> pathIdMap = pathMap.get(pair);
+            List<String> pathStrings = new ArrayList<>();
+            String sourceId = pair.getSrc().getId();
             if(pathIdMap.size() > 0){
-                pathBuilder.append(pair.toString());
-                pathBuilder.append(": \n");
                 for(String pathId : pathIdMap.keySet()){
                     Path path = pathIdMap.get(pathId);
-                    pathBuilder.append(pathId);
-                    pathBuilder.append(": ");
-                    pathBuilder.append(path.toString());
-                    pathBuilder.append("\n");
+                    String pathString = "\t\t" + pathId + ": " + path.toString() + "\n";
+                    pathStrings.add(pathString);
+                }
+            }
+            stringsPerSource.putIfAbsent(sourceId, new HashMap<>());
+            stringsPerSource.get(sourceId).put(pair, pathStrings);
+        }
+        for(String sourceId : stringsPerSource.keySet()){
+            Map<SourceDestPair, List<String>> stringsPerPair = stringsPerSource.get(sourceId);
+            pathBuilder.append(sourceId).append(": \n");
+            for(SourceDestPair pair : stringsPerPair.keySet()) {
+                List<String> pathStrings = stringsPerPair.get(pair);
+                if (!pathStrings.isEmpty()) {
+                    pathBuilder.append("\t").append(pair.toString()).append(": \n");
+                    for (String pathString : pathStrings) {
+                        pathBuilder.append(pathString);
+                    }
                 }
             }
         }

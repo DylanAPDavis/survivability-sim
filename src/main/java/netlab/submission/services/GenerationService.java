@@ -353,7 +353,9 @@ public class GenerationService {
         Set<SourceDestPair> pairs = new HashSet<>();
         for(Node source : sources){
             for(Node dest: destinations){
-                pairs.add(SourceDestPair.builder().src(source).dst(dest).build());
+                if(!source.getId().equals(dest.getId())) {
+                    pairs.add(SourceDestPair.builder().src(source).dst(dest).build());
+                }
             }
         }
         return pairs;

@@ -347,16 +347,16 @@ subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 
 ### L_s, L_d, L_sd definition constraints
 subject to flowOnLinkFromSource_A{s in S, u in V, v in V}:
-	L_s[s,u,v] <= sum{d in D, i in I} L[s,d,i,u,v];
+	L_s[s,u,v] <= sum{d in D, i in I: s != d} L[s,d,i,u,v];
 
 subject to flowOnLinkFromSource_B{s in S, u in V, v in V}:
-	L_s[s,u,v] * card(V)^4 >= sum{d in D, i in I} L[s,d,i,u,v];
+	L_s[s,u,v] * card(V)^4 >= sum{d in D, i in I: s != d} L[s,d,i,u,v];
 
 subject to flowOnLinkToDestination_A{d in D, u in V, v in V}:
-	L_d[d,u,v] <= sum{s in S, i in I} L[s,d,i,u,v];
+	L_d[d,u,v] <= sum{s in S, i in I: s != d} L[s,d,i,u,v];
 
 subject to flowOnLinkToDestination_B{d in D, u in V, v in V}:
-	L_d[d,u,v] * card(V)^4 >= sum{s in S, i in I} L[s,d,i,u,v];
+	L_d[d,u,v] * card(V)^4 >= sum{s in S, i in I: s != d} L[s,d,i,u,v];
 
 subject to flowOnLinkBetweenPair_A{(s,d) in SD, u in V, v in V}:
 	L_sd[s,d,u,v] <= sum{i in I} L[s,d,i,u,v];
