@@ -34,9 +34,6 @@ param NumGroups default 1;
 # GroupIndices - Indexing set for all groups of failure elements of size k
 set GroupIndices := 1..NumGroups;
 
-# The number of failure events (k)
-param nfe default 0;
-
 # FG - Set of all failure groups of size k
 set FG {g in GroupIndices} within AllPairs default {};
 
@@ -86,7 +83,6 @@ var numDestsDisconnected{g in GroupIndices} >= 0 integer;
 
 var maxDestsDisconnected >= 0 integer;
 
-var nddMoreThanNfe binary;
 
 
 # END INDICATOR VARIABLES
@@ -183,28 +179,16 @@ subject to destConnected_2{d in D}:
 	destConnected[d] * card(V)^4 >= Num_Conn_dst[d];
 
 subject to numDestsThatAreDisconnected{g in GroupIndices}:
-	numDestsDisconnected[g] = card(D) - sum{d in D} connSurvivesToD[d,g];
+	numDestsDisconnected[g] = sum{d in D} destConnected[d] - sum{d in D} connSurvivesToD[d,g];
 
 subject to greatestedNumDisconnected{g in GroupIndices}:
 	maxDestsDisconnected >= numDestsDisconnected[g];
 
-subject to defineDisconnector_1:
-	maxDestsDisconnected >= nfe + 1 - card(V)^4 * (1-nddMoreThanNfe);
+subject to minDestsThatMustBeConnected:
+	sum{d in D} destConnected[d] >= useMinD + maxDestsDisconnected;
 
-subject to defineDisconnector_2:
-	nfe >= maxDestsDisconnected - card(V)^4 * nddMoreThanNfe;
-
-subject to fewerDestsDisconnectedThanNFE_min:
-	nddMoreThanNfe == 0 ==> sum{d in D} destConnected[d] >= useMinD + maxDestsDisconnected;
-
-subject to moreDestsDisconnectedThanNFE_min:
-	nddMoreThanNfe == 1 ==> sum{d in D} destConnected[d] >= useMinD + nfe;
-
-subject to fewerDestsDisconnectedThanNFE_max:
-	nddMoreThanNfe == 0 ==> sum{d in D} destConnected[d] <= useMaxD + maxDestsDisconnected;
-
-subject to moreDestsDisconnectedThanNFE_max:
-	nddMoreThanNfe == 1 ==> sum{d in D} destConnected[d] <= useMaxD + nfe;
+subject to maxDestsThatMustBeConnected:
+	sum{d in D} destConnected[d] <= useMaxD + maxDestsDisconnected;
 
 
 

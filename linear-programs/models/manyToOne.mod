@@ -181,28 +181,16 @@ subject to srcConnected_2{s in S}:
     srcConnected[s] * card(V)^4 >= Num_Conn_src[s];
 
 subject to numSrcsThatAreDisconnected{g in GroupIndices}:
-    numSrcsDisconnected[g] = card(S) - sum{s in S} connSurvivesFromS[s,g];
+    numSrcsDisconnected[g] = sum{s in S} srcConnected[s] - sum{s in S} connSurvivesFromS[s,g];
 
 subject to greatestedNumDisconnected{g in GroupIndices}:
     maxSrcsDisconnected >= numSrcsDisconnected[g];
 
-subject to defineDisconnector_1:
-    maxSrcsDisconnected >= nfe + 1 - card(V)^4 * (1-nsdMoreThanNfe);
+subject to minSourcesThatMustBeConnected:
+    sum{s in S} srcConnected[s] >= useMinS + maxSrcsDisconnected;
 
-subject to defineDisconnector_2:
-    nfe >= maxSrcsDisconnected - card(V)^4 * nsdMoreThanNfe;
-
-subject to fewerSrcssDisconnectedThanNFE_min:
-    nsdMoreThanNfe == 0 ==> sum{s in S} srcConnected[s] >= useMinS + maxSrcsDisconnected;
-
-subject to moreSrcsDisconnectedThanNFE_min:
-    nsdMoreThanNfe == 1 ==> sum{s in S} srcConnected[s] >= useMinS + nfe;
-
-subject to fewerSrcsDisconnectedThanNFE_max:
-    nsdMoreThanNfe == 0 ==> sum{s in S} srcConnected[s] <= useMaxS + maxSrcsDisconnected;
-
-subject to moreSrcsDisconnectedThanNFE_max:
-    nsdMoreThanNfe == 1 ==> sum{s in S} srcConnected[s] <= useMaxS + nfe;
+subject to maxSourcesThatMustBeConnected:
+    sum{s in S} srcConnected[s] <= useMaxS + maxSrcsDisconnected;
 
 
 

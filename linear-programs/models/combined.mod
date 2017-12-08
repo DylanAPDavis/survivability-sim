@@ -60,16 +60,15 @@ set GroupIndices := 1..NumGroups;
 # FG - Set of all failure groups of size k
 set FG {g in GroupIndices} within AllPairs default {};
 
+# Traffic combination
+param combineSourceTraffic binary default 0;
+param combineDestTraffic binary default 0;
+
 # MIN AND MAX PARAMS FOR NUMBER OF SRCS/DESTINATIONS
 param useMinS >= 0 integer default 0;
 param useMaxS >= 0 integer default card(S);
 param useMinD >= 0 integer default 0;
 param useMaxD >= 0 integer default card(D);
-
-
-# Traffic combination
-param combineSourceTraffic binary default 0;
-param combineDestTraffic binary default 0;
 
 
 # VARIABLES
@@ -124,10 +123,23 @@ var FG_Conn_d{d in D, g in GroupIndices} binary;
 # At least one connection to d is disconnected by removal of any FG
 var FG_Conn_d_any{d in D} binary;
 
-var connSurvivesFromS{s in S, g in GroupIndices} binary;
-var connSurvivesToD{d in D, g in GroupIndices} binary;
 
-# END INDICATOR VARIABLES
+
+#### Survival variables - determine if sufficient srcs/dsts are connected
+# For sources
+var connSurvivesFromS{s in S, g in GroupIndices} binary;
+var srcConnected{s in S} binary;
+var numSrcsDisconnected{g in GroupIndices} >= 0 integer;
+var maxSrcsDisconnected >= 0 integer;
+# For destinations
+var connSurvivesToD{d in D, g in GroupIndices} binary;
+var destConnected{d in D} binary;
+var numDestsDisconnected{g in GroupIndices} >= 0 integer;
+var maxDestsDisconnected >= 0 integer;
+####
+
+
+
 
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {g in GroupIndices} >= 0 integer;
@@ -235,33 +247,62 @@ subject to maxNumConnectionsNeededDestNoFails{d in D}:
 
 #END ENDPOINT CONSTRAINTS
 
-# SRC/DEST REACHABILITY CONSTRAINTS
+##### SRC/DEST REACHABILITY CONSTRAINTS
 
+### SOURCES
 subject to connSurvivesFromS_1{s in S, g in GroupIndices}:
-   connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+    connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
 
 subject to connSurvivesFromS_2{s in S, g in GroupIndices}:
-   connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+    connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
 
+subject to srcConnected_1{s in S}:
+    srcConnected[s] <= Num_Conn_src[s];
+
+subject to srcConnected_2{s in S}:
+    srcConnected[s] * card(V)^4 >= Num_Conn_src[s];
+
+subject to numSrcsThatAreDisconnected{g in GroupIndices}:
+    numSrcsDisconnected[g] = sum{s in S} srcConnected[s] - sum{s in S} connSurvivesFromS[s,g];
+
+subject to greatestedNumSrcDisconnected{g in GroupIndices}:
+    maxSrcsDisconnected >= numSrcsDisconnected[g];
+
+subject to minSourcesThatMustBeConnected:
+    sum{s in S} srcConnected[s] >= useMinS + maxSrcsDisconnected;
+
+subject to maxSourcesThatMustBeConnected:
+    sum{s in S} srcConnected[s] <= useMaxS + maxSrcsDisconnected;
+### END SOURCES
+
+### START DESTINATIONS
 subject to connSurvivesToD_1{d in D, g in GroupIndices}:
-   connSurvivesToD[d,g] <= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+   connSurvivesToD[d,g] <= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
 
 subject to connSurvivesToD_2{d in D, g in GroupIndices}:
-   connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+   connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
 
-subject to minSrcsReached{g in GroupIndices}:
-    sum{s in S} connSurvivesFromS[s,g] >= useMinS;
+subject to destConnected_1{d in D}:
+	destConnected[d] <= Num_Conn_dst[d];
 
-subject to minDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] >= useMinD;
+subject to destConnected_2{d in D}:
+	destConnected[d] * card(V)^4 >= Num_Conn_dst[d];
 
-subject to maxSrcsReached{g in GroupIndices}:
-    sum{s in S} connSurvivesFromS[s,g] <= useMaxS;
+subject to numDestsThatAreDisconnected{g in GroupIndices}:
+	numDestsDisconnected[g] = sum{d in D} destConnected[d] - sum{d in D} connSurvivesToD[d,g];
 
-subject to maxDstsReached{g in GroupIndices}:
-    sum{d in D} connSurvivesToD[d,g] <= useMaxD;
+subject to greatestedNumDestsDisconnected{g in GroupIndices}:
+	maxDestsDisconnected >= numDestsDisconnected[g];
 
-# END SRC/DEST REACHABILITY CONSTRAINTS
+subject to minDestsThatMustBeConnected:
+	sum{d in D} destConnected[d] >= useMinD + maxDestsDisconnected;
+
+subject to maxDestsThatMustBeConnected:
+	sum{d in D} destConnected[d] <= useMaxD + maxDestsDisconnected;
+
+### END DESTINATIONS
+
+##### END SRC/DEST REACHABILITY CONSTRAINTS
 
 
 
@@ -345,9 +386,7 @@ subject to groupCausesConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g 
 
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:
-	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn_include_endpoints[s,d,i,g];
-
-
+	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn[s,d,i,g];
 
 # Put limits on the number of connections between a pair  that can share a FG
 subject to connectionsBetweenPairDoNotShareFG{(s,d) in SD, g in GroupIndices}:

@@ -306,6 +306,32 @@ public class AmplRoutingModelTest {
         System.out.println(outputPaths(request));
     }
 
+    @Test
+    public void manyToManyNodeFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manytomany")
+                .numSources(3)
+                .numDestinations(3)
+                .useMinS(2)
+                .useMaxS(2)
+                .useMinD(2)
+                .useMaxD(2)
+                .failureScenario("allnodes")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(outputPaths(request));
+    }
+
 
     public String outputPaths(Request request){
         StringBuilder pathBuilder = new StringBuilder();

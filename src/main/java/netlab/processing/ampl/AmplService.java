@@ -182,8 +182,6 @@ public class AmplService {
                 dataLines.add("param useMaxD := " + details.getConnections().getUseMaxD() + ";");
         }
 
-        dataLines.add("param nfe := " + details.getNumFailureEvents().getTotalNumFailureEvents() + ";");
-
         // Traffic Combination
         String combineSourceTraffic = "param combineSourceTraffic := ";
         String combineDestTraffic = "param combineDestTraffic := ";
