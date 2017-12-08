@@ -84,6 +84,11 @@ var destConnected{d in D} binary;
 
 var numDestsDisconnected{g in GroupIndices} >= 0 integer;
 
+var maxDestsDisconnected >= 0 integer;
+
+var nddMoreThanNfe binary;
+
+
 # END INDICATOR VARIABLES
 
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
@@ -104,8 +109,6 @@ var Num_Links_Used >= 0 integer;
 
 # Total weight of all used links
 var Total_Weight >= 0 integer;
-
-var nddMoreThanNfe{g in GroupIndices} binary;
 
 
 # OBJECTIVE
@@ -182,23 +185,28 @@ subject to destConnected_2{d in D}:
 subject to numDestsThatAreDisconnected{g in GroupIndices}:
 	numDestsDisconnected[g] = card(D) - sum{d in D} connSurvivesToD[d,g];
 
-subject to defineDisconnector_1{g in GroupIndices}:
-	numDestsDisconnected[g] >= nfe + 1 - card(V)^4 * (1-nddMoreThanNfe[g]);
+subject to greatestedNumDisconnected{g in GroupIndices}:
+	maxDestsDisconnected >= numDestsDisconnected[g];
 
-subject to defineDisconnector_2{g in GroupIndices}:
-	nfe >= numDestsDisconnected[g] - card(V)^4 * nddMoreThanNfe[g];
+subject to defineDisconnector_1:
+	maxDestsDisconnected >= nfe + 1 - card(V)^4 * (1-nddMoreThanNfe);
 
-subject to fewerDestsDisconnectedThanNFE_min{g in GroupIndices}:
-	nddMoreThanNfe[g] == 0 ==> sum{d in D} destConnected[d] >= useMinD + numDestsDisconnected[g];
+subject to defineDisconnector_2:
+	nfe >= maxDestsDisconnected - card(V)^4 * nddMoreThanNfe;
 
-subject to moreDestsDisconnectedThanNFE_min{g in GroupIndices}:
-	nddMoreThanNfe[g] == 1 ==> sum{d in D} destConnected[d] >= useMinD + nfe;
+subject to fewerDestsDisconnectedThanNFE_min:
+	nddMoreThanNfe == 0 ==> sum{d in D} destConnected[d] >= useMinD + maxDestsDisconnected;
 
-subject to fewerDestsDisconnectedThanNFE_max{g in GroupIndices}:
-	nddMoreThanNfe[g] == 0 ==> sum{d in D} destConnected[d] <= useMaxD + numDestsDisconnected[g];
+subject to moreDestsDisconnectedThanNFE_min:
+	nddMoreThanNfe == 1 ==> sum{d in D} destConnected[d] >= useMinD + nfe;
 
-subject to moreDestsDisconnectedThanNFE_max{g in GroupIndices}:
-	nddMoreThanNfe[g] == 1 ==> sum{d in D} destConnected[d] <= useMaxD + nfe;
+subject to fewerDestsDisconnectedThanNFE_max:
+	nddMoreThanNfe == 0 ==> sum{d in D} destConnected[d] <= useMaxD + maxDestsDisconnected;
+
+subject to moreDestsDisconnectedThanNFE_max:
+	nddMoreThanNfe == 1 ==> sum{d in D} destConnected[d] <= useMaxD + nfe;
+
+
 
 
 

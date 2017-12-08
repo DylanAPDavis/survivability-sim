@@ -1,8 +1,10 @@
 package netlab.submission.services;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.submission.enums.SourceSubsetDestType;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.SimulationParameters;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -12,6 +14,15 @@ import java.util.stream.IntStream;
 @Service
 @Slf4j
 public class RoutingParamAssignmentService {
+
+    EnumGenerationService enumGenerationService;
+    SelectionService selectionService;
+
+    @Autowired
+    public RoutingParamAssignmentService(EnumGenerationService enumGenerationService, SelectionService selectionService){
+        this.enumGenerationService = enumGenerationService;
+        this.selectionService = selectionService;
+    }
 
     public void provideRoutingValues(RequestParameters params) {
         Set<String> sources = params.getSources();
@@ -278,7 +289,9 @@ public class RoutingParamAssignmentService {
                 useMaxS = numS;
                 useMinD = numD;
                 useMaxD = numD;
-                Integer numSourcesAlsoDest = (int)Math.ceil(numS * params.getPercentSrcAlsoDest());
+                SourceSubsetDestType sourceSubsetDestType = enumGenerationService.getSourceSubsetDestType(params.getSourceSubsetDestType());
+                Double sourceSubsetDestPercentage = selectionService.translateSubsetTypeToPercentage(sourceSubsetDestType);
+                Integer numSourcesAlsoDest = (int)Math.ceil(numS * sourceSubsetDestPercentage);
                 Integer numJustSources = numS - numSourcesAlsoDest;
                 // For each source that is also a destination, connect it to all other destinations
                 // For each source that is not also a destination, connect it to all destinations

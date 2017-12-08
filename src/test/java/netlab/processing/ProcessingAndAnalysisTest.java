@@ -36,7 +36,7 @@ public class ProcessingAndAnalysisTest {
         SimulationParameters params = makeParameters(2L, "NSFnet", 1, "ILP", problemClass,
                 3, 3, null, Arrays.asList(1, 1), "Both", 1.0, new ArrayList<>(),
                 9, Arrays.asList(0, 0), Arrays.asList(1,2), null, Arrays.asList(1, 2), "Solo",
-                false, false, 0.0, 0.0, 0.0);
+                false, false, "none", "prevent", "prevent");
         Request request = generationService.generateFromSimParams(params);
         processingService.processRequest(request);
         Analysis analysis = analysisService.analyzeRequest(request);
@@ -49,8 +49,8 @@ public class ProcessingAndAnalysisTest {
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
-                                                Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                                double percentDstFail){
+                                                Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                                                String destFailureType){
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
@@ -64,9 +64,9 @@ public class ProcessingAndAnalysisTest {
                 .minConnections(numConnections)
                 .numFailureEvents(numFails)
                 .useAws(useAws)
-                .percentSrcAlsoDest(percentSrcAlsoDest)
-                .percentSrcFail(percentSrcFail)
-                .percentDstFail(percentDstFail)
+                .sourceSubsetDestType(sourceSubsetDestType)
+                .sourceFailureType(sourceFailureType)
+                .destFailureType(destFailureType)
                 .build();
     }
 }

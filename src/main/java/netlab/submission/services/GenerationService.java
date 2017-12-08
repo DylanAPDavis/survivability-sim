@@ -60,9 +60,9 @@ public class GenerationService {
                 .failureScenario(enumGenerationService.getFailureScenario(params.getFailureScenario()))
                 .trafficCombinationType(enumGenerationService.getTrafficCombinationType(params.getTrafficCombinationType()))
                 .routingType(enumGenerationService.getRoutingType(params.getRoutingType()))
-                .percentSrcAlsoDest(params.getPercentSrcAlsoDest())
-                .percentSrcFail(params.getPercentSrcFail())
-                .percentDestFail(params.getPercentDstFail())
+                .sourceSubsetDestType(enumGenerationService.getSourceSubsetDestType(params.getSourceSubsetDestType()))
+                .sourceFailureType(enumGenerationService.getMemberFailureType(params.getSourceFailureType()))
+                .destFailureType(enumGenerationService.getMemberFailureType(params.getDestFailureType()))
                 .useAws(params.getUseAws())
                 .ignoreFailures(params.getIgnoreFailures())
                 .topologyId(params.getTopologyId())
@@ -89,9 +89,9 @@ public class GenerationService {
                 .failureScenario(FailureScenario.Default)
                 .trafficCombinationType(enumGenerationService.getTrafficCombinationType(params.getTrafficCombinationType()))
                 .routingType(enumGenerationService.getRoutingType(params.getRoutingType()))
-                .percentSrcAlsoDest(-1.0)
-                .percentSrcFail(-1.0)
-                .percentDestFail(-1.0)
+                .sourceSubsetDestType(SourceSubsetDestType.None)
+                .sourceFailureType(MemberFailureType.Allow)
+                .destFailureType(MemberFailureType.Allow)
                 .useAws(false)
                 .topologyId(params.getTopologyId())
                 .numThreads(params.getNumThreads())
@@ -271,8 +271,9 @@ public class GenerationService {
     public Details createDetails(SimulationParameters params, Topology topo, Random rng){
 
         Set<Node> sources = selectionService.pickSources(topo.getNodes(), params.getNumSources(), rng);
+        SourceSubsetDestType sourceSubsetDestType = enumGenerationService.getSourceSubsetDestType(params.getSourceSubsetDestType());
         Set<Node> destinations = selectionService.pickDestinations(topo.getNodes(), params.getNumDestinations(), rng,
-                params.getPercentSrcAlsoDest(), sources);
+                sourceSubsetDestType, sources);
 
         Set<SourceDestPair> pairs = createPairs(sources, destinations);
         List<SourceDestPair> sortedPairs = new ArrayList<>(pairs);

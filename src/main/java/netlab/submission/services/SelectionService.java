@@ -1,6 +1,7 @@
 package netlab.submission.services;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.submission.enums.SourceSubsetDestType;
 import netlab.topology.elements.Link;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
@@ -17,12 +18,15 @@ public class SelectionService {
         return new HashSet<>(chooseRandomSubsetNodes(nodes, numSources, rng));
     }
 
-    public Set<Node> pickDestinations(Set<Node> nodes, Integer numDestinations, Random rng, Double percentSrcAlsoDest,
+    public Set<Node> pickDestinations(Set<Node> nodes, Integer numDestinations, Random rng, SourceSubsetDestType sourceSubsetDestType,
                                       Set<Node> sources) {
         Set<Node> remainingNodes = new HashSet<>(nodes);
         Set<Node> chosenNodes = new HashSet<>();
+
+
         // If any sources also must be destinations
-        if(percentSrcAlsoDest > 0.0){
+        if(!sourceSubsetDestType.equals(SourceSubsetDestType.None)){
+            Double percentSrcAlsoDest = translateSubsetTypeToPercentage(sourceSubsetDestType);
             chosenNodes.addAll(choosePercentageSubsetNodes(sources, percentSrcAlsoDest, rng));
         }
         // If you still haven't picked enough yet
@@ -37,6 +41,18 @@ public class SelectionService {
     public Set<Node> choosePercentageSubsetNodes(Set<Node> options, Double percentage, Random rng){
         int numToChoose = numFromPercentage(options.size(), percentage);
         return chooseRandomSubsetNodes(options, numToChoose, rng);
+    }
+
+    public double translateSubsetTypeToPercentage(SourceSubsetDestType sourceSubsetDestType){
+        switch(sourceSubsetDestType){
+            case All:
+                return 1.0;
+            case Half:
+                return 0.5;
+            case None:
+            default:
+                return 0.0;
+        }
     }
 
     private int numFromPercentage(int numOptions, double percentage){

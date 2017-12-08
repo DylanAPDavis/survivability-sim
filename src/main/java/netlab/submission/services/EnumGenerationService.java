@@ -35,4 +35,12 @@ public class EnumGenerationService {
     public Objective getObjective(String objective) {
         return Objective.get(objective).orElse(Objective.LinksUsed);
     }
+
+    public MemberFailureType getMemberFailureType(String memberFailureType){
+        return MemberFailureType.get(memberFailureType).orElse(MemberFailureType.Allow);
+    }
+
+    public SourceSubsetDestType getSourceSubsetDestType(String sourceSubsetDestType){
+        return SourceSubsetDestType.get(sourceSubsetDestType).orElse(SourceSubsetDestType.None);
+    }
 }

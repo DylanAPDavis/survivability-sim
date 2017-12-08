@@ -125,9 +125,9 @@ public class AnalysisController {
 
     private String makeHash(SimulationParameters p) {
         return hashingService.hash(p.getTopologyId(), p.getAlgorithm(), p.getProblemClass(), p.getObjective(),
-                String.valueOf(p.getPercentSrcAlsoDest()), p.getFailureClass(), String.valueOf(p.getFailureSetSize()),
-                String.valueOf(p.getNumFailureEvents()), String.valueOf(p.getPercentSrcFail()),
-                String.valueOf(p.getPercentDstFail()), String.valueOf(p.getIgnoreFailures()), String.valueOf(p.getMinConnections()),
+                p.getSourceSubsetDestType(), p.getFailureClass(), String.valueOf(p.getFailureSetSize()),
+                String.valueOf(p.getNumFailureEvents()), p.getSourceFailureType(),
+                p.getDestFailureType(), String.valueOf(p.getIgnoreFailures()), String.valueOf(p.getMinConnections()),
                 String.valueOf(p.getMinPairConnections()), String.valueOf(p.getMaxPairConnections()),
                 String.valueOf(p.getNumSources()), String.valueOf(p.getNumDestinations()));
     }

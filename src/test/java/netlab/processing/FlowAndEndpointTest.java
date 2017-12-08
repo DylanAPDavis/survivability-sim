@@ -40,10 +40,10 @@ public class FlowAndEndpointTest {
     @Test
     public void zeroMinOneMaxOneSourceOneDestOneC(){
         Request r1 = createSet("Endpoint", 1, 1, 1, Arrays.asList(0,0),
-                Arrays.asList(1,1), 0.0) ;
+                Arrays.asList(1,1), "none") ;
         analyze(r1, 1, true);
         Request r2 = createSet("Flow", 1, 1, 1, Arrays.asList(0,0),
-                Arrays.asList(1,1), 0.0) ;
+                Arrays.asList(1,1), "none") ;
         analyze(r2, 1, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -51,10 +51,10 @@ public class FlowAndEndpointTest {
     @Test
     public void zeroMinOneMaxOneSourceOneDestTwoC(){
         Request r1 = createSet("Endpoint", 1, 1, 2, Arrays.asList(0,0),
-                Arrays.asList(1,1), 0.0) ;
+                Arrays.asList(1,1), "none") ;
         analyze(r1, 0, false);
         Request r2 = createSet("Flow", 1, 1, 2, Arrays.asList(0,0),
-                Arrays.asList(1,1), 0.0) ;
+                Arrays.asList(1,1), "none") ;
         analyze(r2, 0, false);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -62,10 +62,10 @@ public class FlowAndEndpointTest {
     @Test
     public void oneMinOneMaxOneSourceOneDestTwoC(){
         Request r1 = createSet("Endpoint", 1, 1, 2, Arrays.asList(1,1),
-                Arrays.asList(1,1), 0.0) ;
+                Arrays.asList(1,1), "none") ;
         analyze(r1, 0, false);
         Request r2 = createSet("Flow", 1, 1, 2, Arrays.asList(1,1),
-                Arrays.asList(1,1), 0.0) ;
+                Arrays.asList(1,1), "none") ;
         analyze(r2, 0, false);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -73,10 +73,10 @@ public class FlowAndEndpointTest {
     @Test
     public void zeroMinTwoMaxOneSourceOneDestTwoC(){
         Request r1 = createSet("Endpoint", 1, 1, 2, Arrays.asList(0,0),
-                Arrays.asList(2,2), 0.0) ;
+                Arrays.asList(2,2), "none") ;
         analyze(r1, 2, true);
         Request r2 = createSet("Flow", 1, 1, 2, Arrays.asList(0,0),
-                Arrays.asList(2,2), 0.0) ;
+                Arrays.asList(2,2), "none") ;
         analyze(r2, 2, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -84,10 +84,10 @@ public class FlowAndEndpointTest {
     @Test
     public void zeroMinOneMaxOneSourceTwoDestOneC(){
         Request r1 = createSet("Endpoint", 1, 2, 1, Arrays.asList(0,0),
-                Arrays.asList(1,1), 0.0) ;
+                Arrays.asList(1,1), "none") ;
         analyze(r1, 1, true);
         Request r2 = createSet("Flow", 1, 2, 1, Arrays.asList(0,0),
-                Arrays.asList(1,1), 0.0) ;
+                Arrays.asList(1,1), "none") ;
         analyze(r2, 1, true);
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
@@ -723,10 +723,11 @@ public class FlowAndEndpointTest {
     }
 
     private Request createSet(String problemClass, int numSources, int numDestinations, int numConns, List<Integer> minConns,
-                              List<Integer> maxConns, double percentSrcAlsoDest){
+                              List<Integer> maxConns, String sourceSubsetDestType){
         return solve(1L, "NSFnet", 1, "ILP", problemClass, "LinksUsed", numSources, numDestinations, 0,
                 new ArrayList<>(), "Both", 0.0, new ArrayList<>(), numConns, minConns, maxConns,
-                0, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, 0.0, 0.0);
+                0, new ArrayList<>(), "Solo", false, false, sourceSubsetDestType,
+                "prevent", "prevent");
 
     }
 
@@ -754,12 +755,12 @@ public class FlowAndEndpointTest {
                           List<Double> minMaxFailureProb, Integer numConnections,
                           List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                           Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
-                          Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                          double percentDstFail){
+                          Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                          String destFailureType){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
-                numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                numFails, minMaxFails, processingType, sdn, useAws, sourceSubsetDestType, sourceFailureType, destFailureType);
         Request request = generationService.generateFromSimParams(params);
         processingService.processRequest(request);
         return request;
@@ -771,8 +772,8 @@ public class FlowAndEndpointTest {
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
-                                                Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                                double percentDstFail){
+                                                Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                                                String destFailureType){
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
@@ -787,9 +788,9 @@ public class FlowAndEndpointTest {
                 .minConnections(numConnections)
                 .numFailureEvents(numFails)
                 .useAws(useAws)
-                .percentSrcAlsoDest(percentSrcAlsoDest)
-                .percentSrcFail(percentSrcFail)
-                .percentDstFail(percentDstFail)
+                .sourceSubsetDestType(sourceSubsetDestType)
+                .sourceFailureType(sourceFailureType)
+                .destFailureType(destFailureType)
                 .build();
     }
 }

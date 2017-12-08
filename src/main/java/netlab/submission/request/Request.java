@@ -39,11 +39,11 @@ public class Request implements Serializable {
 
     private RoutingType routingType;
 
-    private Double percentSrcAlsoDest;
+    private SourceSubsetDestType sourceSubsetDestType;
 
-    private Double percentSrcFail;
+    private MemberFailureType sourceFailureType;
 
-    private Double percentDestFail;
+    private MemberFailureType destFailureType;
 
     private boolean useAws;
 

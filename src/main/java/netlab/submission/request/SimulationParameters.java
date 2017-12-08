@@ -64,9 +64,9 @@ public class SimulationParameters {
 
     public String trafficCombinationType;
 
-    public Double percentSrcAlsoDest;
-    public Double percentSrcFail;
-    public Double percentDstFail;
+    public String sourceSubsetDestType;
+    public String sourceFailureType;
+    public String destFailureType;
 
     public Boolean useAws;
     public Boolean ignoreFailures;
@@ -104,9 +104,9 @@ public class SimulationParameters {
                     .useMaxS(useMaxS)
                     .useMinD(useMinD)
                     .useMaxD(useMaxD)
-                    .percentSrcAlsoDest(percentSrcAlsoDest)
-                    .percentSrcFail(percentSrcFail)
-                    .percentDstFail(percentDstFail)
+                    .sourceSubsetDestType(sourceSubsetDestType)
+                    .sourceFailureType(sourceFailureType)
+                    .destFailureType(destFailureType)
                     .useAws(useAws)
                     .ignoreFailures(ignoreFailures)
                     .trafficCombinationType(trafficCombinationType)

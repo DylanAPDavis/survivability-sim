@@ -35,7 +35,7 @@ public class AnalysisTest {
         List<Integer> minConns = Arrays.asList(1, 1);
         List<Integer> maxConns = Arrays.asList(1, 2);
         Request rs = createSetWithGenService("Flex", 3, 3, 2, minConns, maxConns, 0,
-                0, "Both", 0.0, 0.0, 0.0, 10);
+                0, "Both", "none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -44,7 +44,7 @@ public class AnalysisTest {
         Integer numFails = 10;
         Integer nfa = 2;
         Request rs = createSetWithGenService("Flex", 3, 3, 2, new ArrayList<>(),
-                new ArrayList<>(), numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+                new ArrayList<>(), numFails, nfa, "Both", "none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -55,7 +55,7 @@ public class AnalysisTest {
         List<Integer> minConns = Arrays.asList(1, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+                maxConns, numFails, nfa, "Both", "none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -66,7 +66,7 @@ public class AnalysisTest {
         List<Integer> minConns = Arrays.asList(1, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+                maxConns, numFails, nfa, "Both", "none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -77,7 +77,7 @@ public class AnalysisTest {
         Integer numFails = 10;
         Integer nfa = 1;
         Request rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+                maxConns, numFails, nfa, "Both","none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -88,7 +88,7 @@ public class AnalysisTest {
         Integer numFails = 10;
         Integer nfa = 1;
         Request rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+                maxConns, numFails, nfa, "Both", "none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -100,7 +100,7 @@ public class AnalysisTest {
         Integer numFails = 10;
         Integer nfa = 3;
         Request rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+                maxConns, numFails, nfa, "Both", "none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -111,7 +111,7 @@ public class AnalysisTest {
         List<Integer> minConns = Arrays.asList(0, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
+                maxConns, numFails, nfa, "Link", "none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -122,7 +122,7 @@ public class AnalysisTest {
         List<Integer> minConns = Arrays.asList(0, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
+                maxConns, numFails, nfa, "Link", "none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -133,7 +133,7 @@ public class AnalysisTest {
         Integer numFails = 10;
         Integer nfa = 2;
         Request rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Both", 0.0, 0.0, 0.0, 10);
+                maxConns, numFails, nfa, "Both", "none", "prevent", "prevent",10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -144,7 +144,7 @@ public class AnalysisTest {
         List<Integer> minConns = Arrays.asList(2, 2);
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Link", 0.0, 0.0, 0.0, 10);
+                maxConns, numFails, nfa, "Link", "none", "prevent", "prevent", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -156,7 +156,7 @@ public class AnalysisTest {
         Integer numFails = 14;
         Integer nfa = 14;
         Request rs = createSetWithGenService("Flex", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Node", 0.0, 1.0, 1.0, 10);
+                maxConns, numFails, nfa, "Node", "none", "enforce", "enforce", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -167,7 +167,7 @@ public class AnalysisTest {
         List<Integer> minConns = Arrays.asList(0, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("FlowSharedF", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
+                maxConns, numFails, nfa, "Link", "none", "enforce", "enforce", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -178,7 +178,7 @@ public class AnalysisTest {
         List<Integer> minConns = Arrays.asList(0, 1);
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("EndpointSharedF", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
+                maxConns, numFails, nfa, "Link", "none", "enforce", "enforce", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -189,7 +189,7 @@ public class AnalysisTest {
         Integer numFails = 14;
         Integer nfa = 14;
         Request rs = createSetWithGenService("Flow", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Both", 0.0, 1.0, 1.0, 10);
+                maxConns, numFails, nfa, "Both", "none", "enforce", "enforce", 10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -200,7 +200,8 @@ public class AnalysisTest {
         List<Integer> minConns = Arrays.asList(2, 2);
         List<Integer> maxConns = Arrays.asList(4, 4);
         Request rs = createSetWithGenService("Endpoint", 3, 3, 2, minConns,
-                maxConns, numFails, nfa, "Link", 0.0, 1.0, 1.0, 10);
+                maxConns, numFails, nfa, "Link", "none", "enforce", "enforce",
+                10);
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
@@ -209,17 +210,19 @@ public class AnalysisTest {
         Request rs = createSetAndSolve(1L, "NSFnet", 1, "ILP", "Flow",
                 "TotalCost", 1, 7, 35, new ArrayList<>(), "Both",
                 1.0, new ArrayList<>(), 7, Arrays.asList(1,1), Arrays.asList(1,1), 2,
-                new ArrayList<>(), "Solo", false, false, 1.0, 1.0, 1.0);
+                new ArrayList<>(), "Solo", false, false, "all",
+                "enforce", "enforce");
         Analysis as = analysisService.analyzeRequest(rs);
     }
 
     private Request createSetWithGenService(String problemClass, int numSources, int numDestinations, int numConns,
                                             List<Integer> minConns, List<Integer> maxConns, Integer numFails,
-                                            Integer nfa, String failureClass, double percentSrcAlsoDest, double percentSrcFail,
-                                            double percentDstFail, int numRequests) {
+                                            Integer nfa, String failureClass, String sourceSubsetDestType, String sourceFailureType,
+                                            String destFailureType, int numRequests) {
         return createSetAndSolve(1L, "NSFnet", numRequests, "ILP", problemClass, "LinksUsed", numSources, numDestinations, numFails,
                 new ArrayList<>(), failureClass, 0.0, new ArrayList<>(), numConns, minConns, maxConns,
-                nfa, new ArrayList<>(), "Solo", false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                nfa, new ArrayList<>(), "Solo", false, false, sourceSubsetDestType,
+                sourceFailureType, destFailureType);
     }
 
     private Request createSetAndSolve(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
@@ -228,12 +231,13 @@ public class AnalysisTest {
                                       List<Double> minMaxFailureProb, Integer numConnections,
                                       List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                       Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
-                                      Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                      double percentDstFail){
+                                      Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                                      String destFailureType){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
-                numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, sourceSubsetDestType,
+                sourceFailureType, destFailureType);
         Request request = generationService.generateFromSimParams(params);
         processingService.processRequest(request);
         return request;
@@ -245,8 +249,8 @@ public class AnalysisTest {
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 Integer numFails, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
-                                                Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                                double percentDstFail){
+                                                Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                                                String destFailureType){
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
@@ -261,9 +265,9 @@ public class AnalysisTest {
                 .minConnections(numConnections)
                 .numFailureEvents(numFails)
                 .useAws(useAws)
-                .percentSrcAlsoDest(percentSrcAlsoDest)
-                .percentSrcFail(percentSrcFail)
-                .percentDstFail(percentDstFail)
+                .sourceSubsetDestType(sourceSubsetDestType)
+                .sourceFailureType(sourceFailureType)
+                .destFailureType(destFailureType)
                 .build();
     }
 }

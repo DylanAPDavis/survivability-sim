@@ -230,25 +230,16 @@ public class DefaultValueService {
             params.setUseAws(false);
         }
 
-        if(params.getPercentSrcAlsoDest() == null || params.getPercentSrcAlsoDest() < 0.0){
-            params.setPercentSrcAlsoDest(0.0);
-        }
-        else if(params.getPercentSrcAlsoDest() > 1.0){
-            params.setPercentSrcAlsoDest(1.0);
+        if(params.getSourceSubsetDestType() == null){
+            params.setSourceSubsetDestType("none");
         }
 
-        if(params.getPercentSrcFail() == null || params.getPercentSrcFail() < 0.0){
-            params.setPercentSrcFail(0.0);
-        }
-        else if(params.getPercentSrcFail() > 1.0){
-            params.setPercentSrcFail(1.0);
+        if(params.getSourceFailureType() == null){
+            params.setSourceFailureType("allow");
         }
 
-        if(params.getPercentDstFail() == null || params.getPercentDstFail() < 0.0){
-            params.setPercentDstFail(0.0);
-        }
-        else if(params.getPercentDstFail() > 1.0){
-            params.setPercentDstFail(1.0);
+        if(params.getDestFailureType() == null){
+            params.setDestFailureType("allow");
         }
         if(params.getIgnoreFailures() == null){
             params.setIgnoreFailures(false);

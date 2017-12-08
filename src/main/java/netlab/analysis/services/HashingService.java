@@ -30,8 +30,8 @@ public class HashingService {
                 params.getMaxSrcConnections(), params.getMinDstConnections(), params.getMaxDstConnections(),
                 params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(), params.getTrafficCombinationType(),
                 params.getFailureSetSize(), params.getFailureClass(), params.getFailureProb(), params.getFailureScenario(),
-                params.getNumFailureEvents(), params.getPercentSrcAlsoDest(), params.getPercentSrcFail(),
-                params.getPercentDstFail(), params.getIgnoreFailures(), params.getNumThreads());
+                params.getNumFailureEvents(), params.getSourceSubsetDestType(), params.getSourceFailureType(),
+                params.getDestFailureType(), params.getIgnoreFailures(), params.getNumThreads());
     }
 
     public String makeAggregationHash(SimulationParameters params) {
@@ -39,8 +39,8 @@ public class HashingService {
                 params.getAlgorithm(), params.getNumSources(), params.getNumDestinations(), params.getMinConnections(),
                 params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(), params.getTrafficCombinationType(),
                 params.getFailureSetSize(), params.getFailureClass(), params.getFailureScenario(),
-                params.getNumFailureEvents(), params.getPercentSrcAlsoDest(), params.getPercentSrcFail(),
-                params.getPercentDstFail(), params.getIgnoreFailures(), params.getNumThreads());
+                params.getNumFailureEvents(), params.getSourceSubsetDestType(), params.getSourceFailureType(),
+                params.getDestFailureType(), params.getIgnoreFailures(), params.getNumThreads());
     }
 
     public String makeAggregationHash(Topology topology, Integer threads, Objective objective,

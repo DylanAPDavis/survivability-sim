@@ -35,8 +35,8 @@ public class SubmissionAnalysisControllerTest {
         SimulationParameters params = makeParameters(1L, false, "NSFnet", 5, "ILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
-                1, new ArrayList<>(), "Solo", false, true, 0.0,
-                0.0, 0.0);
+                1, new ArrayList<>(), "Solo", false, true, "none",
+                "prevent", "prevent");
         String requestSetId = submissionController.submitRequestSet(params);
         AnalysisParameters analysisParameters = AnalysisParameters.builder().requestSetId(requestSetId).useAws(true).build();
         analysisController.analyzeRequestSet(analysisParameters);
@@ -52,8 +52,8 @@ public class SubmissionAnalysisControllerTest {
         SimulationParameters params = makeParameters(2L, false, "NSFnet", 5, "ILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
-                1, new ArrayList<>(), "Solo", false, true, 0.0,
-                0.0, 0.0);
+                1, new ArrayList<>(), "Solo", false, true, "none",
+                "prevent", "prevent");
         String requestSetId = submissionController.submitRequestSet(params);
         AnalysisParameters analysisParameters = AnalysisParameters.builder().requestSetId(requestSetId).useAws(true).build();
         analysisController.analyzeRequestSet(analysisParameters);
@@ -67,8 +67,8 @@ public class SubmissionAnalysisControllerTest {
         SimulationParameters params = makeParameters(null, true, "NSFnet", 5, "ILP",
                 "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
-                1, new ArrayList<>(), "Solo", false, true, 0.0,
-                0.0, 0.0);
+                1, new ArrayList<>(), "Solo", false, true, "none",
+                "prevent", "prevent");
         AggregateAnalysis aas = analysisController.aggregateAnalyzedSets(params);
         System.out.println(aas);
     }
@@ -80,8 +80,8 @@ public class SubmissionAnalysisControllerTest {
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 Integer numFails, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
-                                                Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                                double percentDstFail){
+                                                Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                                                String destFailureType){
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
@@ -96,9 +96,9 @@ public class SubmissionAnalysisControllerTest {
                 .minConnections(numConnections)
                 .numFailureEvents(numFails)
                 .useAws(useAws)
-                .percentSrcAlsoDest(percentSrcAlsoDest)
-                .percentSrcFail(percentSrcFail)
-                .percentDstFail(percentDstFail)
+                .sourceSubsetDestType(sourceSubsetDestType)
+                .sourceFailureType(sourceFailureType)
+                .destFailureType(destFailureType)
                 .build();
     }
 }

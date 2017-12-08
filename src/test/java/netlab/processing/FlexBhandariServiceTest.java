@@ -37,7 +37,8 @@ public class FlexBhandariServiceTest {
         Request request = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
                 "TotalCost", 1, 1, 6, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
-                2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
+                2, new ArrayList<>(), "Solo", false, false,
+                "none", "prevent", "prevent");
         processingService.processRequest(request);
         Map<SourceDestPair, Map<String, Path>> pathMap = request.getDetails().getChosenPaths();
         log.info("Failure set: " + request.getDetails().getFailures().getFailureSet());
@@ -49,7 +50,8 @@ public class FlexBhandariServiceTest {
         Request request = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
                 "TotalCost", 1, 1, 10, new ArrayList<>(), "Link", 1.0,
                 new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
-                2, new ArrayList<>(), "Solo", false, false, 0.0, 0.0, 0.0);
+                2, new ArrayList<>(), "Solo", false, false,
+                "none", "prevent", "prevent");
         processingService.processRequest(request);
         Details details = request.getDetails();
         Map<SourceDestPair, Map<String, Path>> pathMap = details.getChosenPaths();
@@ -86,12 +88,12 @@ public class FlexBhandariServiceTest {
                                      List<Double> minMaxFailureProb, Integer numConnections,
                                      List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                      Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
-                                     Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                     double percentDstFail){
+                                     Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                                     String destFailureType){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
-                numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, sourceSubsetDestType, sourceFailureType, destFailureType);
         Request request = generationService.generateFromSimParams(params);
         return request;
     }
@@ -102,8 +104,8 @@ public class FlexBhandariServiceTest {
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 Integer numFails, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
-                                                Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                                double percentDstFail){
+                                                Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                                                String destFailureType){
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
@@ -118,9 +120,9 @@ public class FlexBhandariServiceTest {
                 .minConnections(numConnections)
                 .numFailureEvents(numFails)
                 .useAws(useAws)
-                .percentSrcAlsoDest(percentSrcAlsoDest)
-                .percentSrcFail(percentSrcFail)
-                .percentDstFail(percentDstFail)
+                .sourceSubsetDestType(sourceSubsetDestType)
+                .sourceFailureType(sourceFailureType)
+                .destFailureType(destFailureType)
                 .build();
     }
 }

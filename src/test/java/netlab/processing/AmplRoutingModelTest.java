@@ -46,6 +46,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -67,6 +68,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -88,6 +90,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -109,6 +112,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -130,6 +134,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -151,6 +156,30 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(outputPaths(request));
+    }
+
+    @Test
+    public void anycastNodeNoDestFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(2)
+                .failureSetSize(11)
+                .destFailureType("prevent")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -175,6 +204,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -198,6 +228,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -221,6 +252,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -241,9 +273,11 @@ public class AmplRoutingModelTest {
                 .failureScenario("allnodes")
                 .numFailureEvents(1)
                 .useAws(false)
+                .destFailureType("prevent")
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 
@@ -268,6 +302,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
         System.out.println(outputPaths(request));
     }
 

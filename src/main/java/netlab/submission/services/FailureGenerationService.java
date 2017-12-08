@@ -3,6 +3,7 @@ package netlab.submission.services;
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.enums.FailureClass;
 import netlab.submission.enums.FailureScenario;
+import netlab.submission.enums.MemberFailureType;
 import netlab.submission.enums.ProblemClass;
 import netlab.submission.request.Failures;
 import netlab.submission.request.NumFailureEvents;
@@ -83,7 +84,7 @@ public class FailureGenerationService {
         Set<Link> filteredLinks = new HashSet<>();
         for(Link link : links){
             String[] splitId = link.getId().split("-");
-            String revId = "";
+            String revId;
             if(splitId.length > 2){
                 revId = splitId[1] + "-" + splitId[0] + "-" + splitId[2];
             }
@@ -259,8 +260,12 @@ public class FailureGenerationService {
         // If Flex, use the total number of failureSet
         // Otherwise, use min/max, unless that field isn't set.
         // Create failureSet
-        Set<Node> srcDstFailures = selectionService.choosePercentageSubsetNodes(new HashSet<>(sources), params.getPercentSrcFail(), rng);
-        srcDstFailures.addAll(selectionService.choosePercentageSubsetNodes(new HashSet<>(destinations), params.getPercentDstFail(), rng));
+        MemberFailureType sourceFailureType = enumGenerationService.getMemberFailureType(params.getSourceFailureType());
+        Double sourceFailPercentage = percentageFromFailureType(sourceFailureType);
+        MemberFailureType destFailureType = enumGenerationService.getMemberFailureType(params.getDestFailureType());
+        Double destFailPercentage = percentageFromFailureType(destFailureType);
+        Set<Node> srcDstFailures = selectionService.choosePercentageSubsetNodes(new HashSet<>(sources), sourceFailPercentage, rng);
+        srcDstFailures.addAll(selectionService.choosePercentageSubsetNodes(new HashSet<>(destinations), destFailPercentage, rng));
 
         Integer failureSetSize = numFailures != null ? numFailures : 0;
 
@@ -271,7 +276,8 @@ public class FailureGenerationService {
         if(minMaxFailures.size() < 2){
             failureSetSize = numFailures;
             failures = generateFailureSet(topo.getNodes(), filteredLinks, numFailures, failureClass,
-                    params.getFailureProb(), params.getFailureScenario(), sources, destinations, srcDstFailures, topo, rng);
+                    params.getFailureProb(), params.getFailureScenario(), sources, destinations, srcDstFailures,
+                    sourceFailureType, destFailureType, topo, rng);
         }
         else{
             if(problemClass.equals(ProblemClass.Flow)){
@@ -279,7 +285,7 @@ public class FailureGenerationService {
                     Integer randomNumFailures = selectionService.randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
                     Set<Failure> failureSet = generateFailureSet(topo.getNodes(), filteredLinks,
                             randomNumFailures, failureClass, params.getFailureProb(), params.getFailureScenario(),
-                            sources, destinations, srcDstFailures, topo, rng);
+                            sources, destinations, srcDstFailures, sourceFailureType, destFailureType, topo, rng);
                     pairFailuresMap.put(pair, failureSet);
                     failureSetSize += failureSet.size();
                 }
@@ -299,7 +305,7 @@ public class FailureGenerationService {
                 failureSetSize = selectionService.randomInt(minMaxFailures.get(0), minMaxFailures.get(1), rng);
                 failures = generateFailureSet(topo.getNodes(), filteredLinks,
                         failureSetSize, failureClass, params.getFailureProb(), params.getFailureScenario(),
-                        sources, destinations, srcDstFailures, topo, rng);
+                        sources, destinations, srcDstFailures, sourceFailureType, destFailureType, topo, rng);
             }
         }
 
@@ -312,6 +318,18 @@ public class FailureGenerationService {
                 .build();
     }
 
+    private Double percentageFromFailureType(MemberFailureType memberFailureType){
+        switch(memberFailureType){
+            case Allow:
+            case Prevent:
+                return  0.0;
+            case Enforce:
+                return 1.0;
+            default:
+                return 0.0;
+        }
+    }
+
     private Integer populateFailureMap(List<Integer> minMaxFailures, Topology topo, Random rng, FailureClass failureClass,
                                        SimulationParameters params, List<Node> sources, List<Node> destinations,
                                        Set<Node> srcDstFailures, Map<Node, Set<Failure>> failuresMap, Integer failureSetSize,
@@ -322,7 +340,7 @@ public class FailureGenerationService {
         Set<Link> filteredLinks = filterLinks(topo.getLinks(), topo.getLinkIdMap());
         Set<Failure> failureSet = generateFailureSet(topo.getNodes(), filteredLinks,
                 randomNumFailures, failureClass, params.getFailureProb(), params.getFailureScenario(),
-                sources, destinations, srcDstFailures, topo, rng);
+                sources, destinations, srcDstFailures, MemberFailureType.Allow, MemberFailureType.Allow, topo, rng);
         failuresMap.put(member, failureSet);
         failureSetSize += failureSet.size();
         return failureSetSize;
@@ -330,13 +348,21 @@ public class FailureGenerationService {
 
     private Set<Failure> generateFailureSet(Set<Node> nodes, Set<Link> links, Integer numFailures, FailureClass failureClass,
                                             Double probability, String failScenario, List<Node> sources, List<Node> destinations,
-                                            Set<Node> prioritySet, Topology topo, Random rng) {
+                                            Set<Node> prioritySet, MemberFailureType sourceFailureType, MemberFailureType destFailureType, Topology topo, Random rng) {
 
         List<Link> chosenLinks = new ArrayList<>();
         List<Node> chosenNodes = new ArrayList<>();
         List<Double> probabilities = new ArrayList<>();
 
         Set<Node> nodeOptions = new HashSet<>(nodes);
+
+        // If you're preventing sources or destinations from failing, remove them from the node options
+        if(sourceFailureType.equals(MemberFailureType.Prevent)){
+            nodeOptions.removeAll(sources);
+        }
+        if(destFailureType.equals(MemberFailureType.Prevent)){
+            nodeOptions.removeAll(destinations);
+        }
 
         FailureScenario failureScenario = enumGenerationService.getFailureScenario(failScenario);
 
@@ -347,6 +373,9 @@ public class FailureGenerationService {
         if(failureScenario.equals(FailureScenario.Default)) {
             if (!prioritySet.isEmpty()) {
                 chosenNodes.addAll(selectionService.chooseRandomSubsetNodes(prioritySet, numFailures, rng));
+
+                nodeOptions.removeAll(sources);
+                nodeOptions.removeAll(destinations);
             }
             // If we still haven't gotten enough failureSet, make some more
             if (chosenNodes.size() < numFailures) {
@@ -357,9 +386,6 @@ public class FailureGenerationService {
                     chosenLinks.addAll(selectionService.chooseRandomSubsetLinks(linkOptions, numLeftToChoose, rng));
                 }
 
-                // remove any nodes, if necessary
-                nodeOptions.removeAll(sources);
-                nodeOptions.removeAll(destinations);
 
                 if (failureClass.equals(FailureClass.Node)) {
                     chosenNodes.addAll(selectionService.chooseRandomSubsetNodes(nodeOptions, numLeftToChoose, rng));
@@ -406,6 +432,7 @@ public class FailureGenerationService {
                     break;
             }
         }
+
 
         return generateFailuresFromNodeLinks(chosenNodes, chosenLinks, probabilities);
     }

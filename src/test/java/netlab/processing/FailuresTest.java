@@ -39,70 +39,70 @@ public class FailuresTest {
     @Test
     public void oneSrcOneDstOneFailOneConnOneNFA(){
         solveAndAnalyzeSrcDestOverlap(1, 1, 1, 1, 1,
-                "Node", 0.0, 0.0, 0.0, true, true, 1);
+                "Node", "none", "prevent", "prevent", true, true, 1);
     }
 
     @Test
     public void oneSrcOneDst14FailOneConnOneNFA(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(1, 1, 1, 14, 1,
-                "Node", 0.0, 0.0, 0.0, true, true, 2);
+                "Node", "none", "prevent", "prevent", true, true, 2);
     }
 
     @Test
     public void oneSrcOneDst14FailOneConnThreeNFA(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(1, 1, 1, 12, 3,
-                "Node", 0.0, 0.0, 0.0, false, false, 0);
+                "Node", "none", "prevent", "prevent", false, false, 0);
     }
 
     @Test
     public void oneSrcOneDst21FailLinksOneConnThreeNFA(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(1, 1, 1, 21, 3,
-                "Link", 0.0, 0.0, 0.0, false, false, 0);
+                "Link", "none", "prevent", "prevent", false, false, 0);
     }
 
     @Test
     public void oneSrcOneDst14FailThreeConnThreeNFA(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(1, 1, 3, 12, 3,
-                "Node", 0.0, 0.0, 0.0, false, false, 0);
+                "Node", "none", "prevent", "prevent", false, false, 0);
     }
 
     @Test
     public void oneSrcOneDst14FailOneConnOneNFASrcFails(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(1, 1, 1, 14, 1,
-                "Node", 0.0, 1.0, 0.0, false, false, 0);
+                "Node", "none", "enforce", "prevent", false, false, 0);
     }
 
     @Test
     public void oneSrcOneDst14FailOneConnOneNFADstFails(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(1, 1, 1, 14, 1,
-                "Node", 0.0, 1.0, 1.0, false, false, 0);
+                "Node", "none", "enforce", "enforce", false, false, 0);
     }
 
     @Test
     public void twoSrcOneDest14FailOneConnOneNFA(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(2, 1, 1, 14, 1,
-                "Node", 0.0, 0.0, 0.0, true, true, 2);
+                "Node", "none", "prevent", "prevent", true, true, 2);
     }
 
     @Test
     public void twoSrcOneDest14FailOneConnTwoNFA(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(2, 1, 1, 14, 2,
-                "Node", 0.0, 0.0, 0.0, true, true, 3);
+                "Node", "none", "prevent", "prevent", true, true, 3);
     }
 
     @Test
     public void twoSrcTwoDest14FailOneConnTwoNFA(){
         // Only can get 12
         solveAndAnalyzeSrcDestOverlap(2, 2, 1, 14, 2,
-                "Node", 0.0, 0.0, 0.0, true, true, 3);
+                "Node", "none", "prevent", "prevent", true, true, 3);
     }
 
     @Test
@@ -110,17 +110,17 @@ public class FailuresTest {
         Request rs1 = solve(2L, "NSFnet", 10, "ILP", "Flex",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
-                false, false, .50, 0.0, 0.0);
+                false, false, "half", "prevent", "prevent");
         analyze(rs1, 5, true, true);
         Request rs2 = solve(2L, "NSFnet", 10, "ILP", "Endpoint",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
-                false, false, .50, 0.0, 0.0);
+                false, false, "half", "prevent", "prevent");
         analyze(rs2, 5, true, true);
         Request rs3 = solve(2L, "NSFnet", 10, "ILP", "Flow",
                 "LinksUsed", 4, 4, 12, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 5, new ArrayList<>(), new ArrayList<>(), 2, new ArrayList<>(), "Solo",
-                false, false, .50, 0.0, 0.0);
+                false, false, "half", "prevent", "prevent");
         analyze(rs3, 5, true, true);
     }
 
@@ -162,30 +162,30 @@ public class FailuresTest {
         Request rs1 = solve(1L, "NSFnet", 50, "ILP", "Flex",
                 "LinksUsed", 1, 1, 1, new ArrayList<>(), "Node", 1.0,
                 new ArrayList<>(), 1,  new ArrayList<>(), new ArrayList<>(),
-                1, new ArrayList<>(), "Solo", false, false, 1.0, 0.0, 0.0);
+                1, new ArrayList<>(), "Solo", false, false, "all", "prevent", "prevent");
     }
 
 
     private void solveAndAnalyzeSrcDestOverlap(Integer numSources, Integer numDestinations, Integer numConnections,
                                                Integer fSize, Integer nfa, String failureClass,
-                                               Double percentSrcAlsoDest, Double percentSrcFail,
-                                               Double percentDstFail, Boolean survivable, Boolean feasible, Integer numPaths){
+                                               String sourceSubsetDestType, String sourceFailureType,
+                                               String destFailureType, Boolean survivable, Boolean feasible, Integer numPaths){
         Request rs1 = solve(1L, "NSFnet", 1, "ILP", "Flex",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
-                false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                false, false,  sourceSubsetDestType, sourceFailureType, destFailureType);
         analyze(rs1, numPaths, survivable, feasible);
         // Endpoint
         Request rs2 = solve(1L, "NSFnet", 1, "ILP", "Endpoint",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
-                false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                false, false,  sourceSubsetDestType, sourceFailureType, destFailureType);
         analyze(rs2, numPaths, survivable, feasible);
         // Flow
         Request rs3 = solve(1L, "NSFnet", 1, "ILP", "Flow",
                 "LinksUsed", numSources, numDestinations, fSize, new ArrayList<>(), failureClass, 1.0,
                 new ArrayList<>(), numConnections, new ArrayList<>(), new ArrayList<>(), nfa, new ArrayList<>(), "Solo",
-                false, false, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                false, false,  sourceSubsetDestType, sourceFailureType, destFailureType);
         analyze(rs3, numPaths, survivable, feasible);
         //analyzeMultiSet(Arrays.asList(rs1, rs2, rs3));
     }
@@ -211,12 +211,12 @@ public class FailuresTest {
                           List<Double> minMaxFailureProb, Integer numConnections,
                           List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                           Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
-                          Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                          double percentDstFail){
+                          Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                          String destFailureType){
 
         SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
                 fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
-                numFails, minMaxFails, processingType, sdn, useAws, percentSrcAlsoDest, percentSrcFail, percentDstFail);
+                numFails, minMaxFails, processingType, sdn, useAws, sourceSubsetDestType, sourceFailureType, destFailureType);
         Request request = generationService.generateFromSimParams(params);
         processingService.processRequest(request);
         return request;
@@ -228,8 +228,8 @@ public class FailuresTest {
                                                 List<Double> minMaxFailureProb, Integer numConnections,
                                                 List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
                                                 Integer numFails, List<Integer> minMaxFails, String processingType, Boolean sdn,
-                                                Boolean useAws, double percentSrcAlsoDest, double percentSrcFail,
-                                                double percentDstFail){
+                                                Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
+                                                String destFailureType){
         return SimulationParameters.builder()
                 .seed(seed)
                 .topologyId(topologyId)
@@ -244,9 +244,9 @@ public class FailuresTest {
                 .minConnections(numConnections)
                 .numFailureEvents(numFails)
                 .useAws(useAws)
-                .percentSrcAlsoDest(percentSrcAlsoDest)
-                .percentSrcFail(percentSrcFail)
-                .percentDstFail(percentDstFail)
+                .sourceSubsetDestType(sourceSubsetDestType)
+                .sourceFailureType(sourceFailureType)
+                .destFailureType(destFailureType)
                 .build();
     }
 

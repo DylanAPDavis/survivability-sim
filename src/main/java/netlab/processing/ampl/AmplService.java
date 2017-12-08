@@ -40,9 +40,6 @@ public class AmplService {
             log.info("Solution took: " + duration + " seconds");
             com.ampl.Objective obj = ampl.getObjective(request.getObjective().getCode());
             String result = obj.result();
-            DataFrame ndd = ampl.getData("nddMoreThanNfe");
-            double[] groups = ndd.getColumnAsDoubles("index0");
-            double[] vals = ndd.getColumnAsDoubles("index1");
             if(result.toLowerCase().contains("solved")){
                 details.setIsFeasible(true);
                 DataFrame flows = ampl.getData("L");
