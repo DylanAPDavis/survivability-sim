@@ -34,6 +34,9 @@ param NumGroups default 1;
 # GroupIndices - Indexing set for all groups of failure elements of size k
 set GroupIndices := 1..NumGroups;
 
+# The number of failure events (k)
+param nfe default 0;
+
 # FG - Set of all failure groups of size k
 set FG {g in GroupIndices} within AllPairs default {};
 
@@ -68,7 +71,7 @@ var FG_Conn {s in S, i in I, g in GroupIndices} binary;
 var FG_Conn_include_endpoints {s in S, i in I, g in GroupIndices} binary;
 
 
-#Destinations
+#Source constraints
 # At least one connection from s is disconnected by removal of FG[g]
 var FG_Conn_s{s in S, g in GroupIndices} binary;
 
@@ -77,14 +80,21 @@ var FG_Conn_s_any{s in S} binary;
 
 var connSurvivesFromS{s in S, g in GroupIndices} binary;
 
-# END INDICATOR VARIABLES
+var srcConnected{s in S} binary;
+
+var numSrcsDisconnected{g in GroupIndices} >= 0 integer;
+
+var maxSrcsDisconnected >= 0 integer;
+
+var nsdMoreThanNfe binary;
+
+
 
 # FG_Sum - Number of failed connections caused by this failure group (groupIndex)
 var FG_Sum {g in GroupIndices} >= 0 integer;
 
 # Number of connections from a source s
 var Num_Conn_src{s in S} = sum{i in I} C[s,i];
-# END ENDPOINT VARIABLES
 
 
 # OBJECTIVE VARIABLES
@@ -156,17 +166,43 @@ subject to maxNumConnectionsNeededSrcNoFails{s in S}:
     FG_Conn_s_any[s] == 0 ==> Num_Conn_src[s] <= 1;
 
 
+# Determine how many sources have to be connected
+
 subject to connSurvivesFromS_1{s in S, g in GroupIndices}:
-    connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{i in I: s != d} FG_Conn[s,i,g];
+    connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{i in I: s != d} FG_Conn_include_endpoints[s,i,g];
 
 subject to connSurvivesFromS_2{s in S, g in GroupIndices}:
-    connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{i in I: s != d} FG_Conn[s,i,g];
+    connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{i in I: s != d} FG_Conn_include_endpoints[s,i,g];
 
-subject to minSrcsReached{g in GroupIndices}:
-    sum{s in S} connSurvivesFromS[s,g] >= useMinS;
+subject to srcConnected_1{s in S}:
+    srcConnected[s] <= Num_Conn_src[s];
 
-subject to maxSrcsReached{g in GroupIndices}:
-    sum{s in S} connSurvivesFromS[s,g] <= useMaxS;
+subject to srcConnected_2{s in S}:
+    srcConnected[s] * card(V)^4 >= Num_Conn_src[s];
+
+subject to numSrcsThatAreDisconnected{g in GroupIndices}:
+    numSrcsDisconnected[g] = card(S) - sum{s in S} connSurvivesFromS[s,g];
+
+subject to greatestedNumDisconnected{g in GroupIndices}:
+    maxSrcsDisconnected >= numSrcsDisconnected[g];
+
+subject to defineDisconnector_1:
+    maxSrcsDisconnected >= nfe + 1 - card(V)^4 * (1-nsdMoreThanNfe);
+
+subject to defineDisconnector_2:
+    nfe >= maxSrcsDisconnected - card(V)^4 * nsdMoreThanNfe;
+
+subject to fewerSrcssDisconnectedThanNFE_min:
+    nsdMoreThanNfe == 0 ==> sum{s in S} srcConnected[s] >= useMinS + maxSrcsDisconnected;
+
+subject to moreSrcsDisconnectedThanNFE_min:
+    nsdMoreThanNfe == 1 ==> sum{s in S} srcConnected[s] >= useMinS + nfe;
+
+subject to fewerSrcsDisconnectedThanNFE_max:
+    nsdMoreThanNfe == 0 ==> sum{s in S} srcConnected[s] <= useMaxS + maxSrcsDisconnected;
+
+subject to moreSrcsDisconnectedThanNFE_max:
+    nsdMoreThanNfe == 1 ==> sum{s in S} srcConnected[s] <= useMaxS + nfe;
 
 
 
@@ -257,7 +293,7 @@ subject to groupCausesConnectionToFailIncludeEndpoints_2{s in S, i in I, g in Gr
 
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:
-    FG_Sum[g] = sum{s in S, i in I} FG_Conn_include_endpoints[s,i,g];
+    FG_Sum[g] = sum{s in S, i in I} FG_Conn[s,i,g];
 
 # Put limits on the number of connections between a pair  that can share a FG
 subject to connectionsBetweenPairDoNotShareFG{s in S, g in GroupIndices}:

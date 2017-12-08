@@ -170,7 +170,6 @@ public class AmplService {
             case Manycast:
                 dataLines.add("param useMinD := " + details.getConnections().getUseMinD() + ";");
                 dataLines.add("param useMaxD := " + details.getConnections().getUseMaxD() + ";");
-                dataLines.add("param nfe := " + details.getNumFailureEvents().getTotalNumFailureEvents() + ";");
                 break;
             case ManyToOne:
                 dataLines.add("param useMinS := " + details.getConnections().getUseMinS() + ";");
@@ -182,6 +181,8 @@ public class AmplService {
                 dataLines.add("param useMinD := " + details.getConnections().getUseMinD() + ";");
                 dataLines.add("param useMaxD := " + details.getConnections().getUseMaxD() + ";");
         }
+
+        dataLines.add("param nfe := " + details.getNumFailureEvents().getTotalNumFailureEvents() + ";");
 
         // Traffic Combination
         String combineSourceTraffic = "param combineSourceTraffic := ";
