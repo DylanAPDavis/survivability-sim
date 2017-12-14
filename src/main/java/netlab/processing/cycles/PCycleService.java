@@ -47,7 +47,7 @@ public class PCycleService {
         }
         else {
            pathMap = createPathsFromCycle(request, topo, hamiltonianCycle);
-           pathMap = addPathsForSurvivability(request, topo, pathMap);
+           //pathMap = addPathsForSurvivability(request, topo, pathMap);
         }
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
