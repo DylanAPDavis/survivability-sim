@@ -1,7 +1,7 @@
 package netlab.processing;
 
 import netlab.TestConfiguration;
-import netlab.processing.cycles.PCycleService;
+import netlab.processing.cycles.HamiltonianCycleService;
 import netlab.submission.enums.FailureClass;
 import netlab.submission.request.Details;
 import netlab.submission.request.Failures;
@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
-public class PCycleServiceTest {
+public class HamiltonianCycleServiceTest {
 
     @Autowired
-    PCycleService pCycleService;
+    HamiltonianCycleService hamiltonianCycleService;
 
     @Autowired
     TopologyService topologyService;
@@ -34,7 +34,7 @@ public class PCycleServiceTest {
     @Test
     public void NSFCycleTest(){
         Topology topo = topologyService.getTopologyById("NSFnet");
-        List<Node> path = pCycleService.findHamiltonianCycle(topo);
+        List<Node> path = hamiltonianCycleService.findHamiltonianCycle(topo);
         assert(path.get(0).equals(path.get(path.size()-1)));
         System.out.println(path);
     }
@@ -62,7 +62,7 @@ public class PCycleServiceTest {
                 .failureClass(FailureClass.Link)
                 .details(details)
                 .build();
-        details = pCycleService.solve(request, topo);
+        details = hamiltonianCycleService.solve(request, topo);
         Map<SourceDestPair, Map<String, Path>> pathMap = details.getChosenPaths();
         assert(pathMap.values().stream().allMatch(m -> m.size() == 3));
     }

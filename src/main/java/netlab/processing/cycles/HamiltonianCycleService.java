@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class PCycleService {
+public class HamiltonianCycleService {
 
     TopologyAdjustmentService topologyAdjustmentService;
 
@@ -27,8 +27,8 @@ public class PCycleService {
     PathMappingService pathMappingService;
 
     @Autowired
-    public PCycleService(TopologyAdjustmentService topologyAdjustmentService, BhandariService bhandariService,
-                         PathMappingService pathMappingService){
+    public HamiltonianCycleService(TopologyAdjustmentService topologyAdjustmentService, BhandariService bhandariService,
+                                   PathMappingService pathMappingService){
         this.topologyAdjustmentService = topologyAdjustmentService;
         this.bhandariService = bhandariService;
         this.pathMappingService = pathMappingService;

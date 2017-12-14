@@ -2,7 +2,7 @@ package netlab.processing;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ampl.AmplService;
-import netlab.processing.cycles.PCycleService;
+import netlab.processing.cycles.HamiltonianCycleService;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.disjointpaths.FlexBhandariService;
 import netlab.processing.overlappingtrees.OverlappingTreeService;
@@ -29,21 +29,21 @@ public class ProcessingService {
 
     private OverlappingTreeService overlappingTreeService;
 
-    private PCycleService pCycleService;
+    private HamiltonianCycleService hamiltonianCycleService;
 
     private TopologyService topoService;
 
     @Autowired
     public ProcessingService(TopologyService topologyService, AmplService amplService, FlexBhandariService flexBhandariService,
-                             ShortestPathService shortestPathService,  BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
-                             PCycleService pCycleService) {
+                             ShortestPathService shortestPathService, BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
+                             HamiltonianCycleService hamiltonianCycleService) {
         this.topoService = topologyService;
         this.amplService = amplService;
         this.flexBhandariService = flexBhandariService;
         this.shortestPathService = shortestPathService;
         this.bhandariService = bhandariService;
         this.overlappingTreeService = overlappingTreeService;
-        this.pCycleService = pCycleService;
+        this.hamiltonianCycleService = hamiltonianCycleService;
     }
 
     public Request processRequest(Request request) {
@@ -65,8 +65,8 @@ public class ProcessingService {
             case OverlappingTrees:
                 details = overlappingTreeService.solve(request, topo);
                 break;
-            case Pcycles:
-                details = pCycleService.solve(request, topo);
+            case Hamlitonian:
+                details = hamiltonianCycleService.solve(request, topo);
                 break;
         }
         request.setDetails(details);

@@ -12,7 +12,7 @@ public enum Algorithm {
     ShortestPath("shortestpath"),
     Bhandari("bhandari"),
     OverlappingTrees("overlappingtrees"),
-    Pcycles("pcycles");
+    Hamlitonian("hamiltonian");
 
     private String code;
 
