@@ -3,12 +3,11 @@ package netlab.processing;
 import netlab.TestConfiguration;
 import netlab.processing.cycles.HamiltonianCycleService;
 import netlab.submission.enums.FailureClass;
-import netlab.submission.request.Details;
-import netlab.submission.request.Failures;
-import netlab.submission.request.NumFailureEvents;
-import netlab.submission.request.Request;
+import netlab.submission.request.*;
+import netlab.submission.services.GenerationService;
 import netlab.topology.elements.*;
 import netlab.topology.services.TopologyService;
+import netlab.visualization.PrintingService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +29,15 @@ public class HamiltonianCycleServiceTest {
 
     @Autowired
     TopologyService topologyService;
+
+    @Autowired
+    GenerationService generationService;
+
+    @Autowired
+    ProcessingService processingService;
+
+    @Autowired
+    PrintingService printingService;
 
     @Test
     public void NSFCycleTest(){
@@ -64,6 +72,173 @@ public class HamiltonianCycleServiceTest {
                 .build();
         details = hamiltonianCycleService.solve(request, topo);
         Map<SourceDestPair, Map<String, Path>> pathMap = details.getChosenPaths();
-        assert(pathMap.values().stream().allMatch(m -> m.size() == 3));
+        assert(pathMap.values().stream().allMatch(m -> m.size() == 2));
+    }
+
+    @Test
+    public void unicastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void anycastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void manycastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(3)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void multicastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("multicast")
+                .numSources(1)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+
+    @Test
+    public void manyToOneTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("manyToOne")
+                .numSources(3)
+                .numDestinations(1)
+                .useMinS(2)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void broadcast(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(3)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void broadcastOverlap(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .numFailureEvents(0)
+                .sourceSubsetDestType("half")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void broadcastOverlapFailures(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .failureScenario("allnodes")
+                .numFailureEvents(1)
+                .sourceSubsetDestType("half")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
     }
 }

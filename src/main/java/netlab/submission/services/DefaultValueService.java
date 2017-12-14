@@ -166,6 +166,9 @@ public class DefaultValueService {
         if(params.getRoutingType() == null){
             params.setRoutingType("default");
         }
+        if(params.getSourceSubsetDestType() == null){
+            params.setSourceSubsetDestType("none");
+        }
         if(!params.getRoutingType().toLowerCase().equals("default")){
             routingParamAssignmentService.provideDefaultRoutingValues(params);
         }
@@ -230,9 +233,6 @@ public class DefaultValueService {
             params.setUseAws(false);
         }
 
-        if(params.getSourceSubsetDestType() == null){
-            params.setSourceSubsetDestType("none");
-        }
 
         if(params.getSourceFailureType() == null){
             params.setSourceFailureType("allow");

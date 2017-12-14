@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.pathmapping.PathMappingService;
 import netlab.submission.enums.FailureClass;
+import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.NumFailureEvents;
 import netlab.submission.request.Request;
@@ -87,7 +88,44 @@ public class HamiltonianCycleService {
                 pathMap.get(pair).put("2", forwardPath);
             }
         }
+        if(pairs.size() > 1) {
+            List<SourceDestPair> pairsSortedByTotalWeight = pathMap.keySet().stream()
+                    .sorted(Comparator.comparingLong(p -> pathMap.get(p).values().stream().mapToLong(Path::getTotalWeight).sum()))
+                    .collect(Collectors.toList());
+            // Filter out unneeded pairs
+            Set<Node> usedS = new HashSet<>();
+            Set<Node> usedD = new HashSet<>();
+            Connections connections = details.getConnections();
+            int useMinS = connections.getUseMinS();
+            int useMinD = connections.getUseMinD();
+            int useMaxS = connections.getUseMaxS();
+            int useMaxD = connections.getUseMaxD();
+            Map<SourceDestPair, Integer> minPerPairMap = connections.getPairMinConnectionsMap();
 
+            boolean remove = false;
+            for (SourceDestPair pair : pairsSortedByTotalWeight) {
+                Node src = pair.getSrc();
+                Node dst = pair.getDst();
+                boolean added = false;
+                // If src or dst has not been used yet
+                if (!usedS.contains(src) || !usedD.contains(dst) || minPerPairMap.get(pair) > 0) {
+                    int newSSize = usedS.contains(src) ? usedS.size() : usedS.size() + 1;
+                    int newDSize = usedD.contains(dst) ? usedD.size() : usedD.size() + 1;
+                    if (newSSize <= useMaxS && newDSize <= useMaxD) {
+                        usedS.add(src);
+                        usedD.add(dst);
+                        added = true;
+                    }
+                }
+                if (!added || remove && minPerPairMap.get(pair) == 0) {
+                    pathMap.put(pair, new HashMap<>());
+                }
+                // If you have sufficient sources/dests, then remove all paths for future pairs
+                if(usedS.size() >= useMinS && usedD.size() >= useMinD){
+                    remove = true;
+                }
+            }
+        }
         return pathMap;
     }
     private List<Link> findPathFromNodes(SourceDestPair pair, List<Node> cycle, Map<SourceDestPair, List<Link>> neighborLinkMap) {

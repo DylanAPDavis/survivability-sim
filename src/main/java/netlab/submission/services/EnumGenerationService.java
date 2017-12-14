@@ -9,11 +9,11 @@ import org.springframework.stereotype.Service;
 public class EnumGenerationService {
 
     public Algorithm getAlgorithm(String alg){
-        return Algorithm.get(alg).orElse(Algorithm.ILP);
+        return Algorithm.get(alg.toLowerCase()).orElse(Algorithm.ILP);
     }
 
     public TrafficCombinationType getTrafficCombinationType(String type){
-        return TrafficCombinationType.get(type).orElse(TrafficCombinationType.None);
+        return TrafficCombinationType.get(type.toLowerCase()).orElse(TrafficCombinationType.None);
     }
 
     public RoutingType getRoutingType(String type){
@@ -21,26 +21,26 @@ public class EnumGenerationService {
     }
 
     public FailureScenario getFailureScenario(String scenario){
-        return FailureScenario.get(scenario).orElse(FailureScenario.Default);
+        return FailureScenario.get(scenario.toLowerCase()).orElse(FailureScenario.Default);
     }
 
     public FailureClass getFailureClass(String fClass){
-        return FailureClass.get(fClass).orElse(FailureClass.Both);
+        return FailureClass.get(fClass.toLowerCase()).orElse(FailureClass.Both);
     }
 
     public ProblemClass getProblemClass(String problemClass) {
-        return ProblemClass.get(problemClass).orElse(ProblemClass.Combined);
+        return ProblemClass.get(problemClass.toLowerCase()).orElse(ProblemClass.Combined);
     }
 
     public Objective getObjective(String objective) {
-        return Objective.get(objective).orElse(Objective.LinksUsed);
+        return Objective.get(objective.toLowerCase()).orElse(Objective.LinksUsed);
     }
 
     public MemberFailureType getMemberFailureType(String memberFailureType){
-        return MemberFailureType.get(memberFailureType).orElse(MemberFailureType.Allow);
+        return MemberFailureType.get(memberFailureType.toLowerCase()).orElse(MemberFailureType.Allow);
     }
 
     public SourceSubsetDestType getSourceSubsetDestType(String sourceSubsetDestType){
-        return SourceSubsetDestType.get(sourceSubsetDestType).orElse(SourceSubsetDestType.None);
+        return SourceSubsetDestType.get(sourceSubsetDestType.toLowerCase()).orElse(SourceSubsetDestType.None);
     }
 }
