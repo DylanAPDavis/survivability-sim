@@ -76,6 +76,10 @@ public class ShortestPathService {
             Path sp = findShortestPath(pair, topo, usedSources, usedDestinations, trafficCombinationType);
             potentialPaths.add(sp);
             potentialPathMap.put(sp, pair);
+            usedSources.putIfAbsent(pair.getSrc(), new HashSet<>());
+            usedSources.get(pair.getSrc()).add(sp);
+            usedDestinations.putIfAbsent(pair.getDst(), new HashSet<>());
+            usedDestinations.get(pair.getDst()).add(sp);
         }
 
         // If you're doing Broadcast or Multicast, you're done
@@ -85,12 +89,16 @@ public class ShortestPathService {
 
 
         // Sort the paths by weight
+        usedSources = new HashMap<>();
+        usedDestinations = new HashMap<>();
         potentialPaths = potentialPaths.stream().sorted(Comparator.comparingLong(Path::getTotalWeight)).collect(Collectors.toList());
         // Pick a subset of the paths to satisfy the min constraints
         for(Path path : potentialPaths){
             SourceDestPair pair = potentialPathMap.get(path);
             if(!usedSources.containsKey(pair.getSrc()) || !usedDestinations.containsKey(pair.getDst())) {
+                usedSources.putIfAbsent(pair.getSrc(), new HashSet<>());
                 usedSources.get(pair.getSrc()).add(path);
+                usedDestinations.putIfAbsent(pair.getDst(), new HashSet<>());
                 usedDestinations.get(pair.getDst()).add(path);
                 pathMap.get(pair).put(String.valueOf(pathMap.get(pair).size() + 1), path);
             }
