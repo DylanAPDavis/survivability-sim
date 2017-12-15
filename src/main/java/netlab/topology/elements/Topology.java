@@ -71,6 +71,7 @@ public class Topology {
     private Map<Node, Set<Link>> makeNodeLinkMap(Set<Node> nodes, Set<Link> links){
         Map<Node, Set<Link>> nodeLinkMap = nodes.stream().collect(Collectors.toMap(n -> n, n -> new HashSet<>()));
         for(Link link : links){
+            nodeLinkMap.putIfAbsent(link.getOrigin(), new HashSet<>());
             nodeLinkMap.get(link.getOrigin()).add(link);
         }
         return nodeLinkMap;
@@ -84,6 +85,7 @@ public class Topology {
                 .sorted(Comparator.comparing(Link::getId))
                 .collect(Collectors.toList());
         for(Link link : sortedLinks){
+            orderedMap.putIfAbsent(link.getOrigin(), new ArrayList<>());
             orderedMap.get(link.getOrigin()).add(link);
         }
         return orderedMap;

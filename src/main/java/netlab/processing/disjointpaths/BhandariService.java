@@ -35,22 +35,16 @@ public class BhandariService {
     public Details solve(Request request, Topology topo){
         Details details = request.getDetails();
         Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
-        Connections connections = details.getConnections();
-        // Requirements
-        Integer useMinS = connections.getUseMinS();
-        Integer useMinD = connections.getUseMinD();
 
         // Get sorted pairs
         List<SourceDestPair> pairs = topologyService.sortPairsByPathCost(details.getPairs(), topo);
 
-        Integer numFailEvents = details.getNumFailureEvents().getTotalNumFailureEvents();
         FailureClass failureClass = request.getFailureClass();
-        Set<Failure> failures = details.getFailures().getFailureSet();
         long startTime = System.nanoTime();
         if(request.getRoutingType().equals(RoutingType.Unicast)){
             SourceDestPair pair = pairs.iterator().next();
             List<Path> paths = findPathSet(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None,
-                    numFailEvents, failureClass, failures);
+                    failureClass);
             if(!paths.isEmpty()){
                 Map<String, Path> idMap = new HashMap<>();
                 int id = 1;
@@ -67,8 +61,8 @@ public class BhandariService {
             details.setChosenPaths(pathMap);
         }
         else{
-            details = findPaths(details, request.getRoutingType(), pairs, topo, useMinS, useMinD, request.getTrafficCombinationType(),
-                    numFailEvents, failureClass, failures);
+            details = findPaths(details, pairs, topo, request.getTrafficCombinationType(),
+                    failureClass);
         }
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
@@ -76,7 +70,63 @@ public class BhandariService {
         return details;
     }
 
-    private Details findPaths(Details details, RoutingType routingType, Collection<SourceDestPair> pairs,
+    private Details findPaths(Details details, Collection<SourceDestPair> pairs, Topology topo,
+                              TrafficCombinationType trafficCombinationType, FailureClass failureClass){
+
+        Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
+        Map<Node, Set<Path>> srcPathsMap = new HashMap<>();
+        Map<Node, Set<Path>> dstPathsMap = new HashMap<>();
+        // Iterate through each pair
+        // For each pair, find two paths between that pair by traversing the cycle
+        for(SourceDestPair pair : pairs){
+            pathMap.put(pair, new HashMap<>());
+            List<Path> paths = findPathSet(pair, topo, srcPathsMap,dstPathsMap, trafficCombinationType, failureClass);
+            int id = 1;
+            for(Path path : paths){
+                pathMap.get(pair).put(String.valueOf(id), path);
+                id++;
+            }
+        }
+
+        if(pairs.size() > 1) {
+            pathMappingService.filterMap(pathMap, details);
+        }
+        details.setChosenPaths(pathMap);
+        details.setIsFeasible(evaluatePathMap(pathMap, details));
+        return details;
+    }
+
+    private Boolean evaluatePathMap(Map<SourceDestPair, Map<String, Path>> pathMap, Details details) {
+        Connections connections = details.getConnections();
+        int useMinS = connections.getUseMinS();
+        int useMinD = connections.getUseMinD();
+        int useMaxS = connections.getUseMaxS();
+        int useMaxD = connections.getUseMaxD();
+        Set<Node> usedSources = new HashSet<>();
+        Set<Node> usedDestinations = new HashSet<>();
+        Map<SourceDestPair, Integer> minPerPairMap = connections.getPairMinConnectionsMap();
+        Map<SourceDestPair, Integer> numPerPairMap = minPerPairMap.keySet().stream().collect(Collectors.toMap(p -> p, p -> 0));
+        boolean feasible = false;
+        for (SourceDestPair pair : pathMap.keySet()) {
+            Map<String, Path> paths = pathMap.get(pair);
+            if(paths.size() > 0) {
+                Node src = pair.getSrc();
+                Node dst = pair.getDst();
+                usedSources.add(src);
+                usedDestinations.add(dst);
+                numPerPairMap.put(pair, Integer.MAX_VALUE);
+            }
+        }
+        if(usedSources.size() >= useMinS && usedSources.size() <= useMaxS && usedDestinations.size() >= useMinD && usedDestinations.size() <= useMaxD){
+            if(numPerPairMap.keySet().stream().allMatch(p -> numPerPairMap.get(p) >= minPerPairMap.get(p))){
+                feasible = true;
+            }
+        }
+        return feasible;
+    }
+
+    /*
+    private Details findPathsDeprecated(Details details, RoutingType routingType, Collection<SourceDestPair> pairs,
                               Topology topo, Integer useMinS, Integer useMinD, TrafficCombinationType trafficCombinationType,
                               Integer numFailEvents, FailureClass failureClass, Set<Failure> failures) {
         Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
@@ -126,10 +176,11 @@ public class BhandariService {
         details.setChosenPaths(pathMap);
         return details;
     }
+    */
 
     private List<Path> findPathSet(SourceDestPair pair, Topology topo, Map<Node, Set<Path>> srcPathsMap,
-                                   Map<Node, Set<Path>> dstPathsMap, TrafficCombinationType trafficType, Integer numFailEvents,
-                                   FailureClass failureClass, Set<Failure> failures) {
+                                   Map<Node, Set<Path>> dstPathsMap, TrafficCombinationType trafficType,
+                                   FailureClass failureClass) {
 
         Node src = pair.getSrc();
         Node dst = pair.getDst();
@@ -139,8 +190,8 @@ public class BhandariService {
         Topology modifiedTopo = topologyService.adjustWeightsUsingTrafficCombination(topo, trafficType, src, dst,
                 srcPathsMap, dstPathsMap);
 
-        List<List<Link>> linkLists = computeDisjointPaths(modifiedTopo, src, dst, 1, numFailEvents, nodesFail,
-                failures, false);
+        List<List<Link>> linkLists = computeDisjointPaths(modifiedTopo, src, dst, 2, 0, nodesFail,
+                new HashSet<>(), true);
 
         return pathMappingService.convertToPaths(linkLists, topo.getLinkIdMap());
     }
@@ -219,7 +270,9 @@ public class BhandariService {
             for(Link pathEdge : prevPath){
                 // If this link (or internal link) is in the set of failures, reverse it and give it negative weight
                 // If default behavior flag is set and no failures are passed in, this will produce a basic link-disjoint solution
-                if(failureLinks.contains(pathEdge) || defaultBehavior) {
+                // Do not reverse the interal edge for src/dest
+                boolean isInternalEndpoint = pathEdge.getOrigin().equals(src) || pathEdge.getTarget().equals(dst); //pathEdge.getId().contains("internal")
+                if(!isInternalEndpoint && (failureLinks.contains(pathEdge) || defaultBehavior)) {
                     Long reversedMetric = -1 * pathEdge.getWeight();
                     Link reversedEdge = new Link(pathEdge.getTarget(), pathEdge.getOrigin(), reversedMetric);
                     reversedToOriginalMap.put(reversedEdge, pathEdge);
@@ -247,8 +300,7 @@ public class BhandariService {
             List<Link> modShortestPath = bellmanFordService.shortestPath(modifiedTopo, src, dst);
             tempPaths.add(modShortestPath);
         }
-        List<List<Link>> pathLinks = combine(shortestPath, tempPaths, reversedToOriginalMap, modifiedTopo, src, dst, k);
-        return nodesCanFail ? convertToOriginalTopoLinks(pathLinks) : pathLinks;
+        return  combine(shortestPath, tempPaths, reversedToOriginalMap, modifiedTopo, src, dst, k);
     }
 
     private List<List<Link>> convertToOriginalTopoLinks(List<List<Link>> pathLinks) {
@@ -277,14 +329,14 @@ public class BhandariService {
             modifiedNodes.add(internalLink.getOrigin());
             modifiedNodes.add(internalLink.getTarget());
         }
-        Set<Link> modifiedLinks = new HashSet<>(topo.getLinks());
-        for(Link link : modifiedLinks){
+        Set<Link> modifiedLinks = new HashSet<>();
+        for(Link link : topo.getLinks()){
             // Set origin to origin-outgoing
             Node originOutgoing = Node.builder().id(link.getOrigin().getId() + "-outgoing").build();
-            link.setOrigin(originOutgoing);
             // Set target to target-incoming
             Node targetIncoming = Node.builder().id(link.getTarget().getId() + "-incoming").build();
-            link.setTarget(targetIncoming);
+            Link newLink = Link.builder().id(link.getId()).weight(link.getWeight()).origin(originOutgoing).target(targetIncoming).build();
+            modifiedLinks.add(newLink);
         }
         modifiedLinks.addAll(internalLinks);
         return new Topology(topo.getId() + "-modified", modifiedNodes, modifiedLinks);
@@ -359,10 +411,34 @@ public class BhandariService {
 
         combinedEdges.addAll(shortestPath);
 
-        // Use the edges from paths that had to be split up
-        topo.setLinks(combinedEdges);
+        // Convert edges if node-disjoint algorithm was used
+        topo = convertFromNodeDisjoint(topo, combinedEdges);
 
+        source.setId(source.getId().replace("-incoming", ""));
+        dest.setId(dest.getId().replace("-outgoing", ""));
         return createPaths(topo, source, dest, k);
+    }
+
+    private Topology  convertFromNodeDisjoint(Topology topo, Set<Link> combinedEdges) {
+        Set<Link> newLinks = new HashSet<>();
+        for(Link link : combinedEdges){
+            if(!link.getId().contains("internal")){
+                link.getOrigin().setId(link.getOrigin().getId().replace("-incoming", "").replace("-outgoing", ""));
+                link.getTarget().setId(link.getTarget().getId().replace("-incoming", "").replace("-outgoing", ""));
+                newLinks.add(link);
+            }
+        }
+        Set<Node> nodes = topo.getNodes();
+        Set<Node> newNodes = new HashSet<>();
+        for(Node node : nodes){
+            String id = node.getId();
+            id = id.replace("-incoming", "").replace("-outgoing", "");
+            node.setId(id);
+            newNodes.add(node);
+        }
+
+        // Use the edges from paths that had to be split up
+        return new Topology(topo.getId(), newNodes, newLinks);
     }
 
     private List<List<Link>> createPaths(Topology topo, Node source, Node dest, Integer k) {
