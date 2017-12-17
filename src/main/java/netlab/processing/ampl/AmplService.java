@@ -191,14 +191,16 @@ public class AmplService {
                 combineDestTraffic += "0;";
                 break;
             case Source:
-                combineSourceTraffic += "1";
+                combineSourceTraffic += "1;";
+                combineDestTraffic += "0;";
                 break;
             case Destination:
-                combineDestTraffic += "1";
+                combineSourceTraffic += "0;";
+                combineDestTraffic += "1;";
                 break;
             case Both:
-                combineSourceTraffic += "1";
-                combineDestTraffic += "1";
+                combineSourceTraffic += "1;";
+                combineDestTraffic += "1;";
                 break;
         }
         dataLines.add(combineSourceTraffic);

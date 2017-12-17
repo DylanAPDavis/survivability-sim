@@ -133,7 +133,7 @@ subject to linksUsed_doNotCombineTraffic:
     combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, i in I, u in V, v in V} L[s,d,i,u,v];
 
 subject to linksUsed_combineBothTraffic:
-    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v];
+    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{u in V, v in V} L_d[u,v];
 
 # TOTAL WEIGHT
 subject to totalWeight_combineTraffic_SourceOnly:
@@ -146,7 +146,7 @@ subject to totalWeight_doNotCombineTraffic:
     combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{s in S, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
 
 subject to totalWeight_combineBothTraffic:
-    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Total_Weight >= sum{s in S, u in V, v in V} L_s[s,u,v] * Weight[u,v];
+    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Total_Weight >= sum{u in V, v in V} L_d[u,v] * Weight[u,v];
 
 ## Connection Constraints
 
