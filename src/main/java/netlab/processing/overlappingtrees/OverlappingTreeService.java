@@ -53,7 +53,7 @@ public class OverlappingTreeService {
                               Topology topo, Integer useMinS, Integer useMinD, TrafficCombinationType trafficCombinationType) {
         Map<SourceDestPair, Map<String, Path>> primaryTree = shortestPathService.findPaths(details, routingType, pairs, topo,  trafficCombinationType);
         Set<Link> treeLinks = pathMappingService.getLinksFromMap(primaryTree);
-        Set<Map<SourceDestPair, Map<String, Path>>> trees = new HashSet<>();
+        List<Map<SourceDestPair, Map<String, Path>>> trees = new ArrayList<>();
         boolean feasible = true;
         for(Link link : treeLinks){
             Set<Link> newLinks = new HashSet<>(topo.getLinks());

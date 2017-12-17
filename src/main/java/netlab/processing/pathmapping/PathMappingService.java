@@ -52,7 +52,7 @@ public class PathMappingService {
         return links;
     }
 
-    public Map<SourceDestPair,Map<String,Path>> mergeMaps(Set<Map<SourceDestPair, Map<String, Path>>> maps) {
+    public Map<SourceDestPair,Map<String,Path>> mergeMaps(List<Map<SourceDestPair, Map<String, Path>>> maps) {
         Map<SourceDestPair, Map<String, Path>> allPathsMap = new HashMap<>();
         for(Map<SourceDestPair, Map<String, Path>> pathMap : maps){
             for(SourceDestPair pair : pathMap.keySet()){
