@@ -13,8 +13,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
-public class BhandariServiceTest {
-
+public class OverlappingTreeServiceTest {
     @Autowired
     ProcessingService processingService;
 
@@ -24,13 +23,14 @@ public class BhandariServiceTest {
     @Autowired
     GenerationService generationService;
 
+
     @Test
     public void unicastTest(){
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("bhandari")
+                .algorithm("overlappingtrees")
                 .objective("totalcost")
                 .routingType("unicast")
                 .numSources(1)
@@ -50,7 +50,7 @@ public class BhandariServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("bhandari")
+                .algorithm("overlappingtrees")
                 .objective("totalcost")
                 .routingType("anycast")
                 .numSources(1)
@@ -70,7 +70,7 @@ public class BhandariServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("bhandari")
+                .algorithm("overlappingtrees")
                 .objective("totalcost")
                 .routingType("manycast")
                 .numSources(1)
@@ -92,7 +92,7 @@ public class BhandariServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(2L)
                 .topologyId("NSFnet")
-                .algorithm("bhandari")
+                .algorithm("overlappingtrees")
                 .objective("totalcost")
                 .routingType("multicast")
                 .numSources(1)
@@ -112,7 +112,7 @@ public class BhandariServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(2L)
                 .topologyId("NSFnet")
-                .algorithm("bhandari")
+                .algorithm("overlappingtrees")
                 .objective("totalcost")
                 .routingType("multicast")
                 .numSources(1)
@@ -134,7 +134,7 @@ public class BhandariServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("bhandari")
+                .algorithm("overlappingtrees")
                 .objective("totalcost")
                 .routingType("manyToOne")
                 .numSources(3)
@@ -155,7 +155,7 @@ public class BhandariServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("bhandari")
+                .algorithm("overlappingtrees")
                 .objective("totalcost")
                 .routingType("broadcast")
                 .numSources(3)
@@ -175,7 +175,7 @@ public class BhandariServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("bhandari")
+                .algorithm("overlappingtrees")
                 .objective("totalcost")
                 .routingType("broadcast")
                 .numSources(4)
@@ -196,7 +196,7 @@ public class BhandariServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("bhandari")
+                .algorithm("overlappingtrees")
                 .objective("totalcost")
                 .routingType("broadcast")
                 .numSources(4)
@@ -211,5 +211,4 @@ public class BhandariServiceTest {
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
-
 }

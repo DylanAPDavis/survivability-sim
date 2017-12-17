@@ -35,10 +35,6 @@ public class ShortestPathService {
     public Details solve(Request request, Topology topo){
         Details details = request.getDetails();
         Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
-        Connections connections = details.getConnections();
-        // Requirements
-        Integer useMinS = connections.getUseMinS();
-        Integer useMinD = connections.getUseMinD();
 
         List<SourceDestPair> pairs = topologyAdjustmentService.sortPairsByPathCost(details.getPairs(), topo);
         long startTime = System.nanoTime();
@@ -53,7 +49,7 @@ public class ShortestPathService {
                 }
                 break;
             default:
-                pathMap = findPaths(request.getRoutingType(), pairs, topo, useMinS, useMinD, request.getTrafficCombinationType());
+                pathMap = findPaths(request.getDetails(), request.getRoutingType(), pairs, topo, request.getTrafficCombinationType());
                 break;
         }
         long endTime = System.nanoTime();
@@ -64,17 +60,14 @@ public class ShortestPathService {
         return details;
     }
 
-    public Map<SourceDestPair,Map<String,Path>> findPaths(RoutingType routingType, Collection<SourceDestPair> pairs, Topology topo,
-                                                           Integer useMinS, Integer useMinD, TrafficCombinationType trafficCombinationType) {
-        Map<SourceDestPair, Map<String, Path>> pathMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
+    public Map<SourceDestPair,Map<String,Path>> findPaths(Details details, RoutingType routingType, Collection<SourceDestPair> pairs, Topology topo,
+                                                          TrafficCombinationType trafficCombinationType) {
         Map<Node, Set<Path>> usedSources = new HashMap<>();
         Map<Node, Set<Path>> usedDestinations = new HashMap<>();
 
         Map<Path, SourceDestPair> potentialPathMap = new HashMap<>();
-        List<Path> potentialPaths = new ArrayList<>();
         for(SourceDestPair pair : pairs){
             Path sp = findShortestPath(pair, topo, usedSources, usedDestinations, trafficCombinationType);
-            potentialPaths.add(sp);
             potentialPathMap.put(sp, pair);
             usedSources.putIfAbsent(pair.getSrc(), new HashSet<>());
             usedSources.get(pair.getSrc()).add(sp);
@@ -83,11 +76,15 @@ public class ShortestPathService {
         }
 
         // If you're doing Broadcast or Multicast, you're done
-        if(routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Multicast)){
-            return pathMappingService.formatPathMap(potentialPathMap);
+        Map<SourceDestPair, Map<String, Path>> pathMap = pathMappingService.formatPathMap(potentialPathMap);
+        if(routingType.equals(RoutingType.Broadcast) || routingType.equals(RoutingType.Multicast) || pairs.size() == 1){
+            return pathMap;
         }
 
+        return pathMappingService.filterMap(pathMap, details);
 
+
+        /*
         // Sort the paths by weight
         usedSources = new HashMap<>();
         usedDestinations = new HashMap<>();
@@ -136,8 +133,9 @@ public class ShortestPathService {
             }
             return pathMappingService.formatPathMap(potentialPathMap);
         }
-
         return pathMap;
+        */
+
     }
 
     public Path findShortestPath(SourceDestPair pair, Topology topo, Map<Node, Set<Path>> srcPathsMap,
