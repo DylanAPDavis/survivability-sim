@@ -37,9 +37,9 @@ public class SubmissionAnalysisControllerTest {
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, "none",
                 "prevent", "prevent");
-        String requestSetId = submissionController.submitRequestSet(params);
-        AnalysisParameters analysisParameters = AnalysisParameters.builder().requestSetId(requestSetId).useAws(true).build();
-        analysisController.analyzeRequestSet(analysisParameters);
+        String requestSetId = submissionController.submitRequest(params);
+        AnalysisParameters analysisParameters = AnalysisParameters.builder().requestId(requestSetId).useAws(true).build();
+        analysisController.analyzeRequest(analysisParameters);
 
         // Get all the analyzed sets back from AWS
         params = SimulationParameters.builder().useAws(true).objective("TotalCost").build();
@@ -54,9 +54,9 @@ public class SubmissionAnalysisControllerTest {
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, "none",
                 "prevent", "prevent");
-        String requestSetId = submissionController.submitRequestSet(params);
-        AnalysisParameters analysisParameters = AnalysisParameters.builder().requestSetId(requestSetId).useAws(true).build();
-        analysisController.analyzeRequestSet(analysisParameters);
+        String requestSetId = submissionController.submitRequest(params);
+        AnalysisParameters analysisParameters = AnalysisParameters.builder().requestId(requestSetId).useAws(true).build();
+        analysisController.analyzeRequest(analysisParameters);
         params = SimulationParameters.builder().useAws(true).objective("TotalCost").build();
         List<Analysis> analyses = storageController.getMatchingAnalysis(params);
         assert(analyses.size()>=1);
@@ -69,7 +69,7 @@ public class SubmissionAnalysisControllerTest {
                 "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
                 1, new ArrayList<>(), "Solo", false, true, "none",
                 "prevent", "prevent");
-        AggregateAnalysis aas = analysisController.aggregateAnalyzedSets(params);
+        AggregateAnalysis aas = analysisController.aggregateAnalyses(params);
         System.out.println(aas);
     }
 

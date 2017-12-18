@@ -37,23 +37,28 @@ public class SubmissionController {
 
     @RequestMapping(value = "/submit_sim", method = RequestMethod.POST)
     @ResponseBody
-    public String submitRequestSet(SimulationParameters simulationParameters){
+    public String submitRequest(SimulationParameters simulationParameters){
         Request request = generationService.generateFromSimParams(simulationParameters);
         log.info("Generated request set: " + request.getId());
         // Find solutions as long as request has successfully been generated
-        List<SimulationParameters> matchingParams = storageService.queryForId(request.getId());
-        if(!matchingParams.isEmpty()){
-            SimulationParameters previousRun = matchingParams.get(0);
-            log.info("Details Set ID: " + request.getId() + " is already in Dynamo DB!");
-            if(previousRun.getCompleted()) {
-                log.info("Already completed, exiting...");
-                return request.getId();
+        boolean useAws = simulationParameters.getUseAws();
+        if(useAws) {
+            List<SimulationParameters> matchingParams = storageService.queryForId(request.getId());
+            if (!matchingParams.isEmpty()) {
+                SimulationParameters previousRun = matchingParams.get(0);
+                log.info("Details Set ID: " + request.getId() + " is already in Dynamo DB!");
+                if (previousRun.getCompleted()) {
+                    log.info("Already completed, exiting...");
+                    return request.getId();
+                }
+                log.info("Has not been completed, rerunning now...");
             }
-            log.info("Has not been completed, rerunning now...");
         }
         // Store the request ID and sim params in Dynamo DB
-        storageService.putSimulationParameters(simulationParameters);
-        log.info("Stored params");
+        if(useAws) {
+            storageService.putSimulationParameters(simulationParameters);
+            log.info("Stored params");
+        }
 
         // Process request
         request = processingService.processRequest(request);
@@ -65,8 +70,10 @@ public class SubmissionController {
         log.info("Stored request set");
 
         // Store the request ID and sim params in Dynamo DB
-        storageService.putSimulationParameters(simulationParameters);
-        log.info("Updated params with ID: " + request.getId());
+        if(useAws) {
+            storageService.putSimulationParameters(simulationParameters);
+            log.info("Updated params with ID: " + request.getId());
+        }
 
         // Return the request set ID
         return request.getId();
@@ -74,19 +81,19 @@ public class SubmissionController {
 
     @RequestMapping(value = "/submit_rerun", method = RequestMethod.POST)
     @ResponseBody
-    public List<String> rerunRequestSets(List<Long> seeds){
+    public List<String> rerunRequests(List<Long> seeds){
         List<String> ids = new ArrayList<>();
         for(Long seed : seeds) {
             List<SimulationParameters> matchingParams = storageService.queryForSeed(seed).parallelStream().filter(p -> !p.getCompleted()).collect(Collectors.toList());
             ids.addAll(matchingParams.parallelStream().map(SimulationParameters::getRequestId).collect(Collectors.toList()));
-            matchingParams.forEach(this::submitRequestSet);
+            matchingParams.forEach(this::submitRequest);
         }
         return ids;
     }
 
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
     @ResponseBody
-    public String submitRequestSet(RequestParameters requestParameters){
+    public String submitRequest(RequestParameters requestParameters){
         Request request = generationService.generateFromRequestParams(requestParameters);
 
         if(request != null) {

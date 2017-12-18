@@ -69,7 +69,7 @@ public class SurvivabilitySimApplication {
 
 		// If they provided simulation parameters, just run the simulation, output results, and shutdown
 		if(simParams != null){
-			String requestId = subCon.submitRequestSet(simParams);
+			String requestId = subCon.submitRequest(simParams);
 			log.info("Details Set ID: " + requestId);
 			// If you're not analyzing the request, close the context and shut down the simulator
 			if(analysisParams == null) {
@@ -80,8 +80,8 @@ public class SurvivabilitySimApplication {
 
 		// If they provided a request ID to analyze, analyze it
 		if(analysisParams != null){
-			analysCon.analyzeRequestSet(analysisParams);
-			log.info("Analyzing request " + analysisParams.getRequestSetId());
+			analysCon.analyzeRequest(analysisParams);
+			log.info("Analyzing request " + analysisParams.getRequestId());
 			ctx.close();
 			System.exit(0);
 		}
@@ -91,7 +91,7 @@ public class SurvivabilitySimApplication {
 			List<SimulationParameters> params = storCon.getParameters(rerunSeed);
 			params = params.stream().filter(p -> !p.getCompleted()).collect(Collectors.toList());
 			for(SimulationParameters param : params){
-				subCon.submitRequestSet(param);
+				subCon.submitRequest(param);
 				log.info("Details Set ID: " + param.getRequestId());
 			}
 			ctx.close();

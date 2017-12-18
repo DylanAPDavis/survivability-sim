@@ -156,7 +156,7 @@ public class DynamoInterface {
         /*
 
         if(params.getRequestId() != null) {
-            eav.put("requestSetId", new AttributeValue().withS(params.getRequestId()));
+            eav.put("requestId", new AttributeValue().withS(params.getRequestId()));
         }
         if(params.getSeed() != null) {
             eav.put("seed", new AttributeValue().withN(Long.toString(params.getSeed())));

@@ -40,8 +40,8 @@ public class AnalysisController {
 
     @RequestMapping(value = "/analyze", method = RequestMethod.POST)
     @ResponseBody
-    public Analysis analyzeRequestSet(AnalysisParameters params){
-        Request request = storageService.retrieveRequestSet(params.getRequestSetId(), params.getUseAws());
+    public Analysis analyzeRequest(AnalysisParameters params){
+        Request request = storageService.retrieveRequestSet(params.getRequestId(), params.getUseAws());
 
         Analysis analysis = analysisService.analyzeRequest(request);
 
@@ -80,7 +80,7 @@ public class AnalysisController {
 
     @RequestMapping(value = "/analyze/aggregate", method = RequestMethod.POST)
     @ResponseBody
-    public AggregateAnalysis aggregateAnalyzedSets(SimulationParameters params){
+    public AggregateAnalysis aggregateAnalyses(SimulationParameters params){
 
         List<Analysis> analyses = storageService.getAnalyzedSets(params);
         return aggregationAnalysisService.aggregateAnalyses(analyses);
