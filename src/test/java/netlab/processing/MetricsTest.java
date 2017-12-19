@@ -51,18 +51,7 @@ public class MetricsTest {
                 .numFailureEvents(0)
                 .useAws(false)
                 .build();
-        String requestId = submissionController.submitRequest(params);
-        Request request = storageController.getRequest(requestId, false);
-
-        AnalysisParameters analysisParameters = AnalysisParameters.builder()
-                .requestId(requestId)
-                .useAws(false)
-                .build();
-
-        Analysis analysis = analysisController.analyzeRequest(analysisParameters);
-        System.out.println(analysis.toString());
-        System.out.println(printingService.outputPaths(request));
-        assert(analysis.getIsFeasible());
+        evaluate(params);
     }
 
     @Test
@@ -81,18 +70,7 @@ public class MetricsTest {
                 .numFailureEvents(0)
                 .useAws(false)
                 .build();
-        String requestId = submissionController.submitRequest(params);
-        Request request = storageController.getRequest(requestId, false);
-
-        AnalysisParameters analysisParameters = AnalysisParameters.builder()
-                .requestId(requestId)
-                .useAws(false)
-                .build();
-
-        Analysis analysis = analysisController.analyzeRequest(analysisParameters);
-        System.out.println(analysis.toString());
-        System.out.println(printingService.outputPaths(request));
-        assert(analysis.getIsFeasible());
+        evaluate(params);
 
     }
 
@@ -112,18 +90,7 @@ public class MetricsTest {
                 .numFailureEvents(0)
                 .useAws(false)
                 .build();
-        String requestId = submissionController.submitRequest(params);
-        Request request = storageController.getRequest(requestId, false);
-
-        AnalysisParameters analysisParameters = AnalysisParameters.builder()
-                .requestId(requestId)
-                .useAws(false)
-                .build();
-
-        Analysis analysis = analysisController.analyzeRequest(analysisParameters);
-        System.out.println(analysis.toString());
-        System.out.println(printingService.outputPaths(request));
-        assert(analysis.getIsFeasible());
+        evaluate(params);
 
     }
 
@@ -143,18 +110,7 @@ public class MetricsTest {
                 .numFailureEvents(0)
                 .useAws(false)
                 .build();
-        String requestId = submissionController.submitRequest(params);
-        Request request = storageController.getRequest(requestId, false);
-
-        AnalysisParameters analysisParameters = AnalysisParameters.builder()
-                .requestId(requestId)
-                .useAws(false)
-                .build();
-
-        Analysis analysis = analysisController.analyzeRequest(analysisParameters);
-        System.out.println(analysis.toString());
-        System.out.println(printingService.outputPaths(request));
-        assert(analysis.getIsFeasible());
+        evaluate(params);
 
     }
 
@@ -175,18 +131,7 @@ public class MetricsTest {
                 .numFailureEvents(5)
                 .useAws(false)
                 .build();
-        String requestId = submissionController.submitRequest(params);
-        Request request = storageController.getRequest(requestId, false);
-
-        AnalysisParameters analysisParameters = AnalysisParameters.builder()
-                .requestId(requestId)
-                .useAws(false)
-                .build();
-
-        Analysis analysis = analysisController.analyzeRequest(analysisParameters);
-        System.out.println(analysis.toString());
-        System.out.println(printingService.outputPaths(request));
-        assert(analysis.getIsFeasible());
+        evaluate(params);
     }
 
     @Test
@@ -205,88 +150,119 @@ public class MetricsTest {
                 .numFailureEvents(5)
                 .useAws(false)
                 .build();
-        String requestId = submissionController.submitRequest(params);
-        Request request = storageController.getRequest(requestId, false);
-
-        AnalysisParameters analysisParameters = AnalysisParameters.builder()
-                .requestId(requestId)
-                .useAws(false)
-                .build();
-
-        Analysis analysis = analysisController.analyzeRequest(analysisParameters);
-        System.out.println(analysis.toString());
-        System.out.println(printingService.outputPaths(request));
-        assert(analysis.getIsFeasible());
+        evaluate(params);
 
     }
 
-    @Test
-    public void overlappingFailuresTreesTest(){
-
-        SimulationParameters params = SimulationParameters.builder()
-                .seed(1L)
-                .topologyId("NSFnet")
-                .algorithm("overlappingTrees")
-                .problemClass("combined")
-                .objective("totalcost")
-                .routingType("unicast")
-                .numSources(1)
-                .numDestinations(1)
-                .failureScenario("default")
-                .numFailureEvents(0)
-                .useAws(false)
-                .build();
-        String requestId = submissionController.submitRequest(params);
-        Request request = storageController.getRequest(requestId, false);
-
-        AnalysisParameters analysisParameters = AnalysisParameters.builder()
-                .requestId(requestId)
-                .useAws(false)
-                .build();
-
-        Analysis analysis = analysisController.analyzeRequest(analysisParameters);
-        System.out.println(analysis.toString());
-        System.out.println(printingService.outputPaths(request));
-        assert(analysis.getIsFeasible());
-
-    }
-
-    @Test
-    public void hamiltonianFailuresTest(){
-
-        SimulationParameters params = SimulationParameters.builder()
-                .seed(1L)
-                .topologyId("NSFnet")
-                .algorithm("hamiltonian")
-                .problemClass("combined")
-                .objective("totalcost")
-                .routingType("unicast")
-                .numSources(1)
-                .numDestinations(1)
-                .failureScenario("default")
-                .numFailureEvents(0)
-                .useAws(false)
-                .build();
-        String requestId = submissionController.submitRequest(params);
-        Request request = storageController.getRequest(requestId, false);
-
-        AnalysisParameters analysisParameters = AnalysisParameters.builder()
-                .requestId(requestId)
-                .useAws(false)
-                .build();
-
-        Analysis analysis = analysisController.analyzeRequest(analysisParameters);
-        System.out.println(analysis.toString());
-        System.out.println(printingService.outputPaths(request));
-        assert(analysis.getIsFeasible());
-
-    }
 
     // Baseline Algorithms with TrafficCombination
+    @Test
+    public void multicastTest(){
 
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(4L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .objective("totalcost")
+                .routingType("multicast")
+                .numSources(1)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void multicastCombineTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(4L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .objective("totalcost")
+                .routingType("multicast")
+                .numSources(1)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .trafficCombinationType("source")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void multicastCombineDestTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(4L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .objective("totalcost")
+                .routingType("multicast")
+                .numSources(1)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .trafficCombinationType("dest")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void multicastCombineBothTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(4L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .objective("totalcost")
+                .routingType("multicast")
+                .numSources(1)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .trafficCombinationType("both")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
     // ILPs
+    @Test
+    public void unicastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureSetSize(0)
+                .failureClass("both")
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
 
     // ILPs with Failure
 
     // ILPs with TrafficCombination
+
+
+    public void evaluate(SimulationParameters params){
+        String requestId = submissionController.submitRequest(params);
+        Request request = storageController.getRequest(requestId, false);
+
+        AnalysisParameters analysisParameters = AnalysisParameters.builder()
+                .requestId(requestId)
+                .useAws(false)
+                .build();
+
+        Analysis analysis = analysisController.analyzeRequest(analysisParameters);
+        System.out.println(analysis.toString());
+        System.out.println(printingService.outputPaths(request));
+    }
 }

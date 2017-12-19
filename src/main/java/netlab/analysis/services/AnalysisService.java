@@ -59,7 +59,6 @@ public class AnalysisService {
         //Map for storing number of times a source/dest/pair sends a connection over a link
         Map<Link, Set<Node>> sourceLinkMap = new HashMap<>();
         Map<Link, Set<Node>> destLinkMap = new HashMap<>();
-        Map<Link, Set<SourceDestPair>> pairLinkMap = new HashMap<>();
 
         for(SourceDestPair pair : chosenPaths.keySet()){
             // Sort in ascending order -> total path weight
@@ -81,11 +80,9 @@ public class AnalysisService {
                 for(Link link : links){
                     sourceLinkMap.putIfAbsent(link, new HashSet<>());
                     destLinkMap.putIfAbsent(link, new HashSet<>());
-                    pairLinkMap.putIfAbsent(link, new HashSet<>());
 
                     sourceLinkMap.get(link).add(pair.getSrc());
                     destLinkMap.get(link).add(pair.getDst());
-                    pairLinkMap.get(link).add(pair);
                 }
                 totalCost += path.getTotalWeight();
                 totalPaths++;
@@ -150,7 +147,7 @@ public class AnalysisService {
                 .build();
 
         if(!request.getTrafficCombinationType().equals(TrafficCombinationType.None)){
-            adjustLinksUsedTotalCost(analysis, sourceLinkMap, destLinkMap, pairLinkMap, request.getTrafficCombinationType());
+            adjustLinksUsedTotalCost(analysis, sourceLinkMap, destLinkMap, request.getTrafficCombinationType());
         }
 
         return analysis;
@@ -164,7 +161,6 @@ public class AnalysisService {
 
     private void adjustLinksUsedTotalCost(Analysis analysis, Map<Link, Set<Node>> sourceLinkMap,
                                           Map<Link, Set<Node>> destLinkMap,
-                                          Map<Link, Set<SourceDestPair>> pairLinkMap,
                                           TrafficCombinationType trafficCombinationType) {
         Double totalCost = 0.0;
         Double totalLinksUsed = 0.0;
@@ -179,7 +175,7 @@ public class AnalysisService {
                     count = destLinkMap.get(link).size();
                     break;
                 case Both:
-                    count = pairLinkMap.get(link).size();
+                    count = Math.min(sourceLinkMap.get(link).size(), destLinkMap.get(link).size());
                     break;
             }
             totalLinksUsed += count;

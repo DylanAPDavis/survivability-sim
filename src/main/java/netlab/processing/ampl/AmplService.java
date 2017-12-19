@@ -469,7 +469,7 @@ public class AmplService {
             // Path already exists, add to it
             if(pairMap.containsKey(pathId)){
                 Path thisPath = pairMap.get(pathId);
-                thisPath.getLinks().add(link);
+                thisPath.appendLink(link);
             }
             // New path
             else{

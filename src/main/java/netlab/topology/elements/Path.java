@@ -33,7 +33,22 @@ public class Path implements Serializable {
         this.nodes = getNodes(links);
         this.linkIds = links.stream().map(Link::getId).collect(Collectors.toSet());
         this.nodeIds = this.nodes.stream().map(Node::getId).collect(Collectors.toSet());
-        totalWeight = links.stream().map(Link::getWeight).reduce(0L, (w1, w2) -> w1 + w2);
+        totalWeight = links.stream().mapToLong(Link::getWeight).sum();
+    }
+
+    public void appendNode(Node node){
+        this.nodes.add(node);
+        this.nodeIds.add(node.getId());
+    }
+
+    public void appendLink(Link link){
+        this.links.add(link);
+        this.linkIds.add(link.getId());
+        if(!nodeIds.contains(link.getOrigin().getId())){
+            appendNode(link.getOrigin());
+        }
+        appendNode(link.getTarget());
+        this.totalWeight += link.getWeight();
     }
 
 
