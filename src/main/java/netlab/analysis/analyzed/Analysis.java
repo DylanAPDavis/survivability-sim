@@ -5,10 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import netlab.analysis.enums.MemberType;
-import netlab.submission.enums.Algorithm;
-import netlab.submission.enums.FailureClass;
-import netlab.submission.enums.Objective;
-import netlab.submission.enums.ProblemClass;
+import netlab.submission.enums.*;
+import netlab.submission.request.NumFailureEvents;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
@@ -24,10 +22,12 @@ public class Analysis implements Serializable {
 
     private String requestId;
     private Long seed;
-    private ProblemClass problemClass;
     private Algorithm algorithm;
+    private RoutingType routingType;
     private Objective objective;
+    private FailureScenario failureScenario;
     private FailureClass failureClass;
+    private Integer numFailuresEvents;
 
     private Boolean isFeasible;
     private Double runningTime;
@@ -61,4 +61,31 @@ public class Analysis implements Serializable {
     private Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap;
     private Map<MemberType, Map<Node, Map<SourceDestPair, PathSetMetrics>>> memberPathSetMetricsMap;
     */
+
+    public String toString(){
+
+        return "ID: " + requestId + "\n" +
+                "Seed: " + seed + "\n" +
+                "Algorithm: " + algorithm.getCode() + "\n" +
+                "Routing Type: " + routingType.getCode() + "\n" +
+                "Objective: " + objective.getCode() + "\n" +
+                "Failure Scenario: " + failureScenario.getCode() + "\n" +
+                "Failure Class: " + failureClass.getCode() + "\n" +
+                "NFE: " + numFailuresEvents + "\n" +
+                "---Metrics---" + "\n" +
+                "Feasible: " + isFeasible + "\n" +
+                "Running Time: " + runningTime + "\n" +
+                "Total Cost: " + totalCost + "\n" +
+                "Total Links Used: " + totalLinksUsed + "\n" +
+                "Total Paths: " + totalPaths + "\n" +
+                "Avg Primary Hops: " + averagePrimaryHops + "\n" +
+                "Avg Primary Cost: " + averagePrimaryCost + "\n" +
+                "-Post Failure-" + "\n" +
+                "PF Avg Primary Hops: " + averagePrimaryHopsPostFailure + "\n" +
+                "PF Avg Primary Cost: " + averagePrimaryCostPostFailure + "\n" +
+                "Paths Intact: " + pathsIntact + "\n" +
+                "Paths Severed: " + pathsSevered + "\n" +
+                "Connections Intact: " + connectionsIntact + "\n" +
+                "Connections Severed: " + connectionsSevered + "\n";
+    }
 }

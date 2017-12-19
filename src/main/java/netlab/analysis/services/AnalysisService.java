@@ -1,6 +1,5 @@
 package netlab.analysis.services;
 
-import com.opencsv.CSVWriter;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.*;
 import netlab.submission.enums.*;
@@ -10,11 +9,6 @@ import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -69,7 +63,7 @@ public class AnalysisService {
 
         for(SourceDestPair pair : chosenPaths.keySet()){
             // Sort in ascending order -> total path weight
-            List<Path> pathsForPair = sortPathsByWeight(chosenPaths.get(pair).values());
+            List<Path> pathsForPair = sortPathsByWeight(new ArrayList<>(chosenPaths.get(pair).values()));
             if(pathsForPair.size() == 0){
                 continue;
             }
@@ -125,16 +119,18 @@ public class AnalysisService {
 
         averagePrimaryCost = totalPrimaryCost / numberOfPrimaryPaths;
         averagePrimaryHops = totalPrimaryHops / numberOfPrimaryPaths;
-        averagePrimaryCostPostFailure = totalPrimaryCostPostFailure / numberOfPrimaryPathsPostFailure;
-        averagePrimaryHopsPostFailure = totalPrimaryHopsPostFailure / numberOfPrimaryPathsPostFailure;
+        averagePrimaryCostPostFailure = numberOfPrimaryPathsPostFailure > 0 ? totalPrimaryCostPostFailure / numberOfPrimaryPathsPostFailure : 0;
+        averagePrimaryHopsPostFailure = numberOfPrimaryPathsPostFailure > 0 ? totalPrimaryHopsPostFailure / numberOfPrimaryPathsPostFailure : 0;
 
 
 
         Analysis analysis =  Analysis.builder()
                 .requestId(request.getId())
                 .seed(request.getSeed())
-                .problemClass(request.getProblemClass())
+                .failureScenario(request.getFailureScenario())
+                .numFailuresEvents(request.getDetails().getNumFailureEvents().getTotalNumFailureEvents())
                 .algorithm(request.getAlgorithm())
+                .routingType(request.getRoutingType())
                 .objective(request.getObjective())
                 .failureClass(request.getFailureClass())
                 .isFeasible(details.getIsFeasible())
@@ -187,10 +183,10 @@ public class AnalysisService {
         analysis.setTotalLinksUsed(totalLinksUsed);
     }
 
-    private List<Path> sortPathsByWeight(Collection<Path> paths){
-        return paths.stream()
-                .sorted(Comparator.comparingLong(Path::getTotalWeight))
-                .collect(Collectors.toList());
+    private List<Path> sortPathsByWeight(List<Path> paths){
+        Comparator comparator = Comparator.comparingDouble(Path::getTotalWeight).thenComparing(p -> p.getLinks().size());
+        paths.sort(comparator);
+        return paths;
     }
 
     private List<Failure> chooseFailuresBasedOnProb(List<List<Failure>> failureGroups) {
@@ -200,7 +196,7 @@ public class AnalysisService {
         Map<List<Failure>, Double> likelihoods = new HashMap<>();
         Map<List<Failure>, String> combinedIds = new HashMap<>();
         for(List<Failure> failureGroup : failureGroups){
-            Double likelihood = 0.0;
+            Double likelihood = 1.0;
             String combinedId = "";
             for(Failure failure : failureGroup){
                 likelihood *= failure.getProbability();
@@ -209,12 +205,10 @@ public class AnalysisService {
             likelihoods.put(failureGroup, likelihood);
             combinedIds.put(failureGroup, combinedId);
         }
-        List<List<Failure>> sortedGroups = failureGroups.stream()
-                .sorted(Comparator.comparingDouble(likelihoods::get))
-                .sorted(Comparator.comparing(combinedIds::get))
-                .collect(Collectors.toList());
+        Comparator comparator = Comparator.comparingDouble(likelihoods::get).thenComparing(combinedIds::get);
+        failureGroups.sort(comparator);
 
-        return sortedGroups.get(0);
+        return failureGroups.get(0);
     }
 
     private String invertLinkId(Link link) {

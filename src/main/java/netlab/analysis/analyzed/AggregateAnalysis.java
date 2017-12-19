@@ -4,10 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import netlab.submission.enums.Algorithm;
-import netlab.submission.enums.FailureClass;
-import netlab.submission.enums.Objective;
-import netlab.submission.enums.ProblemClass;
+import netlab.submission.enums.*;
 
 import java.io.Serializable;
 import java.util.List;
@@ -20,10 +17,12 @@ public class AggregateAnalysis implements Serializable {
 
     private List<String> requestSetIds;
     private List<Long> seeds;
-    private ProblemClass problemClass;
     private Algorithm algorithm;
+    private RoutingType routingType;
     private Objective objective;
+    private FailureScenario failureScenario;
     private FailureClass failureClass;
+    private Integer numFailuresEvents;
 
     private Integer numRequests;
 

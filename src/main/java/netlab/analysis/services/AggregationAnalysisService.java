@@ -3,10 +3,7 @@ package netlab.analysis.services;
 import com.opencsv.CSVWriter;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.*;
-import netlab.submission.enums.Algorithm;
-import netlab.submission.enums.FailureClass;
-import netlab.submission.enums.Objective;
-import netlab.submission.enums.ProblemClass;
+import netlab.submission.enums.*;
 import netlab.submission.request.SimulationParameters;
 import netlab.topology.elements.Topology;
 import org.springframework.stereotype.Service;
@@ -37,10 +34,12 @@ public class AggregationAnalysisService {
 
         List<String> requestSetIds = new ArrayList<>();
         List<Long> seeds = new ArrayList<>();
-        ProblemClass problemClass = analyses.get(0).getProblemClass();
         Algorithm algorithm = analyses.get(0).getAlgorithm();
+        RoutingType routingType = analyses.get(0).getRoutingType();
         Objective objective = analyses.get(0).getObjective();
         FailureClass failureClass = analyses.get(0).getFailureClass();
+        FailureScenario failureScenario = analyses.get(0).getFailureScenario();
+        Integer numFailureEvents = analyses.get(0).getNumFailuresEvents();
 
         Double sumRunningTime = 0.0;
         Double numFeasible = 0.0;
@@ -57,6 +56,7 @@ public class AggregationAnalysisService {
         Double sumConnectionsIntact = 0.0;
 
 
+        int numWithConnectionsIntact = 0;
         int numRequests = 0;
         for (Analysis analysis : analyses) {
             if (analysis == null){
@@ -73,12 +73,16 @@ public class AggregationAnalysisService {
                 sumPaths += analysis.getTotalPaths();
                 sumAveragePrimaryCost += analysis.getAveragePrimaryCost();
                 sumAveragePrimaryHops += analysis.getAveragePrimaryHops();
-                sumAveragePrimaryCostPostFailure += analysis.getAveragePrimaryCostPostFailure();
-                sumAveragePrimaryHopsPostFailure += analysis.getAveragePrimaryHopsPostFailure();
                 sumPathsSevered += analysis.getPathsSevered();
                 sumPathsIntact += analysis.getPathsIntact();
                 sumConnectionsSevered += analysis.getConnectionsSevered();
                 sumConnectionsIntact += analysis.getConnectionsIntact();
+
+                if(analysis.getConnectionsIntact() > 0) {
+                    sumAveragePrimaryCostPostFailure += analysis.getAveragePrimaryCostPostFailure();
+                    sumAveragePrimaryHopsPostFailure += analysis.getAveragePrimaryHopsPostFailure();
+                    numWithConnectionsIntact++;
+                }
             }
         }
 
@@ -86,10 +90,12 @@ public class AggregationAnalysisService {
         return AggregateAnalysis.builder()
                 .requestSetIds(requestSetIds)
                 .seeds(seeds)
-                .problemClass(problemClass)
                 .algorithm(algorithm)
+                .routingType(routingType)
                 .objective(objective)
+                .failureScenario(failureScenario)
                 .failureClass(failureClass)
+                .numFailuresEvents(numFailureEvents)
                 .numRequests(numRequests)
                 .totalFeasible(numFeasible)
                 .percentFeasible(numFeasible / numRequests)
@@ -99,8 +105,8 @@ public class AggregationAnalysisService {
                 .totalPaths(sumPaths / numFeasible)
                 .averagePrimaryHops(sumAveragePrimaryHops / numFeasible)
                 .averagePrimaryCost(sumAveragePrimaryCost / numFeasible)
-                .averagePrimaryHopsPostFailure(sumAveragePrimaryHopsPostFailure / numFeasible)
-                .averagePrimaryCostPostFailure(sumAveragePrimaryCostPostFailure / numFeasible)
+                .averagePrimaryHopsPostFailure(numWithConnectionsIntact > 0 ? sumAveragePrimaryHopsPostFailure / numWithConnectionsIntact : 0)
+                .averagePrimaryCostPostFailure(numWithConnectionsIntact > 0 ?  sumAveragePrimaryCostPostFailure / numWithConnectionsIntact : 0)
                 .pathsSevered(sumPathsSevered / numFeasible)
                 .pathsIntact(sumPathsIntact / numFeasible)
                 .connectionsSevered(sumConnectionsSevered / numFeasible)
