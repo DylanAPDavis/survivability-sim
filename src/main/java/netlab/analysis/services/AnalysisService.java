@@ -128,6 +128,7 @@ public class AnalysisService {
                 .numFailuresEvents(request.getDetails().getNumFailureEvents().getTotalNumFailureEvents())
                 .algorithm(request.getAlgorithm())
                 .routingType(request.getRoutingType())
+                .trafficCombinationType(request.getTrafficCombinationType())
                 .objective(request.getObjective())
                 .failureClass(request.getFailureClass())
                 .isFeasible(details.getIsFeasible())

@@ -28,6 +28,7 @@ public class Analysis implements Serializable {
     private FailureScenario failureScenario;
     private FailureClass failureClass;
     private Integer numFailuresEvents;
+    private TrafficCombinationType trafficCombinationType;
 
     private Boolean isFeasible;
     private Double runningTime;
@@ -69,6 +70,7 @@ public class Analysis implements Serializable {
                 "Seed: " + seed + "\n" +
                 "Algorithm: " + algorithm.getCode() + "\n" +
                 "Routing Type: " + routingType.getCode() + "\n" +
+                "Traffic Combination Type: " + trafficCombinationType.getCode() + "\n" +
                 "Objective: " + objective.getCode() + "\n" +
                 "Failure Scenario: " + failureScenario.getCode() + "\n" +
                 "Failure Class: " + failureClass.getCode() + "\n" +

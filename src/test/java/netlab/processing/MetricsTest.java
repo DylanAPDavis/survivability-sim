@@ -147,7 +147,7 @@ public class MetricsTest {
                 .numSources(1)
                 .numDestinations(1)
                 .failureScenario("allLinks")
-                .numFailureEvents(5)
+                .numFailureEvents(1)
                 .useAws(false)
                 .build();
         evaluate(params);
@@ -228,7 +228,7 @@ public class MetricsTest {
     }
     // ILPs
     @Test
-    public void unicastTest(){
+    public void ilpUnicastTest(){
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
@@ -247,9 +247,194 @@ public class MetricsTest {
         evaluate(params);
     }
 
+    @Test
+    public void ilpAnycastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(3)
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void ilpBoadcastFullOverlap(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .sourceSubsetDestType("all")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
     // ILPs with Failure
+    @Test
+    public void ilpUnicastLinkFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("alllinks")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
 
     // ILPs with TrafficCombination
+    @Test
+    public void ilpManycastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(6L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(2)
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void ilpManycastSourceTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(6L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(2)
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .trafficCombinationType("source")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void ilpManycastDestTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(6L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(2)
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .trafficCombinationType("dest")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void ilpManycastBothTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(6L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(2)
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .trafficCombinationType("both")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void ilpManyToOneSourceTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manytoone")
+                .numSources(3)
+                .numDestinations(1)
+                .useMinS(2)
+                .useMaxS(2)
+                .numFailureEvents(0)
+                .trafficCombinationType("source")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void ilpManyToOneDestTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manytoone")
+                .numSources(3)
+                .numDestinations(1)
+                .useMinS(2)
+                .useMaxS(2)
+                .numFailureEvents(0)
+                .trafficCombinationType("dest")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
 
 
     public void evaluate(SimulationParameters params){

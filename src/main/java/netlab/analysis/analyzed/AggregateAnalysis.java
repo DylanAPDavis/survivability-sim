@@ -23,6 +23,7 @@ public class AggregateAnalysis implements Serializable {
     private FailureScenario failureScenario;
     private FailureClass failureClass;
     private Integer numFailuresEvents;
+    private TrafficCombinationType trafficCombinationType;
 
     private Integer numRequests;
 

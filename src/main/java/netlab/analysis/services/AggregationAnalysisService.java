@@ -36,6 +36,7 @@ public class AggregationAnalysisService {
         List<Long> seeds = new ArrayList<>();
         Algorithm algorithm = analyses.get(0).getAlgorithm();
         RoutingType routingType = analyses.get(0).getRoutingType();
+        TrafficCombinationType trafficCombinationType = analyses.get(0).getTrafficCombinationType();
         Objective objective = analyses.get(0).getObjective();
         FailureClass failureClass = analyses.get(0).getFailureClass();
         FailureScenario failureScenario = analyses.get(0).getFailureScenario();
@@ -92,6 +93,7 @@ public class AggregationAnalysisService {
                 .seeds(seeds)
                 .algorithm(algorithm)
                 .routingType(routingType)
+                .trafficCombinationType(trafficCombinationType)
                 .objective(objective)
                 .failureScenario(failureScenario)
                 .failureClass(failureClass)
