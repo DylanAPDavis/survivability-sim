@@ -172,7 +172,7 @@ public class MetricsTest {
                 .numSources(1)
                 .numDestinations(1)
                 .failureScenario("allLinks")
-                .numFailureEvents(10)
+                .numFailureEvents(5)
                 .useAws(false)
                 .build();
         String requestId = submissionController.submitRequest(params);
@@ -201,8 +201,8 @@ public class MetricsTest {
                 .routingType("unicast")
                 .numSources(1)
                 .numDestinations(1)
-                .failureScenario("default")
-                .numFailureEvents(0)
+                .failureScenario("allLinks")
+                .numFailureEvents(5)
                 .useAws(false)
                 .build();
         String requestId = submissionController.submitRequest(params);

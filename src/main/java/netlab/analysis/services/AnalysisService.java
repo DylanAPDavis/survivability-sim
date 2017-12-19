@@ -146,6 +146,7 @@ public class AnalysisService {
                 .pathsIntact(pathsIntact)
                 .connectionsSevered(connectionsSevered)
                 .connectionsIntact(connectionsIntact)
+                .chosenFailures(convertFailuresToString(chosenFailures))
                 .build();
 
         if(!request.getTrafficCombinationType().equals(TrafficCombinationType.None)){
@@ -153,6 +154,12 @@ public class AnalysisService {
         }
 
         return analysis;
+    }
+
+    private List<String> convertFailuresToString(List<Failure> chosenFailures) {
+        return chosenFailures.stream()
+                .map(f -> f.getNode() == null ? f.getLink().getId() : f.getNode().getId())
+                .collect(Collectors.toList());
     }
 
     private void adjustLinksUsedTotalCost(Analysis analysis, Map<Link, Set<Node>> sourceLinkMap,
@@ -198,6 +205,7 @@ public class AnalysisService {
         for(List<Failure> failureGroup : failureGroups){
             Double likelihood = 1.0;
             String combinedId = "";
+            failureGroup.sort(Comparator.comparing(f -> f.getNode() == null ? f.getLink().getId() : f.getNode().getId()));
             for(Failure failure : failureGroup){
                 likelihood *= failure.getProbability();
                 combinedId += failure.getNode() != null ? failure.getNode().getId() : failure.getLink().getId();

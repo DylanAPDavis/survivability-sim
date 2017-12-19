@@ -38,6 +38,7 @@ public class Analysis implements Serializable {
     private Double averagePrimaryCost;
 
     // After failure simulation
+    private List<String> chosenFailures;
     private Double averagePrimaryHopsPostFailure;
     private Double averagePrimaryCostPostFailure;
     private Double pathsSevered;
@@ -86,6 +87,7 @@ public class Analysis implements Serializable {
                 "Paths Intact: " + pathsIntact + "\n" +
                 "Paths Severed: " + pathsSevered + "\n" +
                 "Connections Intact: " + connectionsIntact + "\n" +
-                "Connections Severed: " + connectionsSevered + "\n";
+                "Connections Severed: " + connectionsSevered + "\n" +
+                "Chosen Failures: " + chosenFailures.toString() + "\n";
     }
 }
