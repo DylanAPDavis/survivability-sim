@@ -13,7 +13,7 @@ public enum Algorithm {
     Bhandari("bhandari"),
     OverlappingTrees("overlappingtrees"),
     Hamlitonian("hamiltonian"),
-    MemberForwarding("memberforwarding");
+    DestinationForwarding("destinationforwarding");
 
     private String code;
 

@@ -5,7 +5,7 @@ import netlab.processing.ampl.AmplService;
 import netlab.processing.cycles.HamiltonianCycleService;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.disjointpaths.FlexBhandariService;
-import netlab.processing.groupcast.MemberForwardingService;
+import netlab.processing.groupcast.DestinationForwardingService;
 import netlab.processing.overlappingtrees.OverlappingTreeService;
 import netlab.processing.shortestPaths.ShortestPathService;
 import netlab.submission.request.Details;
@@ -32,14 +32,14 @@ public class ProcessingService {
 
     private HamiltonianCycleService hamiltonianCycleService;
 
-    private MemberForwardingService memberForwardingService;
+    private DestinationForwardingService destinationForwardingService;
 
     private TopologyService topoService;
 
     @Autowired
     public ProcessingService(TopologyService topologyService, AmplService amplService, FlexBhandariService flexBhandariService,
                              ShortestPathService shortestPathService, BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
-                             HamiltonianCycleService hamiltonianCycleService, MemberForwardingService memberForwardingService) {
+                             HamiltonianCycleService hamiltonianCycleService, DestinationForwardingService destinationForwardingService) {
         this.topoService = topologyService;
         this.amplService = amplService;
         this.flexBhandariService = flexBhandariService;
@@ -47,7 +47,7 @@ public class ProcessingService {
         this.bhandariService = bhandariService;
         this.overlappingTreeService = overlappingTreeService;
         this.hamiltonianCycleService = hamiltonianCycleService;
-        this.memberForwardingService = memberForwardingService;
+        this.destinationForwardingService = destinationForwardingService;
     }
 
     public Request processRequest(Request request) {
@@ -72,8 +72,8 @@ public class ProcessingService {
             case Hamlitonian:
                 details = hamiltonianCycleService.solve(request, topo);
                 break;
-            case MemberForwarding:
-                details = memberForwardingService.solve(request, topo);
+            case DestinationForwarding:
+                details = destinationForwardingService.solve(request, topo);
                 break;
         }
         request.setDetails(details);

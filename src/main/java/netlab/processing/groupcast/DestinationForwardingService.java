@@ -20,15 +20,15 @@ import java.util.*;
 
 @Service
 @Slf4j
-public class MemberForwardingService {
+public class DestinationForwardingService {
 
     private ShortestPathService shortestPathService;
     private PathMappingService pathMappingService;
     private TopologyAdjustmentService topologyService;
 
     @Autowired
-    public MemberForwardingService(ShortestPathService shortestPathService, PathMappingService pathMappingService,
-                                   TopologyAdjustmentService topologyService) {
+    public DestinationForwardingService(ShortestPathService shortestPathService, PathMappingService pathMappingService,
+                                        TopologyAdjustmentService topologyService) {
         this.shortestPathService = shortestPathService;
         this.pathMappingService = pathMappingService;
         this.topologyService = topologyService;
@@ -50,7 +50,7 @@ public class MemberForwardingService {
         Details details = request.getDetails();
 
         TrafficCombinationType trafficCombinationType = request.getTrafficCombinationType();
-
+        Set<SourceDestPair> pairs = request.getDetails().getPairs();
 
         Set<Node> sources = details.getSources();
         Set<Node> dests = details.getDestinations();
@@ -122,6 +122,8 @@ public class MemberForwardingService {
                         if(chosenPathsMap.containsKey(srcToMinDestPair)){
                             Path combinedPath = chosenPathsMap.get(srcToMinDestPair).values().iterator().next().combinePaths(minDestToOtherDestPath);
                             updateMaps(srcOtherDestPair, combinedPath, srcPathsMap, dstPathsMap, chosenPathsMap);
+                        } else if(src == minimumCostDest && pairs.contains(srcOtherDestPair)){
+                            updateMaps(srcOtherDestPair, minDestToOtherDestPath, srcPathsMap, dstPathsMap, chosenPathsMap);
                         }
                     }
                 }
