@@ -1,8 +1,9 @@
-package netlab.processing;
+package netlab.analysis;
 
 import netlab.TestConfiguration;
 import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.services.AnalysisService;
+import netlab.processing.ProcessingService;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;

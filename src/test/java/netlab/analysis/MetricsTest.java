@@ -1,4 +1,4 @@
-package netlab.processing;
+package netlab.analysis;
 
 import netlab.TestConfiguration;
 import netlab.analysis.analyzed.Analysis;

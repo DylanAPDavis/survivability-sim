@@ -12,7 +12,8 @@ public enum Algorithm {
     ShortestPath("shortestpath"),
     Bhandari("bhandari"),
     OverlappingTrees("overlappingtrees"),
-    Hamlitonian("hamiltonian");
+    Hamlitonian("hamiltonian"),
+    MemberForwarding("memberforwarding");
 
     private String code;
 

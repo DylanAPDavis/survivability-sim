@@ -51,6 +51,12 @@ public class Path implements Serializable {
         this.totalWeight += link.getWeight();
     }
 
+    public Path combinePaths(Path otherPath){
+        List<Link> allLinks = new ArrayList<>(this.links);
+        allLinks.addAll(otherPath.getLinks());
+        return new Path(allLinks);
+    }
+
 
     private List<Node> getNodes(List<Link> links){
         List<Node> nodes = new ArrayList<>();

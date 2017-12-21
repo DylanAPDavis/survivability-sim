@@ -1,7 +1,8 @@
-package netlab;
+package netlab.aws;
 
 
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import netlab.TestConfiguration;
 import netlab.analysis.analyzed.AggregationParameters;
 import netlab.analysis.analyzed.FailureDescription;
 import netlab.analysis.analyzed.RoutingDescription;
