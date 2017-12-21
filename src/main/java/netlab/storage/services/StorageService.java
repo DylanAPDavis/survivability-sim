@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -167,6 +170,13 @@ public class StorageService {
         //String fileName = nameComponents.stream().reduce("", (s1, s2) -> s1 + "_" + s2);
         //fileName = fileName.substring(1);
         String outputPath = System.getProperty("user.dir") + "/results/" + subDir + "/";
+        if(Files.notExists(Paths.get(outputPath))){
+            try {
+                Files.createDirectory(Paths.get(outputPath));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         return new File(outputPath + id);
     }
 

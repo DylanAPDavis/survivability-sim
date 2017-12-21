@@ -114,6 +114,49 @@ public class MetricsTest {
 
     }
 
+    @Test
+    public void destinationForwardingBroadcastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(10L)
+                .topologyId("NSFnet")
+                .algorithm("destinationForwarding")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .sourceSubsetDestType("all")
+                .failureScenario("default")
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        evaluate(params);
+
+    }
+
+    @Test
+    public void destinationForwardingBroadcastCombineTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(10L)
+                .topologyId("NSFnet")
+                .algorithm("destinationForwarding")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .sourceSubsetDestType("all")
+                .failureScenario("default")
+                .trafficCombinationType("both")
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        evaluate(params);
+
+    }
+
     // Baseline Algorithms with Failure
     @Test
     public void shortestPathFailuresTest(){
