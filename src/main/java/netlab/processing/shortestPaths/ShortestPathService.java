@@ -138,6 +138,10 @@ public class ShortestPathService {
 
     }
 
+    public Path findShortestPath(SourceDestPair pair, Topology topo){
+        return findShortestPath(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None);
+    }
+
     public Path findShortestPath(SourceDestPair pair, Topology topo, Map<Node, Set<Path>> srcPathsMap,
                                  Map<Node, Set<Path>> dstPathsMap, TrafficCombinationType trafficType){
 
