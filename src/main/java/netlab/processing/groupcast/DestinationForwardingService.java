@@ -122,13 +122,18 @@ public class DestinationForwardingService {
                         if(chosenPathsMap.containsKey(srcToMinDestPair)){
                             Path combinedPath = chosenPathsMap.get(srcToMinDestPair).values().iterator().next().combinePaths(minDestToOtherDestPath);
                             updateMaps(srcOtherDestPair, combinedPath, srcPathsMap, dstPathsMap, chosenPathsMap);
-                        } else if(src == minimumCostDest && pairs.contains(srcOtherDestPair)){
+                        }
+                        // If this source is also a minimum cost dest, just use the direct MinCostDest -> OtherDest route
+                        else if(src == minimumCostDest && pairs.contains(srcOtherDestPair)){
                             updateMaps(srcOtherDestPair, minDestToOtherDestPath, srcPathsMap, dstPathsMap, chosenPathsMap);
                         }
                     }
                 }
             }
         }
+
+        // Path filtering
+        chosenPathsMap = pathMappingService.filterMap(chosenPathsMap, details);
         details.setChosenPaths(chosenPathsMap);
         details.setIsFeasible(true);
 
