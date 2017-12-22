@@ -6,10 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
@@ -80,6 +77,12 @@ public class Path implements Serializable {
             }
         }
         return false;
+    }
+
+    public Path reverse(){
+        List<Link> pathLinks = new ArrayList<>(this.links);
+        Collections.reverse(pathLinks);
+        return new Path(pathLinks.stream().map(Link::reverse).collect(Collectors.toList()));
     }
 
 }

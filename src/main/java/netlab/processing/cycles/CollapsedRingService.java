@@ -1,15 +1,18 @@
 package netlab.processing.cycles;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.processing.pathmapping.PathMappingService;
 import netlab.processing.shortestPaths.ShortestPathService;
+import netlab.submission.enums.TrafficCombinationType;
+import netlab.submission.request.Details;
+import netlab.submission.request.Request;
 import netlab.topology.elements.*;
+import netlab.topology.services.TopologyAdjustmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /*
 Minimum Cost Collapsed Ring (MC-CR)
@@ -21,19 +24,68 @@ From "Protection of Multicast Sessions in WDM Mesh Optical Networks" by Tanvir R
 public class CollapsedRingService {
 
     private ShortestPathService shortestPathService;
+    private PathMappingService pathMappingService;
+    private TopologyAdjustmentService topologyService;
 
     @Autowired
-    public CollapsedRingService(ShortestPathService shortestPathService){
+    public CollapsedRingService(ShortestPathService shortestPathService, PathMappingService pathMappingService,
+                                        TopologyAdjustmentService topologyService) {
         this.shortestPathService = shortestPathService;
+        this.pathMappingService = pathMappingService;
+        this.topologyService = topologyService;
+    }
+
+    public Details solve(Request request, Topology topo){
+        long startTime = System.nanoTime();
+        Details details = findPaths(request, topo);
+        long endTime = System.nanoTime();
+        double duration = (endTime - startTime)/1e9;
+        details.setRunningTimeSeconds(duration);
+        return details;
+    }
+
+    private Details findPaths(Request request, Topology topo) {
+        Details details = request.getDetails();
+
+        Set<Node> sources = details.getSources();
+        Node src = sources.iterator().next();
+        Set<Node> dests = details.getDestinations();
+
+        Map<SourceDestPair, Map<String, Path>> chosenPathsMap = new HashMap<>();
+
+        Map<SourceDestPair, Long> minimumCostPathMap = topo.getMinimumPathCostMap();
+
+
+        List<Node> sortedDests = dests.stream()
+                .sorted(Comparator.comparing(d -> minimumCostPathMap.get(new SourceDestPair(src, d))))
+                .collect(Collectors.toList());
+
+        List<Path> forwardAndReverse = findCollapsedRing(src, sortedDests, topo);
+
+        for(Path path : forwardAndReverse){
+            Node dst = path.getNodes().get(path.getNodes().size()-1);
+            SourceDestPair pair = new SourceDestPair(src, dst);
+            chosenPathsMap.putIfAbsent(pair, new HashMap<>());
+            chosenPathsMap.get(pair).put(String.valueOf(chosenPathsMap.get(pair).size()+1), path);
+        }
+
+        // Path filtering
+        chosenPathsMap = pathMappingService.filterMap(chosenPathsMap, details);
+        details.setChosenPaths(chosenPathsMap);
+        details.setIsFeasible(true);
+
+        return details;
     }
 
     public List<Path> findCollapsedRing(Node src, List<Node> destinations, Topology topo){
+        destinations.remove(src);
         // Find a path from src to each destination in order.
         // If a destination ends up as an intermediate node, remove it from the list
         Set<Node> reachedDestinations = new HashSet<>();
         Path firstSrcPath = null;
         List<Path> destToDestPaths = new ArrayList<>();
         Node pathOrigin = src;
+        Node lastDest = null;
         for(Node dest : destinations){
             // If the dest is not the source, and it hasn't been reached already
             if(dest != src && !reachedDestinations.contains(dest)){
@@ -53,10 +105,38 @@ public class CollapsedRingService {
                     destToDestPaths.add(sp);
                 }
                 pathOrigin = dest;
+                lastDest = dest;
             }
         }
 
         // Now we have src -> d1 -> d2 -> ... -> dn paths
         // Need to find a src -> dn path, then store all of the reverse paths
+        Path secondSrcPath = null;
+        List<Path> reverseDestToDestPaths = new ArrayList<>(destToDestPaths);
+        Collections.reverse(reverseDestToDestPaths);
+        if(lastDest != null) {
+            SourceDestPair srcLastDstPair = SourceDestPair.builder().src(src).dst(lastDest).build();
+            secondSrcPath = shortestPathService.findShortestPath(srcLastDstPair, topo);
+            reverseDestToDestPaths = reverseDestToDestPaths.stream()
+                    .map(Path::reverse)
+                    .collect(Collectors.toList());
+        }
+
+        // Now, combine the forward paths to create the src -> dst paths
+        List<Path> finalPaths = combinePaths(firstSrcPath, destToDestPaths);
+        finalPaths.addAll(combinePaths(secondSrcPath, reverseDestToDestPaths));
+        return finalPaths;
+    }
+
+    public List<Path> combinePaths(Path firstPath, List<Path> followupPaths){
+        List<Path> combinedPathList = new ArrayList<>();
+        combinedPathList.add(firstPath);
+        for(int i = 0; i < followupPaths.size(); i++){
+            Path newPath = followupPaths.get(i);
+            Path prePath = combinedPathList.get(i);
+            Path combinedPath = prePath.combinePaths(newPath);
+            combinedPathList.add(combinedPath);
+        }
+        return combinedPathList;
     }
 }

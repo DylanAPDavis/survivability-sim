@@ -2,6 +2,7 @@ package netlab.processing;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ampl.AmplService;
+import netlab.processing.cycles.CollapsedRingService;
 import netlab.processing.cycles.HamiltonianCycleService;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.disjointpaths.FlexBhandariService;
@@ -34,12 +35,15 @@ public class ProcessingService {
 
     private DestinationForwardingService destinationForwardingService;
 
+    private CollapsedRingService collapsedRingService;
+
     private TopologyService topoService;
 
     @Autowired
     public ProcessingService(TopologyService topologyService, AmplService amplService, FlexBhandariService flexBhandariService,
                              ShortestPathService shortestPathService, BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
-                             HamiltonianCycleService hamiltonianCycleService, DestinationForwardingService destinationForwardingService) {
+                             HamiltonianCycleService hamiltonianCycleService, DestinationForwardingService destinationForwardingService,
+                             CollapsedRingService collapsedRingService) {
         this.topoService = topologyService;
         this.amplService = amplService;
         this.flexBhandariService = flexBhandariService;
@@ -48,6 +52,7 @@ public class ProcessingService {
         this.overlappingTreeService = overlappingTreeService;
         this.hamiltonianCycleService = hamiltonianCycleService;
         this.destinationForwardingService = destinationForwardingService;
+        this.collapsedRingService = collapsedRingService;
     }
 
     public Request processRequest(Request request) {
@@ -74,6 +79,9 @@ public class ProcessingService {
                 break;
             case DestinationForwarding:
                 details = destinationForwardingService.solve(request, topo);
+                break;
+            case CollapsedRing:
+                details = collapsedRingService.solve(request, topo);
                 break;
         }
         request.setDetails(details);

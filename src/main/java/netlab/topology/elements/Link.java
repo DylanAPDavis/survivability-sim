@@ -48,4 +48,8 @@ public class Link implements Serializable {
         this.id = origin.getId() + "-" + target.getId();
         this.weight = weight;
     }
+
+    public Link reverse(){
+        return new Link(this.target, this.origin, this.weight);
+    }
 }
