@@ -34,7 +34,7 @@ public class TopologyAdjustmentService {
         return newTopo;
     }
 
-    public Topology adjustWeightsToMax(Topology topo, Set<Path> paths){
+    public Topology adjustWeightsToMax(Topology topo, Collection<Path> paths){
         Set<Link> pathLinks = paths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
         Map<String, Link> linkIdMap = topo.getLinkIdMap();
         Set<Link> inverseLinks = pathLinks.stream()
@@ -46,6 +46,22 @@ public class TopologyAdjustmentService {
         Topology newTopo = new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
         newTopo.copyPathCosts(topo);
         return newTopo;
+    }
+
+    public void readjustLinkWeights(Map<SourceDestPair, Map<String, Path>> chosenPathsMap, Topology sourceTopo) {
+        Map<String, Link> sourceLinkIdMap = sourceTopo.getLinkIdMap();
+        for(Map<String, Path> pathMap : chosenPathsMap.values()){
+            for(String pathId : pathMap.keySet()){
+                List<Link> readjustedLinks = new ArrayList<>(pathMap.get(pathId).getLinks());
+                for(Link link : readjustedLinks){
+                    Link sourceLink = sourceLinkIdMap.get(link.getId());
+                    if(!Objects.equals(sourceLink.getWeight(), link.getWeight())){
+                        link.setWeight(sourceLink.getWeight());
+                    }
+                }
+                pathMap.put(pathId, new Path(readjustedLinks));
+            }
+        }
     }
 
     public Set<Link> modifyLinks(Set<Link> links, boolean shouldModify, Set<Link> setToBeModified, Long newWeight){
@@ -69,7 +85,7 @@ public class TopologyAdjustmentService {
                 .collect(Collectors.toList());
     }
 
-    public Topology removeLinksFromTopology(Topology topo, Set<Link> linksToRemove){
+    public Topology removeLinksFromTopology(Topology topo, Collection<Link> linksToRemove){
         Set<Link> newLinkSet = new HashSet<>();
         for(Link link : topo.getLinks()){
             if(!linksToRemove.contains(link)){
@@ -81,7 +97,9 @@ public class TopologyAdjustmentService {
     }
 
     public Topology createTopologyWithLinkSubset(Topology topo, Set<Link> linkSubset){
-        return new Topology(topo.getId(), topo.getNodes(), linkSubset);
+        Topology newTopo = new Topology(topo.getId(), topo.getNodes(), linkSubset);
+        newTopo.copyPathCosts(topo);
+        return newTopo;
     }
 
 }

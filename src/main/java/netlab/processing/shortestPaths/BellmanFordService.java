@@ -32,8 +32,11 @@ public class BellmanFordService {
 
         BellmanFordShortestPath<Node, DefaultWeightedEdge> shortestPath = new BellmanFordShortestPath<>(graph);
         GraphPath<Node,DefaultWeightedEdge> graphPath = shortestPath.getPath(source, dest);
-        List<DefaultWeightedEdge> edgeList = graphPath.getEdgeList();
-        return edgeList.stream().map(edgeToLinkMap::get).collect(Collectors.toList());
+        if(graphPath != null) {
+            List<DefaultWeightedEdge> edgeList = graphPath.getEdgeList();
+            return edgeList.stream().map(edgeToLinkMap::get).collect(Collectors.toList());
+        }
+        return new ArrayList<>();
         /*
         Map<Node, Link> edgeMap = bellmanFord(topo, source);
         if(edgeMap.isEmpty()){

@@ -57,6 +57,9 @@ public class Path implements Serializable {
 
     private List<Node> getNodes(List<Link> links){
         List<Node> nodes = new ArrayList<>();
+        if(links.size() == 0){
+            return nodes;
+        }
         for(Link link : links){
             nodes.add(link.getOrigin());
         }
@@ -92,6 +95,10 @@ public class Path implements Serializable {
         List<Link> pathLinks = new ArrayList<>(this.links);
         Collections.reverse(pathLinks);
         return new Path(pathLinks.stream().map(Link::reverse).collect(Collectors.toList()));
+    }
+
+    public boolean isEmpty(){
+        return this.links.isEmpty();
     }
 
 }

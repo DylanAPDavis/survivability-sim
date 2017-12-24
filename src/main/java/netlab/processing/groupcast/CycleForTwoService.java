@@ -70,7 +70,8 @@ public class CycleForTwoService {
         // Pick a source
         Node src = sources.stream().sorted(Comparator.comparing(Node::getId)).collect(Collectors.toList()).get(0);
 
-        List<Node> sortedDests = dests.stream()
+        List<Node> sortedDests = members.stream()
+                .filter(d -> !d.equals(src))
                 .sorted(Comparator.comparing(d -> pathCostMap.get(new SourceDestPair(src, d))))
                 .collect(Collectors.toList());
 
@@ -79,26 +80,32 @@ public class CycleForTwoService {
         if(dests.contains(src)) {
             collapsedRingService.augmentPathListWithPathsToSrc(cyclePaths);
         }
-        Set<Link> cycleLinks = cyclePaths.stream().map(Path::getLinks).flatMap(Collection::stream).collect(Collectors.toSet());
+        //Set<Link> forwardCycleLinks = getLinksFromOneCycle(src, cyclePaths);//cyclePaths.stream().map(Path::getLinks).flatMap(Collection::stream).collect(Collectors.toSet());
 
-        // Remove those links from the topology
-        Topology cycleRemovedTopo = topologyAdjustmentService.removeLinksFromTopology(topo, cycleLinks);
+        // Give these links Maximum weight
+        Topology cycleRemovedTopo = topologyAdjustmentService.adjustWeightsToMax(topo, cyclePaths);
 
         // Find a shortestpath/tree solution for the problem without using the cycle links
         Map<SourceDestPair, Map<String, Path>> chosenPathsMap = shortestPathService.findPaths(details, request.getRoutingType(),
                 pairs, cycleRemovedTopo, trafficCombinationType, false);
 
+        // Convert any MAX_INT link weights back to their true weight
+        topologyAdjustmentService.readjustLinkWeights(chosenPathsMap, topo);
+
         // Now, find paths for each source to each destination using the cycle links
-        Topology cycleOnlyTopo = topologyAdjustmentService.createTopologyWithLinkSubset(topo, cycleLinks);
-        Map<SourceDestPair, Map<String, Path>> backupMap = shortestPathService.findPaths(details, request.getRoutingType(),
-                pairs, cycleOnlyTopo, trafficCombinationType, false);
+        Set<Link> bothCycleLinks = cyclePaths.stream().map(Path::getLinks).flatMap(Collection::stream).collect(Collectors.toSet());
+        Topology cycleOnlyTopo = topologyAdjustmentService.createTopologyWithLinkSubset(topo, bothCycleLinks);
+        Map<SourceDestPair, Map<String, Path>> backupMap = getBackupPaths(pairs, cycleOnlyTopo);
 
         // Add backup paths to primary map
         for(SourceDestPair pair : chosenPathsMap.keySet()){
             if(backupMap.containsKey(pair)){
+                Map<String, Path> establishedMap = chosenPathsMap.get(pair);
                 Map<String, Path> backupMapForPair = backupMap.get(pair);
                 for(Path path : backupMapForPair.values()){
-                    chosenPathsMap.get(pair).put(String.valueOf(chosenPathsMap.get(pair).size() + 1), path);
+                    if(!establishedMap.values().contains(path)){
+                        establishedMap.put(String.valueOf(establishedMap.size() + 1), path);
+                    }
                 }
             }
         }
@@ -108,6 +115,51 @@ public class CycleForTwoService {
         details.setIsFeasible(true);
 
         return details;
+    }
+
+
+    private Map<SourceDestPair,Map<String,Path>> getBackupPaths(Set<SourceDestPair> pairs, Topology cycleOnlyTopo) {
+        Map<SourceDestPair, Map<String, Path>> backupPathsMap = new HashMap<>();
+        for(SourceDestPair pair : pairs){
+            backupPathsMap.put(pair, new HashMap<>());
+            Path sp = shortestPathService.findShortestPath(pair, cycleOnlyTopo);
+            if(!sp.isEmpty()) {
+                backupPathsMap.get(pair).put("1", sp);
+                Topology prunedTopo = topologyAdjustmentService.removeLinksFromTopology(cycleOnlyTopo, sp.getLinks());
+                Path secondSp = shortestPathService.findShortestPath(pair, prunedTopo);
+                if(!secondSp.isEmpty()){
+                    backupPathsMap.get(pair).put("2", secondSp);
+                }
+            }
+        }
+        return backupPathsMap;
+    }
+
+    private Set<Link> getLinksFromOneCycle(Node src, List<Path> cyclePaths) {
+        List<Path> primaryPaths = new ArrayList<>();
+        Node lastNode = null;
+        for(Path path : cyclePaths){
+            List<Node> nodes = path.getNodes();
+            Node currLastNode = nodes.get(nodes.size()-1);
+            // Get the forward path that includes all destinations
+            if(primaryPaths.isEmpty()){
+                if(lastNode == null){
+                    lastNode = currLastNode;
+                }
+                else if(lastNode == currLastNode){
+                    primaryPaths.add(path);
+                }
+            }
+            // Get the path back to the source (if it exists) from the last destination
+            if(currLastNode == src){
+                Node firstNode = nodes.get(0);
+                if(firstNode == lastNode){
+                    primaryPaths.add(path);
+                    break;
+                }
+            }
+        }
+        return primaryPaths.stream().map(Path::getLinks).flatMap(Collection::stream).collect(Collectors.toSet());
     }
 
 

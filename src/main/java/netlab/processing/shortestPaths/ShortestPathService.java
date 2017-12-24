@@ -68,11 +68,13 @@ public class ShortestPathService {
         Map<Path, SourceDestPair> potentialPathMap = new HashMap<>();
         for(SourceDestPair pair : pairs){
             Path sp = findShortestPath(pair, topo, usedSources, usedDestinations, trafficCombinationType);
-            potentialPathMap.put(sp, pair);
-            usedSources.putIfAbsent(pair.getSrc(), new HashSet<>());
-            usedSources.get(pair.getSrc()).add(sp);
-            usedDestinations.putIfAbsent(pair.getDst(), new HashSet<>());
-            usedDestinations.get(pair.getDst()).add(sp);
+            if(sp.getLinks().size() > 0) {
+                potentialPathMap.put(sp, pair);
+                usedSources.putIfAbsent(pair.getSrc(), new HashSet<>());
+                usedSources.get(pair.getSrc()).add(sp);
+                usedDestinations.putIfAbsent(pair.getDst(), new HashSet<>());
+                usedDestinations.get(pair.getDst()).add(sp);
+            }
         }
 
         // If you're doing Broadcast or Multicast, you're done

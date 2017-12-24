@@ -88,7 +88,7 @@ public class ProcessingService {
                 details = collapsedRingService.solve(request, topo);
                 break;
             case CycleForTwo:
-                details = collapsedRingService.solve(request, topo);
+                details = cycleForTwoService.solve(request, topo);
         }
         request.setDetails(details);
         return request;

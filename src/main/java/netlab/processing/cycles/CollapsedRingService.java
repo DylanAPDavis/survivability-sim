@@ -115,8 +115,14 @@ public class CollapsedRingService {
         List<Path> reverseDestToDestPaths = new ArrayList<>(destToDestPaths);
         Collections.reverse(reverseDestToDestPaths);
         if(lastDest != null) {
+            // Remove the links used in the primary paths
+            List<Link> linksToRemove = firstSrcPath.getLinks();
+            linksToRemove.addAll(destToDestPaths.stream().map(Path::getLinks).flatMap(Collection::stream).collect(Collectors.toList()));
+            Topology primaryRemovedTopo = topologyService.removeLinksFromTopology(topo, new HashSet<>(linksToRemove));
+            // Find a path to the last connected dest
             SourceDestPair srcLastDstPair = SourceDestPair.builder().src(src).dst(lastDest).build();
-            secondSrcPath = shortestPathService.findShortestPath(srcLastDstPair, topo);
+            secondSrcPath = shortestPathService.findShortestPath(srcLastDstPair, primaryRemovedTopo);
+            // Reverse the primary paths
             reverseDestToDestPaths = reverseDestToDestPaths.stream()
                     .map(Path::reverse)
                     .collect(Collectors.toList());
