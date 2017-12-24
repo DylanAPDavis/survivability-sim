@@ -2,6 +2,7 @@ package netlab.topology.services;
 
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.processing.shortestPaths.BellmanFordService;
 import netlab.processing.shortestPaths.ShortestPathService;
 import netlab.submission.enums.TrafficCombinationType;
 import netlab.topology.elements.*;
@@ -18,6 +19,7 @@ public class TopologyService {
     Map<String, Topology> topologyIdMap;
 
     ShortestPathService shortestPathService;
+
 
     @Autowired
     public TopologyService(ShortestPathService shortestPathService){
@@ -108,21 +110,10 @@ public class TopologyService {
     }
 
     public Topology populatePathCosts(Topology topo) {
-        List<SourceDestPair> pairs = new ArrayList<>();
-        Map<SourceDestPair, Long> pairCostMap = new HashMap<>();
-        Set<Node> nodes = topo.getNodes();
-        for(Node node : nodes){
-            for(Node otherNode : nodes){
-                if(!otherNode.getId().equals(node.getId())){
-                    SourceDestPair pair = new SourceDestPair(node, otherNode);
-                    Path shortestPath = shortestPathService.findShortestPath(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None);
-                    pairs.add(pair);
-                    pairCostMap.put(pair, shortestPath.getTotalWeight());
-                }
-            }
-        }
-        pairs.sort(Comparator.comparing(pairCostMap::get));
-        topo.setMinimumPathCostMap(pairCostMap);
+        Map<SourceDestPair, Path> allPairsPathMap = shortestPathService.findAllShortestPaths(topo);
+        Map<SourceDestPair, Long> allPairsWeightMap = allPairsPathMap.keySet().stream()
+                .collect(Collectors.toMap(p -> p, p -> allPairsPathMap.get(p).getTotalWeight()));
+        topo.setMinimumPathCostMap(allPairsWeightMap);
         return topo;
     }
 

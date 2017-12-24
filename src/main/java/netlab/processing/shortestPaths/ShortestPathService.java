@@ -157,6 +157,12 @@ public class ShortestPathService {
         return pathMappingService.convertToPath(pathLinks, topo.getLinkIdMap());
     }
 
+    public Map<SourceDestPair, Path> findAllShortestPaths(Topology topo){
+        Map<SourceDestPair, List<Link>> allPathsMap = bellmanFordService.allShortestPaths(topo);
+        return allPathsMap.keySet().stream()
+                .collect(Collectors.toMap(p -> p, p -> new Path(allPathsMap.get(p))));
+    }
+
 
     // Confirm that you've met all requirements
     private boolean testSatisfication(Integer reqNumConnections, Integer useMinS, Integer useMaxS, Integer useMinD,

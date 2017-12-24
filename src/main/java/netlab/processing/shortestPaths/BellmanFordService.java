@@ -3,8 +3,11 @@ package netlab.processing.shortestPaths;
 import lombok.extern.slf4j.Slf4j;
 import netlab.topology.elements.Link;
 import netlab.topology.elements.Node;
+import netlab.topology.elements.SourceDestPair;
 import netlab.topology.elements.Topology;
+import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
+import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.BellmanFordShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
@@ -19,16 +22,8 @@ public class BellmanFordService {
 
     public List<Link> shortestPath(Topology topo, Node source, Node dest){
 
-        DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
-        for(Node node : topo.getNodes()){
-            graph.addVertex(node);
-        }
         Map<DefaultWeightedEdge, Link> edgeToLinkMap = new HashMap<>();
-        for(Link link : topo.getLinks()){
-            DefaultWeightedEdge e = graph.addEdge(link.getOrigin(), link.getTarget());
-            graph.setEdgeWeight(e, link.getWeight());
-            edgeToLinkMap.put(e, link);
-        }
+        DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = convertToGraph(topo, edgeToLinkMap);
 
         BellmanFordShortestPath<Node, DefaultWeightedEdge> shortestPath = new BellmanFordShortestPath<>(graph);
         GraphPath<Node,DefaultWeightedEdge> graphPath = shortestPath.getPath(source, dest);
@@ -45,6 +40,42 @@ public class BellmanFordService {
 
         return buildPath(dest, source, edgeMap);
         */
+    }
+
+    public Map<SourceDestPair, List<Link>> allShortestPaths(Topology topo){
+        Map<SourceDestPair, List<Link>> shortestPathMap = new HashMap<>();
+        Map<DefaultWeightedEdge, Link> edgeToLinkMap = new HashMap<>();
+
+        DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = convertToGraph(topo, edgeToLinkMap);
+        BellmanFordShortestPath<Node, DefaultWeightedEdge> allPaths = new BellmanFordShortestPath<>(graph);
+
+        for(Node src : topo.getNodes()){
+            ShortestPathAlgorithm.SingleSourcePaths<Node, DefaultWeightedEdge> srcPaths = allPaths.getPaths(src);
+            for(Node dst : topo.getNodes()){
+                if(src != dst){
+                    SourceDestPair pair = new SourceDestPair(src, dst);
+                    GraphPath<Node,DefaultWeightedEdge> path = srcPaths.getPath(dst);
+                    if(path != null){
+                        List<Link> edgeList = path.getEdgeList().stream().map(edgeToLinkMap::get).collect(Collectors.toList());
+                        shortestPathMap.put(pair, edgeList);
+                    }
+                }
+            }
+        }
+        return shortestPathMap;
+    }
+
+    public DirectedWeightedMultigraph<Node, DefaultWeightedEdge> convertToGraph(Topology topo, Map<DefaultWeightedEdge, Link> edgeToLinkMap){
+        DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
+        for(Node node : topo.getNodes()){
+            graph.addVertex(node);
+        }
+        for(Link link : topo.getLinks()){
+            DefaultWeightedEdge e = graph.addEdge(link.getOrigin(), link.getTarget());
+            graph.setEdgeWeight(e, link.getWeight());
+            edgeToLinkMap.put(e, link);
+        }
+        return graph;
     }
 
     public Map<Node, List<Link>> allShortestPaths(Topology topo, Node source){
