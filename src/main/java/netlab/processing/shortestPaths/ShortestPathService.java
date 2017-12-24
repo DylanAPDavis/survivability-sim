@@ -49,7 +49,7 @@ public class ShortestPathService {
                 }
                 break;
             default:
-                pathMap = findPaths(request.getDetails(), request.getRoutingType(), pairs, topo, request.getTrafficCombinationType());
+                pathMap = findPaths(request.getDetails(), request.getRoutingType(), pairs, topo, request.getTrafficCombinationType(), true);
                 break;
         }
         long endTime = System.nanoTime();
@@ -61,7 +61,7 @@ public class ShortestPathService {
     }
 
     public Map<SourceDestPair,Map<String,Path>> findPaths(Details details, RoutingType routingType, Collection<SourceDestPair> pairs, Topology topo,
-                                                          TrafficCombinationType trafficCombinationType) {
+                                                          TrafficCombinationType trafficCombinationType, Boolean filter) {
         Map<Node, Set<Path>> usedSources = new HashMap<>();
         Map<Node, Set<Path>> usedDestinations = new HashMap<>();
 
@@ -81,7 +81,7 @@ public class ShortestPathService {
             return pathMap;
         }
 
-        return pathMappingService.filterMap(pathMap, details);
+        return filter ? pathMappingService.filterMap(pathMap, details) : pathMap;
 
 
         /*

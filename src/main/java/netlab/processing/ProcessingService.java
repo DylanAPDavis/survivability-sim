@@ -3,6 +3,7 @@ package netlab.processing;
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.ampl.AmplService;
 import netlab.processing.cycles.CollapsedRingService;
+import netlab.processing.groupcast.CycleForTwoService;
 import netlab.processing.cycles.HamiltonianCycleService;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.disjointpaths.FlexBhandariService;
@@ -37,13 +38,15 @@ public class ProcessingService {
 
     private CollapsedRingService collapsedRingService;
 
+    private CycleForTwoService cycleForTwoService;
+
     private TopologyService topoService;
 
     @Autowired
     public ProcessingService(TopologyService topologyService, AmplService amplService, FlexBhandariService flexBhandariService,
                              ShortestPathService shortestPathService, BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
                              HamiltonianCycleService hamiltonianCycleService, DestinationForwardingService destinationForwardingService,
-                             CollapsedRingService collapsedRingService) {
+                             CollapsedRingService collapsedRingService, CycleForTwoService cycleForTwoService) {
         this.topoService = topologyService;
         this.amplService = amplService;
         this.flexBhandariService = flexBhandariService;
@@ -53,6 +56,7 @@ public class ProcessingService {
         this.hamiltonianCycleService = hamiltonianCycleService;
         this.destinationForwardingService = destinationForwardingService;
         this.collapsedRingService = collapsedRingService;
+        this.cycleForTwoService = cycleForTwoService;
     }
 
     public Request processRequest(Request request) {
@@ -83,6 +87,8 @@ public class ProcessingService {
             case CollapsedRing:
                 details = collapsedRingService.solve(request, topo);
                 break;
+            case CycleForTwo:
+                details = collapsedRingService.solve(request, topo);
         }
         request.setDetails(details);
         return request;

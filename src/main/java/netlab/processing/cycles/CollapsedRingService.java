@@ -139,4 +139,26 @@ public class CollapsedRingService {
         }
         return combinedPathList;
     }
+
+    public void augmentPathListWithPathsToSrc( List<Path> cyclePaths) {
+        // Create a path to the src using the existing paths
+        // Find the two shortest link-disjoint paths that start at the src
+        List<Path> pathsToReverse = new ArrayList<>();
+        cyclePaths.sort(Comparator.comparing(Path::getTotalWeight));
+        for(Path path : cyclePaths){
+            if(pathsToReverse.isEmpty()){
+                pathsToReverse.add(path);
+            }
+            else{
+                if(pathsToReverse.get(0).isDisjoint(path, false)){
+                    pathsToReverse.add(path);
+                    break;
+                }
+            }
+        }
+        // Reverse those paths and add them to the list
+        for(Path path : pathsToReverse){
+            cyclePaths.add(path.reverse());
+        }
+    }
 }

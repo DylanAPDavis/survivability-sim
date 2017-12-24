@@ -14,7 +14,8 @@ public enum Algorithm {
     OverlappingTrees("overlappingtrees"),
     Hamlitonian("hamiltonian"),
     DestinationForwarding("destinationforwarding"),
-    CollapsedRing("collapsedring");
+    CollapsedRing("collapsedring"),
+    CycleForTwo("cyclefortwo");
 
     private String code;
 

@@ -51,7 +51,8 @@ public class OverlappingTreeService {
 
     private Details findPaths(Details details, RoutingType routingType, Collection<SourceDestPair> pairs,
                               Topology topo, Integer useMinS, Integer useMinD, TrafficCombinationType trafficCombinationType) {
-        Map<SourceDestPair, Map<String, Path>> primaryTree = shortestPathService.findPaths(details, routingType, pairs, topo,  trafficCombinationType);
+        Map<SourceDestPair, Map<String, Path>> primaryTree = shortestPathService.findPaths(details, routingType, pairs,
+                topo,  trafficCombinationType, true);
         Set<Link> treeLinks = pathMappingService.getLinksFromMap(primaryTree);
         List<Map<SourceDestPair, Map<String, Path>>> trees = new ArrayList<>();
         boolean feasible = true;
@@ -60,7 +61,7 @@ public class OverlappingTreeService {
             newLinks.remove(link);
             Topology modifiedTopo = new Topology(topo.getId(), topo.getNodes(), newLinks);
             Map<SourceDestPair, Map<String, Path>> backupTree = shortestPathService.findPaths(details, routingType, pairs,
-                    modifiedTopo, trafficCombinationType);
+                    modifiedTopo, trafficCombinationType, true);
             if(pathMappingService.countPaths(backupTree) == 0){
                 feasible = false;
             }

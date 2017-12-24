@@ -69,4 +69,19 @@ public class TopologyAdjustmentService {
                 .collect(Collectors.toList());
     }
 
+    public Topology removeLinksFromTopology(Topology topo, Set<Link> linksToRemove){
+        Set<Link> newLinkSet = new HashSet<>();
+        for(Link link : topo.getLinks()){
+            if(!linksToRemove.contains(link)){
+                newLinkSet.add(link);
+            }
+        }
+
+        return createTopologyWithLinkSubset(topo, newLinkSet);
+    }
+
+    public Topology createTopologyWithLinkSubset(Topology topo, Set<Link> linkSubset){
+        return new Topology(topo.getId(), topo.getNodes(), linkSubset);
+    }
+
 }

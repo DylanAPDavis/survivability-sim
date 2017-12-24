@@ -65,7 +65,7 @@ public class Topology {
     }
 
     public void copyPathCosts(Topology otherTopo){
-        this.minimumPathCostMap = otherTopo.getMinimumPathCostMap();
+        this.minimumPathCostMap = new HashMap<>(otherTopo.getMinimumPathCostMap());
     }
 
     private Map<Node, Set<Link>> makeNodeLinkMap(Set<Node> nodes, Set<Link> links){

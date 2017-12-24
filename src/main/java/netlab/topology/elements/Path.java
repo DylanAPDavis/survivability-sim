@@ -79,6 +79,15 @@ public class Path implements Serializable {
         return false;
     }
 
+    public boolean isDisjoint(Path otherPath, boolean nodeDisjoint){
+        if(nodeDisjoint){
+            // Node disjoint if no node id in other path is in this path
+            return otherPath.nodeIds.stream().noneMatch(this.nodeIds::contains);
+        }
+        // Link disjoint if no link id in other path is in this path
+        return  otherPath.linkIds.stream().noneMatch(this.linkIds::contains);
+    }
+
     public Path reverse(){
         List<Link> pathLinks = new ArrayList<>(this.links);
         Collections.reverse(pathLinks);
