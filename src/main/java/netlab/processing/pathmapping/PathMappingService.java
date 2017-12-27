@@ -114,4 +114,45 @@ public class PathMappingService {
         }
         return count;
     }
+
+    public List<Path> sortPathsByWeight(Collection<Path> paths){
+        List<Path> pathList = new ArrayList<>(paths);
+        Comparator comparator = Comparator.comparingDouble(Path::getTotalWeight).thenComparing(p -> p.getLinks().size());
+        pathList.sort(comparator);
+        return pathList;
+    }
+
+    public Path getPrimary(Collection<Path> paths){
+        if(paths.isEmpty()){
+            return null;
+        }
+        List<Path> sortedPaths = sortPathsByWeight(paths);
+        return sortedPaths.get(0);
+    }
+
+    public Map<SourceDestPair,Path> buildPrimaryPathMap(Map<SourceDestPair, Map<String, Path>> chosenPathsMap) {
+        Map<SourceDestPair, Path> primaryPathMap = new HashMap<>();
+        for(SourceDestPair pair : chosenPathsMap.keySet()){
+            primaryPathMap.put(pair, getPrimary(chosenPathsMap.get(pair).values()));
+        }
+        return primaryPathMap;
+    }
+
+    public Set<String> findOverlap(Set<Path> paths) {
+        Set<String> overlap = new HashSet<>();
+        List<Path> pathList = new ArrayList<>(paths);
+        for(int i = 0; i < pathList.size(); i++){
+            Path path = pathList.get(i);
+            Set<String> pathNodes = new HashSet<>(path.getNodeIds());
+            for(int j = i+1; j < pathList.size(); j++){
+                Path otherPath = pathList.get(j);
+                Set<String> otherPathNodes = otherPath.getNodeIds();
+                // Keep all nodes in the first path that are also in the second path
+                pathNodes.retainAll(otherPathNodes);
+                // Add those to the overlap (if any)
+                overlap.addAll(pathNodes);
+            }
+        }
+        return overlap;
+    }
 }

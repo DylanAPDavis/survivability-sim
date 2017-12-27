@@ -47,6 +47,8 @@ public class Analysis implements Serializable {
     private Double connectionsSevered;
     private Double connectionsIntact;
 
+    private List<CachingResult> cachingResults;
+
     /*
     private Integer numLinksUsed;
     private Long costLinksUsed;
@@ -66,7 +68,7 @@ public class Analysis implements Serializable {
 
     public String toString(){
 
-        return "ID: " + requestId + "\n" +
+        String output = "ID: " + requestId + "\n" +
                 "Seed: " + seed + "\n" +
                 "Algorithm: " + algorithm.getCode() + "\n" +
                 "Routing Type: " + routingType.getCode() + "\n" +
@@ -91,5 +93,9 @@ public class Analysis implements Serializable {
                 "Connections Intact: " + connectionsIntact + "\n" +
                 "Connections Severed: " + connectionsSevered + "\n" +
                 "Chosen Failures: " + chosenFailures.toString() + "\n";
+        for(CachingResult result : cachingResults){
+            output += "Caching: " + result.toString() + "\n";
+        }
+        return output;
     }
 }

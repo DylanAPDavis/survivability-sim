@@ -2,6 +2,8 @@ package netlab.analysis.services;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.*;
+import netlab.analysis.enums.CachingType;
+import netlab.processing.pathmapping.PathMappingService;
 import netlab.submission.enums.*;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
@@ -16,11 +18,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AnalysisService {
 
-    private TopologyService topologyService;
+    private PathMappingService pathMappingService;
+    private CachingService cachingService;
 
     @Autowired
-    public AnalysisService( TopologyService topologyService) {
-        this.topologyService = topologyService;
+    public AnalysisService( PathMappingService pathMappingService, CachingService cachingService) {
+        this.pathMappingService = pathMappingService;
+        this.cachingService = cachingService;
     }
 
     public Analysis analyzeRequest(Request request) {
@@ -54,6 +58,15 @@ public class AnalysisService {
         Double numberOfPrimaryPathsPostFailure = 0.0;
 
         List<Failure> chosenFailures = chooseFailuresBasedOnProb(failureGroups);
+        List<CachingResult> cachingResults = Arrays.asList(
+                new CachingResult(CachingType.None),
+                new CachingResult(CachingType.SourceAdjacent),
+                new CachingResult(CachingType.FailureAware),
+                new CachingResult(CachingType.BranchingPoint),
+                new CachingResult(CachingType.EntirePath)
+        );
+
+        cachingService.buildCacheMaps(cachingResults, chosenPaths, failureColl.getFailureSet());
 
 
         //Map for storing number of times a source/dest/pair sends a connection over a link
@@ -62,7 +75,7 @@ public class AnalysisService {
 
         for(SourceDestPair pair : chosenPaths.keySet()){
             // Sort in ascending order -> total path weight
-            List<Path> pathsForPair = sortPathsByWeight(new ArrayList<>(chosenPaths.get(pair).values()));
+            List<Path> pathsForPair = pathMappingService.sortPathsByWeight(new ArrayList<>(chosenPaths.get(pair).values()));
             if(pathsForPair.size() == 0){
                 continue;
             }
@@ -106,7 +119,7 @@ public class AnalysisService {
 
             // Get new primary for intact paths
             if(intactPaths.size() > 0){
-                List<Path> sortedIntactPaths = sortPathsByWeight(intactPaths);
+                List<Path> sortedIntactPaths = pathMappingService.sortPathsByWeight(intactPaths);
                 Path newPrimary = sortedIntactPaths.get(0);
                 totalPrimaryCostPostFailure += newPrimary.getTotalWeight();
                 totalPrimaryHopsPostFailure += newPrimary.getLinks().size();
@@ -145,6 +158,7 @@ public class AnalysisService {
                 .connectionsSevered(connectionsSevered)
                 .connectionsIntact(connectionsIntact)
                 .chosenFailures(convertFailuresToString(chosenFailures))
+                .cachingResults(cachingResults)
                 .build();
 
         if(!request.getTrafficCombinationType().equals(TrafficCombinationType.None)){
@@ -185,12 +199,6 @@ public class AnalysisService {
 
         analysis.setTotalCost(totalCost);
         analysis.setTotalLinksUsed(totalLinksUsed);
-    }
-
-    private List<Path> sortPathsByWeight(List<Path> paths){
-        Comparator comparator = Comparator.comparingDouble(Path::getTotalWeight).thenComparing(p -> p.getLinks().size());
-        paths.sort(comparator);
-        return paths;
     }
 
     private List<Failure> chooseFailuresBasedOnProb(List<List<Failure>> failureGroups) {
