@@ -65,14 +65,16 @@ public class CachingService {
         // With these paths, we find any overlapping nodes, and put them in the branching points map
         for(Node dst : branchingPointMap.keySet()){
             Set<Path> paths = pathsToDest.get(dst);
-            branchingPointMap.get(dst).addAll(pathMappingService.findOverlap(paths));
+            Set<String> overlap = pathMappingService.findOverlap(paths);
+            overlap.remove(dst.getId());
+            branchingPointMap.get(dst).addAll(overlap);
         }
         // Now we have the overlapping nodes per destination
         // Go back through the pair, and assign caching nodes
         for(SourceDestPair pair : primaryPathMap.keySet()){
             Node dst = pair.getDst();
             Set<String> branchingPointIds = branchingPointMap.get(dst);
-            Set<Node> cachingPoints = cacheMap.get(pair);
+            Set<Node> cachingPoints = new HashSet<>();
             if(primaryPathMap.get(pair) != null){
                 Path primary = primaryPathMap.get(pair);
                 // Cache at a branching point if possible
@@ -88,6 +90,7 @@ public class CachingService {
                     cachingPoints.add(primary.getNodes().get(1));
                 }
             }
+            cacheMap.put(pair, cachingPoints);
         }
     }
 

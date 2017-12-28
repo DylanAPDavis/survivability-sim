@@ -8,10 +8,7 @@ import netlab.analysis.enums.CachingType;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @Builder
@@ -41,6 +38,24 @@ public class CachingResult {
 
 
     public String toString(){
-        return type + "- " + "Reach: " + reachability + " Access: " + " Hop: " + avgHopCountToContent;
+        String headline = type + " " + "Reach: " + reachability + " Access: " + avgAccessibility + " Hop: " + avgHopCountToContent;
+        return headline  + cachingMapToString() +"\n~~~";
+    }
+
+    public String cachingMapToString(){
+        String output = "";
+        String dash = "--";
+        for(SourceDestPair pair : cachingMap.keySet()){
+            String line = dash + pair.toString() + ": ";
+            List<Node> nodes = new ArrayList<>(cachingMap.get(pair));
+            for(int i = 0; i < nodes.size(); i++){
+                line += nodes.get(i).getId();
+                if(i < nodes.size()-1) {
+                    line += ", ";
+                }
+            }
+            output += "\n" + line;
+        }
+        return output;
     }
 }

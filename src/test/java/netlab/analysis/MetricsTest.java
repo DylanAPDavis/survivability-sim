@@ -269,6 +269,23 @@ public class MetricsTest {
                 .build();
         evaluate(params);
     }
+
+    @Test
+    public void manyToOneTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(4L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .objective("totalcost")
+                .routingType("manytoone")
+                .numSources(3)
+                .numDestinations(1)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
     // ILPs
     @Test
     public void ilpUnicastTest(){

@@ -141,8 +141,8 @@ public class PathMappingService {
         List<Path> pathList = new ArrayList<>(paths);
         for(int i = 0; i < pathList.size(); i++){
             Path path = pathList.get(i);
-            Set<String> pathNodes = new HashSet<>(path.getNodeIds());
             for(int j = i+1; j < pathList.size(); j++){
+                Set<String> pathNodes = new HashSet<>(path.getNodeIds());
                 Path otherPath = pathList.get(j);
                 Set<String> otherPathNodes = otherPath.getNodeIds();
                 // Keep all nodes in the first path that are also in the second path
