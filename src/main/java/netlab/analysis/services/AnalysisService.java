@@ -134,7 +134,8 @@ public class AnalysisService {
 
 
         // Content analysis
-        cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, failureColl.getFailureSet());
+        cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, failureColl.getFailureSet(),
+                details.getConnections().getUseMinD());
 
         Analysis analysis =  Analysis.builder()
                 .requestId(request.getId())

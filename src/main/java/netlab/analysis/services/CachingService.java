@@ -3,6 +3,7 @@ package netlab.analysis.services;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.CachingResult;
 import netlab.processing.pathmapping.PathMappingService;
+import netlab.submission.enums.RoutingType;
 import netlab.topology.elements.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -90,26 +91,17 @@ public class CachingService {
         }
     }
 
-    private void cacheOutsideFailures(Map<SourceDestPair, Set<Node>> cacheMap, Map<SourceDestPair, Path> primaryPathMap, Set<Failure> failures) {
+    private void cacheOutsideFailures(Map<SourceDestPair, Set<Node>> cacheMap, Map<SourceDestPair, Path> primaryPathMap,
+                                      Set<Failure> failures) {
         // The goal is to avoid caching at locations that either can:
         // (a) Fail.
         // (b) Become disconnected from a source due to another failure.
         // For each path, determine which nodes remain reachable.
         // Cache at the closest one
-        Set<Node> failureNodes = new HashSet<>();
-        Set<Link> failureLinks = new HashSet<>();
-        for(Failure failure : failures){
-            if(failure.getNode() != null){
-                failureNodes.add(failure.getNode());
-            }
-            else{
-                failureLinks.add(failure.getLink());
-            }
-        }
         for(SourceDestPair pair : primaryPathMap.keySet()){
             Set<Node> cachingNodes = new HashSet<>();
             Path primary = primaryPathMap.get(pair);
-            List<Node> reachableNodes = getReachableNodes(primary, failureNodes, failureLinks);
+            List<Node> reachableNodes = pathMappingService.getReachableNodes(primary, failures);
             // Cache at the first reachable node along the path
             if(!reachableNodes.isEmpty()){
                 cachingNodes.add(reachableNodes.get(0));
@@ -162,42 +154,82 @@ public class CachingService {
         }
     }
 
-    private List<Node> getReachableNodes(Path path, Set<Node> failureNodes, Set<Link> failureLinks) {
-        // Get all the links that do not fail and are not attached to failing nodes
-        List<Link> pathLinks = path.getLinks().stream()
-                .filter(l -> !failureLinks.contains(l) && !failureNodes.contains(l.getOrigin()) && !failureNodes.contains(l.getTarget()))
-                .collect(Collectors.toList());
-        // If the first link does not start at the src, or there are no links, then there are no reachable nodes
-        if(pathLinks.isEmpty() || pathLinks.get(0).getOrigin() != path.getNodes().get(0)){
-            return new ArrayList<>();
-        }
-        List<Node> reachableNodes = new ArrayList<>();
-        Node prevNode = pathLinks.get(0).getOrigin();
-        for(Link link : pathLinks){
-            // If the origin isn't the target of the previous link, then there was a removed link somewhere in the path
-            Node origin = link.getOrigin();
-            if(origin != prevNode){
-                break;
-            }
-            // Store the target, and designate it as the new prevNode
-            Node target = link.getTarget();
-            reachableNodes.add(target);
-            prevNode = target;
-        }
-        return reachableNodes;
-    }
 
     public void evaluateContentAccessibility(List<CachingResult> cachingResults,
                                              Map<SourceDestPair, Map<String, Path>> chosenPaths,
-                                             Set<Failure> failureSet) {
-        // Calculate the following metrics:
-        //Content Reachability: The percentage of sources that can still reach all of their desired content.
-        double reachability = 0.0;
-        // Average Content Accessibility: The average percentage of content that can still be accessed per source.
-        // For example, if a source wants to access content from three destinations, and can only access content from two
-        // of them (either from the destination itself, or from a cached location), then it has an accessibility percentage of 66%.
-        double avgAccessibility = 0.0;
-        // Average Hop Count to Content: The average hop count that will be traversed after failure to access content, per source.
-        double avgHopCountToContent = 0.0;
+                                             Set<Failure> failureSet, Integer useMinD) {
+
+        Map<SourceDestPair, Path> primaryPathMap = pathMappingService.buildPrimaryPathMap(chosenPaths);
+        Map<SourceDestPair, List<Node>> reachableNodeMap = primaryPathMap.keySet().stream()
+                .filter(pair -> primaryPathMap.get(pair) != null)
+                .collect(Collectors.toMap(pair -> pair,
+                        pair -> pathMappingService.getReachableNodes(primaryPathMap.get(pair), failureSet)));
+        for(CachingResult cachingResult : cachingResults){
+
+            Map<Node, Integer> numContentReachablePerSource = new HashMap<>();
+            Map<SourceDestPair, Set<Node>> cacheMap = cachingResult.getCachingMap();
+            int totalHopCount = 0;
+            for(SourceDestPair pair : primaryPathMap.keySet()){
+                Node src = pair.getSrc();
+                List<Node> reachableNodes = reachableNodeMap.get(pair);
+                Set<Node> cachingLocations = cacheMap.get(pair);
+                int hopCount = 0;
+                boolean hit = false;
+                for(Node node : reachableNodes){
+                    hopCount++;
+                    if(cachingLocations.contains(node)){
+                        // Cache hit
+                        hit = true;
+                        break;
+                    }
+                }
+                if(!hit){
+                    hopCount = 0;
+                }
+                // Add to hop count
+                totalHopCount+= hopCount;
+                // If there was a hit, increase the num content reachable per source
+                numContentReachablePerSource.putIfAbsent(src, 0);
+                if(hit) {
+                    numContentReachablePerSource.put(src, numContentReachablePerSource.get(src) + 1);
+                }
+            }
+
+            int totalThatCanReachAllContent = 0;
+            int totalThatCanReachSomeContent = 0;
+            double totalAccessibility = 0.0;
+            for(Node src : numContentReachablePerSource.keySet()){
+                int numContentReachable = numContentReachablePerSource.get(src);
+                int totalContent = useMinD;
+                double reachPercent;
+                if(numContentReachable > totalContent){
+                    reachPercent = 1.0;
+                } else if(totalContent == 0){
+                    reachPercent = numContentReachable > 0 ? 1.0 : 0.0;
+                } else {
+                    reachPercent = numContentReachable / totalContent;
+                }
+
+                if(reachPercent == 1.0){
+                    totalThatCanReachAllContent++;
+                }
+                if(reachPercent > 0.0){
+                    totalThatCanReachSomeContent++;
+                }
+                totalAccessibility += reachPercent;
+            }
+            // Calculate the following metrics:
+            //Content Reachability: The percentage of sources that can still reach all of their desired content.
+            double reachability = totalThatCanReachAllContent / numContentReachablePerSource.keySet().size();
+            // Average Content Accessibility: The average percentage of content that can still be accessed per source.
+            // For example, if a source wants to access content from three destinations, and can only access content from two
+            // of them (either from the destination itself, or from a cached location), then it has an accessibility percentage of 66%.
+            double avgAccessibility = totalAccessibility / numContentReachablePerSource.keySet().size();
+            // Average Hop Count to Content: The average hop count that will be traversed after failure to access content, per source.
+            double avgHopCountToContent = totalThatCanReachSomeContent > 0 ? totalHopCount / totalThatCanReachSomeContent : 0.0;
+            cachingResult.setReachability(reachability);
+            cachingResult.setAvgAccessibility(avgAccessibility);
+            cachingResult.setAvgHopCountToContent(avgHopCountToContent);
+        }
     }
 }

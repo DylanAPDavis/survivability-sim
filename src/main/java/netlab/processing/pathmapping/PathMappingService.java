@@ -3,10 +3,7 @@ package netlab.processing.pathmapping;
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
-import netlab.topology.elements.Link;
-import netlab.topology.elements.Node;
-import netlab.topology.elements.Path;
-import netlab.topology.elements.SourceDestPair;
+import netlab.topology.elements.*;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -138,6 +135,7 @@ public class PathMappingService {
         return primaryPathMap;
     }
 
+
     public Set<String> findOverlap(Set<Path> paths) {
         Set<String> overlap = new HashSet<>();
         List<Path> pathList = new ArrayList<>(paths);
@@ -154,5 +152,40 @@ public class PathMappingService {
             }
         }
         return overlap;
+    }
+
+    public List<Node> getReachableNodes(Path path, Set<Failure> failures) {
+        Set<Node> failureNodes = new HashSet<>();
+        Set<Link> failureLinks = new HashSet<>();
+        for(Failure failure : failures){
+            if(failure.getNode() != null){
+                failureNodes.add(failure.getNode());
+            }
+            else{
+                failureLinks.add(failure.getLink());
+            }
+        }
+        // Get all the links that do not fail and are not attached to failing nodes
+        List<Link> pathLinks = path.getLinks().stream()
+                .filter(l -> !failureLinks.contains(l) && !failureNodes.contains(l.getOrigin()) && !failureNodes.contains(l.getTarget()))
+                .collect(Collectors.toList());
+        // If the first link does not start at the src, or there are no links, then there are no reachable nodes
+        if(pathLinks.isEmpty() || pathLinks.get(0).getOrigin() != path.getNodes().get(0)){
+            return new ArrayList<>();
+        }
+        List<Node> reachableNodes = new ArrayList<>();
+        Node prevNode = pathLinks.get(0).getOrigin();
+        for(Link link : pathLinks){
+            // If the origin isn't the target of the previous link, then there was a removed link somewhere in the path
+            Node origin = link.getOrigin();
+            if(origin != prevNode){
+                break;
+            }
+            // Store the target, and designate it as the new prevNode
+            Node target = link.getTarget();
+            reachableNodes.add(target);
+            prevNode = target;
+        }
+        return reachableNodes;
     }
 }
