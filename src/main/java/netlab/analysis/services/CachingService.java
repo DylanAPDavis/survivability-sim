@@ -173,12 +173,15 @@ public class CachingService {
                 .collect(Collectors.toMap(pair -> pair,
                         pair -> pathMappingService.getReachableNodes(primaryPathMap.get(pair), chosenFailures)));
         for(CachingResult cachingResult : cachingResults){
+            Map<SourceDestPair, Set<Node>> cacheMap = cachingResult.getCachingMap();
 
             Map<Node, Integer> numContentReachablePerSource = new HashMap<>();
-            Map<SourceDestPair, Set<Node>> cacheMap = cachingResult.getCachingMap();
+            Map<Node, Integer> srcHopCount = new HashMap<>();
+            Map<Node, Integer> srcNumHits = new HashMap<>();
+
             Set<SourceDestPair> pairsReachContentThroughBackup = new HashSet<>();
             Set<SourceDestPair> pairsCantReachContentThroughPrimary = new HashSet<>();
-            int totalHopCount = 0;
+
             for(SourceDestPair pair : primaryPathMap.keySet()){
                 Node src = pair.getSrc();
                 List<Node> reachableNodes = reachableNodeMap.getOrDefault(pair, new ArrayList<>());
@@ -223,11 +226,14 @@ public class CachingService {
                     }
                 }
                 // Add to hop count
-                totalHopCount+= hopCount;
+                srcHopCount.putIfAbsent(src, 0);
+                srcHopCount.put(src, srcHopCount.get(src) + hopCount);
                 // If there was a hit, increase the num content reachable per source
                 numContentReachablePerSource.putIfAbsent(src, 0);
+                srcNumHits.putIfAbsent(src, 0);
                 if(hit) {
                     numContentReachablePerSource.put(src, numContentReachablePerSource.get(src) + 1);
+                    srcNumHits.put(src, srcNumHits.get(src) + 1);
                 }
             }
 
@@ -257,12 +263,20 @@ public class CachingService {
             // Calculate the following metrics:
             //Content Reachability: The percentage of sources that can still reach all of their desired content.
             double reachability = 1.0 * totalThatCanReachAllContent / numContentReachablePerSource.keySet().size();
+
             // Average Content Accessibility: The average percentage of content that can still be accessed per source.
             // For example, if a source wants to access content from three destinations, and can only access content from two
             // of them (either from the destination itself, or from a cached location), then it has an accessibility percentage of 66%.
             double avgAccessibility = 1.0 * totalAccessibility / numContentReachablePerSource.keySet().size();
-            // Average Hop Count to Content: The average hop count that will be traversed after failure to access content, per source.
-            double avgHopCountToContent = totalThatCanReachSomeContent > 0 ? 1.0 * totalHopCount / totalThatCanReachSomeContent : 0.0;
+
+            // Average Hop Count to Content: The average hop count that will be traversed after failure, per source.
+            Map<Node, Double> avgHopCountPerSrc = srcHopCount.keySet().stream()
+                    .filter(src -> srcNumHits.get(src) > 0)
+                    .collect(Collectors.toMap(src -> src, src ->  1.0 * srcHopCount.get(src) / srcNumHits.get(src)));
+            double avgHopCountToContent = avgHopCountPerSrc.values().stream().reduce(0.0, (h1, h2) -> h1 + h2);
+            avgHopCountToContent = avgHopCountPerSrc.size() > 0 ? avgHopCountToContent / avgHopCountPerSrc.size() : 0;
+            //totalThatCanReachSomeContent > 0 ? 1.0 * totalHopCount / totalThatCanReachSomeContent : 0.0;
+
             // Percentage of pairs that reach content through backup
             double pairReachThroughBackup = pairsCantReachContentThroughPrimary.size() > 0 ?
                     1.0 * pairsReachContentThroughBackup.size() / pairsCantReachContentThroughPrimary.size() : 0.0;

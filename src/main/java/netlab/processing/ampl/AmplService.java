@@ -227,6 +227,9 @@ public class AmplService {
     private List<String> createFlexParamsLines(Details details, boolean ignoreFailures){
         List<String> flexLines = new ArrayList<>();
         List<List<Failure>> failureGroups = ignoreFailures ? Collections.singletonList(new ArrayList<>()) : details.getFailures().getFailureGroups();
+        if(failureGroups.isEmpty()){
+            failureGroups.add(new ArrayList<>());
+        }
         String numGroups = "param NumGroups := " + failureGroups.size() + ";";
         flexLines.add(numGroups);
         flexLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flex, null, null, false));

@@ -464,6 +464,7 @@ public class FailureGenerationService {
     public List<List<Failure>> generateFailureGroups(Integer k, Set<Failure> failureSet){
         List<List<Failure>> failureGroups = new ArrayList<>();
         if(k == 0){
+            failureGroups.add(new ArrayList<>());
             return failureGroups;
         }
         List<Failure> failureList = new ArrayList<>(failureSet);
