@@ -127,8 +127,8 @@ public class AnalysisService {
             }
         }
 
-        averagePrimaryCost = totalPrimaryCost / numberOfPrimaryPaths;
-        averagePrimaryHops = totalPrimaryHops / numberOfPrimaryPaths;
+        averagePrimaryCost = numberOfPrimaryPaths > 0 ? totalPrimaryCost / numberOfPrimaryPaths : 0.0;
+        averagePrimaryHops = numberOfPrimaryPaths > 0 ? totalPrimaryHops / numberOfPrimaryPaths : 0;
         averagePrimaryCostPostFailure = numberOfPrimaryPathsPostFailure > 0 ? totalPrimaryCostPostFailure / numberOfPrimaryPathsPostFailure : 0;
         averagePrimaryHopsPostFailure = numberOfPrimaryPathsPostFailure > 0 ? totalPrimaryHopsPostFailure / numberOfPrimaryPathsPostFailure : 0;
 

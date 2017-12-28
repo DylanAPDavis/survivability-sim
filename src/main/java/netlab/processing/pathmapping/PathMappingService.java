@@ -155,6 +155,9 @@ public class PathMappingService {
     }
 
     public List<Node> getReachableNodes(Path path, Collection<Failure> failures) {
+        if(path == null){
+            return new ArrayList<>();
+        }
         Set<Node> failureNodes = new HashSet<>();
         Set<Link> failureLinks = new HashSet<>();
         for(Failure failure : failures){

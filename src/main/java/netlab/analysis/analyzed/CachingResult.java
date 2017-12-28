@@ -27,18 +27,22 @@ public class CachingResult {
     private double avgAccessibility;
     // Average Hop Count to Content: The average hop count that will be traversed after failure to access content, per source.
     private double avgHopCountToContent;
+    // Percentage of pairs that can still access content through backup path
+    private double pairReachThroughBackup;
 
     public CachingResult(CachingType type){
         this.type = type;
         reachability = 0.0;
         avgAccessibility = 0.0;
         avgHopCountToContent = 0.0;
+        pairReachThroughBackup = 0.0;
         cachingMap = new HashMap<>();
     }
 
 
     public String toString(){
-        String headline = type + " " + "Reach: " + reachability + " Access: " + avgAccessibility + " Hop: " + avgHopCountToContent;
+        String headline = type + " " + "Reach: " + reachability + " Access: " + avgAccessibility
+                + " Hop: " + avgHopCountToContent + " Pair_Reach: " + pairReachThroughBackup;
         return headline  + cachingMapToString() +"\n~~~";
     }
 

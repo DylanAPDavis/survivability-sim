@@ -139,7 +139,7 @@ public class MetricsTest {
                 .topologyId("NSFnet")
                 .algorithm("hamiltonian")
                 .objective("totalcost")
-                .routingType("manytoone")
+                .routingType("unicast")
                 .numSources(1)
                 .numDestinations(1)
                 .numFailureEvents(2)
@@ -149,7 +149,28 @@ public class MetricsTest {
         Map<String, Link> linkIdMap = topo.getLinkIdMap();
         Set<Failure> failures = new HashSet<>();
         failures.add(Failure.builder().node(null).link(linkIdMap.get("Palo Alto-Salt Lake City")).probability(1.0).build());
-        //failures.add(Failure.builder().node(null).link(linkIdMap.get("College Park-Ithaca")).probability(1.0).build());
+        evaluate(params, failures);
+    }
+
+    @Test
+    public void hamiltonianNoContentAccessAfterFailure(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Topology topo = topologyService.getTopologyById("NSFnet");
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Set<Failure> failures = new HashSet<>();
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("Palo Alto-Salt Lake City")).probability(1.0).build());
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("Seattle-Champaign")).probability(1.0).build());
         evaluate(params, failures);
     }
 
