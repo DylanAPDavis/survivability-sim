@@ -279,8 +279,11 @@ public class AmplService {
             cMin += " '" + member.getId() + "' " + min;
             cMax += " '" + member.getId() + "' " + max;
             if(printFailsGroupPerMember) {
-                List<List<Failure>> failureGroups = ignoreFailures ? Collections.singletonList(new ArrayList<>()) : memberFailGroupsMap.get(member);
-                numGroups += " '" + member.getId() + "' " + failureGroups.size();
+                List<List<Failure>> failureGroups = ignoreFailures ? Collections.singletonList(new ArrayList<>())
+                        : memberFailGroupsMap.getOrDefault(member, new ArrayList<>());
+                if(failureGroups.isEmpty()){
+                    failureGroups.add(new ArrayList<>());
+                }               numGroups += " '" + member.getId() + "' " + failureGroups.size();
                 fgLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Endpoint, null, member, areSources));
             }
         }
@@ -307,7 +310,11 @@ public class AmplService {
         Map<SourceDestPair, List<List<Failure>>> pairFailGroupsMap = details.getFailures().getPairFailureGroupsMap();
         List<String> fgLines = new ArrayList<>();
         if(problemClass.equals(ProblemClass.FlowSharedF)){
-            List<List<Failure>> requestFailureGroups = ignoreFailures ? Collections.singletonList(new ArrayList<>()) : details.getFailures().getFailureGroups();
+            List<List<Failure>> requestFailureGroups = ignoreFailures ? Collections.singletonList(new ArrayList<>())
+                    : details.getFailures().getFailureGroups();
+            if(requestFailureGroups.isEmpty()){
+                requestFailureGroups.add(new ArrayList<>());
+            }
             numGroups += requestFailureGroups.size();
             fgLines = createFailureGroupLines(requestFailureGroups, ProblemClass.FlowSharedF, null, null, false);
         }
@@ -315,7 +322,11 @@ public class AmplService {
             if(!pair.getSrc().equals(pair.getDst())) {
                 Integer min = pairMinMap.get(pair);
                 Integer max = pairMaxMap.get(pair);
-                List<List<Failure>> failureGroups = ignoreFailures ? Collections.singletonList(new ArrayList<>()) : pairFailGroupsMap.get(pair);
+                List<List<Failure>> failureGroups = ignoreFailures ? Collections.singletonList(new ArrayList<>())
+                        : pairFailGroupsMap.getOrDefault(pair, new ArrayList<>());
+                if(failureGroups.isEmpty()){
+                    failureGroups.add(new ArrayList<>());
+                }
                 cMin += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + min;
                 cMax += " '" + pair.getSrc().getId() + "' '" + pair.getDst().getId() + "' " + max;
                 if(problemClass.equals(ProblemClass.Flow)) {
