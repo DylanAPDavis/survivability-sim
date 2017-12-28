@@ -133,6 +133,8 @@ public class AnalysisService {
         averagePrimaryHopsPostFailure = numberOfPrimaryPathsPostFailure > 0 ? totalPrimaryHopsPostFailure / numberOfPrimaryPathsPostFailure : 0;
 
 
+        // Content analysis
+        cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, failureColl.getFailureSet());
 
         Analysis analysis =  Analysis.builder()
                 .requestId(request.getId())

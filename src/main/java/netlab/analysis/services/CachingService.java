@@ -187,4 +187,17 @@ public class CachingService {
         return reachableNodes;
     }
 
+    public void evaluateContentAccessibility(List<CachingResult> cachingResults,
+                                             Map<SourceDestPair, Map<String, Path>> chosenPaths,
+                                             Set<Failure> failureSet) {
+        // Calculate the following metrics:
+        //Content Reachability: The percentage of sources that can still reach all of their desired content.
+        double reachability = 0.0;
+        // Average Content Accessibility: The average percentage of content that can still be accessed per source.
+        // For example, if a source wants to access content from three destinations, and can only access content from two
+        // of them (either from the destination itself, or from a cached location), then it has an accessibility percentage of 66%.
+        double avgAccessibility = 0.0;
+        // Average Hop Count to Content: The average hop count that will be traversed after failure to access content, per source.
+        double avgHopCountToContent = 0.0;
+    }
 }
