@@ -461,8 +461,11 @@ public class FailureGenerationService {
         return failures;
     }
 
-    private static List<List<Failure>> generateFailureGroups(Integer k, Set<Failure> failureSet){
+    public List<List<Failure>> generateFailureGroups(Integer k, Set<Failure> failureSet){
         List<List<Failure>> failureGroups = new ArrayList<>();
+        if(k == 0){
+            return failureGroups;
+        }
         List<Failure> failureList = new ArrayList<>(failureSet);
         Collections.shuffle(failureList);
 

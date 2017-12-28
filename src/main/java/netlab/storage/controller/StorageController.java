@@ -34,6 +34,12 @@ public class StorageController {
         return storageService.retrieveRequestSet(requestSetId, useAws);
     }
 
+    @RequestMapping(value = "/storage/raw/", method = RequestMethod.POST)
+    @ResponseBody
+    public boolean storeRequest(Request request){
+        return storageService.storeRequestSet(request, request.isUseAws());
+    }
+
     @RequestMapping(method = RequestMethod.GET, value = "/storage/analyzed/{requestId}/{useAws}")
     public Analysis getAnalysis(@PathVariable String requestSetId, @PathVariable Boolean useAws){
 

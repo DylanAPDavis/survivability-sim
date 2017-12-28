@@ -8,14 +8,25 @@ import netlab.processing.pathmapping.PathMappingService;
 import netlab.storage.controller.StorageController;
 import netlab.storage.services.StorageService;
 import netlab.submission.controller.SubmissionController;
+import netlab.submission.request.Failures;
+import netlab.submission.request.NumFailureEvents;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
+import netlab.submission.services.FailureGenerationService;
+import netlab.topology.elements.Failure;
+import netlab.topology.elements.Link;
+import netlab.topology.elements.Topology;
+import netlab.topology.services.TopologyService;
 import netlab.visualization.PrintingService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -32,6 +43,12 @@ public class MetricsTest {
 
     @Autowired
     PrintingService printingService;
+
+    @Autowired
+    FailureGenerationService failureGenerationService;
+
+    @Autowired
+    TopologyService topologyService;
 
     // Baseline Algorithms
 
@@ -112,6 +129,28 @@ public class MetricsTest {
                 .build();
         evaluate(params);
 
+    }
+
+    @Test
+    public void hamiltonianNoContentOnPrimaryAfterFailure(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("hamiltonian")
+                .objective("totalcost")
+                .routingType("manytoone")
+                .numSources(1)
+                .numDestinations(1)
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Topology topo = topologyService.getTopologyById("NSFnet");
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Set<Failure> failures = new HashSet<>();
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("Palo Alto-Salt Lake City")).probability(1.0).build());
+        //failures.add(Failure.builder().node(null).link(linkIdMap.get("College Park-Ithaca")).probability(1.0).build());
+        evaluate(params, failures);
     }
 
     @Test
@@ -285,6 +324,93 @@ public class MetricsTest {
                 .useAws(false)
                 .build();
         evaluate(params);
+    }
+
+    @Test
+    public void manyToOneFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(4L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .objective("totalcost")
+                .routingType("manytoone")
+                .numSources(3)
+                .numDestinations(1)
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Topology topo = topologyService.getTopologyById("NSFnet");
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Set<Failure> failures = new HashSet<>();
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("College Park-Ithaca")).probability(1.0).build());
+        evaluate(params, failures);
+    }
+
+    @Test
+    public void manyToOneTwoConnectionsCanFailTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(6L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .objective("totalcost")
+                .routingType("manytoone")
+                .numSources(3)
+                .numDestinations(1)
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Topology topo = topologyService.getTopologyById("NSFnet");
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Set<Failure> failures = new HashSet<>();
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("Lincoln-Champaign")).probability(1.0).build());
+        evaluate(params, failures);
+    }
+
+    @Test
+    public void manyToOneAllConnectionsCanFailTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(9L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .objective("totalcost")
+                .routingType("manytoone")
+                .numSources(3)
+                .numDestinations(1)
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Topology topo = topologyService.getTopologyById("NSFnet");
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Set<Failure> failures = new HashSet<>();
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("Pittsburgh-Ithaca")).probability(1.0).build());
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("College Park-Ithaca")).probability(1.0).build());
+        evaluate(params, failures);
+    }
+
+    @Test
+    public void manyToOneAllConnectionsFailTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(9L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .objective("totalcost")
+                .routingType("manytoone")
+                .numSources(3)
+                .numDestinations(1)
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Topology topo = topologyService.getTopologyById("NSFnet");
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Set<Failure> failures = new HashSet<>();
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("Seattle-Champaign")).probability(1.0).build());
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("Champaign-Pittsburgh")).probability(1.0).build());
+        failures.add(Failure.builder().node(null).link(linkIdMap.get("Houston-College Park")).probability(1.0).build());
+        evaluate(params, failures);
     }
     // ILPs
     @Test
@@ -496,10 +622,13 @@ public class MetricsTest {
         evaluate(params);
     }
 
-
-    public void evaluate(SimulationParameters params){
+    public void evaluate(SimulationParameters params, Set<Failure> failureSet){
         String requestId = submissionController.submitRequest(params);
         Request request = storageController.getRequest(requestId, false);
+        if(!failureSet.isEmpty()){
+            updateFailures(request, failureSet);
+            storageController.storeRequest(request);
+        }
 
         AnalysisParameters analysisParameters = AnalysisParameters.builder()
                 .requestId(requestId)
@@ -509,5 +638,17 @@ public class MetricsTest {
         Analysis analysis = analysisController.analyzeRequest(analysisParameters);
         System.out.println(analysis.toString());
         System.out.println(printingService.outputPaths(request));
+    }
+
+    public void evaluate(SimulationParameters params){
+        evaluate(params, new HashSet<>());
+    }
+
+    private void updateFailures(Request request, Set<Failure> failureSet) {
+        Failures failures = request.getDetails().getFailures();
+        int nfe = request.getDetails().getNumFailureEvents().getTotalNumFailureEvents();
+        failures.setFailureSet(failureSet);
+        failures.setFailureSetSize(failureSet.size());
+        failures.setFailureGroups(failureGenerationService.generateFailureGroups(nfe, failureSet));
     }
 }

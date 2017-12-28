@@ -154,7 +154,7 @@ public class PathMappingService {
         return overlap;
     }
 
-    public List<Node> getReachableNodes(Path path, Set<Failure> failures) {
+    public List<Node> getReachableNodes(Path path, Collection<Failure> failures) {
         Set<Node> failureNodes = new HashSet<>();
         Set<Link> failureLinks = new HashSet<>();
         for(Failure failure : failures){
