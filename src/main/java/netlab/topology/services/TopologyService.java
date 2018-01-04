@@ -16,16 +16,30 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TopologyService {
 
-    Map<String, Topology> topologyIdMap;
+    private Map<String, Topology> topologyIdMap;
 
-    ShortestPathService shortestPathService;
+    private Map<String, Node> nodeIdMap;
 
+    private Map<String, Link> linkIdMap;
+
+    private ShortestPathService shortestPathService;
 
     @Autowired
     public TopologyService(ShortestPathService shortestPathService){
         this.shortestPathService = shortestPathService;
         topologyIdMap = new HashMap<>();
         topologyIdMap.put("NSFnet", makeNsfNet());
+
+        nodeIdMap = new HashMap<>();
+        linkIdMap = new HashMap<>();
+        for(Topology topo : topologyIdMap.values()){
+            for(Node node : topo.getNodes()){
+                nodeIdMap.put(node.getId(), node);
+            }
+            for(Link link : topo.getLinks()){
+                linkIdMap.put(link.getId(), link);
+            }
+        }
     }
 
     public Topology getTopologyById(String id){
@@ -34,20 +48,20 @@ public class TopologyService {
 
     private Topology makeNsfNet() {
         Set<Node> nodes = new HashSet<>();
-        Node seattle = new Node("Seattle");
-        Node paloAlto = new Node("Palo Alto");
-        Node sanDiego = new Node("San Diego");
-        Node saltLakeCity = new Node("Salt Lake City");
-        Node boulder = new Node("Boulder");
-        Node houston = new Node("Houston");
-        Node lincoln = new Node("Lincoln");
-        Node champaign = new Node("Champaign");
-        Node annArbor = new Node("Ann Arbor");
-        Node pittsburgh = new Node("Pittsburgh");
-        Node atlanta = new Node("Atlanta");
-        Node collegePark = new Node("College Park");
-        Node ithaca = new Node("Ithaca");
-        Node princeton = new Node("Princeton");
+        Node seattle = new Node("Seattle", 200, 1800);
+        Node paloAlto = new Node("Palo Alto", 100, 800);
+        Node sanDiego = new Node("San Diego", 200, 200);
+        Node saltLakeCity = new Node("Salt Lake City", 800, 1000);
+        Node boulder = new Node("Boulder", 1350, 800);
+        Node houston = new Node("Houston", 2200, 100);
+        Node lincoln = new Node("Lincoln", 2150, 800);
+        Node champaign = new Node("Champaign", 2850, 800);
+        Node annArbor = new Node("Ann Arbor", 3050, 1000);
+        Node pittsburgh = new Node("Pittsburgh", 3550, 900);
+        Node atlanta = new Node("Atlanta", 3400, 200);
+        Node collegePark = new Node("College Park", 3900, 600);
+        Node ithaca = new Node("Ithaca", 3850, 1000);
+        Node princeton = new Node("Princeton", 4050, 600);
         nodes.add(seattle);
         nodes.add(paloAlto);
         nodes.add(sanDiego);
@@ -117,5 +131,12 @@ public class TopologyService {
         return topo;
     }
 
+    public Node getNodeById(String id){
+        return nodeIdMap.get(id);
+    }
+
+    public Link getLinkById(String id){
+        return linkIdMap.get(id);
+    }
 
 }

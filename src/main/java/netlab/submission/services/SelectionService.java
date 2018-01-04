@@ -5,6 +5,9 @@ import netlab.submission.enums.SourceSubsetDestType;
 import netlab.topology.elements.Link;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
+import netlab.topology.elements.Topology;
+import netlab.topology.services.TopologyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -13,6 +16,13 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class SelectionService {
+
+    private TopologyService topologyService;
+
+    @Autowired
+    public SelectionService(TopologyService topologyService){
+        this.topologyService = topologyService;
+    }
 
     public Set<Node> pickSources(Set<Node> nodes, Integer numSources, Random rng) {
         return new HashSet<>(chooseRandomSubsetNodes(nodes, numSources, rng));
@@ -99,7 +109,7 @@ public class SelectionService {
     public Map<Node, Integer> makeNodeIntegerMap(Set<Node> members, Map<String, Integer> memberConnMap, Integer defaultValue){
         Map<Node, Integer> memberMap = members.stream().collect(Collectors.toMap(m -> m, m -> defaultValue));
         for(String nodeName : memberConnMap.keySet()){
-            Node node = Node.builder().id(nodeName).build();
+            Node node = topologyService.getNodeById(nodeName);
             memberMap.put(node, memberConnMap.get(nodeName));
         }
         return memberMap;
@@ -110,8 +120,8 @@ public class SelectionService {
         Map<SourceDestPair, Integer> pairMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> defaultValue));
         for(List<String> pairList : pairConnMap.keySet()){
             SourceDestPair pair = SourceDestPair.builder()
-                    .src(Node.builder().id(pairList.get(0)).build())
-                    .dst(Node.builder().id(pairList.get(1)).build())
+                    .src(topologyService.getNodeById(pairList.get(0)))
+                    .dst(topologyService.getNodeById(pairList.get(1)))
                     .build();
             pairMap.put(pair, pairConnMap.get(pairList));
         }

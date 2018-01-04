@@ -52,7 +52,7 @@ public class HamiltonianCycleServiceTest {
         Topology topo = topologyService.getTopologyById("NSFnet");
 
         Set<SourceDestPair> pairs = new HashSet<>();
-        pairs.add(new SourceDestPair(new Node("Palo Alto"), new Node("Atlanta")));
+        pairs.add(new SourceDestPair(topo.getNodeById("Palo Alto"), topo.getNodeById("Atlanta")));
 
         NumFailureEvents nfe = NumFailureEvents.builder()
                 .totalNumFailureEvents(2)

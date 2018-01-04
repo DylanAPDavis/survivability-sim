@@ -109,7 +109,7 @@ public class FailureGenerationService {
                                                        Map<String, Map<String, Double>> memberFailureProbabilityMap, Map<String, Node> nodeIdMap, Map<String, Link> linkIdMap) {
         Map<Node, Set<Failure>> failureMap = members.stream().collect(Collectors.toMap(p -> p, p -> new HashSet<>()));
         for(String memberString : memberFailureMap.keySet()){
-            Node member = Node.builder().id(memberString).build();
+            Node member = topologyService.getNodeById(memberString);
             failureMap.put(member, makeFailureSet(memberFailureMap.get(memberString), memberFailureProbabilityMap.getOrDefault(memberString, new HashMap<>()), nodeIdMap, linkIdMap));
         }
         return failureMap;
@@ -121,8 +121,8 @@ public class FailureGenerationService {
         Map<SourceDestPair, Set<Failure>> failureMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashSet<>()));
         for(List<String> pairList : pairFailureMap.keySet()){
             SourceDestPair pair = SourceDestPair.builder()
-                    .src(Node.builder().id(pairList.get(0)).build())
-                    .dst(Node.builder().id(pairList.get(1)).build())
+                    .src(topologyService.getNodeById(pairList.get(0)))
+                    .dst(topologyService.getNodeById(pairList.get(1)))
                     .build();
             failureMap.put(pair, makeFailureSet(pairFailureMap.get(pairList), pairFailureProbabilityMap.getOrDefault(pairList, new HashMap<>()), nodeIdMap, linkIdMap));
         }

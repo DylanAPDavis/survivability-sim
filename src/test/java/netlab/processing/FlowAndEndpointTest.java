@@ -235,21 +235,6 @@ public class FlowAndEndpointTest {
         analyzeMultiSet(Arrays.asList(r1, r2));
     }
 
-    Node seattle = new Node("Seattle");
-    Node paloAlto = new Node("Palo Alto");
-    Node sanDiego = new Node("San Diego");
-    Node saltLakeCity = new Node("Salt Lake City");
-    Node boulder = new Node("Boulder");
-    Node houston = new Node("Houston");
-    Node lincoln = new Node("Lincoln");
-    Node champaign = new Node("Champaign");
-    Node annArbor = new Node("Ann Arbor");
-    Node pittsburgh = new Node("Pittsburgh");
-    Node atlanta = new Node("Atlanta");
-    Node collegePark = new Node("College Park");
-    Node ithaca = new Node("Ithaca");
-    Node princeton = new Node("Princeton");
-
     @Test
     public void zeroMinOneMaxFourteenSourceOneDestFourteenCInfeasible(){
         Set<String> sources = new HashSet<>(Arrays.asList("Seattle", "Boulder", "Houston", "Palo Alto", "San Diego",

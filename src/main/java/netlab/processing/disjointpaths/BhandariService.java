@@ -232,8 +232,8 @@ public class BhandariService {
         // Modify topology, source and dest if necessary to find node-disjoint paths
         Topology modifiedTopo = nodesCanFail ?
                 makeNodeFailTopo(topo) : new Topology(topo.getId(), new HashSet<>(topo.getNodes()), new HashSet<>(topo.getLinks()));
-        Node src = nodesCanFail ? Node.builder().id(source.getId() + "-incoming").build() : source;
-        Node dst = nodesCanFail ? Node.builder().id(dest.getId() + "-outgoing").build() : dest;
+        Node src = nodesCanFail ? new Node(source.getId() + "-incoming", source.getPoint()) : source;
+        Node dst = nodesCanFail ? new Node(dest.getId() + "-outgoing", dest.getPoint()) : dest;
 
 
         // Find the first shortest path
@@ -309,9 +309,10 @@ public class BhandariService {
             List<Link> newPath = path.stream().filter(l -> !l.getId().contains("-internal")).map(l ->
                 Link.builder()
                         .id(l.getId())
-                        .origin(Node.builder().id(l.getOrigin().getId().replace("-outgoing", "")).build())
-                        .target(Node.builder().id(l.getTarget().getId().replace("-incoming", "")).build())
+                        .origin(new Node(l.getOrigin().getId().replace("-outgoing", ""), l.getOrigin().getPoint()))
+                        .target(new Node(l.getTarget().getId().replace("-incoming", ""), l.getTarget().getPoint()))
                         .weight(l.getWeight())
+                        .points(l.getPoints())
                         .build()
             ).collect(Collectors.toList());
             modifiedPaths.add(newPath);
@@ -330,12 +331,14 @@ public class BhandariService {
             modifiedNodes.add(internalLink.getTarget());
         }
         Set<Link> modifiedLinks = new HashSet<>();
-        for(Link link : topo.getLinks()){
-            // Set origin to origin-outgoing
-            Node originOutgoing = Node.builder().id(link.getOrigin().getId() + "-outgoing").build();
-            // Set target to target-incoming
-            Node targetIncoming = Node.builder().id(link.getTarget().getId() + "-incoming").build();
-            Link newLink = Link.builder().id(link.getId()).weight(link.getWeight()).origin(originOutgoing).target(targetIncoming).build();
+        for(Link l : topo.getLinks()){
+            Link newLink = Link.builder()
+                    .id(l.getId())
+                    .origin(new Node(l.getOrigin().getId() + "-outgoing", l.getOrigin().getPoint()))
+                    .target(new Node(l.getTarget().getId() + "-incoming", l.getTarget().getPoint()))
+                    .weight(l.getWeight())
+                    .points(l.getPoints())
+                    .build();
             modifiedLinks.add(newLink);
         }
         modifiedLinks.addAll(internalLinks);
@@ -363,6 +366,7 @@ public class BhandariService {
                         .origin(internalLink.getTarget())
                         .target(internalLink.getOrigin())
                         .weight(internalLink.getWeight())
+                        .points(internalLink.getPoints())
                         .build();
                 failureLinks.add(inverse);
             }
@@ -371,12 +375,8 @@ public class BhandariService {
     }
 
     private Link buildInternalLink(Node node){
-        Node incomingNode = Node.builder()
-                .id(node.getId() + "-incoming")
-                .build();
-        Node outgoingNode = Node.builder()
-                .id(node.getId() + "-outgoing")
-                .build();
+        Node incomingNode = new Node(node.getId() + "-incoming", node.getPoint());
+        Node outgoingNode = new Node(node.getId() + "-outgoing", node.getPoint());
         return Link.builder()
                 .id(node.getId() + "-internal")
                 .origin(incomingNode)

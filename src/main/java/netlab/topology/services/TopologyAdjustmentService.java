@@ -69,7 +69,7 @@ public class TopologyAdjustmentService {
         for(Link link : links){
             Long weight = shouldModify && setToBeModified.contains(link) ?
                     newWeight : link.getWeight();
-            Link modifiedLink = Link.builder().id(link.getId()).origin(link.getOrigin()).target(link.getTarget()).weight(weight).build();
+            Link modifiedLink = new Link(link.getOrigin(), link.getTarget(), weight);
             modifiedLinks.add(modifiedLink);
         }
         return modifiedLinks;

@@ -6,7 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.xml.transform.Source;
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
@@ -116,5 +118,13 @@ public class Topology {
             neighborMap.put(pair, sortedLinks);
         }
         return neighborMap;
+    }
+
+    public Node getNodeById(String id){
+        return nodeIdMap.get(id);
+    }
+
+    public Link getLinkById(String id){
+        return linkIdMap.get(id);
     }
 }
