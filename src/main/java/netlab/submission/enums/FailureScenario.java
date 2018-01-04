@@ -11,8 +11,21 @@ public enum FailureScenario {
     AllLinks("alllinks"),
     AllNodes("allnodes"),
     Network("network"),
-    Earthquake("earthquake"),
-    Hurricane("hurricane");
+    Quake_1("quake1"),
+    Quake_2("quake2"),
+    Quake_3("quake3"),
+    Quake_1_2("quake12"),
+    Quake_1_3("quake13"),
+    Quake_2_3("quake23"),
+    Quake_1_2_3("quake123"),
+    Nuke_1("nuke1"),
+    Nuke_2("nuke2"),
+    Nuke_3("nuke3"),
+    Nuke_1_2("nuke12"),
+    Nuke_1_3("nuke13"),
+    Nuke_2_3("nuke23"),
+    Nuke_1_2_3("nuke123"),
+    ;
 
     private String code;
 

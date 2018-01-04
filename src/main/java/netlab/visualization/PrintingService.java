@@ -2,14 +2,13 @@ package netlab.visualization;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.request.Request;
+import netlab.topology.elements.Failure;
 import netlab.topology.elements.Path;
 import netlab.topology.elements.SourceDestPair;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -47,5 +46,16 @@ public class PrintingService {
             }
         }
         return pathBuilder.toString();
+    }
+
+    public String outputFailures(Collection<Failure> failures){
+        List<Failure> sortedFailures = failures.stream()
+                .sorted(Comparator.comparing(Failure::getProbability))
+                .collect(Collectors.toList());
+        String output = "";
+        for(Failure failure : sortedFailures){
+            output += "\n" + failure;
+        }
+        return output;
     }
 }

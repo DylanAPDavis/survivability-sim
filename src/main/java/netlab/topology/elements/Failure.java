@@ -16,4 +16,8 @@ public class Failure implements Serializable {
     private Node node;
     private Link link;
     private Double probability;
+
+    public String toString(){
+        return (node != null ? node.getId() : link.getId()) + ": " + probability;
+    }
 }

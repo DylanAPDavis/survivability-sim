@@ -72,6 +72,25 @@ public class MetricsTest {
     }
 
     @Test
+    public void shortestPathQuakeTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("shortestpath")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("quake1")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
     public void bhandariTest(){
 
         SimulationParameters params = SimulationParameters.builder()

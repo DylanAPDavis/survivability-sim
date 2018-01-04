@@ -29,11 +29,15 @@ public class FailureGenerationService {
 
     private TopologyService topologyService;
 
+    private FailureAreaService failureAreaService;
+
     @Autowired
-    public FailureGenerationService(SelectionService selectionService, EnumGenerationService enumGenerationService, TopologyService topologyService) {
+    public FailureGenerationService(SelectionService selectionService, EnumGenerationService enumGenerationService,
+                                    TopologyService topologyService, FailureAreaService failureAreaService) {
         this.selectionService = selectionService;
         this.enumGenerationService = enumGenerationService;
         this.topologyService = topologyService;
+        this.failureAreaService = failureAreaService;
     }
 
     public Failures makeFailuresFromRequestParams(RequestParameters params, Set<SourceDestPair> pairs,
@@ -104,30 +108,6 @@ public class FailureGenerationService {
         return filteredLinks;
     }
 
-
-    private Map<Node,Set<Failure>> makeNodeFailuresMap(Set<Node> members, Map<String, Set<String>> memberFailureMap,
-                                                       Map<String, Map<String, Double>> memberFailureProbabilityMap, Map<String, Node> nodeIdMap, Map<String, Link> linkIdMap) {
-        Map<Node, Set<Failure>> failureMap = members.stream().collect(Collectors.toMap(p -> p, p -> new HashSet<>()));
-        for(String memberString : memberFailureMap.keySet()){
-            Node member = topologyService.getNodeById(memberString);
-            failureMap.put(member, makeFailureSet(memberFailureMap.get(memberString), memberFailureProbabilityMap.getOrDefault(memberString, new HashMap<>()), nodeIdMap, linkIdMap));
-        }
-        return failureMap;
-    }
-
-    private Map<SourceDestPair,Set<Failure>> makePairFailuresMap(Set<SourceDestPair> pairs, Map<List<String>, Set<String>> pairFailureMap,
-                                                                 Map<List<String>, Map<String, Double>> pairFailureProbabilityMap,
-                                                                 Map<String, Node> nodeIdMap, Map<String, Link> linkIdMap) {
-        Map<SourceDestPair, Set<Failure>> failureMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashSet<>()));
-        for(List<String> pairList : pairFailureMap.keySet()){
-            SourceDestPair pair = SourceDestPair.builder()
-                    .src(topologyService.getNodeById(pairList.get(0)))
-                    .dst(topologyService.getNodeById(pairList.get(1)))
-                    .build();
-            failureMap.put(pair, makeFailureSet(pairFailureMap.get(pairList), pairFailureProbabilityMap.getOrDefault(pairList, new HashMap<>()), nodeIdMap, linkIdMap));
-        }
-        return failureMap;
-    }
 
     private Set<Failure> makeFailureSet(Set<String> failureStrings, Map<String, Double> probabilityMap,  Map<String, Node> nodeIdMap,
                                         Map<String, Link> linkIdMap){
@@ -226,15 +206,6 @@ public class FailureGenerationService {
                 .srcNumFailureEvents(srcNumFailsMap)
                 .dstNumFailureEvents(dstNumFailsMap)
                 .build();
-    }
-
-    private void populateNumFailsAndFailureGroupMap(Set<Failure> failureSet, Node member, List<Integer> minMaxFails,
-                                                    Integer numFails, Map<Node, Integer> numFailsMap,
-                                                    Map<Node, List<List<Failure>>> failureGroupsMap, Random rng){
-        int thisNumFails = minMaxFails.size() == 2 ?
-                Math.min(failureSet.size(), selectionService.randomInt(minMaxFails.get(0), minMaxFails.get(1), rng)) : numFails;
-        numFailsMap.put(member, thisNumFails);
-        failureGroupsMap.put(member, generateFailureGroups(thisNumFails, failureSet));
     }
 
     public Failures assignFailureSets(SimulationParameters params, List<Node> sources,
@@ -348,7 +319,8 @@ public class FailureGenerationService {
 
     private Set<Failure> generateFailureSet(Set<Node> nodes, Set<Link> links, Integer numFailures, FailureClass failureClass,
                                             Double probability, String failScenario, List<Node> sources, List<Node> destinations,
-                                            Set<Node> prioritySet, MemberFailureType sourceFailureType, MemberFailureType destFailureType, Topology topo, Random rng) {
+                                            Set<Node> prioritySet, MemberFailureType sourceFailureType, MemberFailureType destFailureType,
+                                            Topology topo, Random rng) {
 
         List<Link> chosenLinks = new ArrayList<>();
         List<Node> chosenNodes = new ArrayList<>();
@@ -426,10 +398,8 @@ public class FailureGenerationService {
                     chosenNodes = new ArrayList<>(nodeOptions);
                     probabilities = generateProbabilities(probability, new ArrayList<>(), chosenNodes.size() + chosenLinks.size(), rng);
                     break;
-                case Earthquake:
-                    break;
-                case Hurricane:
-                    break;
+                default:
+                    return failureAreaService.generateFailures(failureScenario, nodeOptions, links, failureClass);
             }
         }
 

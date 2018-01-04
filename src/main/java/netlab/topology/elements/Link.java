@@ -72,7 +72,7 @@ public class Link implements Serializable {
         int targetX = (int)targetPoint.getX();
         int targetY = (int)targetPoint.getY();
 
-        Long numDivisions = weight / 10;
+        Long numDivisions = weight / 100;
         double xStep = 1.0 * Math.abs(originX - targetX) / numDivisions;
         double yStep = 1.0 * Math.abs(originY - targetY) / numDivisions;
 
