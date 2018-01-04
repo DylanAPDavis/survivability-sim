@@ -221,10 +221,13 @@ public class AnalysisService {
             likelihoods.put(failureGroup, likelihood);
             combinedIds.put(failureGroup, combinedId);
         }
-        Comparator comparator = Comparator.comparingDouble(likelihoods::get).thenComparing(combinedIds::get);
-        failureGroups.sort(comparator);
 
-        return failureGroups.get(0);
+        List<List<Failure>> sortedGroups = failureGroups.stream()
+                .sorted(Comparator.comparingDouble(likelihoods::get).reversed().thenComparing(combinedIds::get))
+                .collect(Collectors.toList());
+
+
+        return sortedGroups.get(0);
     }
 
     private String invertLinkId(Link link) {

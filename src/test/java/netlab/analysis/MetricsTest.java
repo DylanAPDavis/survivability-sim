@@ -83,8 +83,8 @@ public class MetricsTest {
                 .routingType("unicast")
                 .numSources(1)
                 .numDestinations(1)
-                .failureScenario("quake1")
-                .numFailureEvents(1)
+                .failureScenario("quake2")
+                .numFailureEvents(2)
                 .useAws(false)
                 .build();
         evaluate(params);

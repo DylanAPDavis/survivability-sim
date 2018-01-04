@@ -75,7 +75,8 @@ public class Path implements Serializable {
     public boolean containsFailures(Collection<Failure> failures){
         for(Failure failure : failures){
             String failureId = failure.getNode() != null ? failure.getNode().getId() : failure.getLink().getId();
-            if(linkIds.contains(failureId) || nodeIds.contains(failureId)){
+            String reverseLinkId = failure.getLink() != null ? failure.getLink().reverse().getId() : "";
+            if(linkIds.contains(failureId) || linkIds.contains(reverseLinkId) || nodeIds.contains(failureId)){
                 return true;
             }
         }

@@ -86,7 +86,8 @@ public class FailureGenerationService {
 
     private Set<Link> filterLinks(Set<Link> links, Map<String, Link> linkIdMap){
         Set<Link> filteredLinks = new HashSet<>();
-        for(Link link : links){
+        List<Link> sortedLinks = links.stream().sorted(Comparator.comparing(Link::getId)).collect(Collectors.toList());
+        for(Link link : sortedLinks){
             String[] splitId = link.getId().split("-");
             String revId;
             if(splitId.length > 2){

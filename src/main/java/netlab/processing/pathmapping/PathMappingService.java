@@ -113,10 +113,9 @@ public class PathMappingService {
     }
 
     public List<Path> sortPathsByWeight(Collection<Path> paths){
-        List<Path> pathList = new ArrayList<>(paths);
-        Comparator comparator = Comparator.comparingDouble(Path::getTotalWeight).thenComparing(p -> p.getLinks().size());
-        pathList.sort(comparator);
-        return pathList;
+        return paths.stream()
+                .sorted(Comparator.comparingDouble(Path::getTotalWeight).thenComparing(p -> p.getLinks().size()))
+                .collect(Collectors.toList());
     }
 
     public Path getPrimary(Collection<Path> paths){
@@ -158,19 +157,19 @@ public class PathMappingService {
         if(path == null){
             return new ArrayList<>();
         }
-        Set<Node> failureNodes = new HashSet<>();
-        Set<Link> failureLinks = new HashSet<>();
+        Set<String> failureIds = new HashSet<>();
         for(Failure failure : failures){
             if(failure.getNode() != null){
-                failureNodes.add(failure.getNode());
+                failureIds.add(failure.getNode().getId());
             }
             else{
-                failureLinks.add(failure.getLink());
+                failureIds.add(failure.getLink().getId());
+                failureIds.add(failure.getLink().reverse().getId());
             }
         }
         // Get all the links that do not fail and are not attached to failing nodes
         List<Link> pathLinks = path.getLinks().stream()
-                .filter(l -> !failureLinks.contains(l) && !failureNodes.contains(l.getOrigin()) && !failureNodes.contains(l.getTarget()))
+                .filter(l -> !failureIds.contains(l.getId()) && !failureIds.contains(l.getOrigin().getId()) && !failureIds.contains(l.getTarget().getId()))
                 .collect(Collectors.toList());
         // If the first link does not start at the src, or there are no links, then there are no reachable nodes
         if(pathLinks.isEmpty() || pathLinks.get(0).getOrigin() != path.getNodes().get(0)){
