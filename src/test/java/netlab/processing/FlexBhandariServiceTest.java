@@ -7,6 +7,7 @@ import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
 import netlab.topology.elements.*;
+import netlab.visualization.PrintingService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,98 +32,195 @@ public class FlexBhandariServiceTest {
 
     @Autowired
     private ProcessingService processingService;
+    
+    @Autowired
+    private PrintingService printingService;
 
     @Test
-    public void halfNodeFailTest(){
-        Request request = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
-                "TotalCost", 1, 1, 6, new ArrayList<>(), "Node", 1.0,
-                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
-                2, new ArrayList<>(), "Solo", false, false,
-                "none", "prevent", "prevent");
-        processingService.processRequest(request);
-        Map<SourceDestPair, Map<String, Path>> pathMap = request.getDetails().getChosenPaths();
-        log.info("Failure set: " + request.getDetails().getFailures().getFailureSet());
-        printMap(pathMap);
-    }
+    public void unicastTest(){
 
-    @Test
-    public void halfLinkFailTest(){
-        Request request = createRequestSet(1L, "NSFnet", 1, "PartialBhandari", "Flex",
-                "TotalCost", 1, 1, 10, new ArrayList<>(), "Link", 1.0,
-                new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
-                2, new ArrayList<>(), "Solo", false, false,
-                "none", "prevent", "prevent");
-        processingService.processRequest(request);
-        Details details = request.getDetails();
-        Map<SourceDestPair, Map<String, Path>> pathMap = details.getChosenPaths();
-        printFailureSet(details.getFailures().getFailureSet());
-        printMap(pathMap);
-    }
-
-    private void printMap(Map<SourceDestPair, Map<String, Path>> pathMap) {
-        for(SourceDestPair pair : pathMap.keySet()){;
-            Map<String, Path> paths = pathMap.get(pair);
-            if(paths.size() > 0) {
-                log.info(String.format("Pair: (%s, %s)", pair.getSrc().getId(), pair.getDst().getId()));
-                for (String pathId : paths.keySet()) {
-                    log.info(pathId + ": " + paths.get(pathId).toString());
-                }
-            }
-        }
-    }
-
-    private void printFailureSet(Set<Failure> failures){
-        log.info("Failure set: " + failures.stream().map(f -> {
-            if(f.getLink() != null){
-                return String.format("(%s, %s)", f.getLink().getOrigin().getId(), f.getLink().getTarget().getId());
-            }
-            else{
-                return f.getNode().getId();
-            }
-        }).collect(Collectors.joining(", ")));
-    }
-
-    private Request createRequestSet(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                                     String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
-                                     List<Integer> minMaxFailures, String failureClass, Double failureProb,
-                                     List<Double> minMaxFailureProb, Integer numConnections,
-                                     List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
-                                     Integer numFailsAllowed, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
-                                     Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
-                                     String destFailureType){
-
-        SimulationParameters params = makeParameters(seed, topologyId, numRequests, alg, problemClass, objective, numSources, numDestinations,
-                fSetSize, minMaxFailures, failureClass, failureProb, minMaxFailureProb, numConnections, minConnectionsRange, maxConnectionsRange,
-                numFailsAllowed, minMaxFailsAllowed, processingType, sdn, useAws, sourceSubsetDestType, sourceFailureType, destFailureType);
-        Request request = generationService.generateFromSimParams(params);
-        return request;
-    }
-
-    private SimulationParameters makeParameters(Long seed, String topologyId, Integer numRequests, String alg, String problemClass,
-                                                String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
-                                                List<Integer> minMaxFailures, String failureClass, Double failureProb,
-                                                List<Double> minMaxFailureProb, Integer numConnections,
-                                                List<Integer> minConnectionsRange, List<Integer> maxConnectionsRange,
-                                                Integer numFails, List<Integer> minMaxFailsAllowed, String processingType, Boolean sdn,
-                                                Boolean useAws, String sourceSubsetDestType, String sourceFailureType,
-                                                String destFailureType){
-        return SimulationParameters.builder()
-                .seed(seed)
-                .topologyId(topologyId)
-                .algorithm(alg)
-                .problemClass(problemClass)
-                .objective(objective)
-                .numSources(numSources)
-                .numDestinations(numDestinations)
-                .failureSetSize(fSetSize)
-                .failureClass(failureClass)
-                .failureProb(failureProb)
-                .minConnections(numConnections)
-                .numFailureEvents(numFails)
-                .useAws(useAws)
-                .sourceSubsetDestType(sourceSubsetDestType)
-                .sourceFailureType(sourceFailureType)
-                .destFailureType(destFailureType)
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .numFailureEvents(0)
+                .useAws(false)
                 .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void anycastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void manycastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(3)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void multicastTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(2L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("multicast")
+                .numSources(1)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void multicastCombineTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(2L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("multicast")
+                .numSources(1)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .trafficCombinationType("source")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+
+    @Test
+    public void manyToOneTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("manyToOne")
+                .numSources(3)
+                .numDestinations(1)
+                .useMinS(2)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void broadcast(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(3)
+                .numDestinations(3)
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void broadcastOverlap(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .numFailureEvents(0)
+                .sourceSubsetDestType("half")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void broadcastOverlapFailures(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .failureScenario("allnodes")
+                .numFailureEvents(1)
+                .sourceSubsetDestType("half")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
     }
 }

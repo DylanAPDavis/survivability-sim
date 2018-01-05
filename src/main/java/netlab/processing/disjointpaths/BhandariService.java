@@ -249,7 +249,7 @@ public class BhandariService {
         int k = numPaths;
 
         if(k == 1){
-            return paths;
+            return convertToOriginalTopoLinks(paths);
         }
 
         List<List<Link>> tempPaths = new ArrayList<>(paths);
