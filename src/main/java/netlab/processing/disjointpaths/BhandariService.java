@@ -258,7 +258,8 @@ public class BhandariService {
 
         // Convert failures to a set of links
         // Also adds an inverse link for each failure to enable consideration of bidirectional failures
-        Set<Link> failureLinks = convertFailuresToLinks(failures);
+        Set<Link> failureLinks = convertFailuresToLinks(failures, nodesCanFail);
+        Set<String> failureIds = failureLinks.stream().map(Link::getId).collect(Collectors.toSet());
         Set<Link> alreadyConsideredFailureLinks = new HashSet<>();
         for(Integer pIndex = 1; pIndex < k; pIndex++){
 
@@ -271,8 +272,8 @@ public class BhandariService {
                 // If this link (or internal link) is in the set of failures, reverse it and give it negative weight
                 // If default behavior flag is set and no failures are passed in, this will produce a basic link-disjoint solution
                 // Do not reverse the interal edge for src/dest
-                boolean isInternalEndpoint = pathEdge.getOrigin().equals(src) || pathEdge.getTarget().equals(dst); //pathEdge.getId().contains("internal")
-                if(!isInternalEndpoint && (failureLinks.contains(pathEdge) || defaultBehavior)) {
+                boolean isInternalEndpoint = nodesCanFail && (checkIfInternal(pathEdge));
+                if(!isInternalEndpoint && (failureIds.contains(pathEdge.getId()) || defaultBehavior)) {
                     Long reversedMetric = -1 * pathEdge.getWeight();
                     Link reversedEdge = new Link(pathEdge.getTarget(), pathEdge.getOrigin(), reversedMetric);
                     reversedToOriginalMap.put(reversedEdge, pathEdge);
@@ -301,6 +302,13 @@ public class BhandariService {
             tempPaths.add(modShortestPath);
         }
         return  combine(shortestPath, tempPaths, reversedToOriginalMap, modifiedTopo, src, dst, k);
+    }
+
+    private boolean checkIfInternal(Link link){
+        // Is internal if origin and target share the same root node name
+        String originId = link.getOrigin().getId().replace("-incoming", "").replace("-outgoing", "");
+        String targetId = link.getTarget().getId().replace("-incoming", "").replace("-outgoing", "");
+        return originId.contains(targetId);
     }
 
     private List<List<Link>> convertToOriginalTopoLinks(List<List<Link>> pathLinks) {
@@ -345,15 +353,20 @@ public class BhandariService {
         return new Topology(topo.getId() + "-modified", modifiedNodes, modifiedLinks);
     }
 
-    private Set<Link> convertFailuresToLinks(Set<Failure> failures) {
+    private Set<Link> convertFailuresToLinks(Set<Failure> failures, Boolean nodesCanFail) {
         Set<Link> failureLinks = new HashSet<>();
         for(Failure failure : failures){
             Link link = failure.getLink();
             Node node = failure.getNode();
             if(link != null){
+                //Link externalLink = nodesCanFail ? makeExternalLink(link) : link;
+
                 failureLinks.add(link);
                 // Add inverse link
-                Link inverse = new Link(link.getTarget(), link.getOrigin(), link.getWeight());
+                Link inverse =  new Link(link.getTarget(), link.getOrigin(), link.getWeight());
+                /*if(nodesCanFail){
+                    inverse = makeExternalLink(inverse);
+                }*/
                 failureLinks.add(inverse);
             }
             if(node != null){
@@ -372,6 +385,14 @@ public class BhandariService {
             }
         }
         return failureLinks;
+    }
+
+    private Link makeExternalLink(Link link) {
+        Node origin = link.getOrigin();
+        Node target = link.getTarget();
+        Node newOrigin = new Node(origin.getId() + "-outgoing", origin.getPoint());
+        Node newTarget = new Node(target.getId() + "-incoming", origin.getPoint());
+        return new Link(newOrigin, newTarget, link.getWeight());
     }
 
     private Link buildInternalLink(Node node){

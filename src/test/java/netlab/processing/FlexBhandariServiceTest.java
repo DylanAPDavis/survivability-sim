@@ -56,6 +56,7 @@ public class FlexBhandariServiceTest {
         System.out.println(printingService.outputPaths(request));
     }
 
+
     @Test
     public void anycastTest(){
 
@@ -214,6 +215,28 @@ public class FlexBhandariServiceTest {
                 .numSources(4)
                 .numDestinations(4)
                 .failureScenario("allnodes")
+                .numFailureEvents(1)
+                .sourceSubsetDestType("half")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void broadcastOverlapLinkFailures(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("broadcast")
+                .numSources(4)
+                .numDestinations(4)
+                .failureScenario("alllinks")
                 .numFailureEvents(1)
                 .sourceSubsetDestType("half")
                 .useAws(false)

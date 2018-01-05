@@ -1,6 +1,7 @@
 package netlab.submission.services;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.submission.enums.FailureScenario;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.SimulationParameters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +14,12 @@ import java.util.*;
 public class DefaultValueService {
 
     private RoutingParamAssignmentService routingParamAssignmentService;
+    private EnumGenerationService enumGenerationService;
 
     @Autowired
-    public DefaultValueService(RoutingParamAssignmentService routingParamAssignmentService){
+    public DefaultValueService(RoutingParamAssignmentService routingParamAssignmentService, EnumGenerationService enumGenerationService){
         this.routingParamAssignmentService = routingParamAssignmentService;
+        this.enumGenerationService = enumGenerationService;
     }
 
 
@@ -188,6 +191,15 @@ public class DefaultValueService {
         }
         if(params.getNumFailureEvents() == null || params.getNumFailureEvents() < 0){
             params.setNumFailureEvents(0);
+        }
+        FailureScenario failureScenario = enumGenerationService.getFailureScenario(params.getFailureScenario());
+        if(failureScenario != FailureScenario.Default){
+            if(failureScenario.equals(FailureScenario.AllLinks)){
+                params.setFailureClass("link");
+            }
+            if(failureScenario.equals(FailureScenario.AllNodes)){
+                params.setFailureClass("node");
+            }
         }
 
 
