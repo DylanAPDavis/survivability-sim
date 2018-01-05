@@ -30,19 +30,23 @@ public class CachingResult {
     // Percentage of pairs that can still access content through backup path
     private double pairReachThroughBackup;
 
+    // Total number of caches across all pairs
+    private int cachingCost;
+
     public CachingResult(CachingType type){
         this.type = type;
         reachability = 0.0;
         avgAccessibility = 0.0;
         avgHopCountToContent = 0.0;
         pairReachThroughBackup = 0.0;
+        cachingCost = 0;
         cachingMap = new HashMap<>();
     }
 
 
     public String toString(){
         String headline = type + " " + "Reach: " + reachability + " Access: " + avgAccessibility
-                + " Hop: " + avgHopCountToContent + " Pair_Reach: " + pairReachThroughBackup;
+                + " Hop: " + avgHopCountToContent + " Pair_Reach: " + pairReachThroughBackup + " Cost: " + cachingCost;
         return headline  + cachingMapToString() +"\n~~~";
     }
 

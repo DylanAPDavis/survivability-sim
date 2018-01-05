@@ -44,7 +44,23 @@ public class CachingService {
                 case BranchingPoint:
                     cacheAtBranchingPoints(cacheMap, primaryPathMap);
             }
+            cachingResult.setCachingCost(evaluateCost(cacheMap));
         }
+    }
+
+    private int evaluateCost(Map<SourceDestPair, Set<Node>> cacheMap) {
+        Map<Node, Set<Node>> cachePointsPerDestination = new HashMap<>();
+        for(SourceDestPair pair : cacheMap.keySet()){
+            Node dest = pair.getDst();
+            cachePointsPerDestination.putIfAbsent(dest, new HashSet<>());
+            cachePointsPerDestination.get(dest).addAll(cacheMap.get(pair));
+        }
+        int count = 0;
+        for(Node dest : cachePointsPerDestination.keySet()){
+            Set<Node> cachePoints = cachePointsPerDestination.get(dest);
+            count += cachePoints.size();
+        }
+        return count;
     }
 
     private void cacheAtBranchingPoints(Map<SourceDestPair, Set<Node>> cacheMap, Map<SourceDestPair, Path> primaryPathMap) {
