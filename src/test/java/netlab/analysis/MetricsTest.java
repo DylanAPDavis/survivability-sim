@@ -662,6 +662,25 @@ public class MetricsTest {
         evaluate(params);
     }
 
+    @Test
+    public void flexBhandariUnicastFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("quake1")
+                .minConnections(1)
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
     public void evaluate(SimulationParameters params, Set<Failure> failureSet){
         String requestId = submissionController.submitRequest(params);
         Request request = storageController.getRequest(requestId, false);

@@ -437,8 +437,10 @@ public class BhandariService {
 
         source.setId(source.getId().replace("-incoming", ""));
         dest.setId(dest.getId().replace("-outgoing", ""));
+
         return createPaths(topo, source, dest, k);
     }
+
 
     private Topology  convertFromNodeDisjoint(Topology topo, Set<Link> combinedEdges) {
         Set<Link> newLinks = new HashSet<>();
@@ -458,8 +460,29 @@ public class BhandariService {
             newNodes.add(node);
         }
 
+        newLinks = removeForwardReversePairs(newLinks);
+
         // Use the edges from paths that had to be split up
         return new Topology(topo.getId(), newNodes, newLinks);
+    }
+
+    private Set<Link> removeForwardReversePairs(Set<Link> links) {
+        Set<Link> filteredLinks = new HashSet<>();
+        for(Link link1 : links){
+            boolean noMatch = true;
+            for(Link link2 : links){
+                if(Objects.equals(link1.getOrigin().getId(), link2.getTarget().getId())){
+                    if(Objects.equals(link1.getTarget().getId(), link2.getOrigin().getId())){
+                        noMatch = false;
+                        break;
+                    }
+                }
+            }
+            if(noMatch){
+                filteredLinks.add(link1);
+            }
+        }
+        return filteredLinks;
     }
 
     private List<List<Link>> createPaths(Topology topo, Node source, Node dest, Integer k) {

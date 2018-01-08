@@ -129,9 +129,15 @@ public class FlexBhandariService {
                         p -> p,
                         p -> pathsPerPair.get(p).stream().mapToLong(Path::getTotalWeight).sum())
                 );
+        Map<SourceDestPair, Integer> pathNumMap = pathsPerPair.keySet().stream()
+                .collect(Collectors.toMap(
+                        p -> p,
+                        p -> pathsPerPair.get(p).size())
+                );
         List<SourceDestPair> sortedPairs = pathsPerPair.keySet()
                 .stream()
                 .filter(p -> !pathsPerPair.get(p).isEmpty())
+                //.sorted(Comparator.comparing(pathNumMap::get).reversed().thenComparing(totalWeightMap::get))
                 .sorted(Comparator.comparing(totalWeightMap::get))
                 .collect(Collectors.toList());
 
@@ -202,8 +208,8 @@ public class FlexBhandariService {
         addedSrc.add(src);
         Set<Node> addedDst = new HashSet<>(connectedDests);
         addedDst.add(dst);
-        // If adding this source/dest won't violate maximum constraints
-        if(addedSrc.size() <= reachMaxS && addedDst.size() <= reachMaxD){
+        // If you still need sources or destinations
+        if(connectedSources.size() < reachMinS || connectedDests.size() < reachMinD){
             if(addedSrc.size() > connectedSources.size() || addedDst.size() > connectedDests.size()){
                 return true;
             }
@@ -227,7 +233,7 @@ public class FlexBhandariService {
     }
 
     private boolean checkForSufficientPaths(Integer minC, Set<Path> paths, List<List<Failure>> failureGroups) {
-        return minC >= paths.size() - getNumDisconn(paths, failureGroups);
+        return minC <= paths.size() - getNumDisconn(paths, failureGroups);
     }
 
 
