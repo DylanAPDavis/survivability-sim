@@ -138,7 +138,7 @@ public class BhandariService {
         Topology modifiedTopo = topologyService.adjustWeightsUsingTrafficCombination(topo, trafficType, src, dst,
                 srcPathsMap, dstPathsMap);
 
-        List<List<Link>> linkLists = computeDisjointPaths(modifiedTopo, src, dst, 2, 0, nodesFail,
+        List<List<Link>> linkLists = computeDisjointPaths(modifiedTopo, src, dst, 1, 1, nodesFail,
                 new HashSet<>(), true);
 
         return pathMappingService.convertToPaths(linkLists, topo.getLinkIdMap());
@@ -220,7 +220,7 @@ public class BhandariService {
 
 
             if(k < numPaths + nfe){
-                if(pathCanFail) {
+                if(pathCanFail && nfe > 0) {
                     k++;
                 }
                 // Find the new shortest path
