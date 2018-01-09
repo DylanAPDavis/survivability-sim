@@ -186,9 +186,26 @@ public class FlexBhandariService {
         Map<Node, Integer> intactPathsPerDst = destinations.stream().collect(Collectors.toMap(d -> d, d -> 0));
         Map<SourceDestPair, Integer> intactPathsPerPair = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
         Map<SourceDestPair, Map<String, Path>> chosenPathsMap = new HashMap<>();
+        Map<Node, Set<Path>> pathsPerSrc = sources.stream().collect(Collectors.toMap(s -> s, s -> new HashSet<>()));
+        Map<Node, Set<Path>> pathsPerDst = destinations.stream().collect(Collectors.toMap(d -> d, d -> new HashSet<>()));
+
+        Set<Node> failedSrcs = new HashSet<>();
+        Set<Node> protectedSrcs = new HashSet<>();
+        Set<Node> failedDsts = new HashSet<>();
+        Set<Node> protectedDsts = new HashSet<>();
         for(SourceDestPair pair : sortedPairs){
             Node src = pair.getSrc();
             Node dst = pair.getDst();
+            if(failureIds.contains(src.getId())){
+                failedSrcs.add(src);
+            } else{
+                protectedSrcs.add(src);
+            }
+            if(failureIds.contains(dst.getId())){
+                failedDsts.add(dst);
+            } else{
+                protectedDsts.add(dst);
+            }
             List<Path> pairPaths = pathsPerPair.get(pair);
 
             chosenPathsMap.put(pair, new HashMap<>());
@@ -202,15 +219,17 @@ public class FlexBhandariService {
                 pathsPerDest.get(dst).add(path);*/
 
                 chosenPathsMap.get(pair).put(String.valueOf(pathId), path);
-
+                pathsPerSrc.get(src).add(path);
+                pathsPerDst.get(dst).add(path);
                 pathId++;
             }
             int numIntact = intactPathCount.get(pair);
             intactPathsPerPair.put(pair, numIntact);
             intactPathsPerSrc.put(src, intactPathsPerSrc.get(src) + numIntact);
             intactPathsPerDst.put(dst, intactPathsPerDst.get(dst) + numIntact);
-            boolean finished = evaluateSolution(intactPathsPerPair, srcDstDontFail, srcFails, dstFails,
-                    srcDstFail, intactPathsPerSrc, intactPathsPerDst, reachMinS, reachMinD, srcMinConnMap, dstMinConnMap, pairMinConnMap);
+            boolean finished = evaluateSolution(intactPathsPerPair, intactPathsPerSrc, intactPathsPerDst, protectedSrcs, failedSrcs, protectedDsts, failedDsts,
+                    pathsPerSrc, pathsPerDst, reachMinS, reachMinD, srcMinConnMap, dstMinConnMap, pairMinConnMap,
+                    failureGroups.get(0).size());
             if(finished){
                 break;
             }
@@ -220,13 +239,12 @@ public class FlexBhandariService {
 
 
     private boolean evaluateSolution(Map<SourceDestPair, Integer> intactPathsPerPair,
-                                     Set<SourceDestPair> srcDstDontFail,
-                                     Set<SourceDestPair> srcFails,
-                                     Set<SourceDestPair> dstFails,
-                                     Set<SourceDestPair> srcDstFail,
                                      Map<Node, Integer> intactPathsPerSrc, Map<Node, Integer> intactPathsPerDst,
+                                     Set<Node> protectedSrcs, Set<Node> failedSrcs, Set<Node> protectedDsts, Set<Node> failedDsts,
+                                     Map<Node, Set<Path>> pathsPerSrc, Map<Node, Set<Path>> pathsPerDst,
                                      Integer reachMinS, Integer reachMinD, Map<Node, Integer> srcMinConnMap,
-                                     Map<Node, Integer> dstMinConnMap, Map<SourceDestPair, Integer> pairMinConnMap) {
+                                     Map<Node, Integer> dstMinConnMap, Map<SourceDestPair, Integer> pairMinConnMap,
+                                     Integer nfe) {
         // Terminating conditions
         // srcViable = minS <= srcSurvive - srcDisconn || srcConn = |S|
         // dstViable = minD <= dstSurvive - dstDisconn || dstConn = |D|
@@ -235,10 +253,18 @@ public class FlexBhandariService {
         // minForS = minC_s <= numC_s - numDis_s forall s
         // minForD = minC_s <= numC_d - numDis_d forall d
         // minForSD = minC_sd <= numC_sd - numDis_sd forall sd
-        long numViableSrcs = intactPathsPerSrc.keySet().stream().filter(s -> intactPathsPerSrc.get(s) > 0).count();
-        long numViableDsts = intactPathsPerDst.keySet().stream().filter(d -> intactPathsPerDst.get(d) > 0).count();
+        Set<Node> sources = intactPathsPerSrc.keySet();
+        boolean enoughSrcs = evaluateMemberSet(sources, protectedSrcs, failedSrcs, intactPathsPerSrc, pathsPerSrc, reachMinS, nfe);
+        Set<Node> dsts = intactPathsPerDst.keySet();
+        boolean enoughDsts = evaluateMemberSet(dsts, protectedDsts, failedDsts, intactPathsPerDst, pathsPerDst, reachMinD, nfe);
+
+
+        /*
+        long protectedIntactSrcs = intactPathsPerSrc.keySet().stream().filter(protectedSrcs::contains).filter(s -> intactPathsPerSrc.get(s) > 0).count();
+        long protectedIntactDsts = intactPathsPerDst.keySet().stream().filter(protectedSrcs::contains).filter(d -> intactPathsPerDst.get(d) > 0).count();
         boolean enoughSrcs = numViableSrcs >= reachMinS;
         boolean enoughDsts = numViableDsts >= reachMinD;
+        */
 
         boolean enoughForAllS = srcMinConnMap.keySet().stream()
                 .allMatch(s -> intactPathsPerSrc.get(s) >= srcMinConnMap.get(s));
@@ -250,6 +276,45 @@ public class FlexBhandariService {
                 .allMatch(p -> intactPathsPerPair.get(p) >= pairMinConnMap.get(p));
 
         return enoughSrcs && enoughDsts && enoughForAllS && enoughForAllD && enoughForAllPairs;
+    }
+
+    private boolean evaluateMemberSet(Set<Node> members, Set<Node> protectedMembers, Set<Node> failedMembers,
+                                      Map<Node, Integer> intactPathsPerMember, Map<Node, Set<Path>> pathsPerMember,
+                                      Integer reachMin, Integer nfe){
+        int numProtectedIntact = 0;
+        int numFailedIntact = 0;
+        int numProtectedDisconn= 0;
+        int numFailedDisconn = 0;
+        for(Node mem : members){
+            if(protectedMembers.contains(mem)){
+                if(intactPathsPerMember.get(mem) > 0){
+                    numProtectedIntact++;
+                } else if(pathsPerMember.get(mem).size() > 0){
+                    numProtectedDisconn++;
+                }
+            } else if(failedMembers.contains(mem)){
+                if(intactPathsPerMember.get(mem) > 0){
+                    numFailedIntact++;
+                } else if(pathsPerMember.get(mem).size() > 0){
+                    numFailedDisconn++;
+                }
+            }
+        }
+        int size = members.size();
+        boolean enough = false;
+        if(numProtectedIntact >= reachMin){
+            enough = true;
+        }
+        else if(numProtectedIntact + numFailedIntact >= Math.min(reachMin + nfe, size)) {
+            enough = true;
+        }
+        else if(numProtectedIntact + numFailedIntact + numProtectedDisconn >= Math.min(reachMin + nfe, size)){
+            enough = true;
+        }
+        else if(numProtectedIntact + numFailedIntact + numProtectedDisconn + numFailedDisconn >= Math.min(reachMin + nfe, size)){
+            enough = true;
+        }
+        return enough;
     }
 
     private List<SourceDestPair> sortPairs(Map<SourceDestPair, Integer> intactPathCount,

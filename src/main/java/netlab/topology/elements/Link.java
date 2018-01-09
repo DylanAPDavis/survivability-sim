@@ -60,6 +60,14 @@ public class Link implements Serializable {
         setPoints();
     }
 
+    public Link(Node origin, Node target, Long weight, Set<Point> points){
+        this.origin = origin;
+        this.target = target;
+        this.id = origin.getId() + "-" + target.getId();
+        this.weight = weight;
+        this.points = points;
+    }
+
     public Link reverse(){
         return new Link(this.target, this.origin, this.weight);
     }

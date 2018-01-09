@@ -35,14 +35,21 @@ public class TopologyAdjustmentService {
     }
 
     public Topology adjustWeightsToMax(Topology topo, Collection<Path> paths){
-        Set<Link> pathLinks = paths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
-        Map<String, Link> linkIdMap = topo.getLinkIdMap();
-        Set<Link> inverseLinks = pathLinks.stream()
-                .filter(l -> linkIdMap.containsKey(l.getTarget().getId() + "-" + l.getOrigin().getId()))
-                .map(l -> linkIdMap.get(l.getTarget().getId() + "-" + l.getOrigin().getId()))
-                .collect(Collectors.toSet());
-        pathLinks.addAll(inverseLinks);
-        Set<Link> modifiedLinks = modifyLinks(topo.getLinks(), true, pathLinks, Long.MAX_VALUE);
+        Set<Link> pathLinks = paths.size() == 0 ? new HashSet<>() : paths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
+        return adjustWeightsToMaxWithLinks(topo, pathLinks);
+    }
+
+    public Topology adjustWeightsToMaxWithLinks(Topology topo, Set<Link> pathLinks){
+        Set<Link> modifiedLinks = new HashSet<>(topo.getLinks());
+        if(pathLinks.size() > 0) {
+            Map<String, Link> linkIdMap = topo.getLinkIdMap();
+            Set<Link> inverseLinks = pathLinks.stream()
+                    .filter(l -> linkIdMap.containsKey(l.getTarget().getId() + "-" + l.getOrigin().getId()))
+                    .map(l -> linkIdMap.get(l.getTarget().getId() + "-" + l.getOrigin().getId()))
+                    .collect(Collectors.toSet());
+            pathLinks.addAll(inverseLinks);
+            modifiedLinks = modifyLinks(topo.getLinks(), true, pathLinks, Long.MAX_VALUE);
+        }
         Topology newTopo = new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
         newTopo.copyPathCosts(topo);
         return newTopo;
@@ -64,12 +71,28 @@ public class TopologyAdjustmentService {
         }
     }
 
+    public List<List<Link>> readjustLinkWeights(List<List<Link>> pathLinks, Topology sourceTopo) {
+        Map<String, Link> sourceLinkIdMap = sourceTopo.getLinkIdMap();
+        List<List<Link>> adjustedPaths = new ArrayList<>();
+        for(List<Link> path : pathLinks){
+                List<Link> adjustedPath = new ArrayList<>(path);
+                for(Link link : adjustedPath){
+                    Link sourceLink = sourceLinkIdMap.get(link.getId());
+                    if(!Objects.equals(sourceLink.getWeight(), link.getWeight())){
+                        link.setWeight(sourceLink.getWeight());
+                    }
+                }
+            adjustedPaths.add(adjustedPath);
+        }
+        return adjustedPaths;
+    }
+
     public Set<Link> modifyLinks(Set<Link> links, boolean shouldModify, Set<Link> setToBeModified, Long newWeight){
         Set<Link> modifiedLinks = new HashSet<>();
         for(Link link : links){
             Long weight = shouldModify && setToBeModified.contains(link) ?
                     newWeight : link.getWeight();
-            Link modifiedLink = new Link(link.getOrigin(), link.getTarget(), weight);
+            Link modifiedLink = new Link(link.getOrigin(), link.getTarget(), weight, link.getPoints());
             modifiedLinks.add(modifiedLink);
         }
         return modifiedLinks;

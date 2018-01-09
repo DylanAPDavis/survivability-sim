@@ -225,7 +225,30 @@ public class FlexBhandariServiceTest {
                 .useMinD(2)
                 .useMaxD(2)
                 .failureScenario("destinations")
-                .numFailureEvents(1)
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void manycastSourceFailTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(2)
+                .failureScenario("sources")
+                .numFailureEvents(2)
                 .useAws(false)
                 .build();
         Request request = generationService.generateFromSimParams(params);
@@ -296,6 +319,52 @@ public class FlexBhandariServiceTest {
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
+
+    @Test
+    public void manyToOneSourceFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("manyToOne")
+                .numSources(3)
+                .numDestinations(1)
+                .useMinS(2)
+                .failureScenario("sources")
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+
+    @Test
+    public void manyToOneDestFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("manyToOne")
+                .numSources(3)
+                .numDestinations(1)
+                .useMinS(2)
+                .failureScenario("destinations")
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
 
     @Test
     public void broadcast(){

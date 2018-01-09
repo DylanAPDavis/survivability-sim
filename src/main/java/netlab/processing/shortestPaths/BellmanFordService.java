@@ -7,8 +7,10 @@ import netlab.topology.elements.SourceDestPair;
 import netlab.topology.elements.Topology;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
+import org.jgrapht.alg.interfaces.KShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.BellmanFordShortestPath;
+import org.jgrapht.alg.shortestpath.KShortestPaths;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,23 @@ public class BellmanFordService {
 
         return buildPath(dest, source, edgeMap);
         */
+    }
+
+    public List<List<Link>> kShortestPaths(Topology topo, Node source, Node dest, int k){
+        Map<DefaultWeightedEdge, Link> edgeToLinkMap = new HashMap<>();
+        DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = convertToGraph(topo, edgeToLinkMap);
+
+        KShortestPaths<Node, DefaultWeightedEdge> shortestPath = new KShortestPaths<>(graph, k);
+        List<GraphPath<Node,DefaultWeightedEdge>> graphPaths = shortestPath.getPaths(source, dest);
+        List<List<Link>> pathLinks = new ArrayList<>();
+        if(graphPaths != null) {
+            for(GraphPath<Node, DefaultWeightedEdge> graphPath : graphPaths) {
+                List<DefaultWeightedEdge> edgeList = graphPath.getEdgeList();
+                List<Link> path = edgeList.stream().map(edgeToLinkMap::get).collect(Collectors.toList());
+                pathLinks.add(path);
+            }
+        }
+        return pathLinks;
     }
 
     public Map<SourceDestPair, List<Link>> allShortestPaths(Topology topo){
