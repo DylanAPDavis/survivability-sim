@@ -166,6 +166,52 @@ public class FlexBhandariServiceTest {
     }
 
     @Test
+    public void manycastLinkFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(2)
+                .failureScenario("alllinks")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void manycastNodeFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(2)
+                .failureScenario("allnodes")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
     public void manycastDestsFailTest(){
 
         SimulationParameters params = SimulationParameters.builder()
