@@ -166,6 +166,29 @@ public class FlexBhandariServiceTest {
     }
 
     @Test
+    public void manycastDestsFailTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(3)
+                .useMinD(2)
+                .useMaxD(2)
+                .failureScenario("destinations")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
     public void multicastTest(){
 
         SimulationParameters params = SimulationParameters.builder()

@@ -272,7 +272,7 @@ public class BhandariService {
                 // If this link (or internal link) is in the set of failures, reverse it and give it negative weight
                 // If default behavior flag is set and no failures are passed in, this will produce a basic link-disjoint solution
                 // Do not reverse the interal edge for src/dest
-                boolean isInternalEndpoint = nodesCanFail && (checkIfInternal(pathEdge));
+                boolean isInternalEndpoint = nodesCanFail && (checkIfInternalEndpoint(pathEdge, src, dst));
                 if(!isInternalEndpoint && (failureIds.contains(pathEdge.getId()) || defaultBehavior)) {
                     Long reversedMetric = -1 * pathEdge.getWeight();
                     Link reversedEdge = new Link(pathEdge.getTarget(), pathEdge.getOrigin(), reversedMetric);
@@ -304,11 +304,11 @@ public class BhandariService {
         return  combine(shortestPath, tempPaths, reversedToOriginalMap, modifiedTopo, src, dst, k);
     }
 
-    private boolean checkIfInternal(Link link){
+    private boolean checkIfInternalEndpoint(Link link, Node src, Node dst){
         // Is internal if origin and target share the same root node name
         String originId = link.getOrigin().getId().replace("-incoming", "").replace("-outgoing", "");
         String targetId = link.getTarget().getId().replace("-incoming", "").replace("-outgoing", "");
-        return originId.contains(targetId);
+        return originId.contains(targetId) && (src.getId().contains(originId) || dst.getId().contains(originId));
     }
 
     private List<List<Link>> convertToOriginalTopoLinks(List<List<Link>> pathLinks) {

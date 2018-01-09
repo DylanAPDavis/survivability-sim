@@ -399,6 +399,20 @@ public class FailureGenerationService {
                     chosenNodes = new ArrayList<>(nodeOptions);
                     probabilities = generateProbabilities(probability, new ArrayList<>(), chosenNodes.size() + chosenLinks.size(), rng);
                     break;
+                case Sources:
+                    chosenNodes = new ArrayList<>(sources);
+                    probabilities = generateProbabilities(probability, new ArrayList<>(), chosenNodes.size() + chosenLinks.size(), rng);
+                    break;
+                case Destinations:
+                    chosenNodes = new ArrayList<>(destinations);
+                    probabilities = generateProbabilities(probability, new ArrayList<>(), chosenNodes.size() + chosenLinks.size(), rng);
+                    break;
+                case Members:
+                    Set<Node> members = new HashSet<>(sources);
+                    members.addAll(destinations);
+                    chosenNodes = new ArrayList<>(members);
+                    probabilities = generateProbabilities(probability, new ArrayList<>(), chosenNodes.size() + chosenLinks.size(), rng);
+                    break;
                 default:
                     return failureAreaService.generateFailures(failureScenario, nodeOptions, links, failureClass);
             }

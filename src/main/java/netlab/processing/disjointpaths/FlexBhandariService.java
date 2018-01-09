@@ -11,6 +11,7 @@ import netlab.topology.services.TopologyAdjustmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.xml.transform.Source;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,14 +40,11 @@ public class FlexBhandariService {
     public Details solve(Request request, Topology topology) {
         Details details = request.getDetails();
 
-        // Get sorted pairs
-        List<SourceDestPair> pairs = topologyAdjustmentService.sortPairsByPathCost(details.getPairs(), topology);
-
         Failures failCollection = details.getFailures();
         NumFailureEvents nfaCollection = details.getNumFailureEvents();
         Connections connCollection = details.getConnections();
         long startTime = System.nanoTime();
-        Map<SourceDestPair, Map<String, Path>> paths = findPaths(pairs, failCollection, nfaCollection, connCollection,
+        Map<SourceDestPair, Map<String, Path>> paths = findPaths(details.getPairs(), failCollection, nfaCollection, connCollection,
                 request.getFailureClass(), request.getTrafficCombinationType(), topology);
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
@@ -71,7 +69,7 @@ public class FlexBhandariService {
      * @param failureClass
      *@param topo  @return
      */
-    private Map<SourceDestPair,Map<String,Path>> findPaths(Collection<SourceDestPair> pairs, Failures failCollection,
+    private Map<SourceDestPair,Map<String,Path>> findPaths(Set<SourceDestPair> pairs, Failures failCollection,
                                                            NumFailureEvents nfeCollection, Connections connCollection,
                                                            FailureClass failureClass, TrafficCombinationType trafficType,
                                                            Topology topo) {
@@ -104,10 +102,11 @@ public class FlexBhandariService {
             // Modify the topology if combining traffic
             Topology modifiedTopo = topologyAdjustmentService.adjustWeightsUsingTrafficCombination(topo, trafficType, src, dst,
                     usedSources, usedDestinations);
-            int minForSrc = srcMinConnMap.get(src);
-            int minForDst = dstMinConnMap.get(dst);
+            //int minForSrc = srcMinConnMap.get(src);
+            //int minForDst = dstMinConnMap.get(dst);
             int minForPair = pairMinConnMap.get(pair);
-            int numC = Math.max(1, Math.max(minForSrc, Math.max(minForDst, minForPair)));
+            //int numC = Math.max(1, Math.max(minForSrc, Math.max(minForDst, minForPair)));
+            int numC = Math.max(1, minForPair);
             List<List<Link>> pathLinks = bhandariService.computeDisjointPaths(modifiedTopo, src, dst, numC, nfe, nodesCanFail,
                     failureSet, false);
             List<Path> paths = pathLinks.stream()
@@ -121,119 +120,185 @@ public class FlexBhandariService {
             usedDestinations.putIfAbsent(dst, new HashSet<>());
             usedDestinations.get(dst).addAll(paths);
         }
-        // We now have the path lists for each pair, and the path sets per src and dest
-        // Evaluate if minimum requirements were met for each src and dest, and sufficient srcs and dests are connected
-        // Sort the pairs by their total path cost, then only keep the pairs that help you reach the goal
-        Map<SourceDestPair, Long> totalWeightMap = pathsPerPair.keySet().stream()
-                .collect(Collectors.toMap(
-                        p -> p,
-                        p -> pathsPerPair.get(p).stream().mapToLong(Path::getTotalWeight).sum())
-                );
-        Map<SourceDestPair, Integer> pathNumMap = pathsPerPair.keySet().stream()
-                .collect(Collectors.toMap(
-                        p -> p,
-                        p -> pathsPerPair.get(p).size())
-                );
-        List<SourceDestPair> sortedPairs = pathsPerPair.keySet()
-                .stream()
-                .filter(p -> !pathsPerPair.get(p).isEmpty())
-                //.sorted(Comparator.comparing(pathNumMap::get).reversed().thenComparing(totalWeightMap::get))
-                .sorted(Comparator.comparing(totalWeightMap::get))
-                .collect(Collectors.toList());
 
-        return filterPathsPerPair(pathsPerPair, sortedPairs, pairMinConnMap, reachMinS, reachMinD, reachMaxS, reachMaxD,
-                srcMinConnMap, dstMinConnMap, failureGroups);
+        return filterPathsPerPair(pathsPerPair, pairs, usedSources.keySet(), usedDestinations.keySet(),
+                pairMinConnMap, reachMinS, reachMinD, reachMaxS, reachMaxD,
+                srcMinConnMap, dstMinConnMap, failureGroups, failureSet);
     }
 
+
     private Map<SourceDestPair,Map<String,Path>> filterPathsPerPair(Map<SourceDestPair, List<Path>> pathsPerPair,
-                                                                    List<SourceDestPair> sortedPairs,
+                                                                    Set<SourceDestPair> pairs, Set<Node> sources,
+                                                                    Set<Node> destinations,
                                                                     Map<SourceDestPair, Integer> pairMinConnMap,
                                                                     Integer reachMinS, Integer reachMinD,
                                                                     Integer reachMaxS, Integer reachMaxD,
                                                                     Map<Node, Integer> srcMinConnMap,
                                                                     Map<Node, Integer> dstMinConnMap,
-                                                                    List<List<Failure>> failureGroups) {
+                                                                    List<List<Failure>> failureGroups,
+                                                                    Set<Failure> failures) {
+
+        // Figure out the number of disconnected paths, and whether the source/dests can fail
+        Set<String> failureIds = failures.stream()
+                .map(f -> f.getNode() != null ? f.getNode().getId() : f.getLink().getId())
+                .collect(Collectors.toSet());
+        Map<SourceDestPair, Integer> intactPathCount = new HashMap<>();
+        Map<SourceDestPair, Long> totalWeights = new HashMap<>();
+        Set<SourceDestPair> srcDstDontFail = new HashSet<>();
+        Set<SourceDestPair> srcFails = new HashSet<>();
+        Set<SourceDestPair> dstFails = new HashSet<>();
+        Set<SourceDestPair> srcDstFail = new HashSet<>();
+        for(SourceDestPair pair : pairs){
+            Node src = pair.getSrc();
+            Node dst = pair.getDst();
+            List<Path> paths = pathsPerPair.get(pair);
+
+            Long totalWeight = paths.stream().mapToLong(Path::getTotalWeight).sum();
+            totalWeights.put(pair, totalWeight);
+
+            Integer numDisconn = getNumDisconn(src, dst, paths, failureGroups);
+            Integer numIntact = paths.size() - numDisconn;
+            intactPathCount.put(pair, numIntact);
+
+            if(failureIds.contains(src.getId()) || failureIds.contains(dst.getId())){
+                // Just dest
+                if(!failureIds.contains(src.getId())){
+                    dstFails.add(pair);
+                }
+                // Just src
+                else if (!failureIds.contains(dst.getId())){
+                    srcFails.add(pair);
+                }
+                // Both
+                else {
+                    srcDstFail.add(pair);
+                }
+            } else{
+                srcDstDontFail.add(pair);
+            }
+        }
+
+        List<SourceDestPair> sortedPairs = sortPairs(intactPathCount, totalWeights, srcDstDontFail, srcFails, dstFails,
+                srcDstFail, sources.size(), destinations.size());
 
         // Build a map of paths and failures associated with those paths.
+        Map<Node, Integer> intactPathsPerSrc = sources.stream().collect(Collectors.toMap(s -> s, s -> 0));
+        Map<Node, Integer> intactPathsPerDst = destinations.stream().collect(Collectors.toMap(d -> d, d -> 0));
+        Map<SourceDestPair, Integer> intactPathsPerPair = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
         Map<SourceDestPair, Map<String, Path>> chosenPathsMap = new HashMap<>();
-        Map<Node, Set<Path>> pathsPerSrc = new HashMap<>();
-        Map<Node, Set<Path>> pathsPerDest = new HashMap<>();
-        Set<Node> connectedSources = new HashSet<>();
-        Set<Node> connectedDests = new HashSet<>();
-        boolean allPairsNeeded = pairMinConnMap.values().stream().allMatch(min -> min >= 1);
         for(SourceDestPair pair : sortedPairs){
             Node src = pair.getSrc();
             Node dst = pair.getDst();
             List<Path> pairPaths = pathsPerPair.get(pair);
-            // If not every pair is needed, and this pair is not needed, and there are sufficient sources/dests, continue
-            if(!allPairsNeeded && pairMinConnMap.get(pair) == 0 && !checkIfPathsAreNeeded(connectedSources, connectedDests,
-                    reachMinS, reachMinD, reachMaxS, reachMaxD, src, dst)){
-                continue;
-            }
+
             chosenPathsMap.put(pair, new HashMap<>());
             int pathId = 1;
             // Add the paths to the node path sets and store the paths
             for(Path path : pairPaths){
-                pathsPerSrc.putIfAbsent(src, new HashSet<>());
+                /*pathsPerSrc.putIfAbsent(src, new HashSet<>());
                 pathsPerSrc.get(src).add(path);
 
                 pathsPerDest.putIfAbsent(dst, new HashSet<>());
-                pathsPerDest.get(dst).add(path);
+                pathsPerDest.get(dst).add(path);*/
 
                 chosenPathsMap.get(pair).put(String.valueOf(pathId), path);
 
                 pathId++;
             }
-            // Check if the src and dst now have enough to be considered connected
-            if(!connectedSources.contains(src) && pathsPerSrc.get(src).size() >= srcMinConnMap.get(src)){
-                boolean enough = checkForSufficientPaths(srcMinConnMap.get(src), pathsPerSrc.get(src), failureGroups);
-                if(enough){
-                    connectedSources.add(src);
-                }
-            }
-            if(!connectedDests.contains(dst) && pathsPerDest.get(dst).size() >= dstMinConnMap.get(dst)){
-                boolean enough = checkForSufficientPaths(dstMinConnMap.get(dst), pathsPerDest.get(dst), failureGroups);
-                if(enough){
-                    connectedDests.add(dst);
-                }
+            int numIntact = intactPathCount.get(pair);
+            intactPathsPerPair.put(pair, numIntact);
+            intactPathsPerSrc.put(src, intactPathsPerSrc.get(src) + numIntact);
+            intactPathsPerDst.put(dst, intactPathsPerDst.get(dst) + numIntact);
+            boolean finished = evaluateSolution(intactPathsPerPair, srcDstDontFail, srcFails, dstFails,
+                    srcDstFail, intactPathsPerSrc, intactPathsPerDst, reachMinS, reachMinD, srcMinConnMap, dstMinConnMap, pairMinConnMap);
+            if(finished){
+                break;
             }
         }
         return chosenPathsMap;
     }
 
-    // Only add the new src/dst if they will contribute to the minS/D goals
-    private boolean checkIfPathsAreNeeded(Set<Node> connectedSources, Set<Node> connectedDests, Integer reachMinS,
-                                          Integer reachMinD, Integer reachMaxS, Integer reachMaxD, Node src, Node dst) {
-        Set<Node> addedSrc = new HashSet<>(connectedSources);
-        addedSrc.add(src);
-        Set<Node> addedDst = new HashSet<>(connectedDests);
-        addedDst.add(dst);
-        // If you still need sources or destinations
-        if(connectedSources.size() < reachMinS || connectedDests.size() < reachMinD){
-            if(addedSrc.size() > connectedSources.size() || addedDst.size() > connectedDests.size()){
-                return true;
-            }
-        }
-        return false;
+
+    private boolean evaluateSolution(Map<SourceDestPair, Integer> intactPathsPerPair,
+                                     Set<SourceDestPair> srcDstDontFail,
+                                     Set<SourceDestPair> srcFails,
+                                     Set<SourceDestPair> dstFails,
+                                     Set<SourceDestPair> srcDstFail,
+                                     Map<Node, Integer> intactPathsPerSrc, Map<Node, Integer> intactPathsPerDst,
+                                     Integer reachMinS, Integer reachMinD, Map<Node, Integer> srcMinConnMap,
+                                     Map<Node, Integer> dstMinConnMap, Map<SourceDestPair, Integer> pairMinConnMap) {
+        // Terminating conditions
+        // srcViable = minS <= srcSurvive - srcDisconn || srcConn = |S|
+        // dstViable = minD <= dstSurvive - dstDisconn || dstConn = |D|
+        // Combined viable: if(|S| > |D|) {srcViable = srcViable || (dstViable && D subset F)}
+        //                  else if (|D| > |S|) {dstViable = dstViable || (srcViable && S subset F)}
+        // minForS = minC_s <= numC_s - numDis_s forall s
+        // minForD = minC_s <= numC_d - numDis_d forall d
+        // minForSD = minC_sd <= numC_sd - numDis_sd forall sd
+        long numViableSrcs = intactPathsPerSrc.keySet().stream().filter(s -> intactPathsPerSrc.get(s) > 0).count();
+        long numViableDsts = intactPathsPerDst.keySet().stream().filter(d -> intactPathsPerDst.get(d) > 0).count();
+        boolean enoughSrcs = numViableSrcs >= reachMinS;
+        boolean enoughDsts = numViableDsts >= reachMinD;
+
+        boolean enoughForAllS = srcMinConnMap.keySet().stream()
+                .allMatch(s -> intactPathsPerSrc.get(s) >= srcMinConnMap.get(s));
+
+        boolean enoughForAllD = dstMinConnMap.keySet().stream()
+                .allMatch(d -> intactPathsPerDst.get(d) >= dstMinConnMap.get(d));
+
+        boolean enoughForAllPairs = pairMinConnMap.keySet().stream()
+                .allMatch(p -> intactPathsPerPair.get(p) >= pairMinConnMap.get(p));
+
+        return enoughSrcs && enoughDsts && enoughForAllS && enoughForAllD && enoughForAllPairs;
     }
 
-    private int getNumDisconn(Collection<Path> paths, List<List<Failure>> failureGroups){
+    private List<SourceDestPair> sortPairs(Map<SourceDestPair, Integer> intactPathCount,
+                                           Map<SourceDestPair, Long> totalWeights, Set<SourceDestPair> srcDstDontFail,
+                                           Set<SourceDestPair> srcFails, Set<SourceDestPair> dstFails,
+                                           Set<SourceDestPair> srcDstFail, int numSources, int numDsts) {
+        List<SourceDestPair> sortedSrcFails = srcFails.stream()
+                .sorted(Comparator.comparing(intactPathCount::get).reversed().thenComparing(totalWeights::get))
+                .collect(Collectors.toList());
+        List<SourceDestPair> sortedDstFails = dstFails.stream()
+                .sorted(Comparator.comparing(intactPathCount::get).reversed().thenComparing(totalWeights::get))
+                .collect(Collectors.toList());
+        List<SourceDestPair> sortedBothFail = srcDstFail.stream()
+                .sorted(Comparator.comparing(intactPathCount::get).reversed().thenComparing(totalWeights::get))
+                .collect(Collectors.toList());
+
+        List<SourceDestPair> sorted = srcDstDontFail.stream()
+                .sorted(Comparator.comparing(intactPathCount::get).reversed().thenComparing(totalWeights::get))
+                .collect(Collectors.toList());
+        if(numSources < numDsts || numSources == numDsts){
+            sorted.addAll(sortedDstFails);
+            sorted.addAll(sortedSrcFails);
+        }
+        else{
+            sorted.addAll(sortedSrcFails);
+            sorted.addAll(sortedDstFails);
+        }
+        sorted.addAll(sortedBothFail);
+        return sorted;
+    }
+
+
+    // Only consider non src/dst failures
+    private int getNumDisconn(Node src, Node dst, Collection<Path> paths, List<List<Failure>> failureGroups){
         int greatestDisconn = 0;
         for(List<Failure> group : failureGroups){
             int disconnPaths = 0;
+            List<Failure> filtered = group.stream()
+                    .filter(f -> f.getLink() != null || !(f.getNode().equals(src) || f.getNode().equals(dst)))
+                    .collect(Collectors.toList());
             for(Path path : paths) {
-                List<Node> reachablenodes = pathMappingService.getReachableNodes(path, group);
-                if(!reachablenodes.contains(path.getNodes().get(path.getNodes().size()-1))){
+                List<Node> reachablenodes = pathMappingService.getReachableNodes(path, filtered);
+                if(!reachablenodes.contains(dst)){
                     disconnPaths++;
                 }
             }
             greatestDisconn = Math.max(greatestDisconn, disconnPaths);
         }
         return greatestDisconn;
-    }
-
-    private boolean checkForSufficientPaths(Integer minC, Set<Path> paths, List<List<Failure>> failureGroups) {
-        return minC <= paths.size() - getNumDisconn(paths, failureGroups);
     }
 
 
