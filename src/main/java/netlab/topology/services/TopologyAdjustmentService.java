@@ -40,15 +40,28 @@ public class TopologyAdjustmentService {
     public Topology adjustWeightsToMaxWithLinks(Topology topo, Set<Link> pathLinks){
         Set<Link> modifiedLinks = new HashSet<>(topo.getLinks());
         if(pathLinks.size() > 0) {
-            Map<String, Link> linkIdMap = topo.getLinkIdMap();
-            Set<Link> inverseLinks = pathLinks.stream()
-                    .filter(l -> linkIdMap.containsKey(l.getTarget().getId() + "-" + l.getOrigin().getId()))
-                    .map(l -> linkIdMap.get(l.getTarget().getId() + "-" + l.getOrigin().getId()))
-                    .collect(Collectors.toSet());
-            pathLinks.addAll(inverseLinks);
-            modifiedLinks = modifyLinks(topo.getLinks(), true, pathLinks, Long.MAX_VALUE);
+            modifyForwardAndReverseLinks(topo, modifiedLinks, Long.MAX_VALUE);
         }
         return createTopologyWithLinkSubset(topo, modifiedLinks);
+    }
+
+    public Topology adjustWeightsToMaxWithLinksAndNodes(Topology topo, Set<Node> nodesToKeep, Set<Link> pathLinks){
+        Set<Link> modifiedLinks = new HashSet<>(pathLinks);
+        if(pathLinks.size() > 0) {
+            modifiedLinks = modifyForwardAndReverseLinks(topo, modifiedLinks, Long.MAX_VALUE);
+        }
+        return createTopologyWithNodeLinkSubset(topo, nodesToKeep, modifiedLinks);
+    }
+
+    public Set<Link> modifyForwardAndReverseLinks(Topology topo, Set<Link> linksToModify, Long value){
+        Set<Link> tempLinks = new HashSet<>(linksToModify);
+        Map<String, Link> linkIdMap = topo.getLinkIdMap();
+        Set<Link> inverseLinks = tempLinks.stream()
+                .filter(l -> linkIdMap.containsKey(l.getTarget().getId() + "-" + l.getOrigin().getId()))
+                .map(l -> linkIdMap.get(l.getTarget().getId() + "-" + l.getOrigin().getId()))
+                .collect(Collectors.toSet());
+        tempLinks.addAll(inverseLinks);
+        return modifyLinks(topo.getLinks(), true, tempLinks, value);
     }
 
     public Topology adjustWeightsWithFailureProbs(Topology topo, Set<Failure> failures){
@@ -150,6 +163,12 @@ public class TopologyAdjustmentService {
 
     public Topology createTopologyWithLinkSubset(Topology topo, Set<Link> linkSubset){
         Topology newTopo = new Topology(topo.getId(), topo.getNodes(), linkSubset);
+        newTopo.copyPathCosts(topo);
+        return newTopo;
+    }
+
+    public Topology createTopologyWithNodeLinkSubset(Topology topo, Set<Node> nodeSubset, Set<Link> linkSubset){
+        Topology newTopo = new Topology(topo.getId(), nodeSubset, linkSubset);
         newTopo.copyPathCosts(topo);
         return newTopo;
     }

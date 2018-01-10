@@ -27,9 +27,11 @@ public class GraphConversionService {
             graph.addVertex(node);
         }
         for(Link link : topo.getLinks()){
-            DefaultWeightedEdge e = graph.addEdge(link.getOrigin(), link.getTarget());
-            graph.setEdgeWeight(e, link.getWeight());
-            edgeToLinkMap.put(e, link);
+            if(topo.getNodes().contains(link.getOrigin()) && topo.getNodes().contains(link.getTarget())) {
+                DefaultWeightedEdge e = graph.addEdge(link.getOrigin(), link.getTarget());
+                graph.setEdgeWeight(e, link.getWeight());
+                edgeToLinkMap.put(e, link);
+            }
         }
         return graph;
     }

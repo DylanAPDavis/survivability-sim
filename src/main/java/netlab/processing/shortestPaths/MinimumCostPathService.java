@@ -78,6 +78,14 @@ public class MinimumCostPathService {
         return findShortestPath(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None);
     }
 
+    public Path findShortestPath(Node src, Node dst, Topology topo){
+        return pathMappingService.convertToPath(aStarService.shortestPath(topo, src, dst), topo.getLinkIdMap());
+    }
+
+    public List<Link> findShortestPathLinks(Node src, Node dst, Topology topo){
+        return aStarService.shortestPath(topo, src, dst);
+    }
+
     public Path findShortestPath(SourceDestPair pair, Topology topo, Map<Node, Set<Path>> srcPathsMap,
                                  Map<Node, Set<Path>> dstPathsMap, TrafficCombinationType trafficType){
 
@@ -86,7 +94,7 @@ public class MinimumCostPathService {
 
         Topology modifiedTopo = topologyAdjustmentService.adjustWeightsUsingTrafficCombination(topo, trafficType, src, dst,
                 srcPathsMap, dstPathsMap);
-        List<Link> pathLinks = aStarService.shortestPath(modifiedTopo, src, dst);
+        List<Link> pathLinks = findShortestPathLinks(src, dst, modifiedTopo);
 
         return pathMappingService.convertToPath(pathLinks, topo.getLinkIdMap());
     }

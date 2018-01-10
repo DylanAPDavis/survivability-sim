@@ -11,6 +11,7 @@ import netlab.processing.groupcast.DestinationForwardingService;
 import netlab.processing.overlappingtrees.OverlappingTreeService;
 import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.processing.shortestPaths.MinimumRiskPathService;
+import netlab.processing.shortestPaths.YensService;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.Topology;
@@ -43,6 +44,8 @@ public class ProcessingService {
 
     private MinimumRiskPathService minimumRiskPathService;
 
+    private YensService yensService;
+
     private TopologyService topoService;
 
     @Autowired
@@ -50,7 +53,7 @@ public class ProcessingService {
                              MinimumCostPathService minimumCostPathService, BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
                              HamiltonianCycleService hamiltonianCycleService, DestinationForwardingService destinationForwardingService,
                              CollapsedRingService collapsedRingService, CycleForTwoService cycleForTwoService,
-                             MinimumRiskPathService minimumRiskPathService) {
+                             MinimumRiskPathService minimumRiskPathService, YensService yensService) {
         this.topoService = topologyService;
         this.amplService = amplService;
         this.flexBhandariService = flexBhandariService;
@@ -62,6 +65,7 @@ public class ProcessingService {
         this.collapsedRingService = collapsedRingService;
         this.cycleForTwoService = cycleForTwoService;
         this.minimumRiskPathService = minimumRiskPathService;
+        this.yensService = yensService;
     }
 
     public Request processRequest(Request request) {
@@ -97,6 +101,9 @@ public class ProcessingService {
                 break;
             case MinimumRiskPath:
                 details = minimumRiskPathService.solve(request, topo);
+                break;
+            case Yens:
+                details = yensService.solve(request, topo);
                 break;
         }
         request.setDetails(details);

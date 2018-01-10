@@ -16,7 +16,8 @@ public enum Algorithm {
     Hamlitonian("hamiltonian"),
     DestinationForwarding("destinationforwarding"),
     CollapsedRing("collapsedring"),
-    CycleForTwo("cyclefortwo");
+    CycleForTwo("cyclefortwo"),
+    Yens("yens");
 
     private String code;
 
