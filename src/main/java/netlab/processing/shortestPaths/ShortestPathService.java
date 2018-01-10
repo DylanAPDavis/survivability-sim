@@ -20,14 +20,14 @@ import java.util.stream.Collectors;
 @Service
 public class ShortestPathService {
 
-    private BellmanFordService bellmanFordService;
+    private AStarService aStarService;
     private TopologyAdjustmentService topologyAdjustmentService;
     private PathMappingService pathMappingService;
 
     @Autowired
-    public ShortestPathService(BellmanFordService bellmanFordService, TopologyAdjustmentService topologyAdjustmentService,
+    public ShortestPathService(AStarService aStarService, TopologyAdjustmentService topologyAdjustmentService,
                                PathMappingService pathMappingService){
-        this.bellmanFordService = bellmanFordService;
+        this.aStarService = aStarService;
         this.topologyAdjustmentService = topologyAdjustmentService;
         this.pathMappingService = pathMappingService;
     }
@@ -85,59 +85,6 @@ public class ShortestPathService {
 
         return filter ? pathMappingService.filterMap(pathMap, details) : pathMap;
 
-
-        /*
-        // Sort the paths by weight
-        usedSources = new HashMap<>();
-        usedDestinations = new HashMap<>();
-        potentialPaths = potentialPaths.stream().sorted(Comparator.comparingLong(Path::getTotalWeight)).collect(Collectors.toList());
-        // Pick a subset of the paths to satisfy the min constraints
-        for(Path path : potentialPaths){
-            SourceDestPair pair = potentialPathMap.get(path);
-            if(!usedSources.containsKey(pair.getSrc()) || !usedDestinations.containsKey(pair.getDst())) {
-                usedSources.putIfAbsent(pair.getSrc(), new HashSet<>());
-                usedSources.get(pair.getSrc()).add(path);
-                usedDestinations.putIfAbsent(pair.getDst(), new HashSet<>());
-                usedDestinations.get(pair.getDst()).add(path);
-                pathMap.get(pair).put(String.valueOf(pathMap.get(pair).size() + 1), path);
-            }
-            if(usedSources.size() >= useMinS && usedDestinations.size() >= useMinD){
-                break;
-            }
-        }
-
-
-        if(routingType.equals(RoutingType.ManyToMany)){
-            // Prune out potentially unneeded paths
-            for(Node src : usedSources.keySet()){
-                // If this source has more than one path, some could potentially be removed
-                if(usedSources.get(src).size() > 1){
-                    // Get the connected destinations
-                    Set<Path> srcPaths = usedSources.get(src);
-                    int pathsRemaining = srcPaths.size();
-                    for(Path srcPath : srcPaths){
-                        Node dest = srcPath.getNodes().get(srcPath.getNodes().size()-1);
-                        if(usedDestinations.get(dest).size() > 1){
-                            // If they do have more than one path, we now know that both this source and this dest
-                            // are the endpoints for multiple paths.
-                            // This means we can remove the path
-                            usedSources.get(src).remove(srcPath);
-                            usedDestinations.get(dest).remove(srcPath);
-                            pathsRemaining--;
-                            potentialPathMap.remove(srcPath);
-                        }
-                        // If there's just one path left for this source, move on to the next one
-                        if(pathsRemaining == 1){
-                            break;
-                        }
-                    }
-                }
-            }
-            return pathMappingService.formatPathMap(potentialPathMap);
-        }
-        return pathMap;
-        */
-
     }
 
     public Path findShortestPath(SourceDestPair pair, Topology topo){
@@ -152,44 +99,15 @@ public class ShortestPathService {
 
         Topology modifiedTopo = topologyAdjustmentService.adjustWeightsUsingTrafficCombination(topo, trafficType, src, dst,
                 srcPathsMap, dstPathsMap);
-        List<Link> pathLinks = bellmanFordService.shortestPath(modifiedTopo, src, dst);
+        List<Link> pathLinks = aStarService.shortestPath(modifiedTopo, src, dst);
 
         return pathMappingService.convertToPath(pathLinks, topo.getLinkIdMap());
     }
 
     public Map<SourceDestPair, Path> findAllShortestPaths(Topology topo){
-        Map<SourceDestPair, List<Link>> allPathsMap = bellmanFordService.allShortestPaths(topo);
+        Map<SourceDestPair, List<Link>> allPathsMap = aStarService.allShortestPaths(topo);
         return allPathsMap.keySet().stream()
                 .collect(Collectors.toMap(p -> p, p -> new Path(allPathsMap.get(p))));
     }
 
-
-    // Confirm that you've met all requirements
-    private boolean testSatisfication(Integer reqNumConnections, Integer useMinS, Integer useMaxS, Integer useMinD,
-                                      Integer useMaxD, Map<SourceDestPair, Integer> pairMinConnectionsMap,
-                                      Map<SourceDestPair, Integer> pairMaxConnectionsMap,
-                                      Map<Node, Integer> srcMinConnectionsMap, Map<Node, Integer> srcMaxConnectionsMap,
-                                      Map<Node, Integer> dstMinConnectionsMap, Map<Node, Integer> dstMaxConnectionsMap,
-                                      int numConnections, int numSUsed, int numDUsed,
-                                      Map<SourceDestPair, Integer> pairConnectionsMap,
-                                      Map<Node, Integer> srcConnectionsMap, Map<Node, Integer> dstConnectionsMap) {
-
-        boolean enoughConns = numConnections >= reqNumConnections;
-        boolean enoughS = numSUsed >= useMinS && numSUsed <= useMaxS;
-        boolean enoughD = numDUsed >= useMinD && numDUsed <= useMaxD;
-        boolean enoughPairs = pairConnectionsMap.keySet()
-                .stream()
-                .allMatch(p -> pairConnectionsMap.get(p) >= pairMinConnectionsMap.get(p)
-                        && pairConnectionsMap.get(p) <= pairMaxConnectionsMap.get(p));
-        boolean enoughSConn = srcConnectionsMap.keySet()
-                .stream()
-                .allMatch(s -> srcConnectionsMap.get(s) >= srcMinConnectionsMap.get(s)
-                        && srcConnectionsMap.get(s) <= srcMaxConnectionsMap.get(s));
-        boolean enoughDConn = dstConnectionsMap.keySet()
-                .stream()
-                .allMatch(d -> dstConnectionsMap.get(d) >= dstMinConnectionsMap.get(d)
-                        && dstConnectionsMap.get(d) <= dstMaxConnectionsMap.get(d));
-
-        return enoughConns && enoughS && enoughD && enoughPairs && enoughSConn && enoughDConn;
-    }
 }
