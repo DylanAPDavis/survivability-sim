@@ -18,15 +18,15 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ShortestPathService {
+public class MinimumCostPathService {
 
     private AStarService aStarService;
     private TopologyAdjustmentService topologyAdjustmentService;
     private PathMappingService pathMappingService;
 
     @Autowired
-    public ShortestPathService(AStarService aStarService, TopologyAdjustmentService topologyAdjustmentService,
-                               PathMappingService pathMappingService){
+    public MinimumCostPathService(AStarService aStarService, TopologyAdjustmentService topologyAdjustmentService,
+                                  PathMappingService pathMappingService){
         this.aStarService = aStarService;
         this.topologyAdjustmentService = topologyAdjustmentService;
         this.pathMappingService = pathMappingService;
@@ -34,24 +34,11 @@ public class ShortestPathService {
 
     public Details solve(Request request, Topology topo){
         Details details = request.getDetails();
-        Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
 
         List<SourceDestPair> pairs = topologyAdjustmentService.sortPairsByPathCost(details.getPairs(), topo);
         long startTime = System.nanoTime();
-        switch(request.getRoutingType()){
-            case Unicast:
-                SourceDestPair pair = pairs.iterator().next();
-                Path path = findShortestPath(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None);
-                if(!path.getLinks().isEmpty()){
-                    Map<String, Path> idMap = new HashMap<>();
-                    idMap.put("1", path);
-                    pathMap.put(pair, idMap);
-                }
-                break;
-            default:
-                pathMap = findPaths(request.getDetails(), request.getRoutingType(), pairs, topo, request.getTrafficCombinationType(), true);
-                break;
-        }
+        Map<SourceDestPair, Map<String, Path>> pathMap =  findPaths(request.getDetails(), request.getRoutingType(),
+                pairs, topo, request.getTrafficCombinationType(), true);
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
         details.setChosenPaths(pathMap);
@@ -60,7 +47,7 @@ public class ShortestPathService {
         return details;
     }
 
-    public Map<SourceDestPair,Map<String,Path>> findPaths(Details details, RoutingType routingType, Collection<SourceDestPair> pairs, Topology topo,
+    public Map<SourceDestPair, Map<String,Path>> findPaths(Details details, RoutingType routingType, Collection<SourceDestPair> pairs, Topology topo,
                                                           TrafficCombinationType trafficCombinationType, Boolean filter) {
         Map<Node, Set<Path>> usedSources = new HashMap<>();
         Map<Node, Set<Path>> usedDestinations = new HashMap<>();

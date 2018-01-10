@@ -190,4 +190,15 @@ public class PathMappingService {
         }
         return reachableNodes;
     }
+
+    public void setOriginalWeights(Map<SourceDestPair, Map<String, Path>> pathMap, Map<String, Link> linkIdMap) {
+        for(Map<String, Path> pathIdMap : pathMap.values()){
+            for(Path path : pathIdMap.values()){
+                List<Link> links = path.getLinks();
+                for(Link link : links){
+                    link.setWeight(linkIdMap.get(link.getId()).getWeight());
+                }
+            }
+        }
+    }
 }

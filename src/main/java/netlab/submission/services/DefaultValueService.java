@@ -164,7 +164,7 @@ public class DefaultValueService {
             params.setObjective("linksused");
         }
         if(params.getAlgorithm() == null){
-            params.setAlgorithm("ilp");
+            params.setAlgorithm("minimumcost");
         }
         if(params.getRoutingType() == null){
             params.setRoutingType("default");

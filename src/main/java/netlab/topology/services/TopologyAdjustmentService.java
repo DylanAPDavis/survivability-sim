@@ -29,9 +29,7 @@ public class TopologyAdjustmentService {
 
         Set<Link> modifiedLinks = modifyLinks(topo.getLinks(), !trafficType.equals(TrafficCombinationType.None), zeroCostLinks, 0L);
 
-        Topology newTopo = new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
-        newTopo.copyPathCosts(topo);
-        return newTopo;
+        return createTopologyWithLinkSubset(topo, modifiedLinks);
     }
 
     public Topology adjustWeightsToMax(Topology topo, Collection<Path> paths){
@@ -50,9 +48,28 @@ public class TopologyAdjustmentService {
             pathLinks.addAll(inverseLinks);
             modifiedLinks = modifyLinks(topo.getLinks(), true, pathLinks, Long.MAX_VALUE);
         }
-        Topology newTopo = new Topology(topo.getId(), topo.getNodes(), modifiedLinks);
-        newTopo.copyPathCosts(topo);
-        return newTopo;
+        return createTopologyWithLinkSubset(topo, modifiedLinks);
+    }
+
+    public Topology adjustWeightsWithFailureProbs(Topology topo, Set<Failure> failures){
+        Map<String, Long> weightMap = new HashMap<>();
+        Map<String, Failure> failureIdMap = createFailureIdMap(failures);
+        for(Link link : topo.getLinks()){
+            String linkId = link.getId();
+            String origin = link.getOrigin().getId();
+            String target = link.getTarget().getId();
+            double originProb = failureIdMap.containsKey(origin) ? failureIdMap.get(origin).getProbability() : 0;
+            double targetProb = failureIdMap.containsKey(target) ? failureIdMap.get(target).getProbability() : 0;
+            double linkProb = failureIdMap.containsKey(linkId) ? failureIdMap.get(linkId).getProbability() : 0;
+            long newWeight = link.getWeight() + Math.round((link.getWeight() * originProb) + (link.getWeight() * linkProb) + (link.getWeight() * targetProb));
+            weightMap.put(link.getId(), newWeight);
+        }
+        Set<Link> modifiedLinks = modifyLinks(topo.getLinks(), weightMap);
+        return createTopologyWithLinkSubset(topo, modifiedLinks);
+    }
+
+    public Map<String, Failure> createFailureIdMap(Set<Failure> failures){
+        return failures.stream().collect(Collectors.toMap(Failure::getId, f -> f));
     }
 
     public void readjustLinkWeights(Map<SourceDestPair, Map<String, Path>> chosenPathsMap, Topology sourceTopo) {
@@ -92,10 +109,22 @@ public class TopologyAdjustmentService {
         for(Link link : links){
             Long weight = shouldModify && setToBeModified.contains(link) ?
                     newWeight : link.getWeight();
-            Link modifiedLink = new Link(link.getOrigin(), link.getTarget(), weight, link.getPoints());
-            modifiedLinks.add(modifiedLink);
+            modifiedLinks.add(modifyLink(link, weight));
         }
         return modifiedLinks;
+    }
+
+    public Set<Link> modifyLinks(Set<Link> links, Map<String, Long> weightMap){
+        Set<Link> modifiedLinks = new HashSet<>();
+        for(Link link : links){
+            Long weight = weightMap.get(link.getId());
+            modifiedLinks.add(modifyLink(link, weight));
+        }
+        return modifiedLinks;
+    }
+
+    public Link modifyLink(Link link, Long weight){
+        return new Link(link.getOrigin(), link.getTarget(), weight, link.getPoints());
     }
 
     public List<SourceDestPair> sortPairsByPathCost(Collection<SourceDestPair> pairs, Topology topo){

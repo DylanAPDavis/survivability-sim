@@ -2,7 +2,7 @@ package netlab.processing.overlappingtrees;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.pathmapping.PathMappingService;
-import netlab.processing.shortestPaths.ShortestPathService;
+import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.submission.enums.RoutingType;
 import netlab.submission.enums.TrafficCombinationType;
 import netlab.submission.request.Connections;
@@ -19,13 +19,13 @@ import java.util.*;
 @Slf4j
 public class OverlappingTreeService {
 
-    private ShortestPathService shortestPathService;
+    private MinimumCostPathService minimumCostPathService;
     private PathMappingService pathMappingService;
     private TopologyAdjustmentService topologyService;
 
     @Autowired
-    public OverlappingTreeService(ShortestPathService shortestPathService, PathMappingService pathMappingService, TopologyAdjustmentService topologyService) {
-        this.shortestPathService = shortestPathService;
+    public OverlappingTreeService(MinimumCostPathService minimumCostPathService, PathMappingService pathMappingService, TopologyAdjustmentService topologyService) {
+        this.minimumCostPathService = minimumCostPathService;
         this.pathMappingService = pathMappingService;
         this.topologyService = topologyService;
     }
@@ -51,7 +51,7 @@ public class OverlappingTreeService {
 
     private Details findPaths(Details details, RoutingType routingType, Collection<SourceDestPair> pairs,
                               Topology topo, Integer useMinS, Integer useMinD, TrafficCombinationType trafficCombinationType) {
-        Map<SourceDestPair, Map<String, Path>> primaryTree = shortestPathService.findPaths(details, routingType, pairs,
+        Map<SourceDestPair, Map<String, Path>> primaryTree = minimumCostPathService.findPaths(details, routingType, pairs,
                 topo,  trafficCombinationType, true);
         Set<Link> treeLinks = pathMappingService.getLinksFromMap(primaryTree);
         List<Map<SourceDestPair, Map<String, Path>>> trees = new ArrayList<>();
@@ -60,7 +60,7 @@ public class OverlappingTreeService {
             Set<Link> newLinks = new HashSet<>(topo.getLinks());
             newLinks.remove(link);
             Topology modifiedTopo = new Topology(topo.getId(), topo.getNodes(), newLinks);
-            Map<SourceDestPair, Map<String, Path>> backupTree = shortestPathService.findPaths(details, routingType, pairs,
+            Map<SourceDestPair, Map<String, Path>> backupTree = minimumCostPathService.findPaths(details, routingType, pairs,
                     modifiedTopo, trafficCombinationType, true);
             if(pathMappingService.countPaths(backupTree) == 0){
                 feasible = false;

@@ -2,9 +2,7 @@ package netlab.topology.services;
 
 
 import lombok.extern.slf4j.Slf4j;
-import netlab.processing.shortestPaths.BellmanFordService;
-import netlab.processing.shortestPaths.ShortestPathService;
-import netlab.submission.enums.TrafficCombinationType;
+import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.topology.elements.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,11 +20,11 @@ public class TopologyService {
 
     private Map<String, Link> linkIdMap;
 
-    private ShortestPathService shortestPathService;
+    private MinimumCostPathService minimumCostPathService;
 
     @Autowired
-    public TopologyService(ShortestPathService shortestPathService){
-        this.shortestPathService = shortestPathService;
+    public TopologyService(MinimumCostPathService minimumCostPathService){
+        this.minimumCostPathService = minimumCostPathService;
         topologyIdMap = new HashMap<>();
         topologyIdMap.put("NSFnet", makeNsfNet());
 
@@ -124,7 +122,7 @@ public class TopologyService {
     }
 
     public Topology populatePathCosts(Topology topo) {
-        Map<SourceDestPair, Path> allPairsPathMap = shortestPathService.findAllShortestPaths(topo);
+        Map<SourceDestPair, Path> allPairsPathMap = minimumCostPathService.findAllShortestPaths(topo);
         Map<SourceDestPair, Long> allPairsWeightMap = allPairsPathMap.keySet().stream()
                 .collect(Collectors.toMap(p -> p, p -> allPairsPathMap.get(p).getTotalWeight()));
         topo.setMinimumPathCostMap(allPairsWeightMap);

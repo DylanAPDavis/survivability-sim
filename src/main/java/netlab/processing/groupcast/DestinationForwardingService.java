@@ -2,10 +2,8 @@ package netlab.processing.groupcast;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.pathmapping.PathMappingService;
-import netlab.processing.shortestPaths.ShortestPathService;
-import netlab.submission.enums.RoutingType;
+import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.submission.enums.TrafficCombinationType;
-import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.Node;
@@ -22,14 +20,14 @@ import java.util.*;
 @Slf4j
 public class DestinationForwardingService {
 
-    private ShortestPathService shortestPathService;
+    private MinimumCostPathService minimumCostPathService;
     private PathMappingService pathMappingService;
     private TopologyAdjustmentService topologyService;
 
     @Autowired
-    public DestinationForwardingService(ShortestPathService shortestPathService, PathMappingService pathMappingService,
+    public DestinationForwardingService(MinimumCostPathService minimumCostPathService, PathMappingService pathMappingService,
                                         TopologyAdjustmentService topologyService) {
-        this.shortestPathService = shortestPathService;
+        this.minimumCostPathService = minimumCostPathService;
         this.pathMappingService = pathMappingService;
         this.topologyService = topologyService;
     }
@@ -104,7 +102,7 @@ public class DestinationForwardingService {
         for(Node src : sources){
             if(src != minimumCostDest){
                 SourceDestPair pair = SourceDestPair.builder().src(src).dst(minimumCostDest).build();
-                Path sp = shortestPathService.findShortestPath(pair, topo, srcPathsMap, dstPathsMap, trafficCombinationType);
+                Path sp = minimumCostPathService.findShortestPath(pair, topo, srcPathsMap, dstPathsMap, trafficCombinationType);
                 updateMaps(pair, sp, srcPathsMap, dstPathsMap, chosenPathsMap);
             }
         }
@@ -112,7 +110,7 @@ public class DestinationForwardingService {
         for(Node otherDest : dests){
             if(otherDest != minimumCostDest){
                 SourceDestPair minDestToOtherDestPair = SourceDestPair.builder().src(minimumCostDest).dst(otherDest).build();
-                Path minDestToOtherDestPath = shortestPathService.findShortestPath(minDestToOtherDestPair, topo, srcPathsMap, dstPathsMap, trafficCombinationType);
+                Path minDestToOtherDestPath = minimumCostPathService.findShortestPath(minDestToOtherDestPair, topo, srcPathsMap, dstPathsMap, trafficCombinationType);
                 // Then, with that path create a new src -> other dest path for each source
                 for(Node src : sources) {
                     if(src != otherDest) {

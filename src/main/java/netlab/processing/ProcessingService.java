@@ -9,7 +9,8 @@ import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.disjointpaths.FlexBhandariService;
 import netlab.processing.groupcast.DestinationForwardingService;
 import netlab.processing.overlappingtrees.OverlappingTreeService;
-import netlab.processing.shortestPaths.ShortestPathService;
+import netlab.processing.shortestPaths.MinimumCostPathService;
+import netlab.processing.shortestPaths.MinimumRiskPathService;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.Topology;
@@ -26,7 +27,7 @@ public class ProcessingService {
 
     private FlexBhandariService flexBhandariService;
 
-    private ShortestPathService shortestPathService;
+    private MinimumCostPathService minimumCostPathService;
 
     private BhandariService bhandariService;
 
@@ -40,23 +41,27 @@ public class ProcessingService {
 
     private CycleForTwoService cycleForTwoService;
 
+    private MinimumRiskPathService minimumRiskPathService;
+
     private TopologyService topoService;
 
     @Autowired
     public ProcessingService(TopologyService topologyService, AmplService amplService, FlexBhandariService flexBhandariService,
-                             ShortestPathService shortestPathService, BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
+                             MinimumCostPathService minimumCostPathService, BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
                              HamiltonianCycleService hamiltonianCycleService, DestinationForwardingService destinationForwardingService,
-                             CollapsedRingService collapsedRingService, CycleForTwoService cycleForTwoService) {
+                             CollapsedRingService collapsedRingService, CycleForTwoService cycleForTwoService,
+                             MinimumRiskPathService minimumRiskPathService) {
         this.topoService = topologyService;
         this.amplService = amplService;
         this.flexBhandariService = flexBhandariService;
-        this.shortestPathService = shortestPathService;
+        this.minimumCostPathService = minimumCostPathService;
         this.bhandariService = bhandariService;
         this.overlappingTreeService = overlappingTreeService;
         this.hamiltonianCycleService = hamiltonianCycleService;
         this.destinationForwardingService = destinationForwardingService;
         this.collapsedRingService = collapsedRingService;
         this.cycleForTwoService = cycleForTwoService;
+        this.minimumRiskPathService = minimumRiskPathService;
     }
 
     public Request processRequest(Request request) {
@@ -69,8 +74,8 @@ public class ProcessingService {
             case FlexBhandari:
                 details = flexBhandariService.solve(request, topo);
                 break;
-            case ShortestPath:
-                details = shortestPathService.solve(request, topo);
+            case MinimumCostPath:
+                details = minimumCostPathService.solve(request, topo);
                 break;
             case Bhandari:
                 details = bhandariService.solve(request, topo);
@@ -89,6 +94,10 @@ public class ProcessingService {
                 break;
             case CycleForTwo:
                 details = cycleForTwoService.solve(request, topo);
+                break;
+            case MinimumRiskPath:
+                details = minimumRiskPathService.solve(request, topo);
+                break;
         }
         request.setDetails(details);
         return request;

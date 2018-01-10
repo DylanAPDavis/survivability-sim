@@ -2,8 +2,7 @@ package netlab.processing.groupcast;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.cycles.CollapsedRingService;
-import netlab.processing.pathmapping.PathMappingService;
-import netlab.processing.shortestPaths.ShortestPathService;
+import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.submission.enums.TrafficCombinationType;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
@@ -25,14 +24,14 @@ by Tania Panayiotou, Georgios Ellinas, Neo Antoniades - 2013
 @Slf4j
 public class CycleForTwoService {
 
-    private ShortestPathService shortestPathService;
+    private MinimumCostPathService minimumCostPathService;
     private TopologyAdjustmentService topologyAdjustmentService;
     private CollapsedRingService collapsedRingService;
 
     @Autowired
-    public CycleForTwoService(ShortestPathService shortestPathService,
+    public CycleForTwoService(MinimumCostPathService minimumCostPathService,
                               TopologyAdjustmentService topologyService, CollapsedRingService collapsedRingService) {
-        this.shortestPathService = shortestPathService;
+        this.minimumCostPathService = minimumCostPathService;
         this.topologyAdjustmentService = topologyService;
         this.collapsedRingService = collapsedRingService;
     }
@@ -86,7 +85,7 @@ public class CycleForTwoService {
         Topology cycleRemovedTopo = topologyAdjustmentService.adjustWeightsToMax(topo, cyclePaths);
 
         // Find a shortestpath/tree solution for the problem without using the cycle links
-        Map<SourceDestPair, Map<String, Path>> chosenPathsMap = shortestPathService.findPaths(details, request.getRoutingType(),
+        Map<SourceDestPair, Map<String, Path>> chosenPathsMap = minimumCostPathService.findPaths(details, request.getRoutingType(),
                 pairs, cycleRemovedTopo, trafficCombinationType, false);
 
         // Convert any MAX_INT link weights back to their true weight
@@ -122,11 +121,11 @@ public class CycleForTwoService {
         Map<SourceDestPair, Map<String, Path>> backupPathsMap = new HashMap<>();
         for(SourceDestPair pair : pairs){
             backupPathsMap.put(pair, new HashMap<>());
-            Path sp = shortestPathService.findShortestPath(pair, cycleOnlyTopo);
+            Path sp = minimumCostPathService.findShortestPath(pair, cycleOnlyTopo);
             if(!sp.isEmpty()) {
                 backupPathsMap.get(pair).put("1", sp);
                 Topology prunedTopo = topologyAdjustmentService.removeLinksFromTopology(cycleOnlyTopo, sp.getLinks());
-                Path secondSp = shortestPathService.findShortestPath(pair, prunedTopo);
+                Path secondSp = minimumCostPathService.findShortestPath(pair, prunedTopo);
                 if(!secondSp.isEmpty()){
                     backupPathsMap.get(pair).put("2", secondSp);
                 }

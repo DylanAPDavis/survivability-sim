@@ -2,8 +2,7 @@ package netlab.processing.cycles;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.pathmapping.PathMappingService;
-import netlab.processing.shortestPaths.ShortestPathService;
-import netlab.submission.enums.TrafficCombinationType;
+import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
@@ -23,14 +22,14 @@ From "Protection of Multicast Sessions in WDM Mesh Optical Networks" by Tanvir R
 @Slf4j
 public class CollapsedRingService {
 
-    private ShortestPathService shortestPathService;
+    private MinimumCostPathService minimumCostPathService;
     private PathMappingService pathMappingService;
     private TopologyAdjustmentService topologyService;
 
     @Autowired
-    public CollapsedRingService(ShortestPathService shortestPathService, PathMappingService pathMappingService,
-                                        TopologyAdjustmentService topologyService) {
-        this.shortestPathService = shortestPathService;
+    public CollapsedRingService(MinimumCostPathService minimumCostPathService, PathMappingService pathMappingService,
+                                TopologyAdjustmentService topologyService) {
+        this.minimumCostPathService = minimumCostPathService;
         this.pathMappingService = pathMappingService;
         this.topologyService = topologyService;
     }
@@ -91,7 +90,7 @@ public class CollapsedRingService {
             if(dest != src && !reachedDestinations.contains(dest)){
                 SourceDestPair pair = SourceDestPair.builder().src(pathOrigin).dst(dest).build();
                 // Get the Shortest Path
-                Path sp = shortestPathService.findShortestPath(pair, topo);
+                Path sp = minimumCostPathService.findShortestPath(pair, topo);
                 // Add all reached destinations to set
                 for(Node pathNode : sp.getNodes()){
                     if(destinations.contains(pathNode)){
@@ -121,7 +120,7 @@ public class CollapsedRingService {
             Topology primaryRemovedTopo = topologyService.removeLinksFromTopology(topo, new HashSet<>(linksToRemove));
             // Find a path to the last connected dest
             SourceDestPair srcLastDstPair = SourceDestPair.builder().src(src).dst(lastDest).build();
-            secondSrcPath = shortestPathService.findShortestPath(srcLastDstPair, primaryRemovedTopo);
+            secondSrcPath = minimumCostPathService.findShortestPath(srcLastDstPair, primaryRemovedTopo);
             // Reverse the primary paths
             reverseDestToDestPaths = reverseDestToDestPaths.stream()
                     .map(Path::reverse)

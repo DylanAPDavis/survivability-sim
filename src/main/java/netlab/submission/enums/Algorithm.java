@@ -9,7 +9,8 @@ import java.util.Optional;
 public enum Algorithm {
     ILP("ilp"),
     FlexBhandari("flexbhandari"),
-    ShortestPath("shortestpath"),
+    MinimumCostPath("minimumcost"),
+    MinimumRiskPath("minimumrisk"),
     Bhandari("bhandari"),
     OverlappingTrees("overlappingtrees"),
     Hamlitonian("hamiltonian"),

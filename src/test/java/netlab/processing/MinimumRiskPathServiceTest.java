@@ -13,7 +13,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
-public class ShortestPathServiceTest {
+public class MinimumRiskPathServiceTest {
 
     @Autowired
     ProcessingService processingService;
@@ -30,7 +30,7 @@ public class ShortestPathServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("shortestpath")
+                .algorithm("minimumrisk")
                 .objective("totalcost")
                 .routingType("unicast")
                 .numSources(1)
@@ -45,12 +45,33 @@ public class ShortestPathServiceTest {
     }
 
     @Test
+    public void unicastQuakeTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("minimumrisk")
+                .objective("totalcost")
+                .routingType("unicast")
+                .failureScenario("quake2")
+                .numSources(1)
+                .numDestinations(1)
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
     public void anycastTest(){
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("shortestpath")
+                .algorithm("minimumrisk")
                 .objective("totalcost")
                 .routingType("anycast")
                 .numSources(1)
@@ -70,7 +91,7 @@ public class ShortestPathServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("shortestpath")
+                .algorithm("minimumrisk")
                 .objective("totalcost")
                 .routingType("manycast")
                 .numSources(1)
@@ -92,7 +113,7 @@ public class ShortestPathServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(4L)
                 .topologyId("NSFnet")
-                .algorithm("shortestpath")
+                .algorithm("minimumrisk")
                 .objective("totalcost")
                 .routingType("multicast")
                 .numSources(1)
@@ -112,7 +133,7 @@ public class ShortestPathServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(4L)
                 .topologyId("NSFnet")
-                .algorithm("shortestpath")
+                .algorithm("minimumrisk")
                 .objective("totalcost")
                 .routingType("multicast")
                 .numSources(1)
@@ -134,7 +155,7 @@ public class ShortestPathServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("shortestpath")
+                .algorithm("minimumrisk")
                 .objective("totalcost")
                 .routingType("manyToOne")
                 .numSources(3)
@@ -155,7 +176,7 @@ public class ShortestPathServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("shortestpath")
+                .algorithm("minimumrisk")
                 .objective("totalcost")
                 .routingType("broadcast")
                 .numSources(3)
@@ -175,7 +196,7 @@ public class ShortestPathServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("shortestpath")
+                .algorithm("minimumrisk")
                 .objective("totalcost")
                 .routingType("broadcast")
                 .numSources(4)
@@ -196,7 +217,7 @@ public class ShortestPathServiceTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
-                .algorithm("shortestpath")
+                .algorithm("minimumrisk")
                 .objective("totalcost")
                 .routingType("broadcast")
                 .numSources(4)
