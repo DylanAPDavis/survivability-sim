@@ -45,6 +45,27 @@ public class MinimumRiskPathServiceTest {
     }
 
     @Test
+    public void unicastLinksFailTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("minimumrisk")
+                .objective("totalcost")
+                .routingType("unicast")
+                .failureScenario("allLinks")
+                .numSources(1)
+                .numDestinations(1)
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
     public void unicastQuakeTest(){
 
         SimulationParameters params = SimulationParameters.builder()

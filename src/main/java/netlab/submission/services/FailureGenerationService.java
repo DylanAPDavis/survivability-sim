@@ -437,11 +437,11 @@ public class FailureGenerationService {
         Set<Failure> failures = new HashSet<>();
         for(Node node : nodes){
             Double prob = probabilities.remove(0);
-            failures.add(Failure.builder().node(node).link(null).probability(prob).build());
+            failures.add(new Failure(node, null, prob));
         }
         for(Link link : links){
             Double prob = probabilities.remove(0);
-            failures.add(Failure.builder().node(null).link(link).probability(prob).build());
+            failures.add(new Failure(null, link, prob));
         }
         return failures;
     }
