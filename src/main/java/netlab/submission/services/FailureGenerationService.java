@@ -116,10 +116,10 @@ public class FailureGenerationService {
         for(String failString : failureStrings){
             Double prob = probabilityMap.getOrDefault(failString, 1.0);
             if(nodeIdMap.containsKey(failString)){
-                failures.add(Failure.builder().node(nodeIdMap.get(failString)).probability(prob).build());
+                failures.add(new Failure(nodeIdMap.get(failString), null, prob));
             }
             else if(linkIdMap.containsKey(failString)){
-                failures.add(Failure.builder().link(linkIdMap.get(failString)).probability(prob).build());
+                failures.add(new Failure(null, linkIdMap.get(failString), prob));
             }
         }
         return failures;
