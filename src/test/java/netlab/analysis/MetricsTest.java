@@ -694,6 +694,7 @@ public class MetricsTest {
                 .useAws(false)
                 .build();
 
+        assert(request.getDetails().getChosenPaths().values().stream().anyMatch(pm -> pm.values().size() > 0));
         Analysis analysis = analysisController.analyzeRequest(analysisParameters);
         System.out.println(analysis.toString());
         System.out.println(printingService.outputPaths(request));

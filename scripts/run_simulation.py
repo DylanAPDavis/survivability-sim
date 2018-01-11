@@ -3,7 +3,7 @@ import sys, ast
 import traceback
 
 
-default_len = 36
+default_len = 21
 
 
 def run_sim(args):
@@ -39,55 +39,37 @@ def build_param_dict(args):
         return {
             "seed": ast.literal_eval(args[0]),
             "topologyId": args[1],
-            "problemClass": args[2],
-            "objective": args[3],
-            "algorithm": args[4],
-            "numRequests": ast.literal_eval(args[5]),
-            "numSources": ast.literal_eval(args[6]),
-            "numDestinations": ast.literal_eval(args[7]),
-            "minConnections": ast.literal_eval(args[8]),
-            "minPairConnections": ast.literal_eval(args[9]),
-            "maxPairConnections": ast.literal_eval(args[10]),
-            "minSrcConnections": ast.literal_eval(args[11]),
-            "maxSrcConnections": ast.literal_eval(args[12]),
-            "minDstConnections": ast.literal_eval(args[13]),
-            "maxDstConnections": ast.literal_eval(args[14]),
-            "useMinS": ast.literal_eval(args[15]),
-            "useMaxS": ast.literal_eval(args[16]),
-            "useMinD": ast.literal_eval(args[17]),
-            "useMaxD": ast.literal_eval(args[18]),
-            "failureSetSize": ast.literal_eval(args[19]),
-            "minMaxFailures": ast.literal_eval(args[20]),
-            "failureClass": args[21],
-            "failureProb": ast.literal_eval(args[22]),
-            "minMaxFailureProb": ast.literal_eval(args[23]),
-            "numFailureEvents": ast.literal_eval(args[24]),
-            "minMaxFailsAllowed": ast.literal_eval(args[25]),
-            "processingType": args[26],
-            "percentSrcAlsoDest": ast.literal_eval(args[27]),
-            "percentSrcFail": ast.literal_eval(args[28]),
-            "percentDstFail": ast.literal_eval(args[29]),
-            "sdn": args[30].lower() == "true",
-            "useAws": args[31].lower() == "true",
-            "ignoreFailures": args[32].lower() == "true",
-            "numThreads": ast.literal_eval(args[33]),
-            "requestId": args[34]
+            "routingType": args[2],
+            "algorithm": args[3],
+            "numSources": ast.literal_eval(args[4]),
+            "numDestinations": ast.literal_eval(args[5]),
+            "useMinS": ast.literal_eval(args[6]),
+            "useMaxS": ast.literal_eval(args[7]),
+            "useMinD": ast.literal_eval(args[8]),
+            "useMaxD": ast.literal_eval(args[9]),
+            "trafficCombinationType": args[10],
+            "failureScenario": args[11],
+            "failureClass": args[12],
+            "numFailureEvents": ast.literal_eval(args[13]),
+            "sourceSubsetDestType": args[14],
+            "sourceFailureType": args[15],
+            "destFailureType": args[16],
+            "ignoreFailures": args[17].lower() == "true",
+            "numThreads": ast.literal_eval(args[18]),
+            "useAws": args[19].lower() == "true",
+            "requestId": args[20]
         }
     except Exception as e:
         print(traceback.format_exc())
         sys.exit()
 
 
-
 def print_usage_message():
-    message = "Usage: seed topologyId problemClass objective algorithm numRequests numSources numDestinations"
-    message += " minConnections minPairConnections[min, max] maxPairConnections[min, max]"
-    message += " minSrcConnections[min, max] maxSrcConnections[min, max]"
-    message += " minDstConnections[min, max] maxDstConnections[min, max]"
-    message += " useMinS, useMaxS, useMinD, useMaxD"
-    message += " failureSetSize minMaxFailures[min, max] failureClass failureProb minMaxFailureProb[min, max]"
-    message += " numFailureEvents minMaxFailsAllowed[min, max] processingType percentSrcAlsoDest"
-    message += " percentSrcFail percentDstFail sdn useAWS ignoreFailures numThreads requestId analyzeAfterRun"
+    message = "Usage: seed topologyId routingType algorithm numSources numDestinations"
+    message += " useMinS useMaxS useMinD useMaxD trafficCombinationType"
+    message += " failureScenario failureClass numFailureEvents"
+    message += " sourceSubsetDestType sourceFailureType destFailureType ignoreFailures numThreads"
+    message += " useAws requestId"
     print(message)
 
 

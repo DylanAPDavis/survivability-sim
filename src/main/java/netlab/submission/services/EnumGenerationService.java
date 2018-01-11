@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 public class EnumGenerationService {
 
     public Algorithm getAlgorithm(String alg){
-        return Algorithm.get(alg.toLowerCase()).orElse(Algorithm.ILP);
+        return Algorithm.get(alg.toLowerCase()).orElse(Algorithm.MinimumCostPath);
     }
 
     public TrafficCombinationType getTrafficCombinationType(String type){
@@ -33,11 +33,11 @@ public class EnumGenerationService {
     }
 
     public Objective getObjective(String objective) {
-        return Objective.get(objective.toLowerCase()).orElse(Objective.LinksUsed);
+        return Objective.get(objective.toLowerCase()).orElse(Objective.TotalCost);
     }
 
     public MemberFailureType getMemberFailureType(String memberFailureType){
-        return MemberFailureType.get(memberFailureType.toLowerCase()).orElse(MemberFailureType.Allow);
+        return MemberFailureType.get(memberFailureType.toLowerCase()).orElse(MemberFailureType.Prevent);
     }
 
     public SourceSubsetDestType getSourceSubsetDestType(String sourceSubsetDestType){

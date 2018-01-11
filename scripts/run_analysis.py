@@ -3,9 +3,9 @@ import sys
 default_len = 2
 
 
-def run_analysis(request_set_id, use_aws):
+def run_analysis(request_id, use_aws):
     params = {
-        "requestId": request_set_id,
+        "requestId": request_id,
         "useAws": use_aws
     }
     launch_simulator(loop=True, sim_params={}, analysis_params=params, port_num="0", use_web_server="false")

@@ -24,14 +24,16 @@ public class HashingService {
     }
 
     public String createRequestId(SimulationParameters params) {
-        return hash(params.getSeed(), params.getTopologyId(), params.getProblemClass(), params.getObjective(),
-                params.getAlgorithm(), params.getNumSources(), params.getNumDestinations(), params.getMinConnections(),
-                params.getMinPairConnections(), params.getMaxPairConnections(), params.getMinSrcConnections(),
-                params.getMaxSrcConnections(), params.getMinDstConnections(), params.getMaxDstConnections(),
-                params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(), params.getTrafficCombinationType(),
-                params.getFailureSetSize(), params.getFailureClass(), params.getFailureProb(), params.getFailureScenario(),
+        return hash(params.getSeed(), params.getTopologyId(),  params.getRoutingType(), params.getAlgorithm(),
+                params.getNumSources(), params.getNumDestinations(),
+                params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(),
+                /*params.getMinConnections(), params.getMinPairConnections(), params.getMaxPairConnections(), params.getMinSrcConnections(),
+                params.getMaxSrcConnections(), params.getMinDstConnections(), params.getMaxDstConnections(),*/
+                params.getTrafficCombinationType(),
+                params.getFailureScenario(), /*params.getFailureSetSize(),*/ params.getFailureClass(), /*params.getFailureProb(),*/
                 params.getNumFailureEvents(), params.getSourceSubsetDestType(), params.getSourceFailureType(),
-                params.getDestFailureType(), params.getIgnoreFailures(), params.getNumThreads());
+                params.getDestFailureType(),  params.getIgnoreFailures(), /*params.getProblemClass(), params.getObjective(),*/
+                params.getNumThreads());
     }
 
     public String makeAggregationHash(SimulationParameters params) {
