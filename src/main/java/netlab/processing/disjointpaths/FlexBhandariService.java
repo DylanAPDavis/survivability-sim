@@ -44,8 +44,10 @@ public class FlexBhandariService {
         NumFailureEvents nfaCollection = details.getNumFailureEvents();
         Connections connCollection = details.getConnections();
         long startTime = System.nanoTime();
+        Topology riskTopology = topologyAdjustmentService.adjustWeightsWithFailureProbs(topology, failCollection.getFailureSet());
         Map<SourceDestPair, Map<String, Path>> paths = findPaths(details.getPairs(), failCollection, nfaCollection, connCollection,
-                request.getFailureClass(), request.getTrafficCombinationType(), topology);
+                request.getFailureClass(), request.getTrafficCombinationType(), riskTopology);
+        topologyAdjustmentService.readjustLinkWeights(paths, topology);
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
         log.info("Solution took: " + duration + " seconds");

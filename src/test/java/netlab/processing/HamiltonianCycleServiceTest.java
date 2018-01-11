@@ -73,6 +73,7 @@ public class HamiltonianCycleServiceTest {
         details = hamiltonianCycleService.solve(request, topo);
         Map<SourceDestPair, Map<String, Path>> pathMap = details.getChosenPaths();
         assert(pathMap.values().stream().allMatch(m -> m.size() == 2));
+        System.out.println(printingService.outputPaths(request));
     }
 
     @Test
