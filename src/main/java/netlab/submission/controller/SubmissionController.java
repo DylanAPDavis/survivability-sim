@@ -7,6 +7,7 @@ import netlab.submission.request.Request;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
+import netlab.visualization.PrintingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,10 +24,11 @@ public class SubmissionController {
 
     @Autowired
     public SubmissionController(GenerationService generationService, ProcessingService processingService,
-                                StorageService storageService) {
+                                StorageService storageService, PrintingService printingService) {
         this.generationService = generationService;
         this.processingService = processingService;
         this.storageService = storageService;
+        this.printingService = printingService;
     }
 
     private GenerationService generationService;
@@ -34,6 +36,8 @@ public class SubmissionController {
     private ProcessingService processingService;
 
     private StorageService storageService;
+
+    private PrintingService printingService;
 
     @RequestMapping(value = "/submit_sim", method = RequestMethod.POST)
     @ResponseBody
@@ -63,6 +67,7 @@ public class SubmissionController {
         // Process request
         request = processingService.processRequest(request);
         simulationParameters.setCompleted(true);
+        System.out.println(printingService.outputPaths(request));
         log.info("Processed request set");
 
         // Store the request set

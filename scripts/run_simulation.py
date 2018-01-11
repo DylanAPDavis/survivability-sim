@@ -1,14 +1,16 @@
 from launch import launch_simulator
 import sys, ast
 import traceback
+import job
 
 
-default_len = 21
+default_len = 22
 
 
 def run_sim(args):
     print(args)
     num_args = len(args)
+    print(num_args)
     if num_args != default_len:
         print(sys.argv)
         print_usage_message()
@@ -69,13 +71,13 @@ def print_usage_message():
     message += " useMinS useMaxS useMinD useMaxD trafficCombinationType"
     message += " failureScenario failureClass numFailureEvents"
     message += " sourceSubsetDestType sourceFailureType destFailureType ignoreFailures numThreads"
-    message += " useAws requestId"
+    message += " useAws requestId analyzeAfter[true/false]"
     print(message)
 
 
 if __name__ == "__main__":
     if len(sys.argv) != default_len + 1:
-        print(str(len(sys.argv)) + " args submitted")
+        print("Submitted: " + str(sys.argv))
         print_usage_message()
         sys.exit(-1)
     run_sim(sys.argv[1:])

@@ -42,12 +42,17 @@ public class AnalysisController {
     @ResponseBody
     public Analysis analyzeRequest(AnalysisParameters params){
         Request request = storageService.retrieveRequestSet(params.getRequestId(), params.getUseAws());
-
+        log.info("Retrived request for analysis: " + params.getRequestId());
         Analysis analysis = analysisService.analyzeRequest(request);
-
+        log.info(analysis.toString());
         // Store the analyzed set
-        storageService.storeAnalyzedSet(analysis, params.getUseAws());
-
+        boolean stored = storageService.storeAnalyzedSet(analysis, params.getUseAws());
+        if(stored){
+            log.info("Analysis storage succeeded!");
+        }
+        else{
+            log.info("Analysis storage FAILED!");
+        }
         // Return the request set ID
         return analysis;
     }

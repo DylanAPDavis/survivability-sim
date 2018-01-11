@@ -8,13 +8,14 @@ import netlab.analysis.enums.CachingType;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.SourceDestPair;
 
+import java.io.Serializable;
 import java.util.*;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CachingResult {
+public class CachingResult  implements Serializable {
 
     private CachingType type;
     private Map<SourceDestPair, Set<Node>> cachingMap;

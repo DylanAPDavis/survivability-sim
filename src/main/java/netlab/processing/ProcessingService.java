@@ -16,6 +16,7 @@ import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.Topology;
 import netlab.topology.services.TopologyService;
+import netlab.visualization.PrintingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,13 +49,18 @@ public class ProcessingService {
 
     private TopologyService topoService;
 
+    private PrintingService printingService;
+
     @Autowired
-    public ProcessingService(TopologyService topologyService, AmplService amplService, FlexBhandariService flexBhandariService,
-                             MinimumCostPathService minimumCostPathService, BhandariService bhandariService, OverlappingTreeService overlappingTreeService,
-                             HamiltonianCycleService hamiltonianCycleService, DestinationForwardingService destinationForwardingService,
+    public ProcessingService(TopologyService topologyService, PrintingService printingService,
+                             AmplService amplService, FlexBhandariService flexBhandariService,
+                             MinimumCostPathService minimumCostPathService, BhandariService bhandariService,
+                             OverlappingTreeService overlappingTreeService, HamiltonianCycleService hamiltonianCycleService,
+                             DestinationForwardingService destinationForwardingService,
                              CollapsedRingService collapsedRingService, CycleForTwoService cycleForTwoService,
                              MinimumRiskPathService minimumRiskPathService, YensService yensService) {
         this.topoService = topologyService;
+        this.printingService = printingService;
         this.amplService = amplService;
         this.flexBhandariService = flexBhandariService;
         this.minimumCostPathService = minimumCostPathService;

@@ -160,7 +160,7 @@ public class StorageService {
             System.out.println("File not found");
             return false;
         } catch (IOException e) {
-            System.out.println("Error initializing stream");
+            e.printStackTrace();
             return false;
         }
         return true;

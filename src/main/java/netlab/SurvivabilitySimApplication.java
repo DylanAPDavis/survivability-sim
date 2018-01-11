@@ -70,7 +70,7 @@ public class SurvivabilitySimApplication {
 		// If they provided simulation parameters, just run the simulation, output results, and shutdown
 		if(simParams != null){
 			String requestId = subCon.submitRequest(simParams);
-			log.info("Details Set ID: " + requestId);
+			log.info("Details ID: " + requestId);
 			// If you're not analyzing the request, close the context and shut down the simulator
 			if(analysisParams == null) {
 				ctx.close();
@@ -80,8 +80,8 @@ public class SurvivabilitySimApplication {
 
 		// If they provided a request ID to analyze, analyze it
 		if(analysisParams != null){
-			analysCon.analyzeRequest(analysisParams);
 			log.info("Analyzing request " + analysisParams.getRequestId());
+			analysCon.analyzeRequest(analysisParams);
 			ctx.close();
 			System.exit(0);
 		}

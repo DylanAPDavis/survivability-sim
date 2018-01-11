@@ -2,6 +2,10 @@ def create_ordered_params(*args):
     return [str(i).lower() for i in args]
 
 
+def create_id(*args):
+    "_".join(create_ordered_params(args)).replace(" ", "")
+
+
 class Job:
     def __init__(self, seed, topo, routing, algorithm, num_s, num_d, use_min_s,
                  use_max_s, use_min_d, use_max_d, traffic_combo, f_scenario, fail_class, nfe, overlap, s_fail, d_fail,
