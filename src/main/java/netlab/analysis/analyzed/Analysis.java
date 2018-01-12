@@ -42,6 +42,7 @@ public class Analysis implements Serializable {
     private Double averagePathRiskPerPair;
     private Double averageMinRiskPerPair;
     private Double averageMaxRiskPerPair;
+    private Double averagePrimaryRisk;
 
     // After failure simulation
     private List<String> chosenFailures;
@@ -75,9 +76,9 @@ public class Analysis implements Serializable {
                 "Avg Primary Cost: " + averagePrimaryCost + "\n" +
                 "-Risk-" + "\n" +
                 "Avg Path Risk: " + averagePathRisk + "\n" +
-                "Avg Path Risk Per Pair: " + averagePathRiskPerPair + "\n" +
                 "Avg Min Path Risk Per Pair: " + averageMinRiskPerPair + "\n" +
                 "Avg Max Path Risk Per Pair: " + averageMaxRiskPerPair + "\n" +
+                "Avg Primary Path Risk: " + averagePrimaryRisk + "\n" +
                 "-Post Failure-" + "\n" +
                 "PF Avg Primary Hops: " + averagePrimaryHopsPostFailure + "\n" +
                 "PF Avg Primary Cost: " + averagePrimaryCostPostFailure + "\n" +

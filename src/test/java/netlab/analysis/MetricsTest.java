@@ -111,6 +111,125 @@ public class MetricsTest {
     }
 
     @Test
+    public void bhandariQuake1Test(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("bhandari")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("quake1")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        evaluate(params);
+
+    }
+
+    @Test
+    public void bhandariMulticastQuake1Test(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("bhandari")
+                .objective("totalcost")
+                .routingType("multicast")
+                .numSources(1)
+                .numDestinations(4)
+                .failureScenario("quake1")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        evaluate(params);
+
+    }
+
+    @Test
+    public void bhandariManycastQuake1Test(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("bhandari")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(4)
+                .useMinD(2)
+                .failureScenario("quake1")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        evaluate(params);
+
+    }
+
+    @Test
+    public void bhandariManycastQuake3Test(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("bhandari")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(4)
+                .useMinD(2)
+                .failureScenario("quake3")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        evaluate(params);
+
+    }
+
+    @Test
+    public void bhandariManycastQuake2Test(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("bhandari")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(4)
+                .useMinD(2)
+                .failureScenario("quake2")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        evaluate(params);
+
+    }
+
+    @Test
+    public void bhandariManycastAllLinksTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("bhandari")
+                .objective("totalcost")
+                .routingType("manycast")
+                .numSources(1)
+                .numDestinations(4)
+                .useMinD(2)
+                .failureScenario("allLinks")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        evaluate(params);
+
+    }
+
+    @Test
     public void overlappingTreesTest(){
 
         SimulationParameters params = SimulationParameters.builder()
@@ -696,8 +815,8 @@ public class MetricsTest {
 
         assert(request.getDetails().getChosenPaths().values().stream().anyMatch(pm -> pm.values().size() > 0));
         Analysis analysis = analysisController.analyzeRequest(analysisParameters);
-        System.out.println(analysis.toString());
-        System.out.println(printingService.outputPaths(request));
+        //System.out.println(analysis.toString());
+        //System.out.println(printingService.outputPaths(request));
     }
 
     public void evaluate(SimulationParameters params){

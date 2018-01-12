@@ -43,9 +43,9 @@ public class AnalysisService {
         Double averagePrimaryHops;
         Double averagePrimaryCost;
         Double averagePathRisk;
-        Double averagePathRiskPerPair;
         Double averageMinRiskPerPair;
         Double averageMaxRiskPerPair;
+        Double averagePrimaryRisk;
 
         // After failure simulation
         Double averagePrimaryHopsPostFailure;
@@ -64,9 +64,9 @@ public class AnalysisService {
         Double numberOfPrimaryPathsPostFailure = 0.0;
 
         Double totalPathRisk = 0.0; // divide by number of paths
-        Double totalAvgPairRisk = 0.0; // divide by total number of pairs
-        Double totalMinPairRisk = 0.0; // divide by number of pairs
-        Double totalMaxPairRisk = 0.0; // divide by number of pairs
+        Double totalMinPairRisk = 0.0; // divide by number of active pairs
+        Double totalMaxPairRisk = 0.0; // divide by number of active pairs
+        Double totalPrimaryRisk = 0.0; // divide by number of active pairs
 
         List<Failure> chosenFailures = chooseFailuresBasedOnProb(failureGroups);
         List<CachingResult> cachingResults = Arrays.asList(
@@ -105,6 +105,7 @@ public class AnalysisService {
             double totalRiskForPair = 0.0;
             double minPathRiskForPair = Double.MAX_VALUE;
             double maxPathRiskForPair = 0.0;
+            double primaryRisk = calculatePathRisk(primaryPath, failureIdMap);
 
             for(Path path : pathsForPair){
                 List<Link> links = path.getLinks();
@@ -138,10 +139,9 @@ public class AnalysisService {
                 }
             }
             // Store risk values
-            double avgRiskForPair = totalRiskForPair / pathsForPair.size();
-            totalAvgPairRisk += avgRiskForPair;
             totalMinPairRisk += minPathRiskForPair;
             totalMaxPairRisk += maxPathRiskForPair;
+            totalPrimaryRisk += primaryRisk;
 
             if(numPathsSevered == pathsForPair.size()){
                 connectionsSevered++;
@@ -168,10 +168,11 @@ public class AnalysisService {
         averagePrimaryHopsPostFailure = numberOfPrimaryPathsPostFailure > 0 ? totalPrimaryHopsPostFailure / numberOfPrimaryPathsPostFailure : 0;
 
         // Calculate average risk values
+        long numUsedPairs = pairs.stream().filter(p -> chosenPaths.get(p).size() > 0).count();
         averagePathRisk = totalPaths > 0 ? totalPathRisk / totalPaths : 0.0;
-        averagePathRiskPerPair = pairs.size() > 0 ? totalAvgPairRisk / pairs.size() : 0.0;
-        averageMinRiskPerPair = pairs.size() > 0 ? totalMinPairRisk / pairs.size() : 0.0;
-        averageMaxRiskPerPair = pairs.size() > 0 ? totalMaxPairRisk / pairs.size() : 0.0;
+        averageMinRiskPerPair = numUsedPairs > 0 ? totalMinPairRisk / numUsedPairs : 0.0;
+        averageMaxRiskPerPair = numUsedPairs > 0 ? totalMaxPairRisk / numUsedPairs : 0.0;
+        averagePrimaryRisk = numUsedPairs > 0 ? totalPrimaryRisk / numUsedPairs : 0.0;
 
         // Content analysis
         cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, chosenFailures,
@@ -203,9 +204,9 @@ public class AnalysisService {
                 .chosenFailures(convertFailuresToString(chosenFailures))
                 .cachingResults(cachingResults)
                 .averagePathRisk(averagePathRisk)
-                .averagePathRiskPerPair(averagePathRiskPerPair)
                 .averageMinRiskPerPair(averageMinRiskPerPair)
                 .averageMaxRiskPerPair(averageMaxRiskPerPair)
+                .averagePrimaryRisk(averagePrimaryRisk)
                 .build();
 
         if(!request.getTrafficCombinationType().equals(TrafficCombinationType.None)){
@@ -216,13 +217,24 @@ public class AnalysisService {
     }
 
     private double calculatePathRisk(Path path, Map<String, Failure> failureIdMap) {
-        Set<String> pathIds = new HashSet<>(path.getNodeIds());
+        /*Set<String> pathIds = new HashSet<>(path.getNodeIds());
         pathIds.addAll(path.getLinkIds());
-        pathIds.addAll(path.getLinks().stream().map(Link::reverse).map(Link::getId).collect(Collectors.toList()));
+        pathIds.addAll(path.getLinks().stream().map(Link::reverse).map(Link::getId).collect(Collectors.toList()));*/
         // Compound risk probability -> risk at least one item in the path will fail
         double runningProb = 1.0;
-        for(String id : pathIds){
+        for(Node node : path.getNodes()){
+            String id = node.getId();
             double weight = failureIdMap.containsKey(id) ? failureIdMap.get(id).getProbability() : 0.0;
+            runningProb *= (1 - weight);
+        }
+        for(Link link : path.getLinks()){
+            Link reverse = link.reverse();
+            double weight = 0.0;
+            if(failureIdMap.containsKey(link.getId())){
+                weight = failureIdMap.get(link.getId()).getProbability();
+            } else if(failureIdMap.containsKey(reverse.getId())){
+                weight = failureIdMap.get(reverse.getId()).getProbability();
+            }
             runningProb *= (1 - weight);
         }
         return 1.0 - runningProb;

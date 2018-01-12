@@ -37,7 +37,7 @@ public class DefaultValueService {
             params.setProblemClass("combined");
         }
         if(params.getObjective() == null){
-            params.setObjective("linksused");
+            params.setObjective("totalcost");
         }
         if(params.getAlgorithm() == null){
             params.setAlgorithm("ilp");
@@ -161,7 +161,7 @@ public class DefaultValueService {
             params.setProblemClass("combined");
         }
         if(params.getObjective() == null){
-            params.setObjective("linksused");
+            params.setObjective("totalcost");
         }
         if(params.getAlgorithm() == null){
             params.setAlgorithm("minimumcost");
