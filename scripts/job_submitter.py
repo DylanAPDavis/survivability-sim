@@ -34,5 +34,6 @@ def process_job(job, analysis_type):
 seeds = [1]
 for seed in seeds:
     jobs = jobs.create_jobs(seed)
-    for job in jobs:
-        process_job(job, analysis_after_sim)
+    for j in jobs:
+        print(str(j.__dict__))
+        process_job(j, analysis_after_sim)

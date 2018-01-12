@@ -47,12 +47,14 @@ public class YensService {
         Map<SourceDestPair, Map<String, Path>> pathMap = new HashMap<>();
         Map<Node, Set<Path>> srcPathsMap = new HashMap<>();
         Map<Node, Set<Path>> dstPathsMap = new HashMap<>();
+        List<List<Failure>> failureGroups = details.getFailures().getFailureGroups();
         // Iterate through each pair
         // For each pair, find two paths between that pair by traversing the cycle
         for(SourceDestPair pair : pairs){
             pathMap.put(pair, new HashMap<>());
-            int k = Math.max(1, details.getConnections().getPairMinConnectionsMap().get(pair))
-                    + details.getNumFailureEvents().getTotalNumFailureEvents();
+            int k = Math.max(1, details.getConnections().getPairMinConnectionsMap().get(pair));
+            int nfe = failureGroups.size() > 0 ? failureGroups.get(0).size() : 0;
+            k += nfe;
             List<Path> paths = findPathSet(pair, topo, srcPathsMap, dstPathsMap, trafficCombinationType, k);
             int id = 1;
             for(Path path : paths){
@@ -105,6 +107,9 @@ public class YensService {
             // The spur node ranges from the first node to the next to last node in the previous k-shortest path.
             for i from 0 to size(A[k − 1]) − 1:
             */
+            if(k > paths.size()) {
+                break;
+            }
             Path prevPath = paths.get(k-1);
             List<Link> prevPathLinks = prevPath.getLinks();
             List<Node> prevPathNodes = prevPath.getNodes();

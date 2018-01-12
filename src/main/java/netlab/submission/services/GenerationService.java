@@ -287,6 +287,7 @@ public class GenerationService {
         sortedDests.sort(Comparator.comparing(Node::getId));
 
         Failures failureCollection = failureGenerationService.assignFailureSets(params, sortedSources, sortedDests, sortedPairs, topo, rng);
+        params.setFailureSetSize(failureCollection.getFailureSet().size());
 
         // Determine number of cuts
         NumFailureEvents numFailureEventsCollection = failureGenerationService.assignNumFails(params, sortedPairs, sortedSources, sortedDests, failureCollection, rng);

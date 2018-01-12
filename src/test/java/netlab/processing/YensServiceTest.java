@@ -276,4 +276,42 @@ public class YensServiceTest {
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
+
+    @Test
+    public void unicastQuake3Test(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("yens")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("quake3")
+                .numFailureEvents(9999)
+                .sourceSubsetDestType("none")
+                .destFailureType("allow")
+                .sourceFailureType("allow")
+                .failureClass("both")
+                .failureProb(1.0)
+                .failureSetSize(0)
+                .ignoreFailures(false)
+                .useAws(false)
+                .minPairConnections(1)
+                .maxPairConnections(1)
+                .minSrcConnections(1)
+                .maxSrcConnections(1)
+                .minDstConnections(1)
+                .maxDstConnections(1)
+                .numThreads(8)
+                .objective("totalcost")
+                .problemClass("combined")
+                .trafficCombinationType("none")
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
 }
