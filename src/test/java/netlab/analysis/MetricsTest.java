@@ -383,7 +383,7 @@ public class MetricsTest {
         Topology topo = topologyService.getTopologyById("NSFnet");
         Map<String, Link> linkIdMap = topo.getLinkIdMap();
         Set<Failure> failures = new HashSet<>();
-        failures.add(Failure.builder().node(null).link(linkIdMap.get("College Park-Ithaca")).probability(1.0).build());
+        failures.add(new Failure(null, linkIdMap.get("College Park-Ithaca"), 1.0));
         evaluate(params, failures);
     }
 

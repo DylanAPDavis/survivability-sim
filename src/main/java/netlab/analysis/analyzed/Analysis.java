@@ -38,6 +38,11 @@ public class Analysis implements Serializable {
     private Double averagePrimaryHops;
     private Double averagePrimaryCost;
 
+    private Double averagePathRisk;
+    private Double averagePathRiskPerPair;
+    private Double averageMinRiskPerPair;
+    private Double averageMaxRiskPerPair;
+
     // After failure simulation
     private List<String> chosenFailures;
     private Double averagePrimaryHopsPostFailure;
@@ -49,25 +54,8 @@ public class Analysis implements Serializable {
 
     private List<CachingResult> cachingResults;
 
-    /*
-    private Integer numLinksUsed;
-    private Long costLinksUsed;
-    private Integer numPaths;
-    private Integer numDisconnectedPaths;
-    private Integer numIntactPaths;
-    private Double avgPathLength;
-    private Double avgPathCost;
-
-    private Averages averagesPerPair;
-    private Averages averagesPerSrc;
-    private Averages averagesPerDst;
-
-    private Map<SourceDestPair, PathSetMetrics> pathSetMetricsMap;
-    private Map<MemberType, Map<Node, Map<SourceDestPair, PathSetMetrics>>> memberPathSetMetricsMap;
-    */
 
     public String toString(){
-
         String output = "ID: " + requestId + "\n" +
                 "Seed: " + seed + "\n" +
                 "Algorithm: " + algorithm.getCode() + "\n" +
@@ -85,6 +73,11 @@ public class Analysis implements Serializable {
                 "Total Paths: " + totalPaths + "\n" +
                 "Avg Primary Hops: " + averagePrimaryHops + "\n" +
                 "Avg Primary Cost: " + averagePrimaryCost + "\n" +
+                "-Risk-" + "\n" +
+                "Avg Path Risk: " + averagePathRisk + "\n" +
+                "Avg Path Risk Per Pair: " + averagePathRiskPerPair + "\n" +
+                "Avg Min Path Risk Per Pair: " + averageMinRiskPerPair + "\n" +
+                "Avg Max Path Risk Per Pair: " + averageMaxRiskPerPair + "\n" +
                 "-Post Failure-" + "\n" +
                 "PF Avg Primary Hops: " + averagePrimaryHopsPostFailure + "\n" +
                 "PF Avg Primary Cost: " + averagePrimaryCostPostFailure + "\n" +
