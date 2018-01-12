@@ -307,8 +307,8 @@ public class MetricsTest {
         Topology topo = topologyService.getTopologyById("NSFnet");
         Map<String, Link> linkIdMap = topo.getLinkIdMap();
         Set<Failure> failures = new HashSet<>();
-        failures.add(Failure.builder().node(null).link(linkIdMap.get("Palo Alto-Salt Lake City")).probability(1.0).build());
-        failures.add(Failure.builder().node(null).link(linkIdMap.get("Seattle-Champaign")).probability(1.0).build());
+        failures.add(new Failure(null, linkIdMap.get("Palo Alto-Salt Lake City"), 1.0));
+        failures.add(new Failure(null, linkIdMap.get("Seattle-Champaign"), 1.0));
         evaluate(params, failures);
     }
 
@@ -544,8 +544,8 @@ public class MetricsTest {
         Topology topo = topologyService.getTopologyById("NSFnet");
         Map<String, Link> linkIdMap = topo.getLinkIdMap();
         Set<Failure> failures = new HashSet<>();
-        failures.add(Failure.builder().node(null).link(linkIdMap.get("Pittsburgh-Ithaca")).probability(1.0).build());
-        failures.add(Failure.builder().node(null).link(linkIdMap.get("College Park-Ithaca")).probability(1.0).build());
+        failures.add(new Failure(null, linkIdMap.get("Pittsburgh-Ithaca"), 1.0));
+        failures.add(new Failure(null, linkIdMap.get("College Park-Ithaca"), 1.0));
         evaluate(params, failures);
     }
 
@@ -566,9 +566,9 @@ public class MetricsTest {
         Topology topo = topologyService.getTopologyById("NSFnet");
         Map<String, Link> linkIdMap = topo.getLinkIdMap();
         Set<Failure> failures = new HashSet<>();
-        failures.add(Failure.builder().node(null).link(linkIdMap.get("Seattle-Champaign")).probability(1.0).build());
-        failures.add(Failure.builder().node(null).link(linkIdMap.get("Champaign-Pittsburgh")).probability(1.0).build());
-        failures.add(Failure.builder().node(null).link(linkIdMap.get("Houston-College Park")).probability(1.0).build());
+        failures.add(new Failure(null, linkIdMap.get("Seattle-Champaign"), 1.0));
+        failures.add(new Failure(null, linkIdMap.get("Champaign-Pittsburgh"), 1.0));
+        failures.add(new Failure(null, linkIdMap.get("Houston-College Park"), 1.0));
         evaluate(params, failures);
     }
     // ILPs
@@ -815,6 +815,7 @@ public class MetricsTest {
 
         assert(request.getDetails().getChosenPaths().values().stream().anyMatch(pm -> pm.values().size() > 0));
         Analysis analysis = analysisController.analyzeRequest(analysisParameters);
+        assert(analysis.getSeed() > 0L);
         //System.out.println(analysis.toString());
         //System.out.println(printingService.outputPaths(request));
     }

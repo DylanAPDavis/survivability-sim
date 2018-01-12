@@ -43,6 +43,10 @@ public class AnalysisController {
     public Analysis analyzeRequest(AnalysisParameters params){
         Request request = storageService.retrieveRequestSet(params.getRequestId(), params.getUseAws());
         log.info("Retrived request for analysis: " + params.getRequestId());
+        if(!request.isCompleted()) {
+            log.info("Request not completed! Aborting...");
+            return null;
+        }
         Analysis analysis = analysisService.analyzeRequest(request);
         log.info(analysis.toString());
         // Store the analyzed set
@@ -55,6 +59,7 @@ public class AnalysisController {
         }
         // Return the request set ID
         return analysis;
+
     }
 
     @RequestMapping(value="/analyze_seed", method = RequestMethod.POST)
