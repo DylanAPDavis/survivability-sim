@@ -21,6 +21,7 @@ def process_job(job, analysis_type):
         command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
                          str(job.num_threads), "-o", output_file_path, "python", "scripts/run_simulation.py"]
         command_input += job.ordered_params
+        command_input.append(job.use_aws)
         command_input.append(job.request_id)
         if analysis_type == analysis_after_sim:
             command_input.append("true")

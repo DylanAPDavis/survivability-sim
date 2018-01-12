@@ -46,7 +46,7 @@ public class GenerationService {
         params = defaultValueService.assignDefaults(params);
         Details details = createDetailsFromParameters(params);
         String setId = params.getRequestId() != null && !params.getRequestId().isEmpty()
-                ? params.getRequestId() : hashingService.createRequestId(params);
+                ? params.getRequestId().toLowerCase() : hashingService.createRequestId(params);
         params.setRequestId(setId);
         return Request.builder()
                 .details(details)
