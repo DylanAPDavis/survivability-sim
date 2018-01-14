@@ -14,7 +14,7 @@ public enum Algorithm {
     Bhandari("bhandari"),
     OverlappingTrees("overlappingtrees"),
     Hamlitonian("hamiltonian"),
-    DestinationForwarding("destinationforwarding"),
+    MemberForwarding("memberforwarding"),
     CollapsedRing("collapsedring"),
     CycleForTwo("cyclefortwo"),
     Yens("yens");

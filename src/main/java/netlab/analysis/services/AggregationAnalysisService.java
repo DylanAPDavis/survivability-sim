@@ -5,8 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.*;
 import netlab.analysis.enums.CachingType;
 import netlab.submission.enums.*;
-import netlab.submission.request.SimulationParameters;
-import netlab.topology.elements.Topology;
 import org.springframework.stereotype.Service;
 
 import java.beans.IntrospectionException;
@@ -62,19 +60,19 @@ public class AggregationAnalysisService {
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens));
         algorithmMap.put(RoutingType.Multicast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.DestinationForwarding, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
         algorithmMap.put(RoutingType.Manycast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.DestinationForwarding, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
         algorithmMap.put(RoutingType.ManyToOne, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
                 Algorithm.OverlappingTrees, Algorithm.CycleForTwo));
         algorithmMap.put(RoutingType.ManyToMany, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.DestinationForwarding, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
         algorithmMap.put(RoutingType.Broadcast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.DestinationForwarding, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
         return algorithmMap;
     }
 

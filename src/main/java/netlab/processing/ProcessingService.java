@@ -7,7 +7,7 @@ import netlab.processing.groupcast.CycleForTwoService;
 import netlab.processing.cycles.HamiltonianCycleService;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.disjointpaths.FlexBhandariService;
-import netlab.processing.groupcast.DestinationForwardingService;
+import netlab.processing.groupcast.MemberForwardingService;
 import netlab.processing.overlappingtrees.OverlappingTreeService;
 import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.processing.shortestPaths.MinimumRiskPathService;
@@ -37,7 +37,7 @@ public class ProcessingService {
 
     private HamiltonianCycleService hamiltonianCycleService;
 
-    private DestinationForwardingService destinationForwardingService;
+    private MemberForwardingService memberForwardingService;
 
     private CollapsedRingService collapsedRingService;
 
@@ -56,7 +56,7 @@ public class ProcessingService {
                              AmplService amplService, FlexBhandariService flexBhandariService,
                              MinimumCostPathService minimumCostPathService, BhandariService bhandariService,
                              OverlappingTreeService overlappingTreeService, HamiltonianCycleService hamiltonianCycleService,
-                             DestinationForwardingService destinationForwardingService,
+                             MemberForwardingService memberForwardingService,
                              CollapsedRingService collapsedRingService, CycleForTwoService cycleForTwoService,
                              MinimumRiskPathService minimumRiskPathService, YensService yensService) {
         this.topoService = topologyService;
@@ -67,7 +67,7 @@ public class ProcessingService {
         this.bhandariService = bhandariService;
         this.overlappingTreeService = overlappingTreeService;
         this.hamiltonianCycleService = hamiltonianCycleService;
-        this.destinationForwardingService = destinationForwardingService;
+        this.memberForwardingService = memberForwardingService;
         this.collapsedRingService = collapsedRingService;
         this.cycleForTwoService = cycleForTwoService;
         this.minimumRiskPathService = minimumRiskPathService;
@@ -96,8 +96,8 @@ public class ProcessingService {
             case Hamlitonian:
                 details = hamiltonianCycleService.solve(request, topo);
                 break;
-            case DestinationForwarding:
-                details = destinationForwardingService.solve(request, topo);
+            case MemberForwarding:
+                details = memberForwardingService.solve(request, topo);
                 break;
             case CollapsedRing:
                 details = collapsedRingService.solve(request, topo);

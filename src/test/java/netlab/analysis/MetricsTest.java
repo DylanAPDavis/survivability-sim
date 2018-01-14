@@ -313,12 +313,12 @@ public class MetricsTest {
     }
 
     @Test
-    public void destinationForwardingBroadcastTest(){
+    public void memberForwardingBroadcastTest(){
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(10L)
                 .topologyId("NSFnet")
-                .algorithm("destinationForwarding")
+                .algorithm("memberForwarding")
                 .problemClass("combined")
                 .objective("totalcost")
                 .routingType("broadcast")
@@ -334,12 +334,12 @@ public class MetricsTest {
     }
 
     @Test
-    public void destinationForwardingBroadcastCombineTrafficTest(){
+    public void memberForwardingBroadcastCombineTrafficTest(){
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(10L)
                 .topologyId("NSFnet")
-                .algorithm("destinationForwarding")
+                .algorithm("memberForwarding")
                 .problemClass("combined")
                 .objective("totalcost")
                 .routingType("broadcast")
