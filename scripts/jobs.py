@@ -2,11 +2,11 @@ import job
 algorithm_dict = {
     "unicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],
     "anycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],
-    "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "destinationforwarding", "cyclefortwo"],
-    "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "destinationforwarding", "cyclefortwo"],
-    "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "cyclefortwo"],
-    "manytomany": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "destinationforwarding", "cyclefortwo"],
-    "broadcast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "destinationforwarding", "cyclefortwo"],
+    "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
+    "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
+    "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
+    "manytomany": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
+    "broadcast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
 }
 s_d_value_dict = {
     "unicast":
