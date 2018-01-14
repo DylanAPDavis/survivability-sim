@@ -1,7 +1,7 @@
 from os import listdir
 from os.path import isfile, join
 
-onlyfiles = [f for f in listdir("../results/output") if isfile(join("../results/output", f))]
+onlyfiles = [f for f in listdir("results/output") if isfile(join("results/output", f))]
 files_not_stored = []
 files_hit_mem_limit = []
 files_hit_time_limit = []
@@ -10,7 +10,7 @@ already_completed_string = "Already completed, exiting..."
 time_limit_string = "time limit"
 memory_limit_string = "memory usage limit"
 for file in onlyfiles:
-    with open(join("../results/output", file), encoding="latin-1") as f:
+    with open(join("results/output", file), encoding="latin-1") as f:
         content = f.readlines()
         was_stored = False
         hit_time_limit = False

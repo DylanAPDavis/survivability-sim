@@ -18,7 +18,14 @@ def process_job(job, analysis_type):
         output_file_path = "results/output/" + job.request_id
         run_time = "3:59"
         memory = "6000"
-        command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
+        queue = "short"
+        if job.algorithm == "ilp":
+            if job.f_scenario != "default" and job.ignore == "false" and job.nfe == 9999:
+                run_time = "8:00"
+                queue = "long"
+                memory = "8000"
+
+        command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
                          str(job.num_threads), "-o", output_file_path, "python", "scripts/run_simulation.py"]
         command_input += job.ordered_params
         command_input.append(job.use_aws)
