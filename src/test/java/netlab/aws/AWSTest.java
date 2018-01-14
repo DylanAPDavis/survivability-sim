@@ -88,32 +88,6 @@ public class AWSTest {
         }
     }
 
-    @Test
-    public void aggregateAnalysis(){
-        List<Long> seeds = Arrays.asList(1L);
-        List<Objective> objectives = Arrays.asList(Objective.TotalCost);
-        List<Integer> numThreads = Arrays.asList(8);
-        List<Topology> topologies = Arrays.asList(topologyService.getTopologyById("NSFnet"));
-        List<RoutingDescription> routingDescriptions = new ArrayList<>();
-        RoutingDescription survivableUnicast = new RoutingDescription(RoutingType.Unicast, 1, 1,
-                Algorithm.ILP, ProblemClass.Combined,1,  1, 1, 1, 1,
-                TrafficCombinationType.None, 0.0);
-        routingDescriptions.add(survivableUnicast);
-        List<FailureDescription> failureDescriptions = new ArrayList<>();
-        FailureDescription allLinksFail = new FailureDescription(FailureClass.Link, FailureScenario.AllLinks,
-                2, topologies.get(0).getLinks().size(), 0.0, 0.0, false);
-        failureDescriptions.add(allLinksFail);
-
-        AggregationParameters agParams = AggregationParameters.builder()
-                .seeds(seeds)
-                .objectives(objectives)
-                .numThreads(numThreads)
-                .topologies(topologies)
-                .routingDescriptions(routingDescriptions)
-                .failureDescriptions(failureDescriptions)
-                .build();
-        analysisController.aggregateSeeds(agParams);
-    }
 
     //@Test
     public void uploadToRawS3() {

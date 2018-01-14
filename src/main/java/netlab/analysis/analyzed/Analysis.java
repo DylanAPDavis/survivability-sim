@@ -22,13 +22,14 @@ public class Analysis implements Serializable {
 
     private String requestId;
     private Long seed;
+    private String topologyId;
     private Algorithm algorithm;
     private RoutingType routingType;
-    private Objective objective;
     private FailureScenario failureScenario;
-    private FailureClass failureClass;
     private Integer numFailuresEvents;
     private TrafficCombinationType trafficCombinationType;
+    private RoutingDescription routingDescription;
+    private Boolean ignoreFailures;
 
     private Boolean isFeasible;
     private Double runningTime;
@@ -39,7 +40,6 @@ public class Analysis implements Serializable {
     private Double averagePrimaryCost;
 
     private Double averagePathRisk;
-    private Double averagePathRiskPerPair;
     private Double averageMinRiskPerPair;
     private Double averageMaxRiskPerPair;
     private Double averagePrimaryRisk;
@@ -61,10 +61,9 @@ public class Analysis implements Serializable {
                 "Seed: " + seed + "\n" +
                 "Algorithm: " + algorithm.getCode() + "\n" +
                 "Routing Type: " + routingType.getCode() + "\n" +
+                "Routing Description: " + routingDescription + "\n" +
                 "Traffic Combination Type: " + trafficCombinationType.getCode() + "\n" +
-                "Objective: " + objective.getCode() + "\n" +
                 "Failure Scenario: " + failureScenario.getCode() + "\n" +
-                "Failure Class: " + failureClass.getCode() + "\n" +
                 "NFE: " + numFailuresEvents + "\n" +
                 "---Metrics---" + "\n" +
                 "Feasible: " + isFeasible + "\n" +

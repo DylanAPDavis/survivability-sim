@@ -17,15 +17,15 @@ public class AggregateAnalysis implements Serializable {
 
     private List<String> requestSetIds;
     private List<Long> seeds;
+    private String topologyId;
     private Algorithm algorithm;
     private RoutingType routingType;
-    private Objective objective;
     private FailureScenario failureScenario;
-    private FailureClass failureClass;
     private Integer numFailuresEvents;
     private TrafficCombinationType trafficCombinationType;
+    private RoutingDescription routingDescription;
+    private Boolean ignoreFailures;
 
-    private Integer numRequests;
 
     private Double totalFeasible;
     private Double percentFeasible;
@@ -37,6 +37,11 @@ public class AggregateAnalysis implements Serializable {
     private Double averagePrimaryHops;
     private Double averagePrimaryCost;
 
+    private Double averagePathRisk;
+    private Double averageMinRiskPerPair;
+    private Double averageMaxRiskPerPair;
+    private Double averagePrimaryRisk;
+
     // After failure simulation
     private Double averagePrimaryHopsPostFailure;
     private Double averagePrimaryCostPostFailure;
@@ -44,5 +49,8 @@ public class AggregateAnalysis implements Serializable {
     private Double pathsIntact;
     private Double connectionsSevered;
     private Double connectionsIntact;
+
+    // Caching
+    private List<CachingResult> cachingResults;
 
 }

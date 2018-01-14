@@ -32,7 +32,7 @@ public class CachingResult  implements Serializable {
     private double pairReachThroughBackup;
 
     // Total number of caches across all pairs
-    private int cachingCost;
+    private double cachingCost;
 
     public CachingResult(CachingType type){
         this.type = type;
@@ -40,7 +40,7 @@ public class CachingResult  implements Serializable {
         avgAccessibility = 0.0;
         avgHopCountToContent = 0.0;
         pairReachThroughBackup = 0.0;
-        cachingCost = 0;
+        cachingCost = 0.0;
         cachingMap = new HashMap<>();
     }
 

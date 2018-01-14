@@ -8,12 +8,14 @@ import netlab.analysis.controller.AnalysisController;
 import netlab.storage.controller.StorageController;
 import netlab.submission.controller.SubmissionController;
 import netlab.submission.request.SimulationParameters;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RunWith(SpringRunner.class)
@@ -62,15 +64,11 @@ public class SubmissionAnalysisControllerTest {
         assert(analyses.size()>=1);
     }
 
-    //@Test
+    @Test
     public void aggregateTest(){
-        SimulationParameters params = makeParameters(null, true, "NSFnet", 5, "ILP",
-                "Flex", "TotalCost", 3, 2, 4, new ArrayList<>(),
-                "Link", 1.0, new ArrayList<>(), 2, new ArrayList<>(), new ArrayList<>(),
-                1, new ArrayList<>(), "Solo", false, true, "none",
-                "prevent", "prevent");
-        AggregateAnalysis aas = analysisController.aggregateAnalyses(params);
-        System.out.println(aas);
+        List<Long> seeds = Arrays.asList(1L);
+        String output = analysisController.aggregateSeeds(seeds);
+        System.out.println(output);
     }
 
 

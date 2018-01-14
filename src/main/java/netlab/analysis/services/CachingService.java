@@ -48,14 +48,14 @@ public class CachingService {
         }
     }
 
-    private int evaluateCost(Map<SourceDestPair, Set<Node>> cacheMap) {
+    private double evaluateCost(Map<SourceDestPair, Set<Node>> cacheMap) {
         Map<Node, Set<Node>> cachePointsPerDestination = new HashMap<>();
         for(SourceDestPair pair : cacheMap.keySet()){
             Node dest = pair.getDst();
             cachePointsPerDestination.putIfAbsent(dest, new HashSet<>());
             cachePointsPerDestination.get(dest).addAll(cacheMap.get(pair));
         }
-        int count = 0;
+        double count = 0.0;
         for(Node dest : cachePointsPerDestination.keySet()){
             Set<Node> cachePoints = cachePointsPerDestination.get(dest);
             count += cachePoints.size();

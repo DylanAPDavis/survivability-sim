@@ -1,15 +1,19 @@
 package netlab.analysis.services;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.analyzed.AggregationParameters;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.analyzed.FailureDescription;
 import netlab.analysis.analyzed.RoutingDescription;
-import netlab.submission.enums.Objective;
+import netlab.submission.enums.*;
 import netlab.submission.request.SimulationParameters;
 import netlab.topology.elements.Topology;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.coyote.http11.Constants.a;
 
 @Service
 @Slf4j
@@ -36,23 +40,28 @@ public class HashingService {
                 params.getNumThreads());
     }
 
-    public String makeAggregationHash(SimulationParameters params) {
-        return hash(params.getTopologyId(), params.getProblemClass(), params.getObjective(),
-                params.getAlgorithm(), params.getNumSources(), params.getNumDestinations(), params.getMinConnections(),
-                params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(), params.getTrafficCombinationType(),
-                params.getFailureSetSize(), params.getFailureClass(), params.getFailureScenario(),
-                params.getNumFailureEvents(), params.getSourceSubsetDestType(), params.getSourceFailureType(),
-                params.getDestFailureType(), params.getIgnoreFailures(), params.getNumThreads());
+
+    /*
+        private String topologyId;
+        private Algorithm algorithm;
+        private RoutingType routingType;
+        private FailureScenario failureScenario;
+        private Integer numFailuresEvents;
+        private TrafficCombinationType trafficCombinationType;
+        private RoutingDescription routingDescription;
+        private Boolean ignoreFailures;
+     */
+    public String hashAnalysis(Analysis a){
+        return hash(a.getTopologyId(), a.getAlgorithm(), a.getRoutingType(), a.getFailureScenario(), a.getNumFailuresEvents(),
+                a.getTrafficCombinationType(), a.getRoutingDescription(), a.getIgnoreFailures());
     }
 
-    public String makeAggregationHash(Topology topology, Integer threads, Objective objective,
-                                      FailureDescription fd, RoutingDescription rd) {
-        return hash(topology.getId(), rd.getProblemClass(), objective, rd.getAlgorithm(), rd.getNumSources(), rd.getNumDestinations(),
-                rd.getMinConnections(), rd.getUseMinS(), rd.getUseMaxS(), rd.getUseMinD(), rd.getUseMaxD(), rd.getTrafficCombinationType(),
-                fd.getFailureSetSize(), fd.getFailureClass(), fd.getFailureScenario(), fd.getNumFailureEvents(),
-                rd.getPercentSrcAlsoDest(), fd.getPercentSrcFail(), fd.getPercentDstFail(), fd.getIgnoreFailures(),
-                threads);
+    public String hashForAggregation(String topologyId, Algorithm algorithm, RoutingType routingType, FailureScenario failureScenario,
+                                     Integer nfe, TrafficCombinationType trafficCombinationType, RoutingDescription routingDescription,
+                                     Boolean ignoreFailures){
+        return hash(topologyId, algorithm, routingType, failureScenario, nfe, trafficCombinationType, routingDescription, ignoreFailures);
     }
+
 
     public String[] unhash(String hashString){
         return hashString.split("_");

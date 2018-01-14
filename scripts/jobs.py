@@ -66,7 +66,7 @@ traffic_combo_dict = {
 }
 
 #routing_types = ["unicast", "anycast", "manycast", "multicast", "manytoone", "manytomany", "broadcast"]
-routing_types = ["unicast"]
+routing_types = ["anycast"]
 failure_scenarios = ["default", "alllinks", "allnodes", "quake1", "quake2", "quake3", "quake12", "quake13", "quake23", "quake123"]
 nfe_values = [0, 1, 2, 3, 9999]
 

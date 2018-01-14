@@ -99,81 +99,41 @@ public class AnalysisController {
 
     @RequestMapping(value = "/analyze/aggregate_seeds", method = RequestMethod.POST)
     @ResponseBody
-    public String aggregateSeeds(AggregationParameters agParams){
-        List<List<SimulationParameters>> paramsBySeed = new ArrayList<>();
-        Map<String, List<SimulationParameters>> paramMap = new HashMap<>();
-        for(Long seed : agParams.getSeeds()) {
+    public String aggregateSeeds(List<Long> seeds){
+        AggregationParameters agParams = aggregationAnalysisService.makeDefaultParameters(seeds);
+        Map<String, List<Analysis>> analysisMap = new HashMap<>();
+        for(Long seed : agParams.getSeeds()){
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
             for(SimulationParameters params : seedParams){
-                if(params.getCompleted()){
-                    String hash = makeHash(params);
-                    paramMap.putIfAbsent(hash, new ArrayList<>());
-                    paramMap.get(hash).add(params);
+                String id = params.getRequestId();
+                Analysis analysis = storageService.retrieveAnalyzedSet(id, true, true);
+                if(analysis != null) {
+                    String hash = hashingService.hashAnalysis(analysis);
+                    analysisMap.putIfAbsent(hash, new ArrayList<>());
+                    analysisMap.get(hash).add(analysis);
+                } else{
+                    log.info("Analysis for ID: " + id + " could not be found!");
                 }
             }
-            paramsBySeed.add(seedParams);
             try {
-                Thread.sleep(10000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        List<AggregateAnalysis> aggregateSets = new ArrayList<>();
-        List<SimulationParameters> primaryParamList = paramsBySeed.get(0);
-        for(SimulationParameters primaryParams : primaryParamList){
-            List<SimulationParameters> paramsToBeAnalyzed = paramMap.get(makeHash(primaryParams));
-            List<Analysis> analyses = paramsToBeAnalyzed.stream()
-                    .map(p -> storageService.retrieveAnalyzedSet(p.getRequestId(), true))
-                    .collect(Collectors.toList());
+
+        // We now has a map of matching analyses, each list should be an analysis per string
+        // Use this to get an aggregate analysis per hash
+        Map<String, AggregateAnalysis> aggregateAnalysisMap = new HashMap<>();
+        for(String hash : analysisMap.keySet()){
+            List<Analysis> analyses = analysisMap.get(hash);
             AggregateAnalysis aggregateAnalysis = aggregationAnalysisService.aggregateAnalyses(analyses);
-            aggregateSets.add(aggregateAnalysis);
+            aggregateAnalysisMap.put(hash, aggregateAnalysis);
         }
 
-        return aggregationAnalysisService.aggregateSeeds(agParams, primaryParamList, aggregateSets);
+        return aggregationAnalysisService.createAggregationOutput(agParams, aggregateAnalysisMap);
 
     }
-
-    private String makeHash(SimulationParameters p) {
-        return hashingService.hash(p.getTopologyId(), p.getAlgorithm(), p.getProblemClass(), p.getObjective(),
-                p.getSourceSubsetDestType(), p.getFailureClass(), String.valueOf(p.getFailureSetSize()),
-                String.valueOf(p.getNumFailureEvents()), p.getSourceFailureType(),
-                p.getDestFailureType(), String.valueOf(p.getIgnoreFailures()), String.valueOf(p.getMinConnections()),
-                String.valueOf(p.getMinPairConnections()), String.valueOf(p.getMaxPairConnections()),
-                String.valueOf(p.getNumSources()), String.valueOf(p.getNumDestinations()));
-    }
-
-    /*
-    public Optional<SimulationParameters> findMatchingSimParams(SimulationParameters searchParams, List<SimulationParameters> candidates){
-        // Filter by everything except requestId and submittedDate
-        return candidates.parallelStream()
-                .filter(p -> p.getCompleted().equals(searchParams.getCompleted()))
-                .filter(p -> p.getGenerated().equals(searchParams.getGenerated()))
-                .filter(p -> p.getAlgorithm().equals(searchParams.getAlgorithm()))
-                .filter(p -> p.getProblemClass().equals(searchParams.getProblemClass()))
-                .filter(p -> p.getTopologyId().equals(searchParams.getTopologyId()))
-                .filter(p -> p.getObjective().equals(searchParams.getObjective()))
-                .filter(p -> p.getNumRequests().equals(searchParams.getNumRequests()))
-                .filter(p -> p.getNumSources().equals(searchParams.getNumSources()))
-                .filter(p -> p.getNumDestinations().equals(searchParams.getNumDestinations()))
-                .filter(p -> p.getMinConnections().equals(searchParams.getMinConnections()))
-                .filter(p -> p.getMinPairConnections().equals(searchParams.getMinPairConnections()))
-                .filter(p -> p.getMaxPairConnections().equals(searchParams.getMaxPairConnections()))
-                .filter(p -> p.getProcessingType().equals(searchParams.getProcessingType()))
-                .filter(p -> p.getPercentSrcAlsoDest().equals(searchParams.getPercentSrcAlsoDest()))
-                .filter(p -> p.getSdn().equals(searchParams.getSdn()))
-                .filter(p -> p.getUseAws().equals(searchParams.getUseAws()))
-                .filter(p -> p.getFailureSetSize().equals(searchParams.getFailureSetSize()))
-                .filter(p -> p.getMinMaxFailures().equals(searchParams.getMinMaxFailures()))
-                .filter(p -> p.getFailureClass().equals(searchParams.getFailureClass()))
-                .filter(p -> p.getFailureProb().equals(searchParams.getFailureProb()))
-                .filter(p -> p.getMinMaxFailureProb().equals(searchParams.getMinMaxFailureProb()))
-                .filter(p -> p.getNumFailureEvents().equals(searchParams.getNumFailureEvents()))
-                .filter(p -> p.getMinMaxFailsAllowed().equals(searchParams.getMinMaxFailsAllowed()))
-                .filter(p -> p.getPercentSrcFail().equals(searchParams.getPercentSrcFail()))
-                .filter(p -> p.getPercentDstFail().equals(searchParams.getPercentDstFail()))
-                .filter(p -> p.getIgnoreFailures().equals(searchParams.getIgnoreFailures()))
-                .findFirst();
-    }*/
 
 
 

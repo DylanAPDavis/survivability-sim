@@ -651,6 +651,25 @@ public class MetricsTest {
         evaluate(params);
     }
 
+    @Test
+    public void ilpUnicastLink2FailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("alllinks")
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
     // ILPs with TrafficCombination
     @Test
     public void ilpManycastTest(){
@@ -813,7 +832,7 @@ public class MetricsTest {
                 .useAws(false)
                 .build();
 
-        assert(request.getDetails().getChosenPaths().values().stream().anyMatch(pm -> pm.values().size() > 0));
+        //assert(request.getDetails().getChosenPaths().values().stream().anyMatch(pm -> pm.values().size() > 0));
         Analysis analysis = analysisController.analyzeRequest(analysisParameters);
         assert(analysis.getSeed() > 0L);
         //System.out.println(analysis.toString());

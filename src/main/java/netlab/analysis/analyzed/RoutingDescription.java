@@ -6,22 +6,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import netlab.submission.enums.*;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RoutingDescription {
+public class RoutingDescription implements Serializable {
 
-    public RoutingType routingType;
-    public Integer numSources;
-    public Integer numDestinations;
-    public Algorithm algorithm;
-    public ProblemClass problemClass;
-    public Integer minConnections;
-    public Integer useMinS;
-    public Integer useMaxS;
-    public Integer useMinD;
-    public Integer useMaxD;
-    public TrafficCombinationType trafficCombinationType;
-    public Double percentSrcAlsoDest;
+    private Integer numSources;
+    private Integer numDestinations;
+    private Integer useMinS;
+    private Integer useMaxS;
+    private Integer useMinD;
+    private Integer useMaxD;
+
+
+    public String toString(){
+        return "|S|: " + numSources + ", |D|: " + numDestinations + ", minS: " + useMinS + ", maxS: " + useMaxS
+                + ", minD: " + useMinD + ", maxD: " + useMaxD;
+    }
 }

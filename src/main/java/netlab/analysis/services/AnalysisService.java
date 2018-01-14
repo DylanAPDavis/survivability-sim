@@ -178,16 +178,22 @@ public class AnalysisService {
         cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, chosenFailures,
                 details.getConnections().getUseMinD());
 
+        Connections conns = details.getConnections();
+        RoutingDescription routingDescription = new RoutingDescription(details.getSources().size(),
+                details.getDestinations().size(), conns.getUseMinS(), conns.getUseMaxS(), conns.getUseMinD(),
+                conns.getUseMaxD());
+
         Analysis analysis =  Analysis.builder()
                 .requestId(request.getId())
                 .seed(request.getSeed())
+                .topologyId(request.getTopologyId())
                 .failureScenario(request.getFailureScenario())
                 .numFailuresEvents(request.getDetails().getNumFailureEvents().getTotalNumFailureEvents())
                 .algorithm(request.getAlgorithm())
                 .routingType(request.getRoutingType())
                 .trafficCombinationType(request.getTrafficCombinationType())
-                .objective(request.getObjective())
-                .failureClass(request.getFailureClass())
+                .ignoreFailures(request.isIgnoreFailures())
+                .routingDescription(routingDescription)
                 .isFeasible(details.getIsFeasible())
                 .runningTime(details.getRunningTimeSeconds())
                 .totalCost(totalCost)

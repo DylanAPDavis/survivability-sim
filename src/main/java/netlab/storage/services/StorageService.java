@@ -65,6 +65,10 @@ public class StorageService {
     }
 
     public Analysis retrieveAnalyzedSet(String requestSetId, boolean useAws){
+        return retrieveAnalyzedSet(requestSetId, useAws, false);
+    }
+
+    public Analysis retrieveAnalyzedSet(String requestSetId, boolean useAws, boolean deleteAfter){
         Analysis as = null;
         File f = new File(System.getProperty("user.dir") + "/results/analyzed/" + requestSetId);
         if(!f.exists() && useAws){
@@ -72,6 +76,9 @@ public class StorageService {
         }
         if(f != null && f.exists()){
             as = readAnalyzedSetLocal(f);
+            if(deleteAfter){
+                f.delete();
+            }
         }
         return as;
     }
@@ -138,9 +145,7 @@ public class StorageService {
 
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
-        } catch (IOException e) {
-            System.out.println("Error initializing stream");
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return obj;
