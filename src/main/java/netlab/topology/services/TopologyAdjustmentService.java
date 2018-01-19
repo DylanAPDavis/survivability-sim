@@ -68,7 +68,8 @@ public class TopologyAdjustmentService {
             double originProb = failureIdMap.containsKey(origin) ? failureIdMap.get(origin).getProbability() : 0;
             double targetProb = failureIdMap.containsKey(target) ? failureIdMap.get(target).getProbability() : 0;
             double linkProb = failureIdMap.containsKey(linkId) ? failureIdMap.get(linkId).getProbability() : 0;
-            long newWeight = link.getWeight() + Math.round((link.getWeight() * originProb) + (link.getWeight() * linkProb) + (link.getWeight() * targetProb));
+            //long newWeight = link.getWeight() + Math.round((link.getWeight() * originProb) + (link.getWeight() * linkProb) + (link.getWeight() * targetProb));
+            long newWeight = Math.round((link.getWeight() * originProb) + (link.getWeight() * linkProb) + (link.getWeight() * targetProb));
             weightMap.put(link.getId(), newWeight);
         }
         Set<Link> modifiedLinks = modifyLinks(topo.getLinks(), weightMap);

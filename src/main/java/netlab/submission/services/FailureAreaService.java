@@ -22,7 +22,7 @@ public class FailureAreaService {
     public FailureAreaService(){
         failureAreaMap = new HashMap<>();
         FailureArea quake1 = new FailureArea(250, 500, 1500, false);
-        FailureArea quake2 = new FailureArea(2200, 800, 1000, false);
+        FailureArea quake2 = new FailureArea(2500, 800, 1000, false);
         FailureArea quake3 = new FailureArea(3700, 700, 500, false);
         FailureArea nuke1 = new FailureArea(250, 500, 1500, true);
         FailureArea nuke2 = new FailureArea(2200, 800, 1000, true);
