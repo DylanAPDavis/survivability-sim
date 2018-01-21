@@ -66,7 +66,7 @@ public class AggregationAnalysisService {
                 Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
         algorithmMap.put(RoutingType.ManyToOne, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
         algorithmMap.put(RoutingType.ManyToMany, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
                 Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
@@ -107,19 +107,19 @@ public class AggregationAnalysisService {
                 routingList.add(new RoutingDescription(1, 4, 1, 1, 3, 3));
                 break;
             case ManyToOne:
-                routingList.add(new RoutingDescription(2, 1, 1, 1, 1, 1));
+                //routingList.add(new RoutingDescription(2, 1, 1, 1, 1, 1));
                 routingList.add(new RoutingDescription(2, 1, 2, 2, 1, 1));
-                routingList.add(new RoutingDescription(3, 1, 1, 1, 1, 1));
-                routingList.add(new RoutingDescription(3, 1, 2, 2, 1, 1));
+                //routingList.add(new RoutingDescription(3, 1, 1, 1, 1, 1));
+                //routingList.add(new RoutingDescription(3, 1, 2, 2, 1, 1));
                 routingList.add(new RoutingDescription(3, 1, 3, 3, 1, 1));
                 break;
             case ManyToMany:
-                routingList.add(new RoutingDescription(2, 2, 2, 2, 1, 1));
+                //routingList.add(new RoutingDescription(2, 2, 2, 2, 1, 1));
                 routingList.add(new RoutingDescription(2, 2, 2, 2, 1, 2));
                 routingList.add(new RoutingDescription(2, 2, 2, 2, 2, 2));
-                routingList.add(new RoutingDescription(3, 3, 3, 3, 1, 1));
-                routingList.add(new RoutingDescription(3, 3, 3, 3, 1, 2));
-                routingList.add(new RoutingDescription(3, 3, 3, 3, 2, 2));
+                //routingList.add(new RoutingDescription(3, 3, 3, 3, 1, 1));
+                //routingList.add(new RoutingDescription(3, 3, 3, 3, 1, 2));
+                //routingList.add(new RoutingDescription(3, 3, 3, 3, 2, 2));
                 routingList.add(new RoutingDescription(3, 3, 3, 3, 1, 3));
                 routingList.add(new RoutingDescription(3, 3, 3, 3, 2, 3));
                 routingList.add(new RoutingDescription(3, 3, 3, 3, 3, 3));
@@ -135,8 +135,11 @@ public class AggregationAnalysisService {
 
     public Map<RoutingType, List<TrafficCombinationType>> makeTrafficCombinationMap(){
         Map<RoutingType, List<TrafficCombinationType>> trafficCombinationMap = new HashMap<>();
-        List<TrafficCombinationType> trafficList = Arrays.asList(TrafficCombinationType.None,
+        /*List<TrafficCombinationType> trafficList = Arrays.asList(TrafficCombinationType.None,
                 TrafficCombinationType.Source, TrafficCombinationType.Destination, TrafficCombinationType.Both);
+                */
+        List<TrafficCombinationType> trafficList = Arrays.asList(TrafficCombinationType.None,
+                TrafficCombinationType.Destination);
         trafficCombinationMap.put(RoutingType.Unicast, Collections.singletonList(TrafficCombinationType.None));
         trafficCombinationMap.put(RoutingType.Anycast, trafficList);
         trafficCombinationMap.put(RoutingType.Multicast, trafficList);
@@ -441,7 +444,7 @@ public class AggregationAnalysisService {
             String cType = cachingResult.getType().getCode();
             cachingHeaders.add(cType + "_" + "cCost");
             cachingHeaders.add(cType + "_" + "cReach");
-            cachingHeaders.add(cType + "_" + "cAccess");
+            //cachingHeaders.add(cType + "_" + "cAccess");
             cachingHeaders.add(cType + "_" + "cHop");
             cachingHeaders.add(cType + "_" + "cBackup");
         }
@@ -459,7 +462,7 @@ public class AggregationAnalysisService {
         for(CachingResult cachingResult : ag.getCachingResults()){
             dataList.add(String.valueOf(cachingResult.getCachingCost()));
             dataList.add(String.valueOf(cachingResult.getReachability()));
-            dataList.add(String.valueOf(cachingResult.getAvgAccessibility()));
+            //dataList.add(String.valueOf(cachingResult.getAvgAccessibility()));
             dataList.add(String.valueOf(cachingResult.getAvgHopCountToContent()));
             dataList.add(String.valueOf(cachingResult.getPairReachThroughBackup()));
         }
