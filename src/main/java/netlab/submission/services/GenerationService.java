@@ -205,8 +205,8 @@ public class GenerationService {
                         useMinS, useMaxS, useMinS, useMaxS, 1, 1);
             case ManyToMany:
                 // max(useMinS, useMinD) connections, 0/1 per pair, 0/1 per src, 0/1 per dst, useMinS/useMaxS src connected, useMinD/useMaxD dsts connected
-                return buildConnections(pairs, sources, destinations, Math.max(useMinS, useMinD), 0, 1, 0, 1,
-                        0, 1, useMinS, useMaxS, useMinD, useMaxD);
+                return buildConnections(pairs, sources, destinations, Math.max(useMinS, useMinD), 0, 1, 0, destinations.size(),
+                        0, sources.size(), useMinS, useMaxS, useMinD, useMaxD);
             case Broadcast:
                 // |pairs| connections, 1/1 per pair, 0/|D| per src, 0/|S| per dst, |S| src connected, |D| dsts connected
                 return buildConnections(pairs, sources, destinations, pairs.size(), 1, 1, 1, destinations.size(),

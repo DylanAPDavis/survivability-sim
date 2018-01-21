@@ -98,6 +98,7 @@ public class AmplService {
         ampl.setIntOption("omit_zero_rows", 1);
         ampl.setOption("solver", "gurobi");
         ampl.eval("option gurobi_options \'threads " + request.getNumThreads() + "\';");
+        ampl.eval("option gurobi_options \'timelim " + 38 + "\';");
 
         List<String> dataLines = createDataLines(request, topology);
         java.nio.file.Path file = Paths.get(request.getId() + ".dat");
