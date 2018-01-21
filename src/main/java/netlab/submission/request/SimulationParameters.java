@@ -73,6 +73,8 @@ public class SimulationParameters {
 
     public Integer numThreads;
 
+    public Integer cutoffTimeSeconds;
+
     public SimulationParameters clone(){
         try{
             return (SimulationParameters) super.clone();
@@ -111,6 +113,7 @@ public class SimulationParameters {
                     .ignoreFailures(ignoreFailures)
                     .trafficCombinationType(trafficCombinationType)
                     .numThreads(numThreads)
+                    .cutoffTimeSeconds(cutoffTimeSeconds)
                     .build();
         }
     }

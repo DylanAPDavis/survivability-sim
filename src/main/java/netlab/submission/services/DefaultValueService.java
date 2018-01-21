@@ -257,7 +257,12 @@ public class DefaultValueService {
             params.setIgnoreFailures(false);
         }
         if(params.getNumThreads() == null){
-            params.setNumThreads(6);
+            params.setNumThreads(8);
+        }
+
+        // Default cutoff of one hour
+        if(params.getCutoffTimeSeconds() == null || params.getCutoffTimeSeconds() < 0){
+            params.setCutoffTimeSeconds(3600);
         }
 
         return params;

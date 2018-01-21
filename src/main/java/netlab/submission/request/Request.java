@@ -51,4 +51,6 @@ public class Request implements Serializable {
 
     private Integer numThreads;
 
+    private Integer cutoffTimeSeconds;
+
 }

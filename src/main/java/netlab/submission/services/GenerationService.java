@@ -67,6 +67,7 @@ public class GenerationService {
                 .ignoreFailures(params.getIgnoreFailures())
                 .topologyId(params.getTopologyId())
                 .numThreads(params.getNumThreads())
+                .cutoffTimeSeconds(params.getCutoffTimeSeconds())
                 .build();
     }
 
@@ -95,6 +96,7 @@ public class GenerationService {
                 .useAws(false)
                 .topologyId(params.getTopologyId())
                 .numThreads(params.getNumThreads())
+                .cutoffTimeSeconds(3600)
                 .build();
     }
 
@@ -135,10 +137,10 @@ public class GenerationService {
                                                          Set<Node> sources, Set<Node> destinations){
 
         RoutingType routingType = enumGenerationService.getRoutingType(params.getRoutingType());
-        if(routingType != RoutingType.Default){
+        /*(if(routingType != RoutingType.Default){
             return makeConnectionsFromRoutingType(pairs, sources, destinations, params.getUseMinS(), params.getUseMaxS(),
                     params.getUseMinD(), params.getUseMaxD(), routingType);
-        }
+        }*/
         // Map for pairs
         Map<SourceDestPair, Integer> pairMinConnectionsMap = params.getPairNumConnectionsMap().size() > 0 ?
                 selectionService.makePairIntegerMap(pairs, params.getPairNumConnectionsMap(), 0) :

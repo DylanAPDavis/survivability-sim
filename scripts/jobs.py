@@ -30,20 +30,20 @@ s_d_value_dict = {
     ],
     "manytoone":
     [
-        {"num_s": 2, "num_d": 1, "use_min_s": 1, "use_max_s": 1, "use_min_d": 1, "use_max_d": 1},
+        # {"num_s": 2, "num_d": 1, "use_min_s": 1, "use_max_s": 1, "use_min_d": 1, "use_max_d": 1},
         {"num_s": 2, "num_d": 1, "use_min_s": 2, "use_max_s": 2, "use_min_d": 1, "use_max_d": 1},
-        {"num_s": 3, "num_d": 1, "use_min_s": 1, "use_max_s": 1, "use_min_d": 1, "use_max_d": 1},
-        {"num_s": 3, "num_d": 1, "use_min_s": 2, "use_max_s": 2, "use_min_d": 1, "use_max_d": 1},
+        # {"num_s": 3, "num_d": 1, "use_min_s": 1, "use_max_s": 1, "use_min_d": 1, "use_max_d": 1},
+        # {"num_s": 3, "num_d": 1, "use_min_s": 2, "use_max_s": 2, "use_min_d": 1, "use_max_d": 1},
         {"num_s": 3, "num_d": 1, "use_min_s": 3, "use_max_s": 3, "use_min_d": 1, "use_max_d": 1},
     ],
     "manytomany":
     [
-        {"num_s": 2, "num_d": 2, "use_min_s": 2, "use_max_s": 2, "use_min_d": 1, "use_max_d": 1},
+        # {"num_s": 2, "num_d": 2, "use_min_s": 2, "use_max_s": 2, "use_min_d": 1, "use_max_d": 1},
         {"num_s": 2, "num_d": 2, "use_min_s": 2, "use_max_s": 2, "use_min_d": 1, "use_max_d": 2},
         {"num_s": 2, "num_d": 2, "use_min_s": 2, "use_max_s": 2, "use_min_d": 2, "use_max_d": 2},
-        {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 1, "use_max_d": 1},
-        {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 1, "use_max_d": 2},
-        {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 2, "use_max_d": 2},
+        # {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 1, "use_max_d": 1},
+        # {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 1, "use_max_d": 2},
+        # {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 2, "use_max_d": 2},
         {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 1, "use_max_d": 3},
         {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 2, "use_max_d": 3},
         {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 3, "use_max_d": 3},
@@ -58,16 +58,17 @@ s_d_value_dict = {
 traffic_combo_dict = {
     "unicast": ["none"],
     "anycast": ["none"],
-    "multicast": ["none", "source", "dest", "both"],
-    "manycast": ["none", "source", "dest", "both"],
-    "manytoone": ["none", "source", "dest", "both"],
-    "manytomany": ["none", "source", "dest", "both"],
-    "broadcast": ["none", "source", "dest", "both"],
+    "multicast": ["none", "dest"],  # ["none", "source", "dest", "both"],
+    "manycast": ["none", "dest"],  # ["none", "source", "dest", "both"],
+    "manytoone": ["none", "dest"],  # ["none", "source", "dest", "both"],
+    "manytomany": ["none", "dest"],  # ["none", "source", "dest", "both"],
+    "broadcast": ["none", "dest"],  # ["none", "source", "dest", "both"],
 }
 
-#routing_types = ["unicast", "anycast", "manycast", "multicast", "manytoone", "manytomany", "broadcast"]
+# routing_types = ["unicast", "anycast", "manycast", "multicast", "manytoone", "manytomany", "broadcast"]
 routing_types = ["anycast"]
-failure_scenarios = ["default", "alllinks", "allnodes", "quake1", "quake2", "quake3", "quake12", "quake13", "quake23", "quake123"]
+failure_scenarios = ["default", "alllinks", "allnodes", "quake1", "quake2", "quake3"]
+# failure_scenarios = ["default", "alllinks", "allnodes", "quake1", "quake2", "quake3", "quake12", "quake13", "quake23", "quake123"]
 nfe_values = [0, 1, 2, 3, 9999]
 
 
