@@ -56,13 +56,13 @@ s_d_value_dict = {
     ],
 }
 traffic_combo_dict = {
-    "unicast": ["none"],
-    "anycast": ["none"],
-    "multicast": ["none", "dest"],  # ["none", "source", "dest", "both"],
-    "manycast": ["none", "dest"],  # ["none", "source", "dest", "both"],
-    "manytoone": ["none", "dest"],  # ["none", "source", "dest", "both"],
-    "manytomany": ["none", "dest"],  # ["none", "source", "dest", "both"],
-    "broadcast": ["none", "dest"],  # ["none", "source", "dest", "both"],
+    "unicast": ["dest"],  # ["none"],
+    "anycast": ["dest"],  # ["none"],
+    "multicast": ["dest", "both"],  # ["none", "source", "dest", "both"],
+    "manycast": ["dest", "both"],  # ["none", "source", "dest", "both"],
+    "manytoone": ["dest"],  # ["none", "source", "dest", "both"],
+    "manytomany": ["dest"],  # ["none", "source", "dest", "both"],
+    "broadcast": ["dest"],  # ["none", "source", "dest", "both"],
 }
 
 # routing_types = ["unicast", "anycast", "manycast", "multicast", "manytoone", "manytomany", "broadcast"]

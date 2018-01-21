@@ -107,10 +107,19 @@ public class S3Interface {
         if(transferManager != null) transferManager.shutdownNow(true);
     }
 
-    public Boolean deleteFromRaw(List<String> requestSetIds) {
+    public Boolean deleteFromBucket(List<String> requestSetIds, String bucketName) {
+        if(bucketName.toLowerCase().contains("raw")){
+            bucketName = awsConfig.getRawBucket();
+        }
+        else if(bucketName.toLowerCase().contains("analyzed")){
+            bucketName = awsConfig.getAnalyzedBucket();
+        } else{
+            System.out.println("Input did not include 'raw' or 'analyzed', bucket not found");
+            return false;
+        }
         for(String key : requestSetIds) {
             try {
-                s3.deleteObject(new DeleteObjectRequest(awsConfig.getRawBucket(), key));
+                s3.deleteObject(new DeleteObjectRequest(bucketName, key));
             } catch (AmazonServiceException ase) {
                 System.out.println("Caught an AmazonServiceException.");
                 System.out.println("Error Message:    " + ase.getMessage());
