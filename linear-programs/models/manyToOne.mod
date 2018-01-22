@@ -50,6 +50,13 @@ param useMaxS default 1;
 # The number of failure events (k)
 param nfe default 0;
 
+set SinF = {s in S : (s,s) in F};
+set SnotF = {s in S : s not in SinF};
+
+param minSrcFailures = min(card(SinF), nfe);
+param maxSrcNotFailed = useMinS;
+param sRequired = minSrcFailures + maxSrcNotFailed;
+
 # VARIABLES
 
 # C - connection number (i) from node s to node d
@@ -171,11 +178,17 @@ subject to maxNumConnectionsNeededSrcNoFails{s in S}:
 
 # Determine how many sources have to be connected
 
-subject to connSurvivesFromS_1{s in S, g in GroupIndices}:
+subject to connSurvivesFromS_1_LessThanS{s in S, g in GroupIndices: sRequired < card(S)}:
     connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{i in I: s != d} FG_Conn_include_endpoints[s,i,g];
 
-subject to connSurvivesFromS_2{s in S, g in GroupIndices}:
+subject to connSurvivesFromS_2_LessThanS{s in S, g in GroupIndices: sRequired < card(S)}:
     connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{i in I: s != d} FG_Conn_include_endpoints[s,i,g];
+
+subject to connSurvivesFromS_1_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
+    connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{i in I: s != d} FG_Conn[s,i,g];
+
+subject to connSurvivesFromS_2_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
+    connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{i in I: s != d} FG_Conn[s,i,g];
 
 subject to srcConnected_1{s in S}:
     srcConnected[s] <= Num_Conn_src[s];
@@ -189,11 +202,14 @@ subject to numSrcsThatAreDisconnected{g in GroupIndices}:
 subject to greatestedNumDisconnected{g in GroupIndices}:
     maxSrcsDisconnected >= numSrcsDisconnected[g];
 
-subject to minSourcesThatMustBeConnected:
+subject to minSourcesThatMustBeConnected_LessThanS{if sRequired < card(S)}:
     sum{s in S} srcConnected[s] >= useMinS + maxSrcsDisconnected;
 
-subject to maxSourcesThatMustBeConnected:
+subject to maxSourcesThatMustBeConnected_LessThanS{if sRequired < card(S)}:
     sum{s in S} srcConnected[s] <= useMaxS + maxSrcsDisconnected;
+
+subject to minSourcesThatMustBeConnected_GreaterThanS{g in GroupIndices: sRequired >= card(S)}:
+    sum{s in S} connSurvivesFromS[s,g] = card(S);
 
 
 

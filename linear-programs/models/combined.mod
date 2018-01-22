@@ -76,6 +76,20 @@ param useMaxD >= 0 integer default card(D);
 # The number of failure events that will happen
 param nfe default 0;
 
+set SinF = {s in S : (s,s) in F};
+set SnotF = {s in S : s not in SinF};
+
+param minSrcFailures = min(card(SinF), nfe);
+param maxSrcNotFailed = useMinS;
+param sRequired = minSrcFailures + maxSrcNotFailed;
+
+set DinF = {d in D : (d,d) in F};#D inter F;
+set DnotF = {d in D : d not in DinF};#D diff F;
+
+param minDestFailures = min(card(DinF), nfe);
+param maxDestsNotFailed = useMinD;#min(useMinD, card(DnotF));
+param dRequired = minDestFailures + maxDestsNotFailed;
+
 
 # VARIABLES
 
@@ -256,11 +270,18 @@ subject to maxNumConnectionsNeededDestNoFails{d in D}:
 ##### SRC/DEST REACHABILITY CONSTRAINTS
 
 ### SOURCES
-subject to connSurvivesFromS_1{s in S, g in GroupIndices}:
-    connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
+subject to connSurvivesFromS_1_LessThanS{s in S, g in GroupIndices: sRequired < card(S)}:
+   connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
 
-subject to connSurvivesFromS_2{s in S, g in GroupIndices}:
-    connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
+subject to connSurvivesFromS_2_LessThanS{s in S, g in GroupIndices: sRequired < card(S)}:
+   connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
+
+subject to connSurvivesFromS_1_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
+	connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+
+subject to connSurvivesFromS_2_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
+	connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+
 
 subject to srcConnected_1{s in S}:
     srcConnected[s] <= Num_Conn_src[s];
@@ -274,19 +295,28 @@ subject to numSrcsThatAreDisconnected{g in GroupIndices}:
 subject to greatestedNumSrcDisconnected{g in GroupIndices}:
     maxSrcsDisconnected >= numSrcsDisconnected[g];
 
-subject to minSourcesThatMustBeConnected:
-    sum{s in S} srcConnected[s] >= useMinS + maxSrcsDisconnected;
+subject to minSourcesThatMustBeConnected_LessThanS{if sRequired < card(S)}:
+	sum{s in S} srcConnected[s] >= useMinS + maxSrcsDisconnected;
 
-subject to maxSourcesThatMustBeConnected:
-    sum{s in S} srcConnected[s] <= useMaxS + maxSrcsDisconnected;
+subject to maxSourcesThatMustBeConnected_LessThanS{if sRequired < card(S)}:
+	sum{s in S} srcConnected[s] <= useMaxS + maxSrcsDisconnected;
+
+subject to minSourcesThatMustBeConnected_GreaterThanS{g in GroupIndices: sRequired >= card(S)}:
+	sum{s in S} connSurvivesFromS[s,g] = card(S);
 ### END SOURCES
 
 ### START DESTINATIONS
-subject to connSurvivesToD_1{d in D, g in GroupIndices}:
+subject to connSurvivesToD_1_LessThanD{d in D, g in GroupIndices: dRequired < card(D)}:
    connSurvivesToD[d,g] <= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
 
-subject to connSurvivesToD_2{d in D, g in GroupIndices}:
+subject to connSurvivesToD_2_LessThanD{d in D, g in GroupIndices: dRequired < card(D)}:
    connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
+
+subject to connSurvivesToD_1_GreaterThanD{d in D, g in GroupIndices: dRequired >= card(D)}:
+	connSurvivesToD[d,g] <= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+
+subject to connSurvivesToD_2_GreaterThanD{d in D, g in GroupIndices: dRequired >= card(D)}:
+	connSurvivesToD[d,g] * card(V)^4 >= Num_Conn_dst[d] - sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
 
 subject to destConnected_1{d in D}:
 	destConnected[d] <= Num_Conn_dst[d];
@@ -300,11 +330,14 @@ subject to numDestsThatAreDisconnected{g in GroupIndices}:
 subject to greatestedNumDestsDisconnected{g in GroupIndices}:
 	maxDestsDisconnected >= numDestsDisconnected[g];
 
-subject to minDestsThatMustBeConnected:
+subject to minDestsThatMustBeConnected_LessThanD{if dRequired < card(D)}:
 	sum{d in D} destConnected[d] >= useMinD + maxDestsDisconnected;
 
-subject to maxDestsThatMustBeConnected:
+subject to maxDestsThatMustBeConnected_LessThanD{if dRequired < card(D)}:
 	sum{d in D} destConnected[d] <= useMaxD + maxDestsDisconnected;
+
+subject to minDestsThatMustBeConnected_GreaterThanD{g in GroupIndices: dRequired >= card(D)}:
+	sum{d in D} connSurvivesToD[d,g] = card(D);
 
 ### END DESTINATIONS
 
