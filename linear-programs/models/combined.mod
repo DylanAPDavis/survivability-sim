@@ -24,6 +24,9 @@ set S;
 # D - Destinations
 set D;
 
+# F - Failure set
+set F within AllPairs default {};
+
 # SD - Source/Dest pairs
 set SD within {S cross D} default {s in S, d in D: s != d};
 
@@ -69,6 +72,9 @@ param useMinS >= 0 integer default 0;
 param useMaxS >= 0 integer default card(S);
 param useMinD >= 0 integer default 0;
 param useMaxD >= 0 integer default card(D);
+
+# The number of failure events that will happen
+param nfe default 0;
 
 
 # VARIABLES

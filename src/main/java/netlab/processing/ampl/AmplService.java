@@ -2,6 +2,7 @@ package netlab.processing.ampl;
 
 
 import com.ampl.*;
+import com.fasterxml.jackson.databind.deser.impl.CreatorCandidate;
 import lombok.extern.slf4j.Slf4j;
 import netlab.submission.enums.Objective;
 import netlab.submission.enums.ProblemClass;
@@ -41,6 +42,11 @@ public class AmplService {
             com.ampl.Objective obj = ampl.getObjective(request.getObjective().getCode());
             String result = obj.result();
             String message = obj.message();
+/*            SetInstance dnf = ampl.getSet("DinF").get();
+            SetInstance dnotf = ampl.getSet("DnotF").get();
+            Object minDestFailures = ampl.getParameter("minDestFailures").get();
+            Object maxDestsNotFailed = ampl.getParameter("maxDestsNotFailed").get();
+            */
             if(result.toLowerCase().contains("solved") || message.toLowerCase().contains("objective")){
                 details.setIsFeasible(true);
                 DataFrame flows = ampl.getData("L");
@@ -235,8 +241,12 @@ public class AmplService {
         String numGroups = "param NumGroups := " + failureGroups.size() + ";";
         flexLines.add(numGroups);
         flexLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flex, null, null, false));
+        String nfe = "param nfe := " + details.getNumFailureEvents().getTotalNumFailureEvents() + ";";
+        flexLines.add(nfe);
+        //flexLines.add(createFailureSetLine(details.getFailures().getFailureSet()));
         return flexLines;
     }
+
 
     private List<String> createEndpointParamsLines(Details details, ProblemClass problemClass, boolean ignoreFailures){
         List<String> endpointLines = new ArrayList<>();
@@ -386,14 +396,33 @@ public class AmplService {
             }
             List<Failure> group = failureGroups.get(groupIndex);
             for (Failure fail : group) {
-                String failString = fail.getLink() != null ? "('" + fail.getLink().getOrigin().getId() + "','" + fail.getLink().getTarget().getId() + "')"
-                        : "('" + fail.getNode().getId() + "','" + fail.getNode().getId() + "')";
+                String failString = createFailureString(fail);
                 fg += " " + failString;
             }
             fg += ";";
             fgLines.add(fg);
         }
         return fgLines;
+    }
+
+    private String createFailureString(Failure fail){
+        return fail.getLink() != null ? "('" + fail.getLink().getOrigin().getId() + "','" + fail.getLink().getTarget().getId() + "')"
+                : "('" + fail.getNode().getId() + "','" + fail.getNode().getId() + "')";
+    }
+
+    private String createFailureSetLine(Set<Failure> failureSet) {
+        String set = "set F := ";
+        int count = 0;
+        for(Failure fail : failureSet){
+            String failString = createFailureString(fail);
+            set += failString;
+            if(count < failureSet.size()-1) {
+                set += ", ";
+            }
+            count++;
+        }
+        set += ";";
+        return set;
     }
 
     private String createSingleNodeParamLine(Collection<Node> nodes, String paramName){

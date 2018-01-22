@@ -249,6 +249,7 @@ public class AmplRoutingModelTest {
                 .numSources(1)
                 .numDestinations(2)
                 .failureSetSize(11)
+                .failureScenario("allNodes")
                 .destFailureType("prevent")
                 .numFailureEvents(1)
                 .useAws(false)
@@ -424,7 +425,6 @@ public class AmplRoutingModelTest {
                 .failureScenario("allnodes")
                 .numFailureEvents(1)
                 .useAws(false)
-                .destFailureType("prevent")
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
