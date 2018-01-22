@@ -126,6 +126,29 @@ public class AmplRoutingModelTest {
     }
 
     @Test
+    public void unicastDestTraffic3LinkFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("alllinks")
+                .numFailureEvents(3)
+                .trafficCombinationType("dest")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(!request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
     public void unicastNodeFailuresTest(){
 
         SimulationParameters params = SimulationParameters.builder()
@@ -772,7 +795,7 @@ public class AmplRoutingModelTest {
         System.out.println(printingService.outputPaths(request));
     }
 
-    @Test
+    //@Test
     public void broadcastFullOverlapNodesFail(){
 
         SimulationParameters params = SimulationParameters.builder()

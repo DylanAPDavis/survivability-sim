@@ -27,6 +27,9 @@ param s symbolic in S;
 # D - Destinations
 param d symbolic in D;
 
+# F - Failure set
+set F within AllPairs default {};
+
 # c_total - Total number of connections needed after k failures
 param c_total >= 0 integer default 1;
 
@@ -42,6 +45,9 @@ set FG {g in GroupIndices} within AllPairs default {};
 # Traffic combination
 param combineSourceTraffic binary default 0;
 param combineDestTraffic binary default 0;
+
+# The number of failure events (k)
+param nfe default 0;
 
 # VARIABLES
 

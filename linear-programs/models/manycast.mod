@@ -203,15 +203,6 @@ subject to numDestsThatAreDisconnected{g in GroupIndices}:
 subject to greatestedNumDisconnected{g in GroupIndices}:
 	maxDestsDisconnected >= numDestsDisconnected[g];
 
-subject to minSourcesThatMustBeConnected_LessThanS{if sRequired < card(S)}:
-	sum{s in S} srcConnected[s] >= useMinS + maxSrcsDisconnected;
-
-subject to maxSourcesThatMustBeConnected_LessThanS{if sRequired < card(S)}:
-	sum{s in S} srcConnected[s] <= useMaxS + maxSrcsDisconnected;
-
-subject to minSourcesThatMustBeConnected_GreaterThanS{g in GroupIndices: sRequired >= card(S)}:
-	sum{s in S} connSurvivesFromS[s,g] = card(S);
-
 
 
 # Flow constraints
