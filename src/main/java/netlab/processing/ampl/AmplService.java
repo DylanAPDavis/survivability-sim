@@ -160,7 +160,8 @@ public class AmplService {
         dataLines.add(createNodeSetLine(details.getDestinations(), "D"));
 
         // I_max
-        int iMaxNum = details.getConnections().getNumConnections() * (details.getNumFailureEvents().getTotalNumFailureEvents() + 1);
+        Integer minFailures = Math.min(details.getNumFailureEvents().getTotalNumFailureEvents(), details.getFailures().getFailureSetSize());
+        int iMaxNum = details.getConnections().getNumConnections() * (minFailures + 1);
         String iMax = String.format("param I_max := %d;", iMaxNum);
         dataLines.add(iMax);
 
@@ -240,9 +241,11 @@ public class AmplService {
         String numGroups = "param NumGroups := " + failureGroups.size() + ";";
         flexLines.add(numGroups);
         flexLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flex, null, null, false));
-        String nfe = "param nfe := " + details.getNumFailureEvents().getTotalNumFailureEvents() + ";";
-        flexLines.add(nfe);
-        flexLines.add(createFailureSetLine(details.getFailures().getFailureSet()));
+        if(!ignoreFailures) {
+            String nfe = "param nfe := " + details.getNumFailureEvents().getTotalNumFailureEvents() + ";";
+            flexLines.add(nfe);
+            flexLines.add(createFailureSetLine(details.getFailures().getFailureSet()));
+        }
         return flexLines;
     }
 

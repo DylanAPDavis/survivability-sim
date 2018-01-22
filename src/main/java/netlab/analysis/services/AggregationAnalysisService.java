@@ -29,7 +29,7 @@ public class AggregationAnalysisService {
         List<String> topologyIds = Collections.singletonList("NSFnet");
         /*List<RoutingType> routingTypes = Arrays.asList(RoutingType.Unicast, RoutingType.Anycast, RoutingType.Manycast, RoutingType.Multicast,
                 RoutingType.ManyToOne, RoutingType.ManyToMany, RoutingType.Broadcast);*/
-        List<RoutingType> routingTypes = Arrays.asList(RoutingType.Unicast);
+        List<RoutingType> routingTypes = Arrays.asList(RoutingType.Anycast);
         List<FailureScenario> failureScenarios = Arrays.asList(FailureScenario.Default, FailureScenario.AllLinks, FailureScenario.AllNodes,
                 FailureScenario.Quake_1, FailureScenario.Quake_2, FailureScenario.Quake_3);
         List<Integer> nfeValues = Arrays.asList(0, 1, 2, 3, 9999);
@@ -138,9 +138,8 @@ public class AggregationAnalysisService {
         /*List<TrafficCombinationType> trafficList = Arrays.asList(TrafficCombinationType.None,
                 TrafficCombinationType.Source, TrafficCombinationType.Destination, TrafficCombinationType.Both);
                 */
-        List<TrafficCombinationType> trafficList = Arrays.asList(TrafficCombinationType.None,
-                TrafficCombinationType.Destination);
-        trafficCombinationMap.put(RoutingType.Unicast, Collections.singletonList(TrafficCombinationType.None));
+        List<TrafficCombinationType> trafficList = Collections.singletonList(TrafficCombinationType.Destination);
+        trafficCombinationMap.put(RoutingType.Unicast, trafficList);
         trafficCombinationMap.put(RoutingType.Anycast, trafficList);
         trafficCombinationMap.put(RoutingType.Multicast, trafficList);
         trafficCombinationMap.put(RoutingType.Manycast, trafficList);
@@ -373,7 +372,9 @@ public class AggregationAnalysisService {
                                         String hash = hashingService.hashForAggregation(topoId, algorithm, routingType,
                                                 failureScenario, nfe, trafficCombinationType, routingDescription, ignoreF);
                                         AggregateAnalysis aggregateAnalysis = outputMap.get(hash);
-                                        output.addAll(createLines(aggregateAnalysis));
+                                        if(aggregateAnalysis != null) {
+                                            output.addAll(createLines(aggregateAnalysis));
+                                        }
                                     }
                                 }
                             }
