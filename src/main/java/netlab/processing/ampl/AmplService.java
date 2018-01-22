@@ -42,11 +42,7 @@ public class AmplService {
             com.ampl.Objective obj = ampl.getObjective(request.getObjective().getCode());
             String result = obj.result();
             String message = obj.message();
-/*            SetInstance dnf = ampl.getSet("DinF").get();
-            SetInstance dnotf = ampl.getSet("DnotF").get();
-            Object minDestFailures = ampl.getParameter("minDestFailures").get();
-            Object maxDestsNotFailed = ampl.getParameter("maxDestsNotFailed").get();
-            */
+
             if(result.toLowerCase().contains("solved") || message.toLowerCase().contains("objective")){
                 details.setIsFeasible(true);
                 DataFrame flows = ampl.getData("L");
@@ -54,6 +50,9 @@ public class AmplService {
             }
             else{
                 paths = details.getPairs().stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));
+            }
+            if(result.contains("limit")){
+                request.setTimedOut(true);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -243,7 +242,7 @@ public class AmplService {
         flexLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flex, null, null, false));
         String nfe = "param nfe := " + details.getNumFailureEvents().getTotalNumFailureEvents() + ";";
         flexLines.add(nfe);
-        //flexLines.add(createFailureSetLine(details.getFailures().getFailureSet()));
+        flexLines.add(createFailureSetLine(details.getFailures().getFailureSet()));
         return flexLines;
     }
 

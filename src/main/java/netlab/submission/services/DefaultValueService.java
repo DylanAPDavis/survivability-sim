@@ -264,6 +264,9 @@ public class DefaultValueService {
         if(params.getCutoffTimeSeconds() == null || params.getCutoffTimeSeconds() < 0){
             params.setCutoffTimeSeconds(3600);
         }
+        if(params.getTimedOut() == null){
+            params.setTimedOut(false);
+        }
 
         return params;
     }

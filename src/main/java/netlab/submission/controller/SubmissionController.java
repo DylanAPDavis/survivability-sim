@@ -67,6 +67,7 @@ public class SubmissionController {
         // Process request
         request = processingService.processRequest(request);
         simulationParameters.setCompleted(true);
+        simulationParameters.setTimedOut(request.getTimedOut());
         request.setCompleted(true);
         System.out.println(printingService.outputPaths(request));
         log.info("Processed request set");

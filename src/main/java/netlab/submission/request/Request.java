@@ -53,4 +53,6 @@ public class Request implements Serializable {
 
     private Integer cutoffTimeSeconds;
 
+    public Boolean timedOut;
+
 }

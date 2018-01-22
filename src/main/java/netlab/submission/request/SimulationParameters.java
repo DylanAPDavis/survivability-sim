@@ -74,6 +74,7 @@ public class SimulationParameters {
     public Integer numThreads;
 
     public Integer cutoffTimeSeconds;
+    public Boolean timedOut;
 
     public SimulationParameters clone(){
         try{
@@ -114,6 +115,7 @@ public class SimulationParameters {
                     .trafficCombinationType(trafficCombinationType)
                     .numThreads(numThreads)
                     .cutoffTimeSeconds(cutoffTimeSeconds)
+                    .timedOut(timedOut)
                     .build();
         }
     }

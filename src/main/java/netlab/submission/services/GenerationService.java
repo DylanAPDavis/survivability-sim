@@ -68,6 +68,7 @@ public class GenerationService {
                 .topologyId(params.getTopologyId())
                 .numThreads(params.getNumThreads())
                 .cutoffTimeSeconds(params.getCutoffTimeSeconds())
+                .timedOut(params.getTimedOut())
                 .build();
     }
 
@@ -97,6 +98,7 @@ public class GenerationService {
                 .topologyId(params.getTopologyId())
                 .numThreads(params.getNumThreads())
                 .cutoffTimeSeconds(3600)
+                .timedOut(false)
                 .build();
     }
 
