@@ -20,14 +20,14 @@ import java.util.stream.Collectors;
 @Service
 public class MinimumCostPathService {
 
-    private AStarService aStarService;
+    private DijkstraService dijkstraService;
     private TopologyAdjustmentService topologyAdjustmentService;
     private PathMappingService pathMappingService;
 
     @Autowired
-    public MinimumCostPathService(AStarService aStarService, TopologyAdjustmentService topologyAdjustmentService,
+    public MinimumCostPathService(DijkstraService dijkstraService, TopologyAdjustmentService topologyAdjustmentService,
                                   PathMappingService pathMappingService){
-        this.aStarService = aStarService;
+        this.dijkstraService = dijkstraService;
         this.topologyAdjustmentService = topologyAdjustmentService;
         this.pathMappingService = pathMappingService;
     }
@@ -49,12 +49,20 @@ public class MinimumCostPathService {
 
     public Map<SourceDestPair, Map<String,Path>> findPaths(Details details, RoutingType routingType, Collection<SourceDestPair> pairs, Topology topo,
                                                           TrafficCombinationType trafficCombinationType, Boolean filter) {
+        return findPaths(details, routingType, pairs, topo, trafficCombinationType, filter, new HashMap<>());
+    }
+
+    public Map<SourceDestPair,Map<String,Path>> findPaths(Details details, RoutingType routingType,
+                                                          Collection<SourceDestPair> pairs, Topology topo,
+                                                          TrafficCombinationType trafficType, boolean filter,
+                                                          Map<Link, Double> altWeightMap) {
         Map<Node, Set<Path>> usedSources = new HashMap<>();
         Map<Node, Set<Path>> usedDestinations = new HashMap<>();
 
         Map<Path, SourceDestPair> potentialPathMap = new HashMap<>();
         for(SourceDestPair pair : pairs){
-            Path sp = findShortestPath(pair, topo, usedSources, usedDestinations, trafficCombinationType);
+            Path sp = altWeightMap.isEmpty() ? findShortestPath(pair, topo, usedSources, usedDestinations, trafficType)
+                    : findShortestPathWithAltWeights(pair, topo, altWeightMap);
             if(sp.getLinks().size() > 0) {
                 potentialPathMap.put(sp, pair);
                 usedSources.putIfAbsent(pair.getSrc(), new HashSet<>());
@@ -71,19 +79,19 @@ public class MinimumCostPathService {
         }
 
         return filter ? pathMappingService.filterMap(pathMap, details) : pathMap;
-
     }
+
 
     public Path findShortestPath(SourceDestPair pair, Topology topo){
         return findShortestPath(pair, topo, new HashMap<>(), new HashMap<>(), TrafficCombinationType.None);
     }
 
     public Path findShortestPath(Node src, Node dst, Topology topo){
-        return pathMappingService.convertToPath(aStarService.shortestPath(topo, src, dst), topo.getLinkIdMap());
+        return pathMappingService.convertToPath(dijkstraService.shortestPath(topo, src, dst), topo.getLinkIdMap());
     }
 
     public List<Link> findShortestPathLinks(Node src, Node dst, Topology topo){
-        return aStarService.shortestPath(topo, src, dst);
+        return dijkstraService.shortestPath(topo, src, dst);
     }
 
     public Path findShortestPath(SourceDestPair pair, Topology topo, Map<Node, Set<Path>> srcPathsMap,
@@ -100,9 +108,13 @@ public class MinimumCostPathService {
     }
 
     public Map<SourceDestPair, Path> findAllShortestPaths(Topology topo){
-        Map<SourceDestPair, List<Link>> allPathsMap = aStarService.allShortestPaths(topo);
+        Map<SourceDestPair, List<Link>> allPathsMap = dijkstraService.allShortestPaths(topo);
         return allPathsMap.keySet().stream()
                 .collect(Collectors.toMap(p -> p, p -> new Path(allPathsMap.get(p))));
+    }
+
+    private Path findShortestPathWithAltWeights(SourceDestPair pair, Topology topo, Map<Link, Double> altWeightMap) {
+        return pathMappingService.convertToPath(dijkstraService.shortestPathWithAltWeights(topo, pair.getSrc(), pair.getDst(), altWeightMap), topo.getLinkIdMap());
     }
 
 }

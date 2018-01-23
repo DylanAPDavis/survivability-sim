@@ -1,6 +1,8 @@
 package netlab.processing;
 
 import netlab.TestConfiguration;
+import netlab.analysis.analyzed.Analysis;
+import netlab.analysis.services.AnalysisService;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
@@ -23,6 +25,9 @@ public class MinimumRiskPathServiceTest {
 
     @Autowired
     GenerationService generationService;
+
+    @Autowired
+    AnalysisService analysisService;
 
     @Test
     public void unicastTest(){
@@ -104,6 +109,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -125,6 +132,31 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
+    }
+
+    @Test
+    public void anycastTestQuake1Fail(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("minimumrisk")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(2)
+                .failureScenario("quake1")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test

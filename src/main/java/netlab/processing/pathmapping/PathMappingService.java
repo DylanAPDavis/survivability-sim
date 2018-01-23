@@ -64,10 +64,30 @@ public class PathMappingService {
         return allPathsMap;
     }
 
+    public Map<SourceDestPair, Map<String, Path>> filterMapWithRisk(Map<SourceDestPair, Map<String, Path>> pathMap, Details details,
+                                                            Map<Link, Double> riskMap){
+        Map<SourceDestPair, Double> pathRiskMap = new HashMap<>();
+        for(SourceDestPair pair : pathMap.keySet()){
+            Collection<Path> paths = pathMap.get(pair).values();
+            Double sum = paths.stream().mapToDouble(path -> path.getLinks().stream().mapToDouble(riskMap::get).sum()).sum();
+            pathRiskMap.put(pair, sum);
+        }
+        List<SourceDestPair> pairsSortedByRisk = pathMap.keySet().stream()
+                .sorted(Comparator.comparingDouble(pathRiskMap::get)
+                        .thenComparingLong(p -> pathMap.get(p).values().stream().mapToLong(Path::getTotalWeight).sum()))
+                .collect(Collectors.toList());
+        return filterUsingSortedPairs(pathMap, details, pairsSortedByRisk);
+    }
+
     public Map<SourceDestPair, Map<String, Path>> filterMap(Map<SourceDestPair, Map<String, Path>> pathMap, Details details){
         List<SourceDestPair> pairsSortedByTotalWeight = pathMap.keySet().stream()
                 .sorted(Comparator.comparingLong(p -> pathMap.get(p).values().stream().mapToLong(Path::getTotalWeight).sum()))
                 .collect(Collectors.toList());
+        return filterUsingSortedPairs(pathMap, details, pairsSortedByTotalWeight);
+    }
+
+    public Map<SourceDestPair, Map<String, Path>> filterUsingSortedPairs(Map<SourceDestPair, Map<String, Path>> pathMap, Details details,
+                                                                         List<SourceDestPair> pairs){
         // Filter out unneeded pairs
         Set<Node> usedS = new HashSet<>();
         Set<Node> usedD = new HashSet<>();
@@ -79,7 +99,7 @@ public class PathMappingService {
         Map<SourceDestPair, Integer> minPerPairMap = connections.getPairMinConnectionsMap();
 
         boolean remove = false;
-        for (SourceDestPair pair : pairsSortedByTotalWeight) {
+        for (SourceDestPair pair : pairs) {
             Node src = pair.getSrc();
             Node dst = pair.getDst();
             boolean added = false;
@@ -200,5 +220,34 @@ public class PathMappingService {
                 }
             }
         }
+    }
+
+    public Map<Link, Double> createRiskMap(Set<Link> links, Set<Failure> failures){
+        Map<Link, Double> riskWeightMap = new HashMap<>();
+        Map<String, Failure> failureIdMap = createFailureIdMap(failures);
+        for(Link link : links){
+            String linkId = link.getId();
+            String origin = link.getOrigin().getId();
+            String target = link.getTarget().getId();
+            double originProb = failureIdMap.containsKey(origin) ? failureIdMap.get(origin).getProbability() : 0;
+            double targetProb = failureIdMap.containsKey(target) ? failureIdMap.get(target).getProbability() : 0;
+            double linkProb = 0.0;
+            if(failureIdMap.containsKey(linkId)){
+                linkProb = failureIdMap.get(linkId).getProbability();
+            } else if(failureIdMap.containsKey(link.reverse().getId())){
+                linkProb =  failureIdMap.get(link.reverse().getId()).getProbability();
+            }
+            double runningProb = 1.0;
+            runningProb *= (1 -  originProb);
+            runningProb *= (1 -  linkProb);
+            runningProb *= (1 - targetProb);
+            double compoundWeight = 1.0 - runningProb;
+            riskWeightMap.put(link, compoundWeight);
+        }
+        return riskWeightMap;
+    }
+
+    public Map<String, Failure> createFailureIdMap(Set<Failure> failures){
+        return failures.stream().collect(Collectors.toMap(Failure::getId, f -> f));
     }
 }

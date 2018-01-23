@@ -1,9 +1,16 @@
 package netlab.processing.shortestPaths;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.processing.pathmapping.GraphConversionService;
 import netlab.topology.elements.Link;
 import netlab.topology.elements.Node;
+import netlab.topology.elements.SourceDestPair;
 import netlab.topology.elements.Topology;
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -12,16 +19,37 @@ import java.util.*;
 @Service
 public class DijkstraService {
 
-    public List<Link> shortestPath(Topology topo, Node source, Node dest){
+    GraphConversionService graphConversionService;
 
-        return shortestPath(topo, source, dest, new HashMap<>());
+    @Autowired
+    public DijkstraService(GraphConversionService graphConversionService){
+        this.graphConversionService = graphConversionService;
     }
 
-    public List<Link> shortestPath(Topology topo, Node source, Node dest, Map<Link, Double> riskMap){
+    public List<Link> shortestPath(Topology topo, Node source, Node dest){
+        Map<DefaultWeightedEdge, Link> edgeToLinkMap = new HashMap<>();
+        DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = graphConversionService.convertToGraph(topo, edgeToLinkMap);
+        DijkstraShortestPath<Node, DefaultWeightedEdge> shortestPath = new DijkstraShortestPath<>(graph);
+        GraphPath<Node,DefaultWeightedEdge> graphPath = shortestPath.getPath(source, dest);
+        return graphConversionService.convertToLinks(graphPath, edgeToLinkMap);
+    }
+
+    public Map<SourceDestPair, List<Link>> allShortestPaths(Topology topo) {
+        Map<DefaultWeightedEdge, Link> edgeToLinkMap = new HashMap<>();
+
+        DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = graphConversionService.convertToGraph(topo, edgeToLinkMap);
+        DijkstraShortestPath<Node, DefaultWeightedEdge> allPaths = new DijkstraShortestPath<>(graph);
+
+        return graphConversionService.allPathsConversion(allPaths, topo, edgeToLinkMap);
+
+    }
+
+    public List<Link> shortestPathWithAltWeights(Topology topo, Node source, Node dest, Map<Link, Double> riskMap){
         Map<Node, Long> distance = new HashMap<>();
-        //Map<Node, Node> prev = new HashMap<>();
+        Map<Node, Double> cumulativeRisk = new HashMap<>();
         Map<Node, Link> prevLink = new HashMap<>();
         distance.put(source, 0L);
+        cumulativeRisk.put(source, 0.0);
         Comparator<Node> comparator = Comparator.comparing(distance::get);
 
         Set<Node> nodes = topo.getNodes();
@@ -29,6 +57,7 @@ public class DijkstraService {
         for(Node node : nodes){
             if(!node.getId().equals(source.getId())){
                 distance.put(node, Long.MAX_VALUE);
+                cumulativeRisk.put(node, Double.MAX_VALUE);
             }
             queue.add(node);
         }
@@ -41,22 +70,25 @@ public class DijkstraService {
                 if(queue.contains(target)){
                     Long newDistanceToTarget =  distance.get(u) + link.getWeight();
                     Double risk = riskMap.containsKey(link) ? riskMap.get(link) : 0.0;
+                    Double newRiskToTarget = cumulativeRisk.get(u) + risk;
                     // If the node hasn't been reached yet, just keep this link
                     if(!prevLink.containsKey(target)){
                         //prev.put(target, link.getOrigin());
                         prevLink.put(target, link);
                         distance.put(target, newDistanceToTarget);
                         queue.add(target);
+                        cumulativeRisk.put(target, newRiskToTarget);
                     }
                     // Otherwise, compare the alt weights first, then the
                     else{
                         Link pLink = prevLink.get(target);
-                        Double pRisk = riskMap.containsKey(pLink) ? riskMap.get(pLink) : 0.0;
-                        if(risk < pRisk || (risk.equals(pRisk) && newDistanceToTarget < distance.get(target)) ){
+                        //Double pRisk = riskMap.containsKey(pLink) ? riskMap.get(pLink) : 0.0;
+                        if(compareLinks(link, newRiskToTarget, newDistanceToTarget, pLink, cumulativeRisk.get(target), distance.get(target))){
                             //prev.put(target, link.getOrigin());
                             prevLink.put(target, link);
                             distance.put(target, newDistanceToTarget);
                             queue.add(target);
+                            cumulativeRisk.put(target, newRiskToTarget);
                         }
                     }
                 }
@@ -64,12 +96,20 @@ public class DijkstraService {
         }
         List<Link> path = new ArrayList<>();
         Node currentNode = dest;
-        while(currentNode != source){
+        while(!currentNode.getId().equals(source.getId())){
             Link pLink = prevLink.get(currentNode);
             path.add(0, pLink);
             currentNode = pLink.getOrigin();
         }
         return path;
+    }
+
+    public boolean compareLinks(Link link, Double newRisk, Long newDistance, Link pLink, Double pRisk, Long pDistance){
+        boolean lowerRisk = newRisk < pRisk;
+        boolean equalRiskAndLowerDistance = newRisk.equals(pRisk) && newDistance < pDistance;
+        boolean nameLower = link.getId().compareTo(pLink.getId()) < 0;
+        boolean equalRiskAndDistanceLowerNames = newRisk.equals(pRisk) && newDistance.equals(pDistance) && nameLower;
+        return lowerRisk || equalRiskAndLowerDistance || equalRiskAndDistanceLowerNames;
     }
 
     /*

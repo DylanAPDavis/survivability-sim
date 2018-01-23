@@ -58,33 +58,6 @@ public class TopologyAdjustmentService {
         return modifyLinks(topo.getLinks(), true, tempLinks, value);
     }
 
-    public Topology adjustWeightsWithFailureProbs(Topology topo, Set<Failure> failures){
-        Map<String, Long> weightMap = new HashMap<>();
-        Map<String, Failure> failureIdMap = createFailureIdMap(failures);
-        for(Link link : topo.getLinks()){
-            String linkId = link.getId();
-            String origin = link.getOrigin().getId();
-            String target = link.getTarget().getId();
-            double originProb = failureIdMap.containsKey(origin) ? failureIdMap.get(origin).getProbability() : 0;
-            double targetProb = failureIdMap.containsKey(target) ? failureIdMap.get(target).getProbability() : 0;
-            double linkProb = 0.0;
-            if(failureIdMap.containsKey(linkId)){
-                linkProb = failureIdMap.get(linkId).getProbability();
-            } else if(failureIdMap.containsKey(link.reverse().getId())){
-                linkProb =  failureIdMap.get(link.reverse().getId()).getProbability();
-            }
-            //long newWeight = link.getWeight() + Math.round((link.getWeight() * originProb) + (link.getWeight() * linkProb) + (link.getWeight() * targetProb));
-            long newWeight = Math.round((link.getWeight() * originProb) + (link.getWeight() * linkProb) + (link.getWeight() * targetProb));
-            weightMap.put(link.getId(), newWeight);
-        }
-        Set<Link> modifiedLinks = modifyLinks(topo.getLinks(), weightMap);
-        return createTopologyWithLinkSubset(topo, modifiedLinks);
-    }
-
-    public Map<String, Failure> createFailureIdMap(Set<Failure> failures){
-        return failures.stream().collect(Collectors.toMap(Failure::getId, f -> f));
-    }
-
     public void readjustLinkWeights(Map<SourceDestPair, Map<String, Path>> chosenPathsMap, Topology sourceTopo) {
         Map<String, Link> sourceLinkIdMap = sourceTopo.getLinkIdMap();
         for(Map<String, Path> pathMap : chosenPathsMap.values()){

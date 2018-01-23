@@ -36,11 +36,13 @@ public class MinimumRiskPathService {
         List<SourceDestPair> pairs = topologyAdjustmentService.sortPairsByPathCost(details.getPairs(), topo);
         Set<Failure> failures = request.getDetails().getFailures().getFailureSet();
 
-        Topology adjustedTopo = topologyAdjustmentService.adjustWeightsWithFailureProbs(topo, failures);
+        //Topology adjustedTopo = topologyAdjustmentService.adjustWeightsWithFailureProbs(topo, failures);
         long startTime = System.nanoTime();
+        Map<Link, Double> riskWeightMap = pathMappingService.createRiskMap(topo.getLinks(), failures);
         Map<SourceDestPair, Map<String, Path>> pathMap = minimumCostPathService.findPaths(request.getDetails(),
-                request.getRoutingType(), pairs, adjustedTopo, request.getTrafficCombinationType(), true);
-        pathMappingService.setOriginalWeights(pathMap, topo.getLinkIdMap());
+                request.getRoutingType(), pairs, topo, TrafficCombinationType.None, false, riskWeightMap);
+        pathMappingService.filterMapWithRisk(pathMap, details, riskWeightMap);
+        //pathMappingService.setOriginalWeights(pathMap, topo.getLinkIdMap());
         long endTime = System.nanoTime();
 
         double duration = (endTime - startTime)/1e9;
@@ -49,7 +51,5 @@ public class MinimumRiskPathService {
         details.setIsFeasible(true);
         return details;
     }
-
-
 
 }
