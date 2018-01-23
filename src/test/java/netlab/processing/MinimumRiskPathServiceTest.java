@@ -160,6 +160,29 @@ public class MinimumRiskPathServiceTest {
     }
 
     @Test
+    public void anycastTestQuake1FailThreeDests(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("minimumrisk")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(3)
+                .failureScenario("quake1")
+                .numFailureEvents(3)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
+    }
+
+    @Test
     public void manycastTest(){
 
         SimulationParameters params = SimulationParameters.builder()
