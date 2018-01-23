@@ -161,7 +161,7 @@ public class AmplService {
 
         // I_max
         Integer minFailures = Math.min(details.getNumFailureEvents().getTotalNumFailureEvents(), details.getFailures().getFailureSetSize());
-        int iMaxNum = Math.max(1, details.getConnections().getNumConnections() * (minFailures + 1));
+        int iMaxNum = Math.max(1, details.getConnections().getNumConnections()) * (minFailures + 1);
         String iMax = String.format("param I_max := %d;", iMaxNum);
         dataLines.add(iMax);
 

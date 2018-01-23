@@ -96,8 +96,29 @@ public class MinimumRiskPathServiceTest {
                 .objective("totalcost")
                 .routingType("anycast")
                 .numSources(1)
-                .numDestinations(3)
+                .numDestinations(2)
                 .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void anycastTestAllLinksFail(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("minimumrisk")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(2)
+                .failureScenario("allLinks")
+                .numFailureEvents(1)
                 .useAws(false)
                 .build();
         Request request = generationService.generateFromSimParams(params);
