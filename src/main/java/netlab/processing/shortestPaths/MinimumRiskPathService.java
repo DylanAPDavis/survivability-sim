@@ -38,7 +38,7 @@ public class MinimumRiskPathService {
 
         //Topology adjustedTopo = topologyAdjustmentService.adjustWeightsWithFailureProbs(topo, failures);
         long startTime = System.nanoTime();
-        Map<Link, Double> riskWeightMap = pathMappingService.createRiskMap(topo.getLinks(), failures);
+        Map<Link, Double> riskWeightMap = createRiskMap(topo.getLinks(), failures);
         Map<SourceDestPair, Map<String, Path>> pathMap = minimumCostPathService.findPaths(request.getDetails(),
                 request.getRoutingType(), pairs, topo, TrafficCombinationType.None, false, riskWeightMap);
         pathMappingService.filterMapWithRisk(pathMap, details, riskWeightMap);
@@ -50,6 +50,35 @@ public class MinimumRiskPathService {
         details.setRunningTimeSeconds(duration);
         details.setIsFeasible(true);
         return details;
+    }
+
+    public Map<Link, Double> createRiskMap(Set<Link> links, Set<Failure> failures){
+        Map<Link, Double> riskWeightMap = new HashMap<>();
+        Map<String, Failure> failureIdMap = createFailureIdMap(failures);
+        for(Link link : links){
+            String linkId = link.getId();
+            String origin = link.getOrigin().getId();
+            String target = link.getTarget().getId();
+            double originProb = failureIdMap.containsKey(origin) ? failureIdMap.get(origin).getProbability() : 0;
+            double targetProb = failureIdMap.containsKey(target) ? failureIdMap.get(target).getProbability() : 0;
+            double linkProb = 0.0;
+            if(failureIdMap.containsKey(linkId)){
+                linkProb = failureIdMap.get(linkId).getProbability();
+            } else if(failureIdMap.containsKey(link.reverse().getId())){
+                linkProb =  failureIdMap.get(link.reverse().getId()).getProbability();
+            }
+            double runningProb = 1.0;
+            runningProb *= (1 -  originProb);
+            runningProb *= (1 -  linkProb);
+            runningProb *= (1 - targetProb);
+            double compoundWeight = 1.0 - runningProb;
+            riskWeightMap.put(link, compoundWeight);
+        }
+        return riskWeightMap;
+    }
+
+    public Map<String, Failure> createFailureIdMap(Set<Failure> failures){
+        return failures.stream().collect(Collectors.toMap(Failure::getId, f -> f));
     }
 
 }
