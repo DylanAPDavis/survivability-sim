@@ -4,9 +4,18 @@ package netlab.topology.services;
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.topology.elements.*;
+import netlab.topology.elements.Node;
+import netlab.topology.elements.Path;
+import org.graphstream.graph.*;
+import org.graphstream.graph.implementations.DefaultGraph;
+import org.graphstream.stream.file.FileSource;
+import org.graphstream.stream.file.FileSourceFactory;
+import org.graphstream.stream.file.FileSourceGML;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.awt.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,7 +35,8 @@ public class TopologyService {
     public TopologyService(MinimumCostPathService minimumCostPathService){
         this.minimumCostPathService = minimumCostPathService;
         topologyIdMap = new HashMap<>();
-        topologyIdMap.put("NSFnet", makeNsfNet());
+        topologyIdMap.put("nsfnet", makeNsfNet());
+        topologyIdMap.put("tw", makeTWTelecom());
 
         nodeIdMap = new HashMap<>();
         linkIdMap = new HashMap<>();
@@ -119,6 +129,70 @@ public class TopologyService {
         links.add(new Link(ithaca, collegePark, 300L));
         Topology topo = new Topology("NSFnet", nodes, links);
         return populatePathCosts(topo);
+    }
+
+    public Topology makeTWTelecom(){
+        String graphName = "tw";
+        Graph g = readGraphModel(graphName);
+
+        Set<Node> nodes = new HashSet<>();
+        Map<String, Node> nodeIdMap = new HashMap<>();
+        Map<String, Set<String>> nodeIdNeighborsMap = new HashMap<>();
+        Set<Link> links = new HashSet<>();
+        for(org.graphstream.graph.Node node : g.getNodeSet()){
+            Iterator<org.graphstream.graph.Node> neighbors = node.getNeighborNodeIterator();
+            // Skip nodes with no neighbors
+            if(!neighbors.hasNext()){
+                continue;
+            }
+            String label = node.getAttribute("ui.label");
+            Double longitude = node.getAttribute("longitude");
+            Double latitude = node.getAttribute("latitude");
+            Point nodePoint = convertToPoint(longitude, latitude);
+            Node thisNode = new Node(label, nodePoint);
+            nodes.add(thisNode);
+            nodeIdMap.put(label, thisNode);
+            nodeIdNeighborsMap.putIfAbsent(label, new HashSet<>());
+            while(neighbors.hasNext()){
+                org.graphstream.graph.Node neighbor = neighbors.next();
+                String neighborLabel = neighbor.getAttribute("ui.label");
+                nodeIdNeighborsMap.get(label).add(neighborLabel);
+            }
+        }
+
+        for(String nodeId : nodeIdNeighborsMap.keySet()){
+            Node origin = nodeIdMap.get(nodeId);
+            for(String neighborId : nodeIdNeighborsMap.get(nodeId)){
+                Node target = nodeIdMap.get(neighborId);
+                Link otLink = new Link(origin, target, calculateDistance(origin.getPoint(), target.getPoint()));
+                links.add(otLink);
+            }
+        }
+
+        return new Topology(graphName, nodes, links);
+    }
+
+
+    private Long calculateDistance(Point point, Point point1) {
+        double dblDistance = point.distance(point1);
+        return Math.round(dblDistance);
+    }
+
+    public Graph readGraphModel(String graphName){
+        String filePath = System.getProperty("user.dir") + "/config/topologies/" + graphName + ".gml";
+        Graph g = new DefaultGraph(graphName);
+        FileSource fs = new FileSourceGML();
+
+        try {
+            fs.addSink(g);
+            fs.readAll(filePath);
+        } catch( IOException e) {
+            e.printStackTrace();
+        } finally {
+            fs.removeSink(g);
+        }
+
+        return g;
     }
 
     public Topology populatePathCosts(Topology topo) {
