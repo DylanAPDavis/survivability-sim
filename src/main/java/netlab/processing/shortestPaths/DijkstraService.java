@@ -50,7 +50,7 @@ public class DijkstraService {
         Map<Node, Link> prevLink = new HashMap<>();
         distance.put(source, 0L);
         cumulativeRisk.put(source, 0.0);
-        Comparator<Node> comparator = Comparator.comparing(distance::get);
+        Comparator<Node> comparator = Comparator.comparing(cumulativeRisk::get);
 
         Set<Node> nodes = topo.getNodes();
         PriorityQueue<Node> queue = new PriorityQueue<>(nodes.size(), comparator);
