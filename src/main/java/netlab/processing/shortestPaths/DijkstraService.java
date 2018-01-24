@@ -67,29 +67,22 @@ public class DijkstraService {
             Node u = queue.poll();
             for(Link link : nodeLinkMap.get(u)){
                 Node target = link.getTarget();
-                if(queue.contains(target)){
-                    Long newDistanceToTarget =  distance.get(u) + link.getWeight();
-                    Double risk = riskMap.containsKey(link) ? riskMap.get(link) : 0.0;
-                    Double newRiskToTarget = cumulativeRisk.get(u) + risk;
-                    // If the node hasn't been reached yet, just keep this link
-                    if(!prevLink.containsKey(target)){
-                        //prev.put(target, link.getOrigin());
+                Long newDistanceToTarget =  distance.get(u) + link.getWeight();
+                Double risk = riskMap.containsKey(link) ? riskMap.get(link) : 0.0;
+                Double newRiskToTarget = cumulativeRisk.get(u) + risk;
+                // If the node hasn't been reached yet, just keep this link
+                if(!prevLink.containsKey(target)){
+                    prevLink.put(target, link);
+                    distance.put(target, newDistanceToTarget);
+                    cumulativeRisk.put(target, newRiskToTarget);
+                }
+                // Otherwise, compare the alt weights first, then the
+                else{
+                    Link pLink = prevLink.get(target);
+                    if(compareLinks(link, newRiskToTarget, newDistanceToTarget, pLink, cumulativeRisk.get(target), distance.get(target))){
                         prevLink.put(target, link);
                         distance.put(target, newDistanceToTarget);
-                        queue.add(target);
                         cumulativeRisk.put(target, newRiskToTarget);
-                    }
-                    // Otherwise, compare the alt weights first, then the
-                    else{
-                        Link pLink = prevLink.get(target);
-                        //Double pRisk = riskMap.containsKey(pLink) ? riskMap.get(pLink) : 0.0;
-                        if(compareLinks(link, newRiskToTarget, newDistanceToTarget, pLink, cumulativeRisk.get(target), distance.get(target))){
-                            //prev.put(target, link.getOrigin());
-                            prevLink.put(target, link);
-                            distance.put(target, newDistanceToTarget);
-                            queue.add(target);
-                            cumulativeRisk.put(target, newRiskToTarget);
-                        }
                     }
                 }
             }

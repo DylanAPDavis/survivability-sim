@@ -35,7 +35,7 @@ def process_job(job, analysis_type):
 
 
 # seeds = range(1, 31)
-seeds = range(6, 31)
+seeds = range(1, 31)
 for seed in seeds:
     job_list = jobs.create_jobs(seed)
     for j in job_list:
