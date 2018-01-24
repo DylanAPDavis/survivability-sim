@@ -1,5 +1,6 @@
 import subprocess
 import jobs
+import time
 
 analysis_job = "ANALYSIS_JOB"
 analysis_after_sim = "ANALYSIS_AFTER_SIM"
@@ -41,3 +42,4 @@ for seed in seeds:
     for j in job_list:
         print(str(j.__dict__))
         process_job(j, analysis_after_sim)
+    time.sleep(5)

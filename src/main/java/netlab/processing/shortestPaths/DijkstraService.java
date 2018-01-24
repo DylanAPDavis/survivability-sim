@@ -76,7 +76,7 @@ public class DijkstraService {
                     distance.put(target, newDistanceToTarget);
                     cumulativeRisk.put(target, newRiskToTarget);
                 }
-                // Otherwise, compare the alt weights first, then the
+                // Otherwise, compare the alt weights first, then the distance
                 else{
                     Link pLink = prevLink.get(target);
                     if(compareLinks(link, newRiskToTarget, newDistanceToTarget, pLink, cumulativeRisk.get(target), distance.get(target))){
@@ -87,6 +87,7 @@ public class DijkstraService {
                 }
             }
         }
+        // Starting from the dest, build the path back to source in reverse
         List<Link> path = new ArrayList<>();
         Node currentNode = dest;
         while(!currentNode.getId().equals(source.getId())){
