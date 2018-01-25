@@ -31,9 +31,12 @@ public class TopologyService {
 
     private MinimumCostPathService minimumCostPathService;
 
+    private TopologyAdjustmentService topologyAdjustmentService;
+
     @Autowired
-    public TopologyService(MinimumCostPathService minimumCostPathService){
+    public TopologyService(MinimumCostPathService minimumCostPathService, TopologyAdjustmentService topologyAdjustmentService){
         this.minimumCostPathService = minimumCostPathService;
+        this.topologyAdjustmentService = topologyAdjustmentService;
         topologyIdMap = new HashMap<>();
         topologyIdMap.put("nsfnet", makeNsfNet());
         topologyIdMap.put("tw", makeTWTelecom());
@@ -224,6 +227,54 @@ public class TopologyService {
 
     public Link getLinkById(String id){
         return linkIdMap.get(id);
+    }
+
+    public String getMetrics(Topology topo){
+        // Min Degree
+        // Max Degree
+        // Avg Degree
+        // Longest min-hop path (Diameter)
+        // Maximum min-cost path
+        Topology equalCostLinksTopo = topologyAdjustmentService.adjustWeightsToOneWithLinks(topo, topo.getLinks());
+        int minDegree = Integer.MAX_VALUE;
+        int maxDegree = 0;
+        double totalDegree = 0.0;
+        int numNodes = topo.getNodes().size();
+        double longestMinHop = 0;
+        double maxMinCost = 0;
+        for(Node node : topo.getNodeLinkMap().keySet()){
+            Set<Link> links = topo.getNodeLinkMap().get(node);
+            int degree = links.size();
+            if(degree < minDegree){
+                minDegree = degree;
+            }
+            if(degree > maxDegree){
+                maxDegree = degree;
+            }
+            totalDegree += degree;
+            for(Node node2 : topo.getNodes()){
+                if(!node.getId().equals(node2.getId())){
+                    Path minCostPath = minimumCostPathService.findShortestPath(node, node2, topo);
+                    Path minHopPath = minimumCostPathService.findShortestPath(node, node2, equalCostLinksTopo);
+                    if(minCostPath.getTotalWeight() > maxMinCost){
+                        maxMinCost = minCostPath.getTotalWeight();
+                    }
+                    if(minHopPath.getTotalWeight() > longestMinHop){
+                        longestMinHop = minHopPath.getTotalWeight();
+                    }
+                }
+            }
+        }
+        double avgDegree =totalDegree / numNodes;
+
+        String metrics = "Topology metrics: " + topo.getId() + "\n";
+        metrics += "--------------\n";
+        metrics += "Min Degree: " + minDegree + "" + "\n";
+        metrics += "Max Degree: " + maxDegree + "" + "\n";
+        metrics += "Avg Degree: " + avgDegree + "" + "\n";
+        metrics += "Max Min Hop: " + longestMinHop + "" + "\n";
+        metrics += "Max Min Cost: " + maxMinCost + "" + "\n";
+        return metrics;
     }
 
 }

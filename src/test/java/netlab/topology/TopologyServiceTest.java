@@ -25,4 +25,17 @@ public class TopologyServiceTest
         assert(topo.getLinks().size() > 0);
     }
 
+    @Test
+    public void getMetricsTest(){
+        Topology nsf = topologyService.getTopologyById("nsfnet");
+        Topology tw = topologyService.getTopologyById("tw");
+
+        assert(tw.getNodes().size() > 0);
+        assert(tw.getLinks().size() > 0);
+        String nsfMetrics = topologyService.getMetrics(nsf);
+        System.out.println(nsfMetrics);
+        String twMetrics = topologyService.getMetrics(tw);
+        System.out.println(twMetrics);
+    }
+
 }

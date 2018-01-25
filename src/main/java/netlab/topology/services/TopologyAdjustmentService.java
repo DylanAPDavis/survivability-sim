@@ -42,6 +42,11 @@ public class TopologyAdjustmentService {
         return createTopologyWithLinkSubset(topo, modifiedLinks);
     }
 
+    public Topology adjustWeightsToOneWithLinks(Topology topo, Set<Link> links){
+        Set<Link> modifiedLinks = links.size() > 0 ? modifyForwardAndReverseLinks(topo, new HashSet<>(links), 1.0) : topo.getLinks();
+        return createTopologyWithLinkSubset(topo, modifiedLinks);
+    }
+
     public Topology adjustWeightsToMaxWithLinksAndNodes(Topology topo, Set<Node> nodesToKeep, Set<Link> pathLinks){
         Set<Link> modifiedLinks = pathLinks.size() > 0 ? modifyForwardAndReverseLinks(topo, new HashSet<>(pathLinks), Double.MAX_VALUE) : topo.getLinks();
         return createTopologyWithNodeLinkSubset(topo, nodesToKeep, modifiedLinks);
