@@ -6,6 +6,7 @@ import netlab.submission.enums.FailureScenario;
 import netlab.submission.request.FailureArea;
 import netlab.topology.elements.Failure;
 import netlab.topology.elements.Link;
+import netlab.topology.elements.Location;
 import netlab.topology.elements.Node;
 import org.springframework.stereotype.Service;
 
@@ -114,11 +115,11 @@ public class FailureAreaService {
         Set<Failure> failures = new HashSet<>();
         // Check each node
         for(Node node : nodes){
-            Point nodePoint = node.getPoint();
+            Location nodePoint = node.getPoint();
             // For now, take the maximum weight from any failure area
             double max = 0.0;
             for(FailureArea fa : failureAreas){
-                double distance = fa.getCenter().distance(nodePoint);
+                double distance = fa.getCenter().distanceTo(nodePoint);
                 double weight = Math.max(0.0, 1.0 - (distance)/fa.getRadius());
                 // If you're not using distance based weighting, then the weight is 1.0 (node will fail)
                 if(weight > 0.0 && fa.getMustFail()){
@@ -140,16 +141,16 @@ public class FailureAreaService {
         Set<Failure> failures = new HashSet<>();
         // Check each link
         for(Link link : links){
-            Set<Point> points = link.getPoints();
+            Set<Location> points = link.getPoints();
             double max = 0.0;
             // Check each failure area
             for(FailureArea fa : failureAreas){
-                Point center = fa.getCenter();
+                Location center = fa.getCenter();
                 // Get all of the distances from center to link points
                 // Calculate the failure weights
                 double runningProb = 1.0;
-                for(Point linkPoint : points){
-                    double distance = center.distance(linkPoint);
+                for(Location linkPoint : points){
+                    double distance = center.distanceTo(linkPoint);
                     double weight = Math.max(0.0, 1.0 - (distance)/fa.getRadius());
                     runningProb *= (1 - weight);
                 }

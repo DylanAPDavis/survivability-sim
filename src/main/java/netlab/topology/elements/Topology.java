@@ -35,7 +35,7 @@ public class Topology {
 
     Map<SourceDestPair, List<Link>> neighborLinkMap;
 
-    Map<SourceDestPair, Long> minimumPathCostMap;
+    Map<SourceDestPair, Double> minimumPathCostMap;
 
     public Topology(String id, Set<Node> nodes, Set<Link> links){
         this.id = id;

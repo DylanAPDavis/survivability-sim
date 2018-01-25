@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import netlab.topology.elements.Location;
 
 import java.awt.*;
 
@@ -13,12 +14,12 @@ import java.awt.*;
 @AllArgsConstructor
 public class FailureArea {
 
-    private Point center;
+    private Location center;
     private Integer radius;
     private Boolean mustFail;
 
-    public FailureArea(int x, int y, int radius, boolean mustFail){
-        center = new Point(x,y);
+    public FailureArea(double latitude, double longitude, int radius, boolean mustFail){
+        center = new Location(latitude,longitude);
         this.radius = radius;
         this.mustFail = mustFail;
     }

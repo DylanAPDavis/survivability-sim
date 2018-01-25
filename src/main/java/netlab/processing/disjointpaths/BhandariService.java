@@ -203,7 +203,7 @@ public class BhandariService {
                 // Do not reverse the interal edge for src/dest
                 boolean isInternalEndpoint = nodesCanFail && (checkIfInternalEndpoint(pathEdge, src, dst));
                 if(!isInternalEndpoint && (failureIds.contains(pathEdge.getId()) || defaultBehavior)) {
-                    Long reversedMetric = -1 * pathEdge.getWeight();
+                    Double reversedMetric = -1 * pathEdge.getWeight();
                     Link reversedEdge = new Link(pathEdge.getTarget(), pathEdge.getOrigin(), reversedMetric);
                     reversedToOriginalMap.put(reversedEdge, pathEdge);
                     Set<Link> allBetweenPair = findAllBetweenPair(pathEdge.getOrigin(), pathEdge.getTarget(), modifiedTopo.getLinks());
@@ -332,7 +332,7 @@ public class BhandariService {
                 .id(node.getId() + "-internal")
                 .origin(incomingNode)
                 .target(outgoingNode)
-                .weight(0L)
+                .weight(0.0)
                 .build();
     }
 
@@ -472,9 +472,9 @@ public class BhandariService {
             return paths;
         }
         int minIndex = 0;
-        long minWeight = Long.MAX_VALUE;
+        double minWeight = Double.MAX_VALUE;
         for(int index = 0; index < paths.size(); index++){
-            long totalWeight = paths.get(index).stream().map(Link::getWeight).reduce(0L, (w1, w2) -> w1 + w2);
+            double totalWeight = paths.get(index).stream().map(Link::getWeight).reduce(0.0, (w1, w2) -> w1 + w2);
             if(totalWeight < minWeight){
                 minWeight = totalWeight;
                 minIndex = index;

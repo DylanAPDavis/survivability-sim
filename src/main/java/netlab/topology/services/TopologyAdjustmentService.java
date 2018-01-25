@@ -27,7 +27,7 @@ public class TopologyAdjustmentService {
         Set<Link> zeroCostLinks = zeroCostPaths.stream().map(Path::getLinks).flatMap(List::stream).collect(Collectors.toSet());
 
 
-        Set<Link> modifiedLinks = modifyLinks(topo.getLinks(), !trafficType.equals(TrafficCombinationType.None), zeroCostLinks, 0L);
+        Set<Link> modifiedLinks = modifyLinks(topo.getLinks(), !trafficType.equals(TrafficCombinationType.None), zeroCostLinks, 0.0);
 
         return createTopologyWithLinkSubset(topo, modifiedLinks);
     }
@@ -38,16 +38,16 @@ public class TopologyAdjustmentService {
     }
 
     public Topology adjustWeightsToMaxWithLinks(Topology topo, Set<Link> pathLinks){
-        Set<Link> modifiedLinks = pathLinks.size() > 0 ? modifyForwardAndReverseLinks(topo, new HashSet<>(pathLinks), Long.MAX_VALUE) : topo.getLinks();
+        Set<Link> modifiedLinks = pathLinks.size() > 0 ? modifyForwardAndReverseLinks(topo, new HashSet<>(pathLinks), Double.MAX_VALUE) : topo.getLinks();
         return createTopologyWithLinkSubset(topo, modifiedLinks);
     }
 
     public Topology adjustWeightsToMaxWithLinksAndNodes(Topology topo, Set<Node> nodesToKeep, Set<Link> pathLinks){
-        Set<Link> modifiedLinks = pathLinks.size() > 0 ? modifyForwardAndReverseLinks(topo, new HashSet<>(pathLinks), Long.MAX_VALUE) : topo.getLinks();
+        Set<Link> modifiedLinks = pathLinks.size() > 0 ? modifyForwardAndReverseLinks(topo, new HashSet<>(pathLinks), Double.MAX_VALUE) : topo.getLinks();
         return createTopologyWithNodeLinkSubset(topo, nodesToKeep, modifiedLinks);
     }
 
-    public Set<Link> modifyForwardAndReverseLinks(Topology topo, Set<Link> linksToModify, Long value){
+    public Set<Link> modifyForwardAndReverseLinks(Topology topo, Set<Link> linksToModify, Double value){
         Set<Link> tempLinks = new HashSet<>(linksToModify);
         Map<String, Link> linkIdMap = topo.getLinkIdMap();
         Set<Link> inverseLinks = tempLinks.stream()
@@ -90,31 +90,31 @@ public class TopologyAdjustmentService {
         return adjustedPaths;
     }
 
-    public Set<Link> modifyLinks(Set<Link> links, boolean shouldModify, Set<Link> setToBeModified, Long newWeight){
+    public Set<Link> modifyLinks(Set<Link> links, boolean shouldModify, Set<Link> setToBeModified, Double newWeight){
         Set<Link> modifiedLinks = new HashSet<>();
         for(Link link : links){
-            Long weight = shouldModify && setToBeModified.contains(link) ?
+            Double weight = shouldModify && setToBeModified.contains(link) ?
                     newWeight : link.getWeight();
             modifiedLinks.add(modifyLink(link, weight));
         }
         return modifiedLinks;
     }
 
-    public Set<Link> modifyLinks(Set<Link> links, Map<String, Long> weightMap){
+    public Set<Link> modifyLinks(Set<Link> links, Map<String, Double> weightMap){
         Set<Link> modifiedLinks = new HashSet<>();
         for(Link link : links){
-            Long weight = weightMap.get(link.getId());
+            Double weight = weightMap.get(link.getId());
             modifiedLinks.add(modifyLink(link, weight));
         }
         return modifiedLinks;
     }
 
-    public Link modifyLink(Link link, Long weight){
+    public Link modifyLink(Link link, Double weight){
         return new Link(link.getOrigin(), link.getTarget(), weight, link.getPoints());
     }
 
     public List<SourceDestPair> sortPairsByPathCost(Collection<SourceDestPair> pairs, Topology topo){
-        Map<SourceDestPair, Long> minimumPathCostMap = topo.getMinimumPathCostMap();
+        Map<SourceDestPair, Double> minimumPathCostMap = topo.getMinimumPathCostMap();
         return pairs
                 .stream()
                 .sorted(Comparator.comparing(minimumPathCostMap::get))

@@ -52,7 +52,7 @@ public class CollapsedRingService {
 
         Map<SourceDestPair, Map<String, Path>> chosenPathsMap = new HashMap<>();
 
-        Map<SourceDestPair, Long> minimumCostPathMap = topo.getMinimumPathCostMap();
+        Map<SourceDestPair, Double> minimumCostPathMap = topo.getMinimumPathCostMap();
 
 
         List<Node> sortedDests = dests.stream()

@@ -16,7 +16,7 @@ set I := 1..I_max;
 param A{u in V, v in V} binary default 0;
 
 # Link cost
-param Weight{u in V, v in V} integer default 0;
+param Weight{u in V, v in V} default 0;
 
 # S - Sources
 set S;
@@ -185,7 +185,7 @@ var Num_Conns_Total = sum{(s,d) in SD} Num_Conn[s,d];
 var Num_Links_Used >= 0 integer;
 
 # Total weight of all used links
-var Total_Weight >= 0 integer;
+var Total_Weight >= 0;
 
 
 # OBJECTIVE

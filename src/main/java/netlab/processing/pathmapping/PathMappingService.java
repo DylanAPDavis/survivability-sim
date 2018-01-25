@@ -74,14 +74,14 @@ public class PathMappingService {
         }
         List<SourceDestPair> pairsSortedByRisk = pathMap.keySet().stream()
                 .sorted(Comparator.comparingDouble(pathRiskMap::get)
-                        .thenComparingLong(p -> pathMap.get(p).values().stream().mapToLong(Path::getTotalWeight).sum()))
+                        .thenComparingDouble(p -> pathMap.get(p).values().stream().mapToDouble(Path::getTotalWeight).sum()))
                 .collect(Collectors.toList());
         return filterUsingSortedPairs(pathMap, details, pairsSortedByRisk);
     }
 
     public Map<SourceDestPair, Map<String, Path>> filterMap(Map<SourceDestPair, Map<String, Path>> pathMap, Details details){
         List<SourceDestPair> pairsSortedByTotalWeight = pathMap.keySet().stream()
-                .sorted(Comparator.comparingLong(p -> pathMap.get(p).values().stream().mapToLong(Path::getTotalWeight).sum()))
+                .sorted(Comparator.comparingDouble(p -> pathMap.get(p).values().stream().mapToDouble(Path::getTotalWeight).sum()))
                 .collect(Collectors.toList());
         return filterUsingSortedPairs(pathMap, details, pairsSortedByTotalWeight);
     }

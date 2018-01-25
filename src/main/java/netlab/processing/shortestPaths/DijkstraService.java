@@ -45,10 +45,10 @@ public class DijkstraService {
     }
 
     public List<Link> shortestPathWithAltWeights(Topology topo, Node source, Node dest, Map<Link, Double> riskMap){
-        Map<Node, Long> distance = new HashMap<>();
+        Map<Node, Double> distance = new HashMap<>();
         Map<Node, Double> cumulativeRisk = new HashMap<>();
         Map<Node, Link> prevLink = new HashMap<>();
-        distance.put(source, 0L);
+        distance.put(source, 0.0);
         cumulativeRisk.put(source, 0.0);
         Comparator<Node> comparator = Comparator.comparing(cumulativeRisk::get);
 
@@ -56,7 +56,7 @@ public class DijkstraService {
         PriorityQueue<Node> queue = new PriorityQueue<>(nodes.size(), comparator);
         for(Node node : nodes){
             if(!node.getId().equals(source.getId())){
-                distance.put(node, Long.MAX_VALUE);
+                distance.put(node, Double.MAX_VALUE);
                 cumulativeRisk.put(node, Double.MAX_VALUE);
             }
             queue.add(node);
@@ -67,7 +67,7 @@ public class DijkstraService {
             Node u = queue.poll();
             for(Link link : nodeLinkMap.get(u)){
                 Node target = link.getTarget();
-                Long newDistanceToTarget =  distance.get(u) + link.getWeight();
+                Double newDistanceToTarget =  distance.get(u) + link.getWeight();
                 Double risk = riskMap.containsKey(link) ? riskMap.get(link) : 0.0;
                 Double newRiskToTarget = cumulativeRisk.get(u) + risk;
                 // If the node hasn't been reached yet, just keep this link
@@ -98,7 +98,7 @@ public class DijkstraService {
         return path;
     }
 
-    public boolean compareLinks(Link link, Double newRisk, Long newDistance, Link pLink, Double pRisk, Long pDistance){
+    public boolean compareLinks(Link link, Double newRisk, Double newDistance, Link pLink, Double pRisk, Double pDistance){
         boolean lowerRisk = newRisk < pRisk;
         boolean equalRiskAndLowerDistance = newRisk.equals(pRisk) && newDistance < pDistance;
         boolean nameLower = link.getId().compareTo(pLink.getId()) < 0;

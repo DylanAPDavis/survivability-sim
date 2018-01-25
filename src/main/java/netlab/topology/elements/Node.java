@@ -15,11 +15,12 @@ import java.io.Serializable;
 public class Node implements Serializable {
 
     private String id;
-    private Point point;
+    private Location point;
 
-    public Node(String id, int x, int y){
+    // ID, Latitude, Longitude
+    public Node(String id, double lat, double lon){
         this.id = id;
-        this.point = new Point(x,y);
+        this.point = new Location(lat,lon);
     }
 
 

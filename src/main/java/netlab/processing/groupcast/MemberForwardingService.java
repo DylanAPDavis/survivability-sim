@@ -56,15 +56,15 @@ public class MemberForwardingService {
         if(sources.size() > 1) {
             members.addAll(sources);
         }
-        Map<SourceDestPair, Long> pathCostMap = topo.getMinimumPathCostMap();
+        Map<SourceDestPair, Double> pathCostMap = topo.getMinimumPathCostMap();
 
         // First, get the costs to get from each src to each dest, then each dest to each other dest
-        Map<Node, Map<Node, Long>> costToMemberMap = new HashMap<>();
-        Map<Node, Map<Node, Long>> costFromMemberMap = new HashMap<>();
+        Map<Node, Map<Node, Double>> costToMemberMap = new HashMap<>();
+        Map<Node, Map<Node, Double>> costFromMemberMap = new HashMap<>();
         for(SourceDestPair pair : pathCostMap.keySet()) {
             Node origin = pair.getSrc();
             Node target = pair.getDst();
-            Long cost = pathCostMap.get(pair);
+            Double cost = pathCostMap.get(pair);
             if (sources.contains(origin) && members.contains(target)) {
                 costToMemberMap.putIfAbsent(target, new HashMap<>());
                 costToMemberMap.get(target).put(origin, cost);
@@ -81,12 +81,12 @@ public class MemberForwardingService {
         // Pick the destination with the lowest minimum cost to get to from the sources
         // AND to get to the other destinations
         Node minimumCostMember = null;
-        Long minimumCost = Long.MAX_VALUE;
+        Double minimumCost = Double.MAX_VALUE;
         for(Node member : members){
-            Map<Node, Long> costToMap = costToMemberMap.get(member);
-            Map<Node, Long> costFromMap = costToMemberMap.get(member);
-            Long sum = costToMap != null ? costToMap.values().stream().reduce(0L, (c1, c2) -> c1 + c2) : Long.MAX_VALUE;
-            sum += costFromMap != null ? costFromMap.values().stream().reduce(0L, (c1, c2) -> c1 + c2) : Long.MAX_VALUE;
+            Map<Node, Double> costToMap = costToMemberMap.get(member);
+            Map<Node, Double> costFromMap = costToMemberMap.get(member);
+            Double sum = costToMap != null ? costToMap.values().stream().reduce(0.0, (c1, c2) -> c1 + c2) : Double.MAX_VALUE;
+            sum += costFromMap != null ? costFromMap.values().stream().reduce(0.0, (c1, c2) -> c1 + c2) : Double.MAX_VALUE;
             if(sum < minimumCost){
                 minimumCost = sum;
                 minimumCostMember = member;

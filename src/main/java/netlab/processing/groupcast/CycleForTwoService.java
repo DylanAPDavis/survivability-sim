@@ -60,7 +60,7 @@ public class CycleForTwoService {
 
         Set<Node> sources = details.getSources();
         Set<Node> dests = details.getDestinations();
-        Map<SourceDestPair, Long> pathCostMap = topo.getMinimumPathCostMap();
+        Map<SourceDestPair, Double> pathCostMap = topo.getMinimumPathCostMap();
 
         // Get all of the members
         Set<Node> members = new HashSet<>(sources);

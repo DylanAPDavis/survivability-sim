@@ -145,7 +145,7 @@ public class FlexBhandariService {
                 .map(f -> f.getNode() != null ? f.getNode().getId() : f.getLink().getId())
                 .collect(Collectors.toSet());
         Map<SourceDestPair, Integer> intactPathCount = new HashMap<>();
-        Map<SourceDestPair, Long> totalWeights = new HashMap<>();
+        Map<SourceDestPair, Double> totalWeights = new HashMap<>();
         Set<SourceDestPair> srcDstDontFail = new HashSet<>();
         Set<SourceDestPair> srcFails = new HashSet<>();
         Set<SourceDestPair> dstFails = new HashSet<>();
@@ -155,7 +155,7 @@ public class FlexBhandariService {
             Node dst = pair.getDst();
             List<Path> paths = pathsPerPair.get(pair);
 
-            Long totalWeight = paths.stream().mapToLong(Path::getTotalWeight).sum();
+            Double totalWeight = paths.stream().mapToDouble(Path::getTotalWeight).sum();
             totalWeights.put(pair, totalWeight);
 
             Integer numDisconn = getNumDisconn(src, dst, paths, failureGroups);
@@ -320,7 +320,7 @@ public class FlexBhandariService {
     }
 
     private List<SourceDestPair> sortPairs(Map<SourceDestPair, Integer> intactPathCount,
-                                           Map<SourceDestPair, Long> totalWeights, Set<SourceDestPair> srcDstDontFail,
+                                           Map<SourceDestPair, Double> totalWeights, Set<SourceDestPair> srcDstDontFail,
                                            Set<SourceDestPair> srcFails, Set<SourceDestPair> dstFails,
                                            Set<SourceDestPair> srcDstFail, int numSources, int numDsts) {
         List<SourceDestPair> sortedSrcFails = srcFails.stream()
