@@ -73,6 +73,16 @@ public class FailureAreaServiceTest {
     }
 
     @Test
+    public void quake3Test(){
+        Topology topo = topologyService.getTopologyById("NSFnet");
+        Set<Node> nodes = topo.getNodes();
+        Set<Link> links = topo.getLinks();
+        FailureClass failureClass = FailureClass.Both;
+        Set<Failure> failures = failureAreaService.generateFailures(FailureScenario.Quake_3, nodes, links, failureClass);
+        System.out.println(printingService.outputFailures(failures));
+    }
+
+    @Test
     public void quake1_2Test(){
         Topology topo = topologyService.getTopologyById("NSFnet");
         Set<Node> nodes = topo.getNodes();
@@ -99,6 +109,37 @@ public class FailureAreaServiceTest {
         Set<Link> links = topo.getLinks();
         FailureClass failureClass = FailureClass.Both;
         Set<Failure> failures = failureAreaService.generateFailures(FailureScenario.Nuke_1_2_3, nodes, links, failureClass);
+        System.out.println(printingService.outputFailures(failures));
+    }
+
+    // TW network tests
+    @Test
+    public void quake1TestTW(){
+        Topology topo = topologyService.getTopologyById("tw");
+        Set<Node> nodes = topo.getNodes();
+        Set<Link> links = topo.getLinks();
+        FailureClass failureClass = FailureClass.Both;
+        Set<Failure> failures = failureAreaService.generateFailures(FailureScenario.Quake_1, nodes, links, failureClass);
+        System.out.println(printingService.outputFailures(failures));
+    }
+
+    @Test
+    public void quake2TestTW(){
+        Topology topo = topologyService.getTopologyById("tw");
+        Set<Node> nodes = topo.getNodes();
+        Set<Link> links = topo.getLinks();
+        FailureClass failureClass = FailureClass.Both;
+        Set<Failure> failures = failureAreaService.generateFailures(FailureScenario.Quake_2, nodes, links, failureClass);
+        System.out.println(printingService.outputFailures(failures));
+    }
+
+    @Test
+    public void quake3TestTW(){
+        Topology topo = topologyService.getTopologyById("tw");
+        Set<Node> nodes = topo.getNodes();
+        Set<Link> links = topo.getLinks();
+        FailureClass failureClass = FailureClass.Both;
+        Set<Failure> failures = failureAreaService.generateFailures(FailureScenario.Quake_3, nodes, links, failureClass);
         System.out.println(printingService.outputFailures(failures));
     }
 }

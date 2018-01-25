@@ -57,6 +57,29 @@ public class AmplRoutingModelTest {
     }
 
     @Test
+    public void unicastTestTW(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureSetSize(0)
+                .failureClass("both")
+                .numFailureEvents(0)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
     public void unicastSourceTrafficTest(){
 
         SimulationParameters params = SimulationParameters.builder()
@@ -86,6 +109,28 @@ public class AmplRoutingModelTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("alllinks")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void unicastLinkFailuresTestTW(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
                 .algorithm("ilp")
                 .problemClass("combined")
                 .objective("totalcost")
@@ -154,6 +199,28 @@ public class AmplRoutingModelTest {
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
                 .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("allnodes")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void unicastNodeFailuresTestTW(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
                 .algorithm("ilp")
                 .problemClass("combined")
                 .objective("totalcost")
@@ -256,7 +323,7 @@ public class AmplRoutingModelTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
-        assert(request.getDetails().getIsFeasible());
+        assert(!request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
 

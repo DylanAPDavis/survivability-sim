@@ -54,22 +54,38 @@ public class TopologyService {
         return topologyIdMap.getOrDefault(id.toLowerCase(), topologyIdMap.get("nsfnet"));
     }
 
+    /*
+        Seattle, WA	47.60621, -122.332071
+        Palo Alto, CA	37.441883, -122.143019
+        San Diego, CA	32.715738, -117.161084
+        Salt Lake City, UT	40.760779, -111.891047
+        Boulder, CO	40.014986, -105.270546
+        Houston, TX	29.760427, -95.369803
+        Lincoln, NE	40.825763, -96.685198
+        Champaign, IL	40.11642, -88.243383
+        Ann Arbor, MI	42.280826, -83.743038
+        Pittsburgh, PA	40.440625, -79.995886
+        Atlanta, GA	33.748995, -84.387982
+        College Park, MD	38.989697, -76.93776
+        Ithaca, NY	42.443961, -76.501881
+        Princeton, NJ	40.357298, -74.667223
+     */
     private Topology makeNsfNet() {
         Set<Node> nodes = new HashSet<>();
-        Node seattle = new Node("Seattle", 47.6062, 122.3321);
-        Node paloAlto = new Node("Palo Alto", 37.4419, 122.1430);
-        Node sanDiego = new Node("San Diego", 32.7157, 117.1611);
-        Node saltLakeCity = new Node("Salt Lake City", 40.7608, 111.8910);
-        Node boulder = new Node("Boulder", 40.0150, 105.2705);
-        Node houston = new Node("Houston", 29.7604, 95.3698);
-        Node lincoln = new Node("Lincoln", 40.8258, 96.6852);
-        Node champaign = new Node("Champaign", 40.1164, 88.2434);
-        Node annArbor = new Node("Ann Arbor", 42.2808, 83.7430);
-        Node pittsburgh = new Node("Pittsburgh", 40.4406, 79.9959);
-        Node atlanta = new Node("Atlanta", 33.7490, 84.3880);
-        Node collegePark = new Node("College Park", 38.9897, 76.9378);
-        Node ithaca = new Node("Ithaca", 42.4440, 76.5019);
-        Node princeton = new Node("Princeton", 40.3573, 74.6672);
+        Node seattle = new Node("Seattle", 47.60621, -122.332071);
+        Node paloAlto = new Node("Palo Alto", 37.441883, -122.143019);
+        Node sanDiego = new Node("San Diego", 32.715738, -117.161084);
+        Node saltLakeCity = new Node("Salt Lake City", 40.760779, -111.891047);
+        Node boulder = new Node("Boulder", 40.014986, -105.270546);
+        Node houston = new Node("Houston", 29.760427, -95.369803);
+        Node lincoln = new Node("Lincoln", 40.825763, -96.685198);
+        Node champaign = new Node("Champaign", 40.11642, -88.243383);
+        Node annArbor = new Node("Ann Arbor", 42.280826, -83.743038);
+        Node pittsburgh = new Node("Pittsburgh", 40.440625, -79.995886);
+        Node atlanta = new Node("Atlanta", 33.748995, -84.387982);
+        Node collegePark = new Node("College Park", 38.989697, -76.93776);
+        Node ithaca = new Node("Ithaca", 42.443961, -76.501881);
+        Node princeton = new Node("Princeton", 40.357298, -74.667223);
         nodes.add(seattle);
         nodes.add(paloAlto);
         nodes.add(sanDiego);
