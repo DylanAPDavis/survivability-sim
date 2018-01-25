@@ -9,6 +9,8 @@ import net.sf.geographiclib.Geodesic;
 import net.sf.geographiclib.GeodesicData;
 import net.sf.geographiclib.GeodesicLine;
 
+import java.io.Serializable;
+
 /******************************************************************************
  *  Compilation:  javac Location.java
  *  Execution:    java Location
@@ -25,7 +27,7 @@ import net.sf.geographiclib.GeodesicLine;
 @Data
 @Builder
 @NoArgsConstructor
-public class Location {
+public class Location implements Serializable{
     private double longitude;
     private double latitude;
     private static double metersPerKilometer = 1000;

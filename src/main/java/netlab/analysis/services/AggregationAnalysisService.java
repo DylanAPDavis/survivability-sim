@@ -26,10 +26,10 @@ public class AggregationAnalysisService {
     }
 
     public AggregationParameters makeDefaultParameters(List<Long> seeds){
-        List<String> topologyIds = Collections.singletonList("NSFnet");
+        List<String> topologyIds = Arrays.asList("nsfnet", "tw");
         /*List<RoutingType> routingTypes = Arrays.asList(RoutingType.Unicast, RoutingType.Anycast, RoutingType.Manycast, RoutingType.Multicast,
                 RoutingType.ManyToOne, RoutingType.ManyToMany, RoutingType.Broadcast);*/
-        List<RoutingType> routingTypes = Arrays.asList(RoutingType.Anycast);
+        List<RoutingType> routingTypes = Arrays.asList(RoutingType.Unicast, RoutingType.Anycast);
         List<FailureScenario> failureScenarios = Arrays.asList(FailureScenario.Default, FailureScenario.AllLinks, FailureScenario.AllNodes,
                 FailureScenario.Quake_1, FailureScenario.Quake_2, FailureScenario.Quake_3);
         List<Integer> nfeValues = Arrays.asList(0, 1, 2, 3, 9999);

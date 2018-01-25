@@ -117,9 +117,7 @@ public class StorageService {
         List<String> requestSetIds = matchingParams.stream().map(SimulationParameters::getRequestId).collect(Collectors.toList());
         Boolean deleteRequests = s3Interface.deleteFromBucket(requestSetIds, "raw") && s3Interface.deleteFromBucket(requestSetIds, "analyzed");
         Boolean deleteRecords = false;
-        if(deleteRequests){
-            deleteRecords = dynamoInterface.deleteRecords(matchingParams);
-        }
+        deleteRecords = dynamoInterface.deleteRecords(matchingParams);
         return deleteRecords;
     }
 

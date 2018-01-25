@@ -22,12 +22,12 @@ public class FailureAreaService {
 
     public FailureAreaService(){
         failureAreaMap = new HashMap<>();
-        FailureArea quake1 = new FailureArea(37.441883, -122.143019, 1500, false);
-        FailureArea quake2 = new FailureArea(29.760427, -95.369803, 1000, false);
-        FailureArea quake3 = new FailureArea(40.440625, -79.995886, 500, false);
-        FailureArea nuke1 = new FailureArea(37.441883, -122.143019, 1500, true);
-        FailureArea nuke2 = new FailureArea(29.760427, -95.369803, 1000, true);
-        FailureArea nuke3 = new FailureArea(40.440625, -79.995886, 500, true);
+        FailureArea quake1 = new FailureArea(37.441883, -122.143019, 1250, false); // Palo Alto
+        FailureArea quake2 = new FailureArea(40.825763, -96.685198, 750, false); // Lincoln
+        FailureArea quake3 = new FailureArea(33.748995, -84.387982, 500, false); // Atlanta
+        FailureArea nuke1 = new FailureArea(37.441883, -122.143019, 1250, true);
+        FailureArea nuke2 = new FailureArea(40.825763, -96.685198, 750, true);
+        FailureArea nuke3 = new FailureArea(33.748995, -84.387982, 500, true);
         failureAreaMap.put("quake1", quake1);
         failureAreaMap.put("quake2", quake2);
         failureAreaMap.put("quake3", quake3);

@@ -25,6 +25,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -63,14 +66,21 @@ public class AWSTest {
 
     //@Test
     public void rerunRequests(){
-       List<Long> seeds = Arrays.asList(1L);
+        List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
         submissionController.rerunRequests(seeds);
     }
 
-    //@Test
+    @Test
     public void deleteRequests(){
-        Long seed = 1L;
-        storageController.deleteRecordsAndRequests(seed);
+        List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
+        for(Long seed : seeds) {
+            long startTime = System.nanoTime();
+            boolean success = storageController.deleteRecordsAndRequests(seed);
+            assert (success);
+            long endTime = System.nanoTime();
+            double duration = (endTime - startTime)/1e9;
+            System.out.println("Deleted seed " + seed + ". Took: " + duration + " seconds");
+        }
     }
 
     //@Test
