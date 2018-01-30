@@ -24,7 +24,7 @@ public class FailureAreaService {
         failureAreaMap = new HashMap<>();
         FailureArea quake1 = new FailureArea(37.441883, -122.143019, 1250, false); // Palo Alto
         FailureArea quake2 = new FailureArea(40.825763, -96.685198, 750, false); // Lincoln
-        FailureArea quake3 = new FailureArea(33.748995, -84.387982, 500, false); // Atlanta
+        FailureArea quake3 = new FailureArea(33.748995, -76.93776, 500, false); // Atlanta Lat, CP Long
         FailureArea nuke1 = new FailureArea(37.441883, -122.143019, 1250, true);
         FailureArea nuke2 = new FailureArea(40.825763, -96.685198, 750, true);
         FailureArea nuke3 = new FailureArea(33.748995, -84.387982, 500, true);
