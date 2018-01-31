@@ -85,7 +85,7 @@ public class YensService {
 
     }
 
-    private List<Path> computeKPaths(Topology topology, Node src, Node dst, int K) {
+    public List<Path> computeKPaths(Topology topology, Node src, Node dst, int K) {
         // Determine the shortest path from the source to the sink.
         //A[0] = Dijkstra(Graph, source, sink);
         List<Path> paths = new ArrayList<>();

@@ -1,8 +1,0 @@
-"Baton Rouge" = 19
-"San Louis Obispo" = 4
-"Binghamton" = 13
-"Jackson" = 21
-"New Jersey" = 8
-"Shreveport" = 30
-"Miami" = 62
-"Baltimore" = 9

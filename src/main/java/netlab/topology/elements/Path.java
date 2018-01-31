@@ -25,11 +25,14 @@ public class Path implements Serializable {
 
     private Double totalWeight;
 
+    private String id;
+
     public Path(List<Link> links){
         this.links = links;
         this.nodes = getNodes(links);
         this.linkIds = links.stream().map(Link::getId).collect(Collectors.toSet());
         this.nodeIds = this.nodes.stream().map(Node::getId).collect(Collectors.toSet());
+        this.id = links.stream().map(Link::getId).reduce((i1, i2) -> i1 + i2).orElse("EMPTY");
         totalWeight = links.size() > 0 ? links.stream().mapToDouble(Link::getWeight).sum() : 0L;
     }
 

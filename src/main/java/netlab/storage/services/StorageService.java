@@ -6,6 +6,7 @@ import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
+import netlab.topology.elements.TopologyMetrics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ public class StorageService {
     }
 
     public boolean storeRequestSet(Request request, boolean useAws) {
-        File outputFile = createFile(request.getId(), "raw");
+        File outputFile = createFile(request.getId(),"/results/raw/");
         if(useAws){
             writeLocal(request, outputFile);
             return s3Interface.uploadToRaw(outputFile, request.getId());
@@ -54,7 +55,7 @@ public class StorageService {
     }
 
     public boolean storeAnalyzedSet(Analysis analysis, boolean useAws){
-        File outputFile = createFile(analysis.getRequestId(), "analyzed");
+        File outputFile = createFile(analysis.getRequestId(), "/results/raw/");
         if(useAws){
             writeLocal(analysis, outputFile);
             return s3Interface.uploadToAnalyzed(outputFile, analysis.getRequestId());
@@ -81,6 +82,23 @@ public class StorageService {
             }
         }
         return as;
+    }
+
+    public boolean storeTopologyMetrics(TopologyMetrics topologyMetrics){
+        String fileName = topologyMetrics.getTopologyId() + "_metrics";
+        File outputFile = createFile(fileName, "/config/topologies/" + topologyMetrics.getTopologyId() + "/");
+        return writeLocal(topologyMetrics, outputFile);
+    }
+
+    public TopologyMetrics retrieveTopologyMetrics(String topologyId){
+        TopologyMetrics tm = null;
+        String fileName = topologyId + "_metrics";
+        File f = createFile(fileName, "/config/topologies/" + topologyId + "/");
+        //new File(System.getProperty("user.dir") + "/config/topologies/" + topologyId + "/" + fileName);
+        if(f.exists()){
+            tm = readTopologyMetricsLocal(f);
+        }
+        return tm;
     }
 
     public boolean putSimulationParameters(SimulationParameters params){
@@ -131,6 +149,8 @@ public class StorageService {
         return (Analysis) readLocal(file);
     }
 
+    private TopologyMetrics readTopologyMetricsLocal(File file) {return (TopologyMetrics) readLocal(file);}
+
     private Object readLocal(File file){
         Object obj = null;
         try{
@@ -169,10 +189,10 @@ public class StorageService {
         return true;
     }
 
-    public File createFile(String id, String subDir){
+    public File createFile(String id, String path){
         //String fileName = nameComponents.stream().reduce("", (s1, s2) -> s1 + "_" + s2);
         //fileName = fileName.substring(1);
-        String outputPath = System.getProperty("user.dir") + "/results/" + subDir + "/";
+        String outputPath = System.getProperty("user.dir") + path;
         if(Files.notExists(Paths.get(outputPath))){
             try {
                 Files.createDirectory(Paths.get(outputPath));
