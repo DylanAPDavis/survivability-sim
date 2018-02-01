@@ -56,25 +56,25 @@ public class TabuSearchService {
         Set<String> failureIds = convertFailuresToIds(failCollection.getFailureSet());
         Double fitnessThreshold = calculateFitnessThreshold(connCollection, failureIds, nfe);
         Set<Set<String>> failureGroupIds = convertGroupToIds(failCollection.getFailureGroups());
-        Solution bestSolution = tabuSearch(topologyMetrics, pairs, failureGroupIds, fitnessThreshold, connCollection);
+        Solution bestSolution = tabuSearch(topologyMetrics, pairs, failureIds, nfe, fitnessThreshold, connCollection);
 
         return convertToMap(bestSolution, topologyMetrics.getPathIdMap());
 
     }
 
     private Solution tabuSearch(TopologyMetrics topologyMetrics, Set<SourceDestPair> pairs,
-                                Set<Set<String>> failureGroupIds, Double fitnessThreshold,
+                                Set<String> failureIds, Integer nfe, Double fitnessThreshold,
                                 Connections connectReqs){
         Solution bestSolution = new Solution(new HashSet<>(), Double.MAX_VALUE, 0.0, new HashMap<>());
         Solution currentSolution =  new Solution(new HashSet<>(), Double.MAX_VALUE, 0.0, new HashMap<>());
 
-        Map<Set<String>, Set<String>> fgToPathIdsMap = new HashMap<>();
+        Set<String> disconnPathIds = new HashSet<>();
 
         int numInterationsWithoutChange = 0;
         while(numInterationsWithoutChange < 5){
             //TODO: Consider a tabu list while generating candidates
             List<Solution> candidateSolutions = generateCandidateSolutions(currentSolution,  topologyMetrics, pairs,
-                    failureGroupIds, connectReqs, fgToPathIdsMap);
+                    failureIds, nfe, connectReqs, disconnPathIds);
             Solution bestCandidate = pickBestCandidate(candidateSolutions, fitnessThreshold);
             boolean changed = false;
             //TODO: Include change in a tabu list
@@ -129,8 +129,8 @@ public class TabuSearchService {
     }
 
     private List<Solution> generateCandidateSolutions(Solution currentSolution, TopologyMetrics topologyMetrics, Set<SourceDestPair> pairs,
-                                                      Set<Set<String>> failureGroupIds, Connections connectionReqs,
-                                                      Map<Set<String>, Set<String>> fgToPathIdsMap) {
+                                                      Set<String> failureIds, Integer nfe, Connections connectionReqs,
+                                                      Set<String> disconnPaths) {
 
         Map<SourceDestPair, List<String>> kShortestPaths = topologyMetrics.getMinCostPaths();
         Map<String, Path> pathIdMap = topologyMetrics.getPathIdMap();
@@ -146,7 +146,7 @@ public class TabuSearchService {
                     Set<String> candidatePathIds = new HashSet<>(currentPathIds);
                     candidatePathIds.add(pathId);
                     Map<SourceDestPair, Set<String>> pairPathMap = makePairPathMap(candidatePathIds, pathIdMap);
-                    Double fitness = getFitness(candidatePathIds, pathIdMap, failureGroupIds, connectionReqs, fgToPathIdsMap, pairPathMap);
+                    Double fitness = getFitness(candidatePathIds, pathIdMap, failureIds, nfe, connectionReqs, disconnPaths, pairPathMap);
                     Solution candidate = new Solution(candidatePathIds, getCost(candidatePathIds, pathIdMap), fitness, pairPathMap);
                     candidates.add(candidate);
                 }
@@ -166,47 +166,29 @@ public class TabuSearchService {
         return pairPathMap;
     }
 
-    private Double getFitness(Set<String> candidatePathIds, Map<String, Path> pathIdMap, Set<Set<String>> failureGroupIds,
-                              Connections connectionReqs, Map<Set<String>, Set<String>> fgToPathIdsMap,
-                              Map<SourceDestPair,Set<String>> pairPathMap){
+    private Double getFitness(Set<String> candidatePathIds, Map<String, Path> pathIdMap, Set<String> failureIds, Integer nfe,
+                              Connections connectionReqs, Set<String> disconnIds, Map<SourceDestPair,Set<String>> pairPathMap){
         Set<Path> paths = candidatePathIds.stream().map(pathIdMap::get).collect(Collectors.toSet());
         Integer useMinS = connectionReqs.getUseMinS();
         Integer useMinD = connectionReqs.getUseMinD();
         Map<Node, Integer> minCsMap = connectionReqs.getSrcMinConnectionsMap();
         Map<Node, Integer> minCdMap = connectionReqs.getDstMinConnectionsMap();
         Map<SourceDestPair, Integer> minCsdMap = connectionReqs.getPairMinConnectionsMap();
-        Set<String> worstFG = new HashSet<>();
-        Set<String> worstDisconnectedPathIds = new HashSet<>();
-        for(Set<String> failureGroup : failureGroupIds){
-            Set<String> disconnIds = new HashSet<>();
-            for(Path path : paths){
-                // If this path has already been analyzed for this failure group, move on
-                if(fgToPathIdsMap.containsKey(failureGroup) && fgToPathIdsMap.get(failureGroup).contains(path.getId())){
-                    continue;
-                }
-                if(path.containsFailureIds(failureGroup)){
+        for(Path path : paths){
+            if(!disconnIds.contains(path.getId())) {
+                if (path.containsFailureIds(failureIds)) {
                     disconnIds.add(path.getId());
                     break;
                 }
             }
-
-            // Update fg -> Path IDs map to track which paths get disconnected by a failure group
-            fgToPathIdsMap.putIfAbsent(failureGroup, new HashSet<>());
-            fgToPathIdsMap.get(failureGroup).addAll(disconnIds);
-
-            // If this is the "worst case" FG so far, then keep it
-            if(disconnIds.size() > worstDisconnectedPathIds.size()){
-                worstFG = failureGroup;
-                worstDisconnectedPathIds = disconnIds;
-            }
         }
 
-        return calculateFitness(pairPathMap, pathIdMap, worstFG, worstDisconnectedPathIds);
+        return calculateFitness(pairPathMap, pathIdMap, failureIds, nfe, disconnIds);
 
     }
 
     private Double calculateFitness(Map<SourceDestPair, Set<String>> pairPathMap, Map<String, Path> pathIdMap,
-                                    Set<String> worstFG, Set<String> worstDisconnectedPathIds){
+                                    Set<String> failuresIds, Integer nfe, Set<String> disconnIds){
         // Variables for tracking constraint satisfaction
         Map<Node, Set<String>> protectedCPerSrc = new HashMap<>();
         Map<Node, Set<String>> protectedCPerDst = new HashMap<>();
@@ -217,11 +199,10 @@ public class TabuSearchService {
 
         // Determine which paths per src/dst/pair are protected, or can fail but are FG-disjoint from each other
         fillInPathMaps(protectedCPerSrc, protectedCPerDst, protectedCPerPair, fgDisjointCPerSrc, fgDisjointCPerDst, fgDisjointCPerPair,
-                pairPathMap, pathIdMap, worstFG, worstDisconnectedPathIds);
+                pairPathMap, pathIdMap, failuresIds, disconnIds);
         // With the worst FG, find if the requirements are met
         // Have to consider this on a pair by pair basis
         // Even if a path gets disconnected, it's still relevant
-        int nfe = worstFG.size();
 
         // Fitness:
         // numSatisfiedS + numSatisfiedD + sum( (Protected + |FG-disjoint / nfe|) foreach s, d, (s,d) )
@@ -231,7 +212,7 @@ public class TabuSearchService {
         int satisfiedSCount = 0;
         int satisfiedDCount = 0;
         double totalScore = 0.0;
-        int nfeBase = Math.max(nfe, 1);
+        int nfeBase = nfe + 1;
         // Add to the score for each source and destination node
         for(Node node : memberNodes){
             double score = 0.0;
