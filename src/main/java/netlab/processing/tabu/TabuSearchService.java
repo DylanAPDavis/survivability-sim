@@ -108,9 +108,9 @@ public class TabuSearchService {
     }
 
     private boolean isBetter(Solution candidate, Solution solution, Double fitnessThreshold) {
-        boolean equalFitBetterCost = candidate.getFitness() > 0 && candidate.getFitness().equals(solution.getFitness()) && candidate.getCost() < solution.getCost();
-        boolean unnecessaryFitness = candidate.getFitness() > solution.getFitness() && solution.getFitness() >= fitnessThreshold && candidate.getCost() > solution.getCost();
-        return (!unnecessaryFitness && candidate.getFitness() > solution.getFitness()) || equalFitBetterCost;
+        return candidate.getCost().equals(solution.getCost()) && candidate.getFitness() > solution.getFitness() ||
+                (candidate.getCost() / candidate.getFitness()) < (solution.getCost() / solution.getFitness());
+
     }
 
     private Solution pickBestCandidate(List<Solution> candidateSolutions, Double fitnessThreshold) {
