@@ -21,6 +21,7 @@ public class Path implements Serializable {
     private List<Node> nodes;
 
     private Set<String> linkIds;
+    private Set<String> reverseLinkIds;
     private Set<String> nodeIds;
 
     private Double totalWeight;
@@ -31,8 +32,9 @@ public class Path implements Serializable {
         this.links = links;
         this.nodes = getNodes(links);
         this.linkIds = links.stream().map(Link::getId).collect(Collectors.toSet());
+        this.reverseLinkIds = links.stream().map(Link::reverseId).collect(Collectors.toSet());
         this.nodeIds = this.nodes.stream().map(Node::getId).collect(Collectors.toSet());
-        this.id = links.stream().map(Link::getId).reduce((i1, i2) -> i1 + i2).orElse("EMPTY");
+        this.id = links.stream().map(Link::getId).reduce((i1, i2) -> i1 + "_" + i2).orElse("EMPTY");
         totalWeight = links.size() > 0 ? links.stream().mapToDouble(Link::getWeight).sum() : 0L;
     }
 
@@ -73,6 +75,14 @@ public class Path implements Serializable {
     public String toString(){
         //return this.links.stream().map(l -> String.format("(%s, %s)", l.getOrigin().getId(), l.getTarget().getId())).collect(joining(" "));
         return this.nodes.stream().map(Node::getId).collect(joining(", "));
+    }
+
+    public boolean containsFailureId(String f){
+        return linkIds.contains(f) || reverseLinkIds.contains(f)||  nodeIds.contains(f);
+    }
+
+    public boolean containsFailureIds(Collection<String> failureIds){
+        return failureIds.stream().anyMatch(this::containsFailureId);
     }
 
     public boolean containsFailures(Collection<Failure> failures){

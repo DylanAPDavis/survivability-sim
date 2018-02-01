@@ -12,6 +12,7 @@ import netlab.processing.overlappingtrees.OverlappingTreeService;
 import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.processing.shortestPaths.MinimumRiskPathService;
 import netlab.processing.shortestPaths.YensService;
+import netlab.processing.tabu.TabuSearchService;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.topology.elements.Topology;
@@ -47,6 +48,8 @@ public class ProcessingService {
 
     private YensService yensService;
 
+    private TabuSearchService tabuSearchService;
+
     private TopologyService topoService;
 
     private PrintingService printingService;
@@ -58,7 +61,8 @@ public class ProcessingService {
                              OverlappingTreeService overlappingTreeService, HamiltonianCycleService hamiltonianCycleService,
                              MemberForwardingService memberForwardingService,
                              CollapsedRingService collapsedRingService, CycleForTwoService cycleForTwoService,
-                             MinimumRiskPathService minimumRiskPathService, YensService yensService) {
+                             MinimumRiskPathService minimumRiskPathService, YensService yensService,
+                             TabuSearchService tabuSearchService) {
         this.topoService = topologyService;
         this.printingService = printingService;
         this.amplService = amplService;
@@ -72,6 +76,7 @@ public class ProcessingService {
         this.cycleForTwoService = cycleForTwoService;
         this.minimumRiskPathService = minimumRiskPathService;
         this.yensService = yensService;
+        this.tabuSearchService = tabuSearchService;
     }
 
     public Request processRequest(Request request) {
@@ -110,6 +115,9 @@ public class ProcessingService {
                 break;
             case Yens:
                 details = yensService.solve(request, topo);
+                break;
+            case Tabu:
+                details = tabuSearchService.solve(request, topo);
                 break;
         }
         request.setDetails(details);

@@ -72,6 +72,11 @@ public class Link implements Serializable {
         return new Link(this.target, this.origin, this.weight, new HashSet<>(this.points));
     }
 
+    public String reverseId(){
+        String[] split = this.id.split("-");
+        return split[1] + "-" + split[0];
+    }
+
     private void setPoints(){
         Location originPoint = origin.getPoint();
         Location targetPoint = target.getPoint();

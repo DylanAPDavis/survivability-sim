@@ -148,7 +148,7 @@ public class BhandariService {
         if(k == 0)
             return new ArrayList<>();
 
-        List<List<Link>> linkLists = computeDisjointPaths(topo, src, dst, k, 0, nodesCanFail, new HashSet<>(), true);
+        List<List<Link>> linkLists = computeDisjointPaths(topo, src, dst, 1, k-1, nodesCanFail, new HashSet<>(), true);
         return pathMappingService.convertToPaths(linkLists, topo.getLinkIdMap());
     }
 

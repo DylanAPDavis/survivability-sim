@@ -197,7 +197,7 @@ public class TopologyService {
 
 
     public Graph readGraphModel(String graphName){
-        String filePath = System.getProperty("user.dir") + "/config/topologies/" + graphName + ".gml";
+        String filePath = System.getProperty("user.dir") + "/config/topologies/" + graphName + "/" + graphName + ".gml";
         Graph g = new DefaultGraph(graphName);
         FileSource fs = new FileSourceGML();
 

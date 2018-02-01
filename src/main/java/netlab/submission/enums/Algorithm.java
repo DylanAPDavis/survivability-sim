@@ -17,7 +17,8 @@ public enum Algorithm {
     MemberForwarding("memberforwarding"),
     CollapsedRing("collapsedring"),
     CycleForTwo("cyclefortwo"),
-    Yens("yens");
+    Yens("yens"),
+    Tabu("tabu");
 
     private String code;
 
