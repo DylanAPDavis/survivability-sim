@@ -112,9 +112,11 @@ public class TabuSearchService {
         boolean equalCostMoreFit = canCost == curCost && canFit > curFit;
         boolean lowerCostEnoughFit = canCost < curCost && canFit >= thresh;
         boolean moreFitBothBelowThreshold = canFit > curFit && canFit < thresh && curFit < thresh;
+        boolean greaterCostFitEnough = curFit >= thresh && canCost > curCost;
         double candidateRatio = canCost / canFit;
         double solutionRatio = curCost / curFit;
-        return equalCostMoreFit || lowerCostEnoughFit || moreFitBothBelowThreshold || candidateRatio < solutionRatio;
+        return !greaterCostFitEnough &&
+                (equalCostMoreFit || lowerCostEnoughFit || moreFitBothBelowThreshold || candidateRatio < solutionRatio);
     }
 
     private Solution pickBestCandidate(List<Solution> candidateSolutions, Double fitnessThreshold) {
@@ -334,30 +336,30 @@ public class TabuSearchService {
             if(score >= 1){
                 satisfiedSCount++;
             }
-            if(minCsMap.get(node) == 0){
-                score = 0;
+            if(score > minCsMap.get(node)){
+                //score = minCsMap.get(node);
             }
             totalScore += score;
         }
         for(Node node : protectedCPerDst.keySet()){
             double score = getScore(node, protectedCPerDst, fgDisjointCPerDst, nfeBase);
             if(score >= 1){
-                satisfiedSCount++;
+                satisfiedDCount++;
             }
-            if(minCdMap.get(node) == 0){
-                score = 0;
+            if(score > minCdMap.get(node)){
+                //score = minCdMap.get(node);
             }
             totalScore += score;
         }
         // Add to the score for each pair
         for(SourceDestPair pair : protectedCPerPair.keySet()){
             double score = protectedCPerPair.get(pair).size() + (1.0 * fgDisjointCPerPair.get(pair).size() / nfeBase);
-            if(minCsdMap.get(pair) == 0){
-                score = 0;
+            if(score > minCsdMap.get(pair)){
+                //score = minCsdMap.get(pair);
             }
             totalScore += score;
         }
-        totalScore+= satisfiedSCount;
+        totalScore += satisfiedSCount;
         totalScore += satisfiedDCount;
 
         return totalScore;
@@ -400,10 +402,13 @@ public class TabuSearchService {
                     Path current = pathIdMap.get(pathId);
                     // FOR NOW: Do not include src or dst when considering viability
                     Set<String> fgInCurrent = fails.stream()
-                            .filter(f -> !src.getId().equals(f) && !dst.getId().equals(f)).filter(current::containsFailureId)
+                            //.filter(f -> !src.getId().equals(f) && !dst.getId().equals(f))
+                            .filter(current::containsFailureId)
                             .collect(Collectors.toSet());
                     // Add this path to the ongoing sets if it is FG-disjoint from current sets
+                    fgInCurrent.remove(src.getId());
                     srcFGDisjointPaths = evaluateFGDisjointPaths(srcFGDisjointPaths, current, fgInCurrent, pathIdMap);
+                    fgInCurrent.remove(dst.getId());
                     dstFGDisjointPaths = evaluateFGDisjointPaths(dstFGDisjointPaths, current, fgInCurrent, pathIdMap);
                     pairFGDisjointPaths = evaluateFGDisjointPaths(pairFGDisjointPaths, current, fgInCurrent, pathIdMap);
                 } else{
@@ -474,7 +479,7 @@ public class TabuSearchService {
         Set<String> nodesInF = nodes.stream().map(Node::getId).filter(failureIds::contains).collect(Collectors.toSet());
         int minFailures = Math.min(nodesInF.size(), nfe);
         int maxNotFailed = useMin;
-        return minFailures + maxNotFailed;
+        return Math.min(minFailures + maxNotFailed, nodes.size());
     }
 
 
