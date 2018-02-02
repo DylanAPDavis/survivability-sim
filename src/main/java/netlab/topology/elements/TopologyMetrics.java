@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -20,4 +21,6 @@ public class TopologyMetrics implements Serializable {
     Map<SourceDestPair, List<String>> minCostPaths;
     Map<SourceDestPair, List<String>> linkDisjointPaths;
     Map<SourceDestPair, List<String>> nodeDisjointPaths;
+    //Map<String, Set<String>> notLinkDisjointFromPath;
+    //Map<String, Set<String>> notNodeDisjointFromPath;
 }

@@ -9,9 +9,7 @@ import netlab.topology.elements.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,7 +36,6 @@ public class TopologyMetricsService {
         Map<SourceDestPair, List<String>> minCostPaths = new HashMap<>();
         Map<SourceDestPair, List<String>> linkDisjointPaths = new HashMap<>();
         Map<SourceDestPair, List<String>> nodeDisjointPaths = new HashMap<>();
-
         for(Node node : topo.getNodes()){
             for(Node otherNode : topo.getNodes()){
                 // Only find paths between unique pairs
@@ -62,6 +59,42 @@ public class TopologyMetricsService {
                 }
             }
         }
+
+        /*
+        Map<String, Set<String>> notLinkDisjointFromPath = new HashMap<>();
+        // Note, does not include src/dst nodes for the path
+        Map<String, Set<String>> notNodeDisjointFromPath = new HashMap<>();
+        // Get link and node disjoint paths - per path
+        for(String pathId : pathIdMap.keySet()){
+            Path path = pathIdMap.get(pathId);
+            String srcId = path.getNodes().get(0).getId();
+            String dstId = path.getNodes().get(path.getNodes().size()-1).getId();
+            Set<String> linkIds = path.getLinkIds();
+            Set<String> nodeIds = path.getNodeIds();
+            Set<String> revLinkIds = path.getReverseLinkIds();
+            notLinkDisjointFromPath.putIfAbsent(pathId, new HashSet<>());
+            notNodeDisjointFromPath.putIfAbsent(pathId, new HashSet<>());
+            for(String pathId2 : pathIdMap.keySet()){
+                if(!pathId.equals(pathId2)) {
+                    Path path2 = pathIdMap.get(pathId2);
+                    Set<String> linkIds2 = path2.getLinkIds();
+                    Set<String> nodeIds2 = path2.getNodeIds();
+                    Set<String> revLinkIds2 = path2.getReverseLinkIds();
+
+                    // Check for link disjointedness (have to check forward and reverse)
+                    boolean linkMatch = linkIds.stream().anyMatch(l -> linkIds2.contains(l) || revLinkIds2.contains(l))
+                            || revLinkIds.stream().anyMatch(l -> linkIds2.contains(l) || revLinkIds2.contains(l));
+                    boolean nodeMatch = nodeIds.stream().filter(n -> !n.equals(srcId) && !n.equals(dstId)).anyMatch(nodeIds2::contains);
+                    if(linkMatch){
+                        notLinkDisjointFromPath.get(pathId).add(pathId2);
+                    }
+                    if(nodeMatch){
+                        notNodeDisjointFromPath.get(pathId).add(pathId2);
+                    }
+                }
+            }
+        }
+        */
 
         tm = new TopologyMetrics(topo.getId(), pathIdMap, minCostPaths, linkDisjointPaths, nodeDisjointPaths);
         storageService.storeTopologyMetrics(tm);
