@@ -1,6 +1,5 @@
 package netlab.processing.cycles;
 
-import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.pathmapping.PathMappingService;

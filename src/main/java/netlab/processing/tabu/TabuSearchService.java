@@ -109,7 +109,7 @@ public class TabuSearchService {
     }
 
     private boolean isBetter(double canCost, double canFit, double curCost, double curFit, double thresh){
-        boolean equalCostMoreFit = canCost == curCost && canFit > curFit;
+        /*boolean equalCostMoreFit = canCost == curCost && canFit > curFit;
         boolean lowerCostEnoughFit = canCost < curCost && canFit >= thresh;
         boolean moreFitBothBelowThreshold = canFit > curFit && canFit < thresh && curFit < thresh;
         boolean greaterCostFitEnough = curFit >= thresh && canCost > curCost;
@@ -117,6 +117,25 @@ public class TabuSearchService {
         double solutionRatio = curCost / curFit;
         return !greaterCostFitEnough &&
                 (equalCostMoreFit || lowerCostEnoughFit || moreFitBothBelowThreshold || candidateRatio < solutionRatio);
+                */
+
+        // What makes a solution better?
+        // If their fitness is tied, then go with the lower cost one
+        // If they're both below the fitness threshold, pick the more fit one
+        // If one's above the threshold, and the other's not, pick that one
+        // If they're both above the threshold, pick the lower cost one
+        if(canFit == curFit){
+            return canCost < curCost;
+        }
+        if(canFit < thresh && curFit < thresh){
+            return canFit > curFit;
+        }
+        if(canFit >= thresh && curFit >= thresh){
+            return canCost < curCost;
+        }
+        else{
+            return canFit > curFit;
+        }
     }
 
     private Solution pickBestCandidate(List<Solution> candidateSolutions, Double fitnessThreshold) {
@@ -159,12 +178,23 @@ public class TabuSearchService {
             //subset.addAll(disjointSubset);
             for(String pathId : subset){
                 // If this path isn't currently in use, create a new solution using this path
-                Set<String> candidatePathIds = swap ? swapPath(currentSolution, pathId, worstPath) : addPath(currentSolution, pathId);
-                Solution candidate = makeCandidate(candidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
-                        disconnPaths, pathSetFitnessMap, pathSetCostMap);
-                pathSetFitnessMap.putIfAbsent(candidatePathIds, candidate.getFitness());
-                pathSetCostMap.putIfAbsent(candidatePathIds, candidate.getCost());
-                candidates.add(candidate);
+                //Set<String> candidatePathIds = swap ? swapPath(currentSolution, pathId, worstPath) : addPath(currentSolution, pathId);
+                if(!pathId.equals(worstPath)) {
+                    Set<String> swapCandidatePathIds = swapPath(currentSolution, pathId, worstPath);
+                    Solution swapCandidate = makeCandidate(swapCandidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
+                            disconnPaths, pathSetFitnessMap, pathSetCostMap);
+                    pathSetFitnessMap.putIfAbsent(swapCandidatePathIds, swapCandidate.getFitness());
+                    pathSetCostMap.putIfAbsent(swapCandidatePathIds, swapCandidate.getCost());
+                    candidates.add(swapCandidate);
+                }
+                if(!currentPathIds.contains(pathId)) {
+                    Set<String> addCandidatePathIds = addPath(currentSolution, pathId);
+                    Solution addCandidate = makeCandidate(addCandidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
+                            disconnPaths, pathSetFitnessMap, pathSetCostMap);
+                    pathSetFitnessMap.putIfAbsent(addCandidatePathIds, addCandidate.getFitness());
+                    pathSetCostMap.putIfAbsent(addCandidatePathIds, addCandidate.getCost());
+                    candidates.add(addCandidate);
+                }
             }
         }
         return candidates;
@@ -337,7 +367,7 @@ public class TabuSearchService {
                 satisfiedSCount++;
             }
             if(score > minCsMap.get(node)){
-                //score = minCsMap.get(node);
+                score = minCsMap.get(node);
             }
             totalScore += score;
         }
@@ -347,7 +377,7 @@ public class TabuSearchService {
                 satisfiedDCount++;
             }
             if(score > minCdMap.get(node)){
-                //score = minCdMap.get(node);
+                score = minCdMap.get(node);
             }
             totalScore += score;
         }
@@ -355,7 +385,7 @@ public class TabuSearchService {
         for(SourceDestPair pair : protectedCPerPair.keySet()){
             double score = protectedCPerPair.get(pair).size() + (1.0 * fgDisjointCPerPair.get(pair).size() / nfeBase);
             if(score > minCsdMap.get(pair)){
-                //score = minCsdMap.get(pair);
+                score = minCsdMap.get(pair);
             }
             totalScore += score;
         }
