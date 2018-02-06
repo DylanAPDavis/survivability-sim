@@ -113,22 +113,13 @@ public class TabuSearchService {
         return isBetter(candidate.getCost(), candidate.getFitness(), solution.getCost(), solution.getFitness(), fitnessThreshold);
     }
 
+    /* What makes a solution better?
+       If their fitness is tied, then go with the lower cost one.
+       If they're both below the fitness threshold, pick the more fit one.
+       If one's above the threshold, and the other's not, pick that one.
+       If they're both above the threshold, pick the lower cost one.
+     */
     private boolean isBetter(double canCost, double canFit, double curCost, double curFit, double thresh){
-        /*boolean equalCostMoreFit = canCost == curCost && canFit > curFit;
-        boolean lowerCostEnoughFit = canCost < curCost && canFit >= thresh;
-        boolean moreFitBothBelowThreshold = canFit > curFit && canFit < thresh && curFit < thresh;
-        boolean greaterCostFitEnough = curFit >= thresh && canCost > curCost;
-        double candidateRatio = canCost / canFit;
-        double solutionRatio = curCost / curFit;
-        return !greaterCostFitEnough &&
-                (equalCostMoreFit || lowerCostEnoughFit || moreFitBothBelowThreshold || candidateRatio < solutionRatio);
-                */
-
-        // What makes a solution better?
-        // If their fitness is tied, then go with the lower cost one
-        // If they're both below the fitness threshold, pick the more fit one
-        // If one's above the threshold, and the other's not, pick that one
-        // If they're both above the threshold, pick the lower cost one
         if(canFit == curFit){
             return canCost < curCost;
         }
