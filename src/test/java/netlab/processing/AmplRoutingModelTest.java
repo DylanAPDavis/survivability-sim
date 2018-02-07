@@ -717,6 +717,27 @@ public class AmplRoutingModelTest {
     }
 
     @Test
+    public void manyToManyAllLinks1TestTW(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
+                .algorithm("ilp")
+                .objective("totalcost")
+                .routingType("manyToMany")
+                .numSources(5)
+                .numDestinations(5)
+                .failureScenario("allLinks")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
     public void manyToOneNodeFailuresTest(){
 
         SimulationParameters params = SimulationParameters.builder()

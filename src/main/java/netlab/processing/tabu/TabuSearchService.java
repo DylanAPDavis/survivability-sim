@@ -20,7 +20,7 @@ public class TabuSearchService {
     private TopologyMetricsService topologyMetricsService;
 
     // Number of paths to consider at once
-    static int partitionSize = 20;
+    static int partitionSize = 5;
 
     // Thresholds for stopping or changing large parts of the solution
     static int noImprovement = 20; // no improvement on best, stop running

@@ -5,12 +5,17 @@ import netlab.TestConfiguration;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
+import netlab.topology.elements.Path;
+import netlab.topology.elements.SourceDestPair;
 import netlab.visualization.PrintingService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Collection;
+import java.util.Set;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -231,6 +236,12 @@ public class TabuSearchServiceTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        Double totalCost = 0.0;
+        for(SourceDestPair pair : request.getDetails().getChosenPaths().keySet()){
+            Collection<Path> paths = request.getDetails().getChosenPaths().get(pair).values();
+            Double sum = paths.stream().mapToDouble(Path::getTotalWeight).sum();
+            totalCost += sum;
+        }
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }

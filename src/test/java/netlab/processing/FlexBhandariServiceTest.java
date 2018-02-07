@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
@@ -383,6 +380,33 @@ public class FlexBhandariServiceTest {
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void manyToManyAllLinks1TestTW(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
+                .algorithm("flexbhandari")
+                .objective("totalcost")
+                .routingType("manyToMany")
+                .numSources(5)
+                .numDestinations(5)
+                .failureScenario("allLinks")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        Double totalCost = 0.0;
+        for(SourceDestPair pair : request.getDetails().getChosenPaths().keySet()){
+            Collection<Path> paths = request.getDetails().getChosenPaths().get(pair).values();
+            Double sum = paths.stream().mapToDouble(Path::getTotalWeight).sum();
+            totalCost += sum;
+        }
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
