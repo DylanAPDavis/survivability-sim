@@ -182,6 +182,7 @@ public class FlexBhandariService {
 
         List<SourceDestPair> sortedPairs = sortPairs(intactPathCount, totalWeights, srcDstDontFail, srcFails, dstFails,
                 srcDstFail, sources.size(), destinations.size());
+        sortedPairs = interleavePairs(sortedPairs, sources, destinations);
 
         // Build a map of paths and failures associated with those paths.
         Map<Node, Integer> intactPathsPerSrc = sources.stream().collect(Collectors.toMap(s -> s, s -> 0));
@@ -237,6 +238,40 @@ public class FlexBhandariService {
             }
         }
         return chosenPathsMap;
+    }
+
+    private List<SourceDestPair> interleavePairs(List<SourceDestPair> sortedPairs, Set<Node> sources, Set<Node> destinations) {
+        List<Node> sourceOrder = new ArrayList<>();
+        Map<Node, List<SourceDestPair>> extraOrderedPairsPerSrc = new HashMap<>();
+        List<SourceDestPair> outputList = new ArrayList<>();
+        for(SourceDestPair pair : sortedPairs){
+            Node src = pair.getSrc();
+            // If this pair hasn't been seen yet, create a backup list for it, store the pair in output list,
+            // and add it to the source order
+            if(!extraOrderedPairsPerSrc.containsKey(src)){
+                extraOrderedPairsPerSrc.put(src, new ArrayList<>());
+                outputList.add(pair);
+                sourceOrder.add(src);
+            }
+            // Otherwise, just store this pair as a backup
+            else{
+                extraOrderedPairsPerSrc.get(src).add(pair);
+            }
+        }
+        // Go through the sources, interleave their backup pairs
+        int numSatisfied = 0;
+        while(numSatisfied < sourceOrder.size()){
+            for(Node src : sourceOrder){
+                List<SourceDestPair> pairs = extraOrderedPairsPerSrc.get(src);
+                if(pairs.size() == 0){
+                    numSatisfied++;
+                } else{
+                    SourceDestPair nextPair = pairs.remove(0);
+                    outputList.add(nextPair);
+                }
+            }
+        }
+        return outputList;
     }
 
 
