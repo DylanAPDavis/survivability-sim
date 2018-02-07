@@ -24,7 +24,7 @@ public class TabuSearchService {
 
     // Thresholds for stopping or changing large parts of the solution
     static int noImprovement = 20; // no improvement on best, stop running
-    static int notFitEnough = 5;   // solution is not improving enough, inject some disjoint paths
+    static int notFitEnough = 10;   // solution is not improving enough, inject some disjoint paths
     static int keepPaths = 10;     // if a path has been kept in best solution long enough, lock it in place
     static int tabuTime = 5;       // if a path has been added or removed, the opposite action cannot be performed
 
@@ -92,18 +92,20 @@ public class TabuSearchService {
         int iterationsUnderThreshold = 0;
         boolean injected = false;
 
+        Set<SourceDestPair> usedPairsForInjection = new HashSet<>();
+
         Solution previousSolution = currentSolution.copy();
         while(iterationsWithoutImprovement < noImprovement){
             boolean changed = false;
 
             // If you've been under the threshold for too long, inject some disjoint paths
-            if(iterationsUnderThreshold == notFitEnough && !injected){
+            if(iterationsUnderThreshold == notFitEnough){
                 // Store the previous solution before changing the current
                 previousSolution = currentSolution.copy();
                 currentSolution = injectDisjointPaths(currentSolution, topologyMetrics, pairs,
                          failureIds,  nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, failureClass,
-                        sources, destinations);
-                injected = true;
+                        sources, destinations, usedPairsForInjection);
+                iterationsUnderThreshold = 0;
             }
             // Otherwise, generate candidate solutions through remove/swap/add moves
             else {
@@ -123,7 +125,7 @@ public class TabuSearchService {
                 changed = true;
             }
             // If the current solution is not fit enough, track that
-            if(!injected && currentSolution.getFitness() < fitnessThreshold){
+            if(currentSolution.getFitness() < fitnessThreshold){
                 iterationsUnderThreshold++;
             }
             // If there's been a change, reset the counter
@@ -175,18 +177,21 @@ public class TabuSearchService {
                                          Set<String> failureIds, Integer nfe, Connections connectionReqs,
                                          Set<String> disconnPaths, Map<Set<String>, Double> pathSetFitnessMap,
                                          Map<Set<String>, Double> pathSetCostMap, FailureClass failureClass,
-                                         Set<String> sources, Set<String> destinations) {
+                                         Set<String> sources, Set<String> destinations, Set<SourceDestPair> usedPairsForInjection) {
         Set<String> pathIds = new HashSet<>(currentSolution.getPathIds());
         Map<String, Path> pathIdMap = topologyMetrics.getPathIdMap();
-        if(failureIds.size() != 0) {
-            for(SourceDestPair pair : pairs) {
-                if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Node)) {
-                    pathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
-                }
-                if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Link)) {
-                    pathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
-                }
+        List<SourceDestPair> filteredPairs = pairs.stream()
+                //.filter(p -> !usedPairsForInjection.contains(p))
+                .collect(Collectors.toList());
+        if(failureIds.size() != 0 && filteredPairs.size() > 0) {
+            SourceDestPair pair = filteredPairs.get(0);
+            if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Node)) {
+                pathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
             }
+            if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Link)) {
+                pathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
+            }
+            usedPairsForInjection.add(pair);
         }
         return makeCandidate(pathIds, pathIdMap, failureIds, nfe, connectionReqs,
                 disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
