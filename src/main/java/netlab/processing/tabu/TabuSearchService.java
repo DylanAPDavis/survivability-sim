@@ -81,9 +81,8 @@ public class TabuSearchService {
         Solution currentSolution =  new Solution(new HashSet<>(), Double.MAX_VALUE, 0.0, new HashMap<>());
 
         Set<String> disconnPathIds = new HashSet<>();
-        Set<String> tabuToAdd = new HashSet<>();
-        Set<String> tabuToRemove = new HashSet<>();
         Set<String> lockedIn = new HashSet<>();
+        Map<String, Integer> tabuMap = new HashMap<>();
 
         Map<Set<String>, Double> pathSetFitnessMap = new HashMap<>();
         pathSetFitnessMap.put(new HashSet<>(), 0.00000000001);
@@ -92,26 +91,32 @@ public class TabuSearchService {
         int iterationsWithoutImprovement = 0;
         int iterationsUnderThreshold = 0;
         boolean injected = false;
+
+        Solution previousSolution = currentSolution.copy();
         while(iterationsWithoutImprovement < noImprovement){
             boolean changed = false;
 
             // If you've been under the threshold for too long, inject some disjoint paths
             if(iterationsUnderThreshold == notFitEnough && !injected){
+                // Store the previous solution before changing the current
+                previousSolution = currentSolution.copy();
                 currentSolution = injectDisjointPaths(currentSolution, topologyMetrics, pairs,
                          failureIds,  nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, failureClass,
                         sources, destinations);
                 injected = true;
             }
-            // Otherwise, generate candidate solutions through swap/add moves
+            // Otherwise, generate candidate solutions through remove/swap/add moves
             else {
                 List<Solution> candidateSolutions = generateCandidateSolutions(currentSolution, topologyMetrics, pairs,
-                        failureIds, nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, random, failureClass,
-                        fitnessThreshold, sources, destinations, tabuToAdd, tabuToRemove, lockedIn);
+                        failureIds, nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, random,
+                        sources, destinations, tabuMap.keySet(), lockedIn);
                 Solution bestCandidate = pickBestCandidate(candidateSolutions, fitnessThreshold);
-                //TODO: Include change in a tabu list
                 if (isBetter(bestCandidate, currentSolution, fitnessThreshold)) {
+                    // Store the previous solution before changing the current
+                    previousSolution = currentSolution.copy();
                     currentSolution = bestCandidate;
                 }
+                updateTabuMap(tabuMap, previousSolution, currentSolution);
             }
             if (isBetter(currentSolution, bestSolution, fitnessThreshold)) {
                 bestSolution = currentSolution;
@@ -126,6 +131,44 @@ public class TabuSearchService {
         }
 
         return bestSolution;
+    }
+
+    private void updateTabuMap(Map<String, Integer> tabuMap, Solution previousSolution,
+                                Solution currentSolution) {
+        Set<String> pathIds = currentSolution.getPathIds();
+        Set<String> previousPathIds = previousSolution.getPathIds();
+        decrementAndExpireTabus(tabuMap);
+        // Compare current solution to previous solution to check for additions
+        for(String pathId : pathIds){
+            // If this is a new path, then put it in the TabuToRemove map
+            if(!previousPathIds.contains(pathId)){
+                tabuMap.put(pathId, tabuTime);
+            }
+        }
+        // Compare previous solution to current solution to check for removals
+        for(String prevPathId : previousPathIds){
+            // If this path has been removed, then put it in the TabuToAdd map
+            if(!pathIds.contains(prevPathId)){
+                tabuMap.put(prevPathId, tabuTime);
+            }
+        }
+    }
+
+    private void decrementAndExpireTabus(Map<String, Integer> tabuMap){
+        // Decrement tabus
+        Set<String> tabusToRemove = new HashSet<>();
+        for(String tabu : tabuMap.keySet()){
+            Integer tabuCount = tabuMap.get(tabu) - 1;
+            // Filter out the ones that have reached zero
+            if(tabuCount > 0){
+                tabuMap.put(tabu, tabuCount);
+            } else{
+                tabusToRemove.add(tabu);
+            }
+        }
+        for(String tabu : tabusToRemove){
+            tabuMap.remove(tabu);
+        }
     }
 
     private Solution injectDisjointPaths(Solution currentSolution, TopologyMetrics topologyMetrics, Set<SourceDestPair> pairs,
@@ -195,59 +238,101 @@ public class TabuSearchService {
     private List<Solution> generateCandidateSolutions(Solution currentSolution, TopologyMetrics topologyMetrics, Set<SourceDestPair> pairs,
                                                       Set<String> failureIds, Integer nfe, Connections connectionReqs,
                                                       Set<String> disconnPaths, Map<Set<String>, Double> pathSetFitnessMap,
-                                                      Map<Set<String>, Double> pathSetCostMap, Random random, FailureClass failureClass,
-                                                      Double fitThreshold, Set<String> sources, Set<String> destinations,
-                                                      Set<String> tabuToRemove, Set<String> tabuToAdd, Set<String> lockedIn) {
+                                                      Map<Set<String>, Double> pathSetCostMap, Random random,
+                                                      Set<String> sources, Set<String> destinations,
+                                                      Set<String> tabu, Set<String> lockedIn) {
 
         Map<SourceDestPair, List<String>> kShortestPaths = topologyMetrics.getMinCostPaths();
         Map<String, Path> pathIdMap = topologyMetrics.getPathIdMap();
         Set<String> currentPathIds = currentSolution.getPathIds();
 
         List<Solution> candidates = new ArrayList<>();
+        List<String> currentAllowedToRemove = currentPathIds.stream()
+                .filter(p -> !tabu.contains(p) && !lockedIn.contains(p))
+                .sorted(String::compareToIgnoreCase)
+                .collect(Collectors.toList());
 
-        //String worstPath = pickWorst(currentSolution, pathIdMap, failureIds, nfe, connectionReqs, disconnPaths, pathSetFitnessMap, pathSetCostMap, fitThreshold, sources, destinations) : "";
+        // Create a solution by removing a candidate at random
+        Solution removeCandidate = createRemoveCandidate(currentPathIds, currentAllowedToRemove, random, pathIdMap, failureIds, nfe, connectionReqs,
+                disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
+        candidates.add(removeCandidate);
+
         // Go through each pair
         for(SourceDestPair pair : pairs){
             // Select the k shortest paths for that pair
             List<String> kPathsForPair = kShortestPaths.get(pair);
+            // Filter out the tabu paths and the locked in paths
+            List<String> candidatePathsForPair = kPathsForPair.stream()
+                    .filter(p -> !tabu.contains(p) && !lockedIn.contains(p))
+                    .collect(Collectors.toList());
             // Pick a random subset based on the partition size
-            List<String> subset = getSubset(kPathsForPair, partitionSize, random);
+            List<String> subset = getSubset(candidatePathsForPair, partitionSize, random);
+            // Go through each path that from that subset
             for(String pathId : subset){
                 // Swap this path for a randomly chosen path in the current solution
-               if(!tabuToAdd.contains(pathId)) {
-                    String pathToRemove = chooseAtRandom(currentPathIds, tabuToRemove, lockedIn, random);
-                    Set<String> swapCandidatePathIds = swapPath(currentSolution, pathId, pathToRemove);
-                    Solution swapCandidate = makeCandidate(swapCandidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
-                            disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
-                    pathSetFitnessMap.putIfAbsent(swapCandidatePathIds, swapCandidate.getFitness());
-                    pathSetCostMap.putIfAbsent(swapCandidatePathIds, swapCandidate.getCost());
-                    candidates.add(swapCandidate);
-                }
+                Solution swapCandidate = createSwapCandidate(currentAllowedToRemove, random, currentPathIds, pathId,
+                        pathIdMap, failureIds, nfe, connectionReqs, disconnPaths, pathSetFitnessMap, pathSetCostMap,
+                        sources, destinations);
+                candidates.add(swapCandidate);
                 // Add in this new path if it's not currently contained in the solution
-                if(!tabuToAdd.contains(pathId) && !currentPathIds.contains(pathId)) {
-                    Set<String> addCandidatePathIds = addPath(currentSolution, pathId);
-                    Solution addCandidate = makeCandidate(addCandidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
-                            disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
-                    pathSetFitnessMap.putIfAbsent(addCandidatePathIds, addCandidate.getFitness());
-                    pathSetCostMap.putIfAbsent(addCandidatePathIds, addCandidate.getCost());
-                    candidates.add(addCandidate);
-                }
+                Solution addCandidate = createAddCandidate(currentPathIds, pathId, pathIdMap, failureIds, nfe, connectionReqs,
+                        disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
+                candidates.add(addCandidate);
             }
         }
         return candidates;
     }
 
-    private String chooseAtRandom(Set<String> currentPathIds, Set<String> tabuToRemove, Set<String> lockedIn,
-                                  Random random) {
-        Set<String> candidates = new HashSet<>(currentPathIds);
-        candidates.removeAll(tabuToRemove);
-        candidates.removeAll(lockedIn);
+    private Solution createAddCandidate(Set<String> currentPathIds, String pathId, Map<String, Path> pathIdMap,
+                                         Set<String> failureIds, Integer nfe, Connections connectionReqs, Set<String> disconnPaths,
+                                         Map<Set<String>, Double> pathSetFitnessMap, Map<Set<String>, Double> pathSetCostMap,
+                                         Set<String> sources, Set<String> destinations) {
+        Set<String> addCandidatePathIds = addPath(currentPathIds, pathId);
+        return createCandidateUpdateMaps(addCandidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
+                disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
+    }
+
+    private Solution createSwapCandidate(List<String> currentAllowedToRemove, Random random, Set<String> currentPathIds,
+                                         String pathId, Map<String, Path> pathIdMap, Set<String> failureIds, Integer nfe,
+                                         Connections connectionReqs, Set<String> disconnPaths,
+                                         Map<Set<String>, Double> pathSetFitnessMap, Map<Set<String>, Double> pathSetCostMap,
+                                         Set<String> sources, Set<String> destinations) {
+        String pathToSwapOut = chooseAtRandom(currentAllowedToRemove, random);
+        Set<String> swapCandidatePathIds = swapPath(currentPathIds, pathId, pathToSwapOut);
+        return createCandidateUpdateMaps(swapCandidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
+                disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
+    }
+
+    private Solution createRemoveCandidate(Set<String> currentPathIds, List<String> currentAllowedToRemove, Random random,
+                                           Map<String, Path> pathIdMap, Set<String> failureIds, Integer nfe,
+                                           Connections connectionReqs, Set<String> disconnPaths,
+                                           Map<Set<String>, Double> pathSetFitnessMap, Map<Set<String>, Double> pathSetCostMap,
+                                           Set<String> sources, Set<String> destinations) {
+        String pathToRemove = chooseAtRandom(currentAllowedToRemove, random);
+        Set<String> removeCandidatePathIds = currentPathIds.stream()
+                .filter(s -> !s.equals(pathToRemove))
+                .collect(Collectors.toSet());
+        return createCandidateUpdateMaps(removeCandidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
+                disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
+    }
+
+    private Solution createCandidateUpdateMaps(Set<String> candidatePathIds, Map<String, Path> pathIdMap, Set<String> failureIds,
+                                               Integer nfe, Connections connectionReqs, Set<String> disconnPaths,
+                                               Map<Set<String>, Double> pathSetFitnessMap, Map<Set<String>, Double> pathSetCostMap,
+                                               Set<String> sources, Set<String> destinations){
+        Solution candidate = makeCandidate(candidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
+                disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
+        pathSetFitnessMap.putIfAbsent(candidatePathIds, candidate.getFitness());
+        pathSetCostMap.putIfAbsent(candidatePathIds, candidate.getCost());
+        return candidate;
+    }
+
+    private String chooseAtRandom(List<String> candidates, Random random) {
         if(candidates.size() == 0){
             return "";
         } else{
-            List<String> ordered = candidates.stream().sorted(String::compareToIgnoreCase).collect(Collectors.toList());
-            int pos = random.nextInt(ordered.size());
-            return ordered.get(pos);
+            int pos = random.nextInt(candidates.size());
+            return candidates.get(pos);
         }
     }
 
@@ -275,14 +360,20 @@ public class TabuSearchService {
         return new Solution(candidatePathIds, cost, fitness, pairPathMap);
     }
 
-    private Set<String> addPath(Solution base, String pathId){
-        Set<String> candidatePathIds = new HashSet<>(base.getPathIds());
+    private Set<String> removePath(Set<String> basePathIds, String pathId){
+        Set<String> candidatePathIds = new HashSet<>(basePathIds);
+        candidatePathIds.remove(pathId);
+        return candidatePathIds;
+    }
+
+    private Set<String> addPath(Set<String> basePathIds, String pathId){
+        Set<String> candidatePathIds = new HashSet<>(basePathIds);
         candidatePathIds.add(pathId);
         return candidatePathIds;
     }
 
-    private Set<String> swapPath(Solution base, String newPathId, String worstPath){
-        Set<String> pathIds = new HashSet<>(base.getPathIds());
+    private Set<String> swapPath(Set<String> basePathIds, String newPathId, String worstPath){
+        Set<String> pathIds = new HashSet<>(basePathIds);
         if(worstPath.equals("")){
             pathIds.add(newPathId);
         } else{
