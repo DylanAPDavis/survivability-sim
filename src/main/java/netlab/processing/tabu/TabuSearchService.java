@@ -21,12 +21,13 @@ public class TabuSearchService {
 
     // Number of paths to consider at once
     static int partitionSize = 5;
+    static int minThresholdKeepAfterRestart = 5; // only keep parts of the best solution that have been around for this many iterations
 
     // Thresholds for stopping or changing large parts of the solution
+    static int tabuTime = 15;       // if a path has been added or removed, the opposite action cannot be performed
     static int noImprovement = 20; // no improvement on best, stop running
     static int notFitEnough = 10;   // solution is not improving enough, inject some disjoint paths
-    static int keepPaths = 10;     // if a path has been kept in best solution long enough, lock it in place
-    static int tabuTime = 5;       // if a path has been added or removed, the opposite action cannot be performed
+    static int restartFromBest = 10;     // after so many iterations, restart from best subset of the best solution
 
     @Autowired
     public TabuSearchService(TopologyMetricsService topologyMetricsService){
@@ -44,9 +45,9 @@ public class TabuSearchService {
         Set<String> sourceIds = details.getSources().stream().map(Node::getId).collect(Collectors.toSet());
         Set<String> destIds = details.getDestinations().stream().map(Node::getId).collect(Collectors.toSet());
         long startTime = System.nanoTime();
-        Map<SourceDestPair, Map<String, Path>> paths = findPaths(details.getPairs(), failCollection, nfeCollection.getTotalNumFailureEvents(), connCollection,
-                request.getFailureClass(), request.getTrafficCombinationType(), topology, request.getSeed(), topologyMetrics,
-                sourceIds, destIds);
+        Map<SourceDestPair, Map<String, Path>> paths = findPaths(details.getPairs(), failCollection,
+                nfeCollection.getTotalNumFailureEvents(), connCollection, request.getFailureClass(),  request.getSeed(),
+                topologyMetrics, sourceIds, destIds);
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
         log.info("Solution took: " + duration + " seconds");
@@ -59,7 +60,6 @@ public class TabuSearchService {
     private Map<SourceDestPair,Map<String,Path>> findPaths(Set<SourceDestPair> pairs, Failures failCollection,
                                                            Integer nfe, Connections connCollection,
                                                            FailureClass failureClass,
-                                                           TrafficCombinationType trafficCombinationType, Topology topology,
                                                            Long seed, TopologyMetrics topologyMetrics,
                                                            Set<String> sources, Set<String> destinations) {
 
@@ -90,9 +90,9 @@ public class TabuSearchService {
         pathSetCostMap.put(new HashSet<>(), Double.MAX_VALUE);
         int iterationsWithoutImprovement = 0;
         int iterationsUnderThreshold = 0;
-        boolean injected = false;
-
+        int totalIterations = 0;
         Set<SourceDestPair> usedPairsForInjection = new HashSet<>();
+        Map<String, Integer> pathBeenInBestMap = new HashMap<>();
 
         Solution previousSolution = currentSolution.copy();
         while(iterationsWithoutImprovement < noImprovement){
@@ -118,8 +118,9 @@ public class TabuSearchService {
                     previousSolution = currentSolution.copy();
                     currentSolution = bestCandidate;
                 }
-                updateTabuMap(tabuMap, previousSolution, currentSolution);
+                //updateTabuMap(tabuMap, previousSolution, currentSolution);
             }
+            updateTabuMap(tabuMap, previousSolution, currentSolution);
             if (isBetter(currentSolution, bestSolution, fitnessThreshold)) {
                 bestSolution = currentSolution;
                 changed = true;
@@ -130,9 +131,52 @@ public class TabuSearchService {
             }
             // If there's been a change, reset the counter
             iterationsWithoutImprovement = changed ? 0 : iterationsWithoutImprovement + 1;
+            totalIterations++;
+            updatePathBeenInBestMap(pathBeenInBestMap, bestSolution);
+            if(totalIterations % restartFromBest == 0){
+                previousSolution = currentSolution.copy();
+                currentSolution = restartFromBestSubset(pathBeenInBestMap, topologyMetrics.getPathIdMap(), failureIds, nfe,
+                        connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, sources, destinations);
+            }
         }
 
+        log.info("Total iterations: " + totalIterations);
         return bestSolution;
+    }
+
+    private Solution restartFromBestSubset(Map<String, Integer> pathBeenInBestMap, Map<String, Path> pathIdMap,
+                                           Set<String> failureIds, Integer nfe, Connections connectionReqs,
+                                           Set<String> disconnPaths, Map<Set<String>, Double> pathSetFitnessMap,
+                                           Map<Set<String>, Double> pathSetCostMap, Set<String> sources, Set<String> destinations) {
+
+        // Get the path IDs that have been in the best solution long enough
+        Set<String> bestPathIds = pathBeenInBestMap.keySet().stream()
+                .filter(p -> pathBeenInBestMap.get(p) >= minThresholdKeepAfterRestart)
+                .collect(Collectors.toSet());
+        // Reset the counts for all paths
+        for(String pathInMap : pathBeenInBestMap.keySet()){
+            pathBeenInBestMap.put(pathInMap, 0);
+        }
+
+        // Return a new solution that is made up of "only the best paths"
+        return createCandidateUpdateMaps(bestPathIds, pathIdMap, failureIds, nfe, connectionReqs,
+                disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
+    }
+
+    private void updatePathBeenInBestMap(Map<String, Integer> pathBeenInBestMap, Solution bestSolution) {
+        Set<String> pathIds = bestSolution.getPathIds();
+        for(String pathId : pathIds){
+            if(pathBeenInBestMap.containsKey(pathId)){
+                pathBeenInBestMap.put(pathId, pathBeenInBestMap.get(pathId) + 1);
+            } else{
+                pathBeenInBestMap.put(pathId, 1);
+            }
+        }
+        for(String pathInMap : pathBeenInBestMap.keySet()){
+            if(!pathIds.contains(pathInMap)){
+                pathBeenInBestMap.put(pathInMap, 0);
+            }
+        }
     }
 
     private void updateTabuMap(Map<String, Integer> tabuMap, Solution previousSolution,
@@ -181,17 +225,29 @@ public class TabuSearchService {
         Set<String> pathIds = new HashSet<>(currentSolution.getPathIds());
         Map<String, Path> pathIdMap = topologyMetrics.getPathIdMap();
         List<SourceDestPair> filteredPairs = pairs.stream()
-                //.filter(p -> !usedPairsForInjection.contains(p))
+                .filter(p -> !usedPairsForInjection.contains(p))
                 .collect(Collectors.toList());
         if(failureIds.size() != 0 && filteredPairs.size() > 0) {
-            SourceDestPair pair = filteredPairs.get(0);
-            if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Node)) {
-                pathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
+            int numPairsChecked = 0;
+            boolean pairChosen = false;
+            while(!pairChosen && numPairsChecked < filteredPairs.size()) {
+                SourceDestPair pair = filteredPairs.get(0);
+                Set<String> pairPathIds = new HashSet<>();
+                if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Node)) {
+                    pairPathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
+                }
+                if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Link)) {
+                    pairPathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
+                }
+                if(pairPathIds.size() > 0) {
+                    pathIds.addAll(pairPathIds);
+                    usedPairsForInjection.add(pair);
+                    pairChosen = true;
+                }
+                else {
+                    numPairsChecked++;
+                }
             }
-            if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Link)) {
-                pathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
-            }
-            usedPairsForInjection.add(pair);
         }
         return makeCandidate(pathIds, pathIdMap, failureIds, nfe, connectionReqs,
                 disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);

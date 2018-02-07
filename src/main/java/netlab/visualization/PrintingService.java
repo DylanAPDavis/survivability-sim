@@ -23,10 +23,12 @@ public class PrintingService {
             List<String> pathStrings = new ArrayList<>();
             String sourceId = pair.getSrc().getId();
             if(pathIdMap.size() > 0){
+                int count = 1;
                 for(String pathId : pathIdMap.keySet()){
                     Path path = pathIdMap.get(pathId);
-                    String pathString = "\t\t" + pathId + ": " + path.toString() + "\n";
+                    String pathString = "\t\t" + count + ": " + path.toString() + "\n";
                     pathStrings.add(pathString);
+                    count++;
                 }
             }
             stringsPerSource.putIfAbsent(sourceId, new HashMap<>());
