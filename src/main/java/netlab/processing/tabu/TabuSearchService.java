@@ -89,27 +89,60 @@ public class TabuSearchService {
         pathSetFitnessMap.put(new HashSet<>(), 0.00000000001);
         Map<Set<String>, Double> pathSetCostMap = new HashMap<>();
         pathSetCostMap.put(new HashSet<>(), Double.MAX_VALUE);
-        int numInterationsWithoutChange = 0;
-        while(numInterationsWithoutChange < 5){
-            //TODO: Consider a tabu list while generating candidates
-            List<Solution> candidateSolutions = generateCandidateSolutions(currentSolution,  topologyMetrics, pairs,
-                    failureIds, nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, random, failureClass,
-                    fitnessThreshold, sources, destinations, tabuToAdd, tabuToRemove, lockedIn);
-            Solution bestCandidate = pickBestCandidate(candidateSolutions, fitnessThreshold);
+        int iterationsWithoutImprovement = 0;
+        int iterationsUnderThreshold = 0;
+        while(iterationsWithoutImprovement < noImprovement){
             boolean changed = false;
-            //TODO: Include change in a tabu list
-            if(isBetter(bestCandidate, currentSolution, fitnessThreshold)){
-                currentSolution = bestCandidate;
-                if(isBetter(bestCandidate, bestSolution, fitnessThreshold)){
-                    bestSolution = bestCandidate;
-                    changed = true;
+            if(iterationsUnderThreshold == notFitEnough){
+                currentSolution = injectDisjointPaths(currentSolution, topologyMetrics, pairs,
+                         failureIds,  nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, failureClass,
+                        sources, destinations);
+                iterationsUnderThreshold = 0;
+            }
+            else {
+                List<Solution> candidateSolutions = generateCandidateSolutions(currentSolution, topologyMetrics, pairs,
+                        failureIds, nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, random, failureClass,
+                        fitnessThreshold, sources, destinations, tabuToAdd, tabuToRemove, lockedIn);
+                Solution bestCandidate = pickBestCandidate(candidateSolutions, fitnessThreshold);
+                //TODO: Include change in a tabu list
+                if (isBetter(bestCandidate, currentSolution, fitnessThreshold)) {
+                    currentSolution = bestCandidate;
                 }
             }
+            if (isBetter(currentSolution, bestSolution, fitnessThreshold)) {
+                bestSolution = currentSolution;
+                changed = true;
+            }
+            // If the current solution is not fit enough, track that
+            if(currentSolution.getFitness() < fitnessThreshold){
+                iterationsUnderThreshold++;
+            }
             // If there's been a change, reset the counter
-            numInterationsWithoutChange = changed ? 0 : numInterationsWithoutChange + 1;
+            iterationsWithoutImprovement = changed ? 0 : iterationsWithoutImprovement + 1;
         }
 
         return bestSolution;
+    }
+
+    private Solution injectDisjointPaths(Solution currentSolution, TopologyMetrics topologyMetrics, Set<SourceDestPair> pairs,
+                                         Set<String> failureIds, Integer nfe, Connections connectionReqs,
+                                         Set<String> disconnPaths, Map<Set<String>, Double> pathSetFitnessMap,
+                                         Map<Set<String>, Double> pathSetCostMap, FailureClass failureClass,
+                                         Set<String> sources, Set<String> destinations) {
+        Set<String> pathIds = new HashSet<>(currentSolution.getPathIds());
+        Map<String, Path> pathIdMap = topologyMetrics.getPathIdMap();
+        if(failureIds.size() != 0) {
+            for(SourceDestPair pair : pairs) {
+                if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Node)) {
+                    pathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
+                }
+                if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Link)) {
+                    pathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
+                }
+            }
+        }
+        return makeCandidate(pathIds, pathIdMap, failureIds, nfe, connectionReqs,
+                disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
     }
 
 
@@ -215,19 +248,6 @@ public class TabuSearchService {
     }
 
 
-    private List<String> getDisjointSubset(List<String> lDisjointPaths, List<String> nDisjointPaths, int subsetSize,
-                                           Random random, FailureClass failureClass, int numFails) {
-        List<String> subset = new ArrayList<>();
-        if(numFails != 0) {
-            if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Node)) {
-                subset.addAll(getSubset(nDisjointPaths, subsetSize, random));
-            }
-            if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Link)) {
-                subset.addAll(getSubset(lDisjointPaths, subsetSize, random));
-            }
-        }
-        return subset;
-    }
 
     private List<String> getSubset(List<String> candidates, int subsetSize, Random random) {
         int numPartitions = (int) Math.ceil(1.0 * candidates.size() / subsetSize);

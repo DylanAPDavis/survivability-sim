@@ -89,7 +89,7 @@ public class TabuSearchServiceTest {
     }
 
     @Test
-    public void unicastAllLinks3Test(){
+    public void unicastAllLinks1TestTW(){
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
@@ -106,6 +106,28 @@ public class TabuSearchServiceTest {
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void unicastAllLinks2TestTW(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
+                .algorithm("tabu")
+                .objective("totalcost")
+                .routingType("unicast")
+                .numSources(1)
+                .numDestinations(1)
+                .failureScenario("allLinks")
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        assert(request.getDetails().getChosenPaths().values().stream().anyMatch(v -> v.size() == 2));
         System.out.println(printingService.outputPaths(request));
     }
 
