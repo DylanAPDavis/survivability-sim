@@ -91,14 +91,18 @@ public class TabuSearchService {
         pathSetCostMap.put(new HashSet<>(), Double.MAX_VALUE);
         int iterationsWithoutImprovement = 0;
         int iterationsUnderThreshold = 0;
+        boolean injected = false;
         while(iterationsWithoutImprovement < noImprovement){
             boolean changed = false;
-            if(iterationsUnderThreshold == notFitEnough){
+
+            // If you've been under the threshold for too long, inject some disjoint paths
+            if(iterationsUnderThreshold == notFitEnough && !injected){
                 currentSolution = injectDisjointPaths(currentSolution, topologyMetrics, pairs,
                          failureIds,  nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, failureClass,
                         sources, destinations);
-                iterationsUnderThreshold = 0;
+                injected = true;
             }
+            // Otherwise, generate candidate solutions through swap/add moves
             else {
                 List<Solution> candidateSolutions = generateCandidateSolutions(currentSolution, topologyMetrics, pairs,
                         failureIds, nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, random, failureClass,
@@ -114,7 +118,7 @@ public class TabuSearchService {
                 changed = true;
             }
             // If the current solution is not fit enough, track that
-            if(currentSolution.getFitness() < fitnessThreshold){
+            if(!injected && currentSolution.getFitness() < fitnessThreshold){
                 iterationsUnderThreshold++;
             }
             // If there's been a change, reset the counter
