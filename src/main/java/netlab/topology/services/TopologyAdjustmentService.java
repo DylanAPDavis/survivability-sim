@@ -120,12 +120,21 @@ public class TopologyAdjustmentService {
 
     public List<SourceDestPair> sortPairsByPathCost(Collection<SourceDestPair> pairs, Topology topo){
         Map<SourceDestPair, Double> minimumPathCostMap = topo.getMinimumPathCostMap();
-        return pairs
-                .stream()
-                .sorted(Comparator.comparing(minimumPathCostMap::get))
-                .sorted(Comparator.comparing(p -> p.getSrc().getId()))
-                .sorted(Comparator.comparing(p -> p.getDst().getId()))
-                .collect(Collectors.toList());
+        try {
+            return pairs
+                    .stream()
+                    .sorted(Comparator.comparing(minimumPathCostMap::get))
+                    .sorted(Comparator.comparing(p -> p.getSrc().getId()))
+                    .sorted(Comparator.comparing(p -> p.getDst().getId()))
+                    .collect(Collectors.toList());
+        } catch (Exception e){
+            e.printStackTrace();
+            return pairs
+                    .stream()
+                    .sorted(Comparator.comparing(p -> p.getSrc().getId()))
+                    .sorted(Comparator.comparing(p -> p.getDst().getId()))
+                    .collect(Collectors.toList());
+        }
     }
 
     public Topology removeLinksFromTopology(Topology topo, Collection<Link> linksToRemove){

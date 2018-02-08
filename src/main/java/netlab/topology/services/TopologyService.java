@@ -154,7 +154,7 @@ public class TopologyService {
         String graphName = "tw";
         Graph g = readGraphModel(graphName);
 
-        return makeTopologyFromGraph(g);
+        return populatePathCosts(makeTopologyFromGraph(g));
     }
 
     private Topology makeTopologyFromGraph(Graph g) {

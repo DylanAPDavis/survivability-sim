@@ -50,7 +50,7 @@ public class FlexBhandariService {
         //topologyAdjustmentService.readjustLinkWeights(paths, topology);
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
-        log.info("Solution took: " + duration + " seconds");
+        //log.info("Solution took: " + duration + " seconds");
         details.setChosenPaths(paths);
         details.setRunningTimeSeconds(duration);
         details.setIsFeasible(paths.values().stream().noneMatch(Map::isEmpty));

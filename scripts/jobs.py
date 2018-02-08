@@ -1,12 +1,12 @@
 import job
 algorithm_dict = {
-    "unicast": ["minimumrisk"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],
-    "anycast": ["minimumrisk"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],
-    "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
-    "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
-    "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
-    "manytomany": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
-    "broadcast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo"],
+    "unicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],
+    "anycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],
+    "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
+    "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
+    "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
+    "manytomany": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
+    "broadcast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
 }
 s_d_value_dict = {
     "unicast":
@@ -56,13 +56,13 @@ s_d_value_dict = {
     ],
 }
 traffic_combo_dict = {
-    "unicast": ["dest"],  # ["none"],
-    "anycast": ["dest"],  # ["none"],
-    "multicast": ["dest", "both"],  # ["none", "source", "dest", "both"],
-    "manycast": ["dest", "both"],  # ["none", "source", "dest", "both"],
-    "manytoone": ["dest"],  # ["none", "source", "dest", "both"],
-    "manytomany": ["dest"],  # ["none", "source", "dest", "both"],
-    "broadcast": ["dest"],  # ["none", "source", "dest", "both"],
+    "unicast": ["both"],  # ["none"],
+    "anycast": ["both"],  # ["none"],
+    "multicast": ["both"],  # ["none", "source", "dest", "both"],
+    "manycast": ["both"],  # ["none", "source", "dest", "both"],
+    "manytoone": ["both"],  # ["none", "source", "dest", "both"],
+    "manytomany": ["both"],  # ["none", "source", "dest", "both"],
+    "broadcast": ["both"],  # ["none", "source", "dest", "both"],
 }
 
 # routing_types = ["unicast", "anycast", "manycast", "multicast", "manytoone", "manytomany", "broadcast"]

@@ -55,24 +55,24 @@ public class AggregationAnalysisService {
     public Map<RoutingType, List<Algorithm>> makeAlgorithmMap(){
         Map<RoutingType, List<Algorithm>> algorithmMap = new HashMap<>();
         algorithmMap.put(RoutingType.Unicast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
-                Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens));
+                Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens, Algorithm.Tabu));
         algorithmMap.put(RoutingType.Anycast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
-                Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens));
+                Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens, Algorithm.Tabu));
         algorithmMap.put(RoutingType.Multicast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
         algorithmMap.put(RoutingType.Manycast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
         algorithmMap.put(RoutingType.ManyToOne, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
         algorithmMap.put(RoutingType.ManyToMany, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
         algorithmMap.put(RoutingType.Broadcast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Hamlitonian, Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
         return algorithmMap;
     }
 
@@ -138,7 +138,7 @@ public class AggregationAnalysisService {
         /*List<TrafficCombinationType> trafficList = Arrays.asList(TrafficCombinationType.None,
                 TrafficCombinationType.Source, TrafficCombinationType.Destination, TrafficCombinationType.Both);
                 */
-        List<TrafficCombinationType> trafficList = Collections.singletonList(TrafficCombinationType.Destination);
+        List<TrafficCombinationType> trafficList = Collections.singletonList(TrafficCombinationType.Both);
         trafficCombinationMap.put(RoutingType.Unicast, trafficList);
         trafficCombinationMap.put(RoutingType.Anycast, trafficList);
         trafficCombinationMap.put(RoutingType.Multicast, trafficList);

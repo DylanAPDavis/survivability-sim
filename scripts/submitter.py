@@ -36,10 +36,10 @@ def process_job(job, analysis_type):
 
 
 # seeds = range(1, 31)
-seeds = range(1, 6)
+seeds = [1]
 for seed in seeds:
     job_list = jobs.create_jobs(seed)
     for j in job_list:
         print(str(j.__dict__))
         process_job(j, analysis_after_sim)
-    time.sleep(5)
+    time.sleep(2)
