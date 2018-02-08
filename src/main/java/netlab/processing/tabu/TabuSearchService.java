@@ -21,13 +21,19 @@ public class TabuSearchService {
 
     // Number of paths to consider at once
     static int partitionSize = 5;
-    static int minThresholdKeepAfterRestart = 5; // only keep parts of the best solution that have been around for this many iterations
+    static int minThresholdKeepAfterRestart = 3; // only keep parts of the best solution that have been around for this many iterations
 
     // Thresholds for stopping or changing large parts of the solution
     static int tabuTime = 15;       // if a path has been added or removed, the opposite action cannot be performed
     static int noImprovement = 20; // no improvement on best, stop running
     static int notFitEnough = 10;   // solution is not improving enough, inject some disjoint paths
     static int restartFromBest = 10;     // after so many iterations, restart from best subset of the best solution
+
+    // Make connecting sources in solution a priority
+    static int srcMultiplier = 5;
+
+    // Update the Tabu list after injecting and resetting, along with baseline add, swap, and remove
+    static boolean updateTabuAfterSpecialAction = true;
 
     @Autowired
     public TabuSearchService(TopologyMetricsService topologyMetricsService){
@@ -81,7 +87,6 @@ public class TabuSearchService {
         Solution currentSolution =  new Solution(new HashSet<>(), Double.MAX_VALUE, 0.0, new HashMap<>());
 
         Set<String> disconnPathIds = new HashSet<>();
-        Set<String> lockedIn = new HashSet<>();
         Map<String, Integer> tabuMap = new HashMap<>();
 
         Map<Set<String>, Double> pathSetFitnessMap = new HashMap<>();
@@ -111,32 +116,41 @@ public class TabuSearchService {
             else {
                 List<Solution> candidateSolutions = generateCandidateSolutions(currentSolution, topologyMetrics, pairs,
                         failureIds, nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, random,
-                        sources, destinations, tabuMap.keySet(), lockedIn);
+                        sources, destinations, tabuMap.keySet());
                 Solution bestCandidate = pickBestCandidate(candidateSolutions, fitnessThreshold);
                 if (isBetter(bestCandidate, currentSolution, fitnessThreshold)) {
                     // Store the previous solution before changing the current
                     previousSolution = currentSolution.copy();
                     currentSolution = bestCandidate;
                 }
-                //updateTabuMap(tabuMap, previousSolution, currentSolution);
+                // If you're only updating tabus on add/removes/swaps, do it here
+                if(!updateTabuAfterSpecialAction) {
+                    updateTabuMap(tabuMap, previousSolution, currentSolution);
+                }
             }
-            updateTabuMap(tabuMap, previousSolution, currentSolution);
+            // Update best solution (if applicable)
             if (isBetter(currentSolution, bestSolution, fitnessThreshold)) {
                 bestSolution = currentSolution;
                 changed = true;
+            }
+            iterationsWithoutImprovement = changed ? 0 : iterationsWithoutImprovement + 1;
+            totalIterations++;
+
+            // Update the counts for paths that have been in the best solution
+            updatePathBeenInBestMap(pathBeenInBestMap, bestSolution);
+            // If you've gone long enough, restart from the best paths
+            if(totalIterations % restartFromBest == 0){
+                previousSolution = currentSolution.copy();
+                currentSolution = restartFromBestSubset(pathBeenInBestMap, topologyMetrics.getPathIdMap(), failureIds, nfe,
+                        connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, sources, destinations);
             }
             // If the current solution is not fit enough, track that
             if(currentSolution.getFitness() < fitnessThreshold){
                 iterationsUnderThreshold++;
             }
-            // If there's been a change, reset the counter
-            iterationsWithoutImprovement = changed ? 0 : iterationsWithoutImprovement + 1;
-            totalIterations++;
-            updatePathBeenInBestMap(pathBeenInBestMap, bestSolution);
-            if(totalIterations % restartFromBest == 0){
-                previousSolution = currentSolution.copy();
-                currentSolution = restartFromBestSubset(pathBeenInBestMap, topologyMetrics.getPathIdMap(), failureIds, nfe,
-                        connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, sources, destinations);
+            // Update tabus
+            if(updateTabuAfterSpecialAction) {
+                updateTabuMap(tabuMap, previousSolution, currentSolution);
             }
         }
 
@@ -301,7 +315,7 @@ public class TabuSearchService {
                                                       Set<String> disconnPaths, Map<Set<String>, Double> pathSetFitnessMap,
                                                       Map<Set<String>, Double> pathSetCostMap, Random random,
                                                       Set<String> sources, Set<String> destinations,
-                                                      Set<String> tabu, Set<String> lockedIn) {
+                                                      Set<String> tabu) {
 
         Map<SourceDestPair, List<String>> kShortestPaths = topologyMetrics.getMinCostPaths();
         Map<String, Path> pathIdMap = topologyMetrics.getPathIdMap();
@@ -309,7 +323,7 @@ public class TabuSearchService {
 
         List<Solution> candidates = new ArrayList<>();
         List<String> currentAllowedToRemove = currentPathIds.stream()
-                .filter(p -> !tabu.contains(p) && !lockedIn.contains(p))
+                .filter(p -> !tabu.contains(p))
                 .sorted(String::compareToIgnoreCase)
                 .collect(Collectors.toList());
 
@@ -324,7 +338,7 @@ public class TabuSearchService {
             List<String> kPathsForPair = kShortestPaths.get(pair);
             // Filter out the tabu paths and the locked in paths
             List<String> candidatePathsForPair = kPathsForPair.stream()
-                    .filter(p -> !tabu.contains(p) && !lockedIn.contains(p))
+                    .filter(p -> !tabu.contains(p))
                     .collect(Collectors.toList());
             // Pick a random subset based on the partition size
             List<String> subset = getSubset(candidatePathsForPair, partitionSize, random);
@@ -370,9 +384,7 @@ public class TabuSearchService {
                                            Map<Set<String>, Double> pathSetFitnessMap, Map<Set<String>, Double> pathSetCostMap,
                                            Set<String> sources, Set<String> destinations) {
         String pathToRemove = chooseAtRandom(currentAllowedToRemove, random);
-        Set<String> removeCandidatePathIds = currentPathIds.stream()
-                .filter(s -> !s.equals(pathToRemove))
-                .collect(Collectors.toSet());
+        Set<String> removeCandidatePathIds = removePath(currentPathIds, pathToRemove);
         return createCandidateUpdateMaps(removeCandidatePathIds, pathIdMap, failureIds, nfe, connectionReqs,
                 disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
     }
@@ -442,54 +454,6 @@ public class TabuSearchService {
             pathIds.add(newPathId);
         }
         return pathIds;
-    }
-
-    private Set<String> prunePath(Solution base, Map<String, Path> pathIdMap, Set<String> failureIds,
-                                  Integer nfe, Connections connectionReqs, Set<String> disconnPaths,
-                                  Map<Set<String>, Double> pathSetFitnessMap, Map<Set<String>, Double> pathSetCostMap,
-                                  Double fitnessThreshold, Set<String> sources, Set<String> destinations){
-        Set<String> pathIds = new HashSet<>(base.getPathIds());
-        String worstPath = pickWorst(base, pathIdMap, failureIds, nfe, connectionReqs, disconnPaths, pathSetFitnessMap,
-                pathSetCostMap, fitnessThreshold, sources, destinations);
-        if(!worstPath.equals("")){
-            pathIds.remove(worstPath);
-        }
-        return pathIds;
-    }
-
-    private String pickWorst(Solution base, Map<String, Path> pathIdMap, Set<String> failureIds,
-                             Integer nfe, Connections connectionReqs, Set<String> disconnPaths,
-                             Map<Set<String>, Double> pathSetFitnessMap, Map<Set<String>, Double> pathSetCostMap,
-                             Double fitnessThreshold, Set<String> sources, Set<String> destinations){
-        String worstPath = "";
-        double worstCost = 0.0;
-        double worstFit = Double.MAX_VALUE;
-        for(String pathId : base.getPathIds()){
-            Set<String> modPathIds = new HashSet<>(base.getPathIds());
-            modPathIds.remove(pathId);
-            Double cost;
-            Double fitness;
-            if(pathSetCostMap.containsKey(modPathIds) && pathSetFitnessMap.containsKey(modPathIds)){
-                cost = pathSetCostMap.get(modPathIds);
-                fitness = pathSetFitnessMap.get(modPathIds);
-            }
-            else{
-                Solution modCandidate = makeCandidate(modPathIds, pathIdMap, failureIds, nfe, connectionReqs,
-                        disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
-                cost = modCandidate.getCost();
-                fitness = modCandidate.getFitness();
-                // Store this new pathset's cost and fitness for later use
-                pathSetCostMap.put(modPathIds, cost);
-                pathSetFitnessMap.put(modPathIds, fitness);
-            }
-            // If the current worst is better than this, make this the new current worst
-            if(isBetter(worstCost, worstFit, cost, fitness, fitnessThreshold)){
-                worstPath = pathId;
-                worstCost = cost;
-                worstFit = fitness;
-            }
-        }
-        return worstPath;
     }
 
     private Map<SourceDestPair,Set<String>> makePairPathMap(Set<String> candidatePathIds, Map<String, Path> pathIdMap) {
@@ -583,7 +547,7 @@ public class TabuSearchService {
             }
             totalScore += score;
         }
-        totalScore += satisfiedSCount;
+        totalScore += satisfiedSCount * srcMultiplier;
         totalScore += satisfiedDCount;
 
         return totalScore;
@@ -719,7 +683,7 @@ public class TabuSearchService {
         Map<Node, Integer> minCdMap = connCollection.getDstMinConnectionsMap();
         Map<SourceDestPair, Integer> minCsdMap = connCollection.getPairMinConnectionsMap();
 
-        int neededS = calculateNeededMembers(minCsMap.keySet(), useMinS, failureIds, nfe);
+        int neededS = calculateNeededMembers(minCsMap.keySet(), useMinS, failureIds, nfe)  * srcMultiplier;
         int neededD = calculateNeededMembers(minCdMap.keySet(), useMinD, failureIds, nfe);
         int neededSPaths = minCsMap.keySet().stream().mapToInt(minCsMap::get).sum();
         int neededDPaths = minCdMap.keySet().stream().mapToInt(minCdMap::get).sum();

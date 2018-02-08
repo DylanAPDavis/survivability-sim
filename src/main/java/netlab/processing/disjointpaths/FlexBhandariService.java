@@ -242,32 +242,71 @@ public class FlexBhandariService {
 
     private List<SourceDestPair> interleavePairs(List<SourceDestPair> sortedPairs, Set<Node> sources, Set<Node> destinations) {
         List<Node> sourceOrder = new ArrayList<>();
-        Map<Node, List<SourceDestPair>> extraOrderedPairsPerSrc = new HashMap<>();
+        List<Node> destOrder = new ArrayList<>();
+        Map<Node, List<SourceDestPair>> orderedPairsPerSrc = new HashMap<>();
+        Map<Node, List<SourceDestPair>> orderedPairsPerDst = new HashMap<>();
         List<SourceDestPair> outputList = new ArrayList<>();
         for(SourceDestPair pair : sortedPairs){
             Node src = pair.getSrc();
-            // If this pair hasn't been seen yet, create a backup list for it, store the pair in output list,
-            // and add it to the source order
-            if(!extraOrderedPairsPerSrc.containsKey(src)){
-                extraOrderedPairsPerSrc.put(src, new ArrayList<>());
-                outputList.add(pair);
+            Node dst = pair.getDst();
+            // If this pair hasn't been seen yet, add it to the ordering
+            if(!orderedPairsPerSrc.containsKey(src)){
                 sourceOrder.add(src);
             }
-            // Otherwise, just store this pair as a backup
-            else{
-                extraOrderedPairsPerSrc.get(src).add(pair);
+            if(!orderedPairsPerDst.containsKey(dst)){
+                destOrder.add(dst);
             }
+            orderedPairsPerSrc.putIfAbsent(src, new ArrayList<>());
+            orderedPairsPerSrc.get(src).add(pair);
+            orderedPairsPerDst.putIfAbsent(dst, new ArrayList<>());
+            orderedPairsPerDst.get(dst).add(pair);
         }
         // Go through the sources, interleave their backup pairs
         int numSatisfied = 0;
+        Set<Node> usedSources = new HashSet<>();
+        Set<Node> satisfiedDest = new HashSet<>();
+        Set<SourceDestPair> usedPairs = new HashSet<>();
         while(numSatisfied < sourceOrder.size()){
+            // Go until all the nodes are satisfied
             for(Node src : sourceOrder){
-                List<SourceDestPair> pairs = extraOrderedPairsPerSrc.get(src);
+                List<SourceDestPair> pairs = orderedPairsPerSrc.get(src);
                 if(pairs.size() == 0){
                     numSatisfied++;
                 } else{
                     SourceDestPair nextPair = pairs.remove(0);
-                    outputList.add(nextPair);
+                    while(usedPairs.contains(nextPair) && pairs.size() > 0){
+                        nextPair = pairs.remove(0);
+                    }
+                    if(!usedPairs.contains(nextPair)) {
+                        outputList.add(nextPair);
+                        usedPairs.add(nextPair);
+                        usedSources.add(src);
+
+                        Node dst = nextPair.getDst();
+                        satisfiedDest.add(dst);
+                    }
+                }
+                if(usedSources.size() == sources.size()){
+                    // If you haven't gotten at least one pair including every dest yet
+                    if(satisfiedDest.size() < destinations.size()){
+                        // Go through those dests
+                        for(Node dest : destOrder){
+                            // If the dest is not satisfied
+                            if(!satisfiedDest.contains(dest)){
+                                // Get the pairs including that dest
+                                List<SourceDestPair> destPairs = orderedPairsPerDst.get(dest);
+                                for(SourceDestPair destPair : destPairs){
+                                    // If that pair hasn't been used yet, use it, and mark this dest as satisfied
+                                    if(!usedPairs.contains(destPair)){
+                                        outputList.add(destPair);
+                                        usedPairs.add(destPair);
+                                        satisfiedDest.add(dest);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -275,4 +275,33 @@ public class TabuSearchServiceTest {
         System.out.println(printingService.outputPaths(request));
     }
 
+    @Test
+    public void manyToManyAllNodes1TestTWUseMinD1(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
+                .algorithm("tabu")
+                .objective("totalcost")
+                .routingType("manyToMany")
+                .numSources(5)
+                .numDestinations(5)
+                .useMinD(1)
+                .failureScenario("allNodes")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        Double totalCost = 0.0;
+        for(SourceDestPair pair : request.getDetails().getChosenPaths().keySet()){
+            Collection<Path> paths = request.getDetails().getChosenPaths().get(pair).values();
+            Double sum = paths.stream().mapToDouble(Path::getTotalWeight).sum();
+            totalCost += sum;
+        }
+        assert(request.getDetails().getIsFeasible());
+        log.info("Total Cost: " + totalCost);
+        System.out.println(printingService.outputPaths(request));
+    }
+
 }
