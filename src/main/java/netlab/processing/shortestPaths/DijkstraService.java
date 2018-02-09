@@ -81,10 +81,10 @@ public class DijkstraService {
                     Link pLink = prevLink.get(currentTarget);
                     if(compareLinks(link, newRiskToTarget, newDistanceToTarget, pLink, cumulativeRisk.get(currentTarget), distance.get(currentTarget))){
                         // Double check that you're not picking a link to a node that you're already connected to
-                        Link currentLinkToOrigin = prevLink.get(link.getOrigin());
+                        /*Link currentLinkToOrigin = prevLink.get(link.getOrigin());
                         if(currentLinkToOrigin != null && currentLinkToOrigin.getOrigin().equals(currentTarget)){
                             continue;
-                        }
+                        }*/
                         prevLink.put(currentTarget, link);
                         distance.put(currentTarget, newDistanceToTarget);
                         cumulativeRisk.put(currentTarget, newRiskToTarget);
