@@ -388,4 +388,15 @@ public class MinimumRiskPathServiceTest {
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
+
+    @Test
+    public void anycastIssuesTest2(){
+        String hash = "6_tw_anycast_minimumrisk_1_2_1_1_1_1_both_quake2_both_9999_none_allow_allow_false_8";
+        SimulationParameters params = defaultValueService.generateFromHash(hash);
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
 }
+
