@@ -5,6 +5,7 @@ import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.services.AnalysisService;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
+import netlab.submission.services.DefaultValueService;
 import netlab.submission.services.GenerationService;
 import netlab.visualization.PrintingService;
 import org.junit.Test;
@@ -28,6 +29,9 @@ public class MinimumRiskPathServiceTest {
 
     @Autowired
     AnalysisService analysisService;
+
+    @Autowired
+    DefaultValueService defaultValueService;
 
     @Test
     public void unicastTest(){
@@ -368,6 +372,17 @@ public class MinimumRiskPathServiceTest {
                 .sourceSubsetDestType("half")
                 .useAws(false)
                 .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+
+    @Test
+    public void anycastIssuesTest(){
+        String hash = "6_tw_unicast_minimumrisk_1_1_1_1_1_1_both_allnodes_both_3_none_allow_allow_false_8";
+        SimulationParameters params = defaultValueService.generateFromHash(hash);
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());

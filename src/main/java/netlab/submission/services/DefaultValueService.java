@@ -1,6 +1,7 @@
 package netlab.submission.services;
 
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.services.HashingService;
 import netlab.submission.enums.FailureScenario;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.SimulationParameters;
@@ -15,11 +16,50 @@ public class DefaultValueService {
 
     private RoutingParamAssignmentService routingParamAssignmentService;
     private EnumGenerationService enumGenerationService;
+    private HashingService hashingService;
 
     @Autowired
-    public DefaultValueService(RoutingParamAssignmentService routingParamAssignmentService, EnumGenerationService enumGenerationService){
+    public DefaultValueService(RoutingParamAssignmentService routingParamAssignmentService,
+                               EnumGenerationService enumGenerationService, HashingService hashingService){
         this.routingParamAssignmentService = routingParamAssignmentService;
         this.enumGenerationService = enumGenerationService;
+        this.hashingService = hashingService;
+    }
+
+    public SimulationParameters generateFromHash(String hash){
+        String[] params = hashingService.unhash(hash);
+        /*
+        params.getSeed(), params.getTopologyId(),  params.getRoutingType(), params.getAlgorithm(),
+                params.getNumSources(), params.getNumDestinations(),
+                params.getUseMinS(), params.getUseMaxS(), params.getUseMinD(), params.getUseMaxD(),
+        params.getTrafficCombinationType(),
+                params.getFailureScenario(),  params.getFailureClass(),
+                params.getNumFailureEvents(), params.getSourceSubsetDestType(), params.getSourceFailureType(),
+                params.getDestFailureType(),  params.getIgnoreFailures(),
+                params.getNumThreads());
+         */
+        SimulationParameters parameters = SimulationParameters.builder()
+                .seed(Long.parseLong(params[0]))
+                .topologyId(params[1])
+                .routingType(params[2])
+                .algorithm(params[3])
+                .numSources(Integer.parseInt(params[4]))
+                .numDestinations(Integer.parseInt(params[5]))
+                .useMinS(Integer.parseInt(params[6]))
+                .useMaxS(Integer.parseInt(params[7]))
+                .useMinD(Integer.parseInt(params[8]))
+                .useMaxD(Integer.parseInt(params[9]))
+                .trafficCombinationType(params[10])
+                .failureScenario(params[11])
+                .failureClass(params[12])
+                .numFailureEvents(Integer.parseInt(params[13]))
+                .sourceSubsetDestType(params[14])
+                .sourceFailureType(params[15])
+                .destFailureType(params[16])
+                .ignoreFailures(Boolean.parseBoolean(params[17]))
+                .numThreads(Integer.parseInt(params[18]))
+                .build();
+        return assignDefaults(parameters);
     }
 
 

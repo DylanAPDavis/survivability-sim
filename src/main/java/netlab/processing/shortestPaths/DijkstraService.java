@@ -66,23 +66,28 @@ public class DijkstraService {
         while(!queue.isEmpty()){
             Node u = queue.poll();
             for(Link link : nodeLinkMap.get(u)){
-                Node target = link.getTarget();
+                Node currentTarget = link.getTarget();
                 Double newDistanceToTarget =  distance.get(u) + link.getWeight();
                 Double risk = riskMap.containsKey(link) ? riskMap.get(link) : 0.0;
                 Double newRiskToTarget = cumulativeRisk.get(u) + risk;
                 // If the node hasn't been reached yet, just keep this link
-                if(!prevLink.containsKey(target)){
-                    prevLink.put(target, link);
-                    distance.put(target, newDistanceToTarget);
-                    cumulativeRisk.put(target, newRiskToTarget);
+                if(!prevLink.containsKey(currentTarget)){
+                    prevLink.put(currentTarget, link);
+                    distance.put(currentTarget, newDistanceToTarget);
+                    cumulativeRisk.put(currentTarget, newRiskToTarget);
                 }
                 // Otherwise, compare the alt weights first, then the distance
                 else{
-                    Link pLink = prevLink.get(target);
-                    if(compareLinks(link, newRiskToTarget, newDistanceToTarget, pLink, cumulativeRisk.get(target), distance.get(target))){
-                        prevLink.put(target, link);
-                        distance.put(target, newDistanceToTarget);
-                        cumulativeRisk.put(target, newRiskToTarget);
+                    Link pLink = prevLink.get(currentTarget);
+                    if(compareLinks(link, newRiskToTarget, newDistanceToTarget, pLink, cumulativeRisk.get(currentTarget), distance.get(currentTarget))){
+                        // Double check that you're not picking a link to a node that you're already connected to
+                        Link currentLinkToOrigin = prevLink.get(link.getOrigin());
+                        if(currentLinkToOrigin != null && currentLinkToOrigin.getOrigin().equals(currentTarget)){
+                            continue;
+                        }
+                        prevLink.put(currentTarget, link);
+                        distance.put(currentTarget, newDistanceToTarget);
+                        cumulativeRisk.put(currentTarget, newRiskToTarget);
                     }
                 }
             }
@@ -99,11 +104,7 @@ public class DijkstraService {
     }
 
     public boolean compareLinks(Link link, Double newRisk, Double newDistance, Link pLink, Double pRisk, Double pDistance){
-        boolean lowerRisk = newRisk < pRisk;
-        boolean equalRiskAndLowerDistance = newRisk.equals(pRisk) && newDistance < pDistance;
-        boolean nameLower = link.getId().compareTo(pLink.getId()) < 0;
-        boolean equalRiskAndDistanceLowerNames = newRisk.equals(pRisk) && newDistance.equals(pDistance) && nameLower;
-        return lowerRisk || equalRiskAndLowerDistance || equalRiskAndDistanceLowerNames;
+        return newRisk < pRisk || (newRisk.equals(pRisk) && newDistance < pDistance);
     }
 
     /*
