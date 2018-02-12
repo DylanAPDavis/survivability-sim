@@ -54,12 +54,13 @@ public class DijkstraService {
 
         Set<Node> nodes = topo.getNodes();
         PriorityQueue<Node> queue = new PriorityQueue<>(nodes.size(), comparator);
+        queue.add(source);
         for(Node node : nodes){
             if(!node.getId().equals(source.getId())){
                 distance.put(node, Double.MAX_VALUE);
                 cumulativeRisk.put(node, Double.MAX_VALUE);
             }
-            queue.add(node);
+            //queue.add(node);
         }
 
         Map<Node, List<Link>> nodeLinkMap = topo.getNodeOrderedLinkMap();
@@ -67,29 +68,19 @@ public class DijkstraService {
             Node u = queue.poll();
             for(Link link : nodeLinkMap.get(u)){
                 Node currentTarget = link.getTarget();
-                Double newDistanceToTarget =  distance.get(u) + link.getWeight();
-                Double risk = riskMap.containsKey(link) ? riskMap.get(link) : 0.0;
-                Double newRiskToTarget = cumulativeRisk.get(u) + risk;
-                // If the node hasn't been reached yet, just keep this link
-                if(!prevLink.containsKey(currentTarget)){
+                Double newDistanceToTarget = distance.get(u) + link.getWeight();
+                Double newRiskToTarget = cumulativeRisk.get(u) + (riskMap.containsKey(link) ? riskMap.get(link) : 0.0);
+                Double currentRiskToTarget = cumulativeRisk.get(currentTarget);
+                Double currentDistanceToTarget = distance.get(currentTarget);
+                if (compareLinks(newRiskToTarget, newDistanceToTarget, currentRiskToTarget, currentDistanceToTarget)) {
                     prevLink.put(currentTarget, link);
                     distance.put(currentTarget, newDistanceToTarget);
                     cumulativeRisk.put(currentTarget, newRiskToTarget);
-                }
-                // Otherwise, compare the alt weights first, then the distance
-                else{
-                    Link pLink = prevLink.get(currentTarget);
-                    if(compareLinks(link, newRiskToTarget, newDistanceToTarget, pLink, cumulativeRisk.get(currentTarget), distance.get(currentTarget))){
-                        // Double check that you're not picking a link to a node that you're already connected to
-                        /*Link currentLinkToOrigin = prevLink.get(link.getOrigin());
-                        if(currentLinkToOrigin != null && currentLinkToOrigin.getOrigin().equals(currentTarget)){
-                            continue;
-                        }*/
-                        prevLink.put(currentTarget, link);
-                        distance.put(currentTarget, newDistanceToTarget);
-                        cumulativeRisk.put(currentTarget, newRiskToTarget);
+                    if(!queue.contains(currentTarget)){
+                        queue.add(currentTarget);
                     }
                 }
+                    //}
             }
         }
         // Starting from the dest, build the path back to source in reverse
@@ -103,7 +94,8 @@ public class DijkstraService {
         return path;
     }
 
-    public boolean compareLinks(Link link, Double newRisk, Double newDistance, Link pLink, Double pRisk, Double pDistance){
+    public boolean compareLinks(Double newRisk, Double newDistance, Double pRisk, Double pDistance){
+        //return newDistance < pDistance;
         return newRisk < pRisk || (newRisk.equals(pRisk) && newDistance < pDistance);
     }
 
