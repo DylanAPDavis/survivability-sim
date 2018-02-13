@@ -43,10 +43,14 @@ public class CachingService {
                     break;
                 case BranchingPoint:
                     cacheAtBranchingPoints(cacheMap, primaryPathMap);
+                    break;
+                case LeaveCopyDown:
+                    cacheLeaveCopyDown(cacheMap, primaryPathMap);
             }
             cachingResult.setCachingCost(evaluateCost(cacheMap));
         }
     }
+
 
     private double evaluateCost(Map<SourceDestPair, Set<Node>> cacheMap) {
         Map<Node, Set<Node>> cachePointsPerDestination = new HashMap<>();
@@ -172,6 +176,24 @@ public class CachingService {
             if(primary != null) {
                 // Every path has at least two nodes
                 cachingNodes.add(primary.getNodes().get(1));
+                cachingNodes.add(pair.getDst());
+                cacheMap.put(pair, cachingNodes);
+            }
+        }
+    }
+
+    private void cacheLeaveCopyDown(Map<SourceDestPair, Set<Node>> cacheMap, Map<SourceDestPair, Path> primaryPathMap) {
+        // Cache next to every destination
+        for(SourceDestPair pair : primaryPathMap.keySet()){
+            Set<Node> cachingNodes = new HashSet<>();
+            Path primary = primaryPathMap.get(pair);
+            if(primary != null){
+                List<Node> pathNodes = primary.getNodes();
+                Node secondToLast = pathNodes.get(pathNodes.size()-2);
+                // If the second to last is not the source (i.e. there is an intermediate node), then cache there
+                if(!secondToLast.getId().equals(pair.getSrc().getId())) {
+                    cachingNodes.add(secondToLast);
+                }
                 cachingNodes.add(pair.getDst());
                 cacheMap.put(pair, cachingNodes);
             }

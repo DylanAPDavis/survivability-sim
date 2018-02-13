@@ -74,7 +74,8 @@ public class AnalysisService {
                 new CachingResult(CachingType.SourceAdjacent),
                 new CachingResult(CachingType.FailureAware),
                 new CachingResult(CachingType.BranchingPoint),
-                new CachingResult(CachingType.EntirePath)
+                new CachingResult(CachingType.EntirePath),
+                new CachingResult(CachingType.LeaveCopyDown)
         );
 
         cachingService.buildCacheMaps(cachingResults, chosenPaths, failureColl.getFailureSet());

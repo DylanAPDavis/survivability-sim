@@ -11,6 +11,7 @@ public enum CachingType {
     SourceAdjacent("sourceadjacent"),
     FailureAware("failureaware"),
     BranchingPoint("branchingpoint"),
+    LeaveCopyDown("leavecopydown"),
     None("none")
     ;
 
