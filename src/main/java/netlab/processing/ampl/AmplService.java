@@ -30,8 +30,15 @@ public class AmplService {
         Map<SourceDestPair, Map<String, Path>> paths = new HashMap<>();
         Environment env = new Environment(System.getProperty("user.dir") + "/linear-programs/ampl/");
         AMPL ampl = new AMPL(env);
-        double duration = 0.0;
         Details details = request.getDetails();
+        if(!ampl.isRunning()){
+            details.setChosenPaths(new HashMap<>());
+            details.setIsFeasible(false);
+            details.setRunningTimeSeconds(0.0);
+            log.info("AMPL is not running! Can't find solution.");
+            return details;
+        }
+        double duration = 0.0;
         try {
             ampl = assignValues(request, topology, ampl);
             long startTime = System.nanoTime();
