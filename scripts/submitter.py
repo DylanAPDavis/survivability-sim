@@ -5,6 +5,7 @@ import time
 analysis_job = "ANALYSIS_JOB"
 analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
+aggregate_analysis = True
 
 
 def process_job(job, analysis_type):
@@ -36,12 +37,21 @@ def process_job(job, analysis_type):
             command_input.append("false")
     process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
+def process_aggregate_job():
+    output_file_path = "results/output/" + "aggregate"
+    run_time = "3:59"
+    memory = "16000"
+    command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
+                     str(8), "-o", output_file_path, "python", "scripts/run_analysis.py", job.request_id,
+                     str(job.use_aws)]
 
-# seeds = range(1, 31)
-seeds = range(1, 31)
-for seed in seeds:
-    job_list = jobs.create_jobs(seed)
-    for j in job_list:
-        print(str(j.__dict__))
-        process_job(j, analysis_after_sim)
-    time.sleep(2)
+if aggregate_analysis:
+    process_aggregate_job()
+else:
+    seeds = range(1, 31)
+    for seed in seeds:
+        job_list = jobs.create_jobs(seed)
+        for j in job_list:
+            print(str(j.__dict__))
+            process_job(j, analysis_after_sim)
+        time.sleep(2)

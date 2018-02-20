@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 @Slf4j
 @Controller
@@ -96,11 +97,9 @@ public class AnalysisController {
         return aggregationAnalysisService.aggregateAnalyses(analyses);
     }
 
-
     @RequestMapping(value = "/analyze/aggregate_seeds", method = RequestMethod.POST)
     @ResponseBody
-    public String aggregateSeeds(List<Long> seeds){
-        AggregationParameters agParams = aggregationAnalysisService.makeDefaultParameters(seeds);
+    public String aggregateWithParams(AggregationParameters agParams){
         Map<String, List<Analysis>> analysisMap = new HashMap<>();
         for(Long seed : agParams.getSeeds()){
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
@@ -132,11 +131,21 @@ public class AnalysisController {
         }
 
         return aggregationAnalysisService.createAggregationOutput(agParams, aggregateAnalysisMap);
-
     }
 
+    @RequestMapping(value = "/analyze/aggregate_seeds", method = RequestMethod.POST)
+    @ResponseBody
+    public String aggregateSeeds(List<Long> seeds){
+        AggregationParameters agParams = aggregationAnalysisService.makeDefaultParameters(seeds);
+        return aggregateWithParams(agParams);
+    }
 
-
+    @RequestMapping(value = "/analyze/defaultAggregate", method = RequestMethod.GET)
+    @ResponseBody
+    public AggregationParameters getDefaultAggregateParams(){
+        List<Long> range = LongStream.range(1, 31).boxed().collect(Collectors.toList());
+        return aggregationAnalysisService.makeDefaultParameters(range);
+    }
 
 
 }

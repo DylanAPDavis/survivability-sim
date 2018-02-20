@@ -2,8 +2,10 @@ package netlab;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import netlab.analysis.analyzed.AggregationParameters;
 import netlab.analysis.analyzed.AnalysisParameters;
 import netlab.analysis.controller.AnalysisController;
+import netlab.analysis.services.AggregationAnalysisService;
 import netlab.storage.controller.StorageController;
 import netlab.submission.controller.SubmissionController;
 import netlab.submission.request.SimulationParameters;
@@ -27,6 +29,8 @@ public class SurvivabilitySimApplication {
 		SimulationParameters simParams = null;
 		Long rerunSeed = null;
 		AnalysisParameters analysisParams = null;
+		AggregationParameters aggregationParameters = null;
+		boolean defaultAggregate = false;
 		ObjectMapper mapper = new ObjectMapper();
 		printUsage(args);
 		for (String arg : args) {
@@ -54,6 +58,17 @@ public class SurvivabilitySimApplication {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			}
+			if (option.contains("--aggregate")){
+				try {
+					aggregationParameters = mapper.readValue(value, AggregationParameters.class);
+					log.info("Params: " + aggregationParameters.toString());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if (option.contains("--defaultAggregate")){
+				defaultAggregate = true;
 			}
 		}
 
@@ -98,6 +113,15 @@ public class SurvivabilitySimApplication {
 			System.exit(0);
 		}
 
+		// Aggregate data
+		if(defaultAggregate){
+			log.info("Using default parameters for aggregation");
+			aggregationParameters = analysCon.getDefaultAggregateParams();
+		}
+		if(aggregationParameters != null){
+			log.info("Aggregating Analyses");
+			analysCon.aggregateWithParams(aggregationParameters);
+		}
 	}
 
 	private static void printUsage(String[] args){
