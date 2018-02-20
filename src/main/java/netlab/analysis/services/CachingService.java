@@ -128,7 +128,7 @@ public class CachingService {
             List<Node> reachableNodes = pathMappingService.getReachableNodes(primary, failures);
             // Cache at the first reachable node along the path
             if(!reachableNodes.isEmpty()){
-                cachingNodes.add(reachableNodes.get(0));
+                cachingNodes.addAll(reachableNodes);
                 cachingNodes.add(pair.getDst());
             }
             // If there are none, cache next to the source

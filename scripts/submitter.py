@@ -22,6 +22,8 @@ def process_job(job, analysis_type):
         queue = "short"
         if job.algorithm == "ilp" and job.f_scenario != "default" and job.ignore == "false":
             memory = "8000"
+            if job.f_scenario == "alllinks" and job.topo == "tw" and job.nfe == 3:
+                memory = "16000"
 
         command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
                          str(job.num_threads), "-o", output_file_path, "python", "scripts/run_simulation.py"]
