@@ -2,6 +2,8 @@ package netlab.processing;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.TestConfiguration;
+import netlab.analysis.analyzed.Analysis;
+import netlab.analysis.services.AnalysisService;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
@@ -33,6 +35,9 @@ public class FlexBhandariServiceTest {
     @Autowired
     private PrintingService printingService;
 
+    @Autowired
+    private AnalysisService analysisService;
+
     @Test
     public void unicastTest(){
 
@@ -51,6 +56,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -73,6 +80,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
 
@@ -94,6 +103,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -116,6 +127,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -138,6 +151,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -160,6 +175,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -182,6 +199,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -205,6 +224,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -228,6 +249,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -251,6 +274,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -274,6 +299,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -294,6 +321,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -315,6 +344,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
 
@@ -337,6 +368,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -359,6 +392,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
 
@@ -382,6 +417,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -409,6 +446,8 @@ public class FlexBhandariServiceTest {
         }
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -437,6 +476,8 @@ public class FlexBhandariServiceTest {
         assert(request.getDetails().getIsFeasible());
         log.info("Total Cost: " + totalCost);
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -466,6 +507,8 @@ public class FlexBhandariServiceTest {
         assert(request.getDetails().getIsFeasible());
         log.info("Total Cost: " + totalCost);
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
 
@@ -487,6 +530,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -508,6 +553,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -530,6 +577,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -552,6 +601,8 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -574,5 +625,7 @@ public class FlexBhandariServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 }

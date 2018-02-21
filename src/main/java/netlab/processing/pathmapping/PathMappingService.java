@@ -149,7 +149,9 @@ public class PathMappingService {
     public Map<SourceDestPair,Path> buildPrimaryPathMap(Map<SourceDestPair, Map<String, Path>> chosenPathsMap) {
         Map<SourceDestPair, Path> primaryPathMap = new HashMap<>();
         for(SourceDestPair pair : chosenPathsMap.keySet()){
-            primaryPathMap.put(pair, getPrimary(chosenPathsMap.get(pair).values()));
+            if(chosenPathsMap.get(pair).values().size() > 0) {
+                primaryPathMap.put(pair, getPrimary(chosenPathsMap.get(pair).values()));
+            }
         }
         return primaryPathMap;
     }
@@ -197,6 +199,7 @@ public class PathMappingService {
         }
         List<Node> reachableNodes = new ArrayList<>();
         Node prevNode = pathLinks.get(0).getOrigin();
+        reachableNodes.add(prevNode);
         for(Link link : pathLinks){
             // If the origin isn't the target of the previous link, then there was a removed link somewhere in the path
             Node origin = link.getOrigin();

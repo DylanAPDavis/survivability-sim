@@ -105,13 +105,17 @@ public class AnalysisController {
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
             for(SimulationParameters params : seedParams){
                 String id = params.getRequestId();
-                Analysis analysis = storageService.retrieveAnalyzedSet(id, true, true);
-                if(analysis != null) {
-                    String hash = hashingService.hashAnalysis(analysis);
-                    analysisMap.putIfAbsent(hash, new ArrayList<>());
-                    analysisMap.get(hash).add(analysis);
+                if(params.getCompleted()) {
+                    Analysis analysis = storageService.retrieveAnalyzedSet(id, true, true);
+                    if (analysis != null) {
+                        String hash = hashingService.hashAnalysis(analysis);
+                        analysisMap.putIfAbsent(hash, new ArrayList<>());
+                        analysisMap.get(hash).add(analysis);
+                    } else {
+                        log.info("Analysis for ID: " + id + " could not be found!");
+                    }
                 } else{
-                    log.info("Analysis for ID: " + id + " could not be found!");
+                    log.info("ID: " + id + " has not completed successfully!");
                 }
             }
             try {

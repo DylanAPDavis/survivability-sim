@@ -20,38 +20,35 @@ public class CachingResult  implements Serializable {
     private CachingType type;
     private Set<Node> cachingLocations;
 
-    //Content Reachability: The percentage of sources that can still reach all of their desired content.
-    private double reachability;
-    // Average Content Accessibility: The average percentage of content that can still be accessed per source.
-    // For example, if a source wants to access content from three destinations, and can only access content from two
-    // of them (either from the destination itself, or from a cached location), then it has an accessibility percentage of 66%.
-    private double avgAccessibility;
-    // Average Hop Count to Content: The average hop count that will be traversed after failure to access content, per source.
-    private double avgHopCountToContent;
-    // Percentage of pairs that can still access content through backup path
-    private double pairReachThroughBackup;
+    private double avgHopCountBefore;
+    private double avgHopCountAfter;
+    private double reachOnPrimary;
+    private double reachOnBackup;
+    private double reachOnlyBackup;
 
     // Total number of caches across all pairs
     private double cachingCost;
 
     public CachingResult(CachingType type){
         this.type = type;
-        reachability = 0.0;
-        avgAccessibility = 0.0;
-        avgHopCountToContent = 0.0;
-        pairReachThroughBackup = 0.0;
+        avgHopCountBefore = 0.0;
+        avgHopCountAfter = 0.0;
+        reachOnPrimary = 0.0;
+        reachOnBackup = 0.0;
+        reachOnlyBackup = 0.0;
         cachingCost = 0.0;
         cachingLocations = new HashSet<>();
     }
 
 
     public String toString(){
-        String headline = type + " " + "Reach: " + reachability + " Access: " + avgAccessibility
-                + " Hop: " + avgHopCountToContent + " Pair_Reach: " + pairReachThroughBackup + " Cost: " + cachingCost;
-        return headline  + cachingMapToString() +"\n~~~";
+        String headline = type + " " + "Hop Before: " + avgHopCountBefore + ", Hop After: " + avgHopCountAfter
+                + ", Reach on Primary: " + reachOnPrimary + ", Reach on Back: " + reachOnBackup +
+                ", Reach Only Back: " + reachOnlyBackup + ", Cost: " + cachingCost;
+        return headline  + cacheLocationsToString() +"\n~~~";
     }
 
-    public String cachingMapToString(){
+    public String cacheLocationsToString(){
         String output = "";
         String dash = "--";
         String line = dash + "Nodes: ";

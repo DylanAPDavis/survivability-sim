@@ -51,6 +51,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -72,6 +74,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -93,6 +97,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -114,6 +120,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -250,6 +258,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -270,6 +280,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -291,6 +303,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
 
@@ -313,6 +327,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -333,6 +349,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -354,6 +372,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -376,6 +396,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
 
@@ -387,6 +409,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -397,6 +421,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -407,6 +433,8 @@ public class MinimumRiskPathServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 }
 

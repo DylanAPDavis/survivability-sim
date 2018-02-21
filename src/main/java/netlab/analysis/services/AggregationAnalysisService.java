@@ -285,21 +285,24 @@ public class AggregationAnalysisService {
             for(CachingResult result : cachingResults){
                 CachingResult agResult = aggregateCaching.get(cachingResultIndices.get(result.getType()));
                 agResult.setCachingCost(agResult.getCachingCost() + result.getCachingCost());
-                agResult.setAvgAccessibility(agResult.getAvgAccessibility() + result.getAvgAccessibility());
-                agResult.setAvgHopCountToContent(agResult.getAvgHopCountToContent() + result.getAvgHopCountToContent());
-                agResult.setPairReachThroughBackup(agResult.getPairReachThroughBackup() + result.getPairReachThroughBackup());
-                agResult.setReachability(agResult.getReachability() + result.getReachability());
+                agResult.setAvgHopCountBefore(agResult.getAvgHopCountBefore() + result.getAvgHopCountBefore());
+                agResult.setAvgHopCountAfter(agResult.getAvgHopCountAfter() + result.getAvgHopCountAfter());
+                agResult.setReachOnPrimary(agResult.getReachOnPrimary() + result.getReachOnPrimary());
+                agResult.setReachOnBackup(agResult.getReachOnBackup() + result.getReachOnBackup());
+                agResult.setReachOnlyBackup(agResult.getReachOnlyBackup() + result.getReachOnlyBackup());
             }
         }
     }
 
+
     private void averageCachingResults(List<CachingResult> aggregateCaching, double numToDivideBy){
         for(CachingResult agResult : aggregateCaching){
             agResult.setCachingCost(numToDivideBy > 0 ? agResult.getCachingCost() / numToDivideBy : 0.0);
-            agResult.setAvgAccessibility(numToDivideBy > 0 ? agResult.getAvgAccessibility() / numToDivideBy : 0.0);
-            agResult.setAvgHopCountToContent(numToDivideBy > 0 ? agResult.getAvgHopCountToContent() / numToDivideBy : 0.0);
-            agResult.setPairReachThroughBackup(numToDivideBy > 0 ? agResult.getPairReachThroughBackup() / numToDivideBy : 0.0);
-            agResult.setReachability(numToDivideBy > 0 ? agResult.getReachability() / numToDivideBy : 0.0);
+            agResult.setAvgHopCountBefore(numToDivideBy > 0 ? agResult.getAvgHopCountBefore() / numToDivideBy : 0.0);
+            agResult.setAvgHopCountAfter(numToDivideBy > 0 ? agResult.getAvgHopCountAfter() / numToDivideBy : 0.0);
+            agResult.setReachOnPrimary(numToDivideBy > 0 ? agResult.getReachOnPrimary() / numToDivideBy : 0.0);
+            agResult.setReachOnBackup(numToDivideBy > 0 ? agResult.getReachOnBackup() / numToDivideBy : 0.0);
+            agResult.setReachOnlyBackup(numToDivideBy > 0 ? agResult.getReachOnlyBackup() / numToDivideBy : 0.0);
         }
     }
 
@@ -444,11 +447,12 @@ public class AggregationAnalysisService {
         for(CachingResult cachingResult : cachingResults){
             String cType = cachingResult.getType().getCode();
             cachingHeaders.add(cType + "_" + "cCost");
-            cachingHeaders.add(cType + "_" + "cReach");
-            //cachingHeaders.add(cType + "_" + "cAccess");
-            cachingHeaders.add(cType + "_" + "cHop");
-            cachingHeaders.add(cType + "_" + "cBackup");
-        }
+            cachingHeaders.add(cType + "_" + "crPrim");
+            cachingHeaders.add(cType + "_" + "crBack");
+            cachingHeaders.add(cType + "_" + "crOBack");
+            cachingHeaders.add(cType + "_" + "cHopB");
+            cachingHeaders.add(cType + "_" + "cHopA");
+    }
         List<String> combined = new ArrayList<>(headers);
         combined.addAll(cachingHeaders);
         return combined.toArray(new String[headers.size()]);
@@ -462,10 +466,11 @@ public class AggregationAnalysisService {
                 ag.getPathsIntact(), ag.getConnectionsSevered(), ag.getConnectionsIntact());
         for(CachingResult cachingResult : ag.getCachingResults()){
             dataList.add(String.valueOf(cachingResult.getCachingCost()));
-            dataList.add(String.valueOf(cachingResult.getReachability()));
-            //dataList.add(String.valueOf(cachingResult.getAvgAccessibility()));
-            dataList.add(String.valueOf(cachingResult.getAvgHopCountToContent()));
-            dataList.add(String.valueOf(cachingResult.getPairReachThroughBackup()));
+            dataList.add(String.valueOf(cachingResult.getReachOnPrimary()));
+            dataList.add(String.valueOf(cachingResult.getReachOnBackup()));
+            dataList.add(String.valueOf(cachingResult.getReachOnlyBackup()));
+            dataList.add(String.valueOf(cachingResult.getAvgHopCountBefore()));
+            dataList.add(String.valueOf(cachingResult.getAvgHopCountAfter()));
         }
         return dataList.toArray(new String[dataList.size()]);
     }

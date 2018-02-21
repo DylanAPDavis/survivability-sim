@@ -176,8 +176,7 @@ public class AnalysisService {
         averagePrimaryRisk = numUsedPairs > 0 ? totalPrimaryRisk / numUsedPairs : 0.0;
 
         // Content analysis
-        cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, chosenFailures,
-                details.getConnections().getUseMinD());
+        cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, chosenFailures);
 
         Connections conns = details.getConnections();
         RoutingDescription routingDescription = new RoutingDescription(details.getSources().size(),
