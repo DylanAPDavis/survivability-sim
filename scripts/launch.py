@@ -6,7 +6,7 @@ import traceback
 import json
 
 
-def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web_server="true"):
+def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web_server="true", aggregate=False):
     process = None
 
     try:
@@ -18,11 +18,14 @@ def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web
         sim = '--sim=' + convert_params_to_string(sim_params)
         web = "--web=" + use_web_server
         analysis = "--analyze=" + convert_params_to_string(analysis_params)
+        aggregate_arg = "--defaultAggregate"
         command_input = ['java', "-jar", os.path.join("target", "survivability-sim-0.0.1-SNAPSHOT.jar"), port, web]
         if len(sim_params) > 0:
             command_input.append(sim)
         if len(analysis_params) > 0:
             command_input.append(analysis)
+        if aggregate:
+            command_input.append(aggregate_arg)
         process = subprocess.Popen(command_input)
 
         if loop:

@@ -97,7 +97,7 @@ public class AnalysisController {
         return aggregationAnalysisService.aggregateAnalyses(analyses);
     }
 
-    @RequestMapping(value = "/analyze/aggregate_seeds", method = RequestMethod.POST)
+    @RequestMapping(value = "/analyze/aggregate_params", method = RequestMethod.POST)
     @ResponseBody
     public String aggregateWithParams(AggregationParameters agParams){
         Map<String, List<Analysis>> analysisMap = new HashMap<>();

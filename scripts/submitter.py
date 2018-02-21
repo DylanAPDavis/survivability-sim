@@ -37,13 +37,13 @@ def process_job(job, analysis_type):
             command_input.append("false")
     process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
+
 def process_aggregate_job():
     output_file_path = "results/output/" + "aggregate"
     run_time = "3:59"
     memory = "16000"
     command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
-                     str(8), "-o", output_file_path, "python", "scripts/run_analysis.py", job.request_id,
-                     str(job.use_aws)]
+                     str(8), "-o", output_file_path, "python", "scripts/run_aggregate.py"]
 
 if aggregate_analysis:
     process_aggregate_job()
