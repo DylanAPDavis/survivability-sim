@@ -27,27 +27,28 @@ public class CachingService {
                                 Set<Failure> failures) {
         Map<SourceDestPair, Path> primaryPathMap = pathMappingService.buildPrimaryPathMap(chosenPathsMap);
         for(CachingResult cachingResult : cachingResults){
-            Map<SourceDestPair, Set<Node>> cacheMap = cachingResult.getCachingMap();
+            Set<Node> cachingLocations = new HashSet<>();
             switch(cachingResult.getType()){
                 case None:
-                    cacheAtDest(cacheMap, primaryPathMap);
+                    cachingLocations = cacheAtDest(primaryPathMap);
                     break;
                 case EntirePath:
-                    cacheAlongPath(cacheMap, primaryPathMap);
+                    cachingLocations = cacheAlongPath(primaryPathMap);
                     break;
                 case SourceAdjacent:
-                    cacheNextToSource(cacheMap, primaryPathMap);
+                    cachingLocations = cacheNextToSource(primaryPathMap);
                     break;
                 case FailureAware:
-                    cacheOutsideFailures(cacheMap, primaryPathMap, failures);
+                    cachingLocations = cacheOutsideFailures(primaryPathMap, failures);
                     break;
                 case BranchingPoint:
-                    cacheAtBranchingPoints(cacheMap, primaryPathMap);
+                    cachingLocations = cacheAtBranchingPoints(primaryPathMap, chosenPathsMap);
                     break;
                 case LeaveCopyDown:
-                    cacheLeaveCopyDown(cacheMap, primaryPathMap);
+                    cachingLocations = cacheLeaveCopyDown(primaryPathMap);
             }
-            cachingResult.setCachingCost(evaluateCost(cacheMap));
+            cachingResult.setCachingCost(evaluateCost(cachingLocations));
+            cachingResult.setCachingLocations(cachingLocations);
         }
     }
 
@@ -67,61 +68,37 @@ public class CachingService {
         return count;
     }
 
-    private void cacheAtBranchingPoints(Map<SourceDestPair, Set<Node>> cacheMap, Map<SourceDestPair, Path> primaryPathMap) {
-        // The goal is to find any points that are shared by multiple paths going to the same destination,
-        // and caching there.
-        // For each path that does not have one of these points, just cache next to the source.
-        Map<Node, Set<Path>> pathsToDest = new HashMap<>();
-        Map<Node, Set<String>> branchingPointMap = new HashMap<>();
+    private Set<Node> cacheAtBranchingPoints(Map<SourceDestPair, Path> primaryPathMap, Map<SourceDestPair, Map<String, Path>> otherPathsMap) {
+
+        Set<Node> cachingPoints = new HashSet<>();
+        Set<Path> allPaths = otherPathsMap.values().stream().map(Map::values).flatMap(Collection::stream).collect(Collectors.toSet());
         for(SourceDestPair pair : primaryPathMap.keySet()){
-            Node dst = pair.getDst();
-            branchingPointMap.putIfAbsent(dst, new HashSet<>());
-            pathsToDest.putIfAbsent(dst, new HashSet<>());
-            if(primaryPathMap.get(pair) != null) {
-                pathsToDest.get(dst).add(primaryPathMap.get(pair));
-            }
-        }
-        // We now have all paths that go to each dest
-        // With these paths, we find any overlapping nodes, and put them in the branching points map
-        for(Node dst : branchingPointMap.keySet()){
-            Set<Path> paths = pathsToDest.get(dst);
-            Set<String> overlap = pathMappingService.findOverlap(paths);
-            overlap.remove(dst.getId());
-            branchingPointMap.get(dst).addAll(overlap);
-        }
-        // Now we have the overlapping nodes per destination
-        // Go back through the pair, and assign caching nodes
-        for(SourceDestPair pair : primaryPathMap.keySet()){
-            Node dst = pair.getDst();
-            Set<String> branchingPointIds = branchingPointMap.get(dst);
-            Set<Node> cachingNodes = new HashSet<>();
-            if(primaryPathMap.get(pair) != null){
-                Path primary = primaryPathMap.get(pair);
-                // Cache at a branching point if possible
-                boolean atleastOneCache = false;
-                for (Node node : primary.getNodes()) {
-                    if (node != pair.getSrc() && branchingPointIds.contains(node.getId())) {
-                        cachingNodes.add(node);
-                        atleastOneCache = true;
-                    }
+            Path primary = primaryPathMap.get(pair);
+            List<Node> primaryNodes = primary.getNodes();
+            allPaths.remove(primary);
+            Set<Node> nodesInOtherPaths = allPaths.stream().map(Path::getNodes).flatMap(Collection::stream).collect(Collectors.toSet());
+            // Check to see if any nodes from all other paths are shared by the primary path
+            // If so, cache there
+            for(Node primaryNode : primaryNodes){
+                if(nodesInOtherPaths.contains(primaryNode)){
+                    cachingPoints.add(primaryNode);
                 }
-                // Cache next to the source otherwise
-                if (!atleastOneCache) {
-                    cachingNodes.add(primary.getNodes().get(1));
-                }
-                cachingNodes.add(pair.getDst());
             }
-            cacheMap.put(pair, cachingNodes);
+            cachingPoints.add(pair.getDst());
+            // Add the primary path back to the set of all paths so other pairs can check it
+            allPaths.add(primary);
         }
+        return cachingPoints;
     }
 
-    private void cacheOutsideFailures(Map<SourceDestPair, Set<Node>> cacheMap, Map<SourceDestPair, Path> primaryPathMap,
+    private Set<Node> cacheOutsideFailures(Map<SourceDestPair, Path> primaryPathMap,
                                       Set<Failure> failures) {
         // The goal is to avoid caching at locations that either can:
         // (a) Fail.
         // (b) Become disconnected from a source due to another failure.
         // For each path, determine which nodes remain reachable.
         // Cache at the closest one
+        Set<Node> cachingPoints = new HashSet<>();
         for(SourceDestPair pair : primaryPathMap.keySet()){
             Set<Node> cachingNodes = new HashSet<>();
             Path primary = primaryPathMap.get(pair);
@@ -129,75 +106,70 @@ public class CachingService {
             // Cache at the first reachable node along the path
             if(!reachableNodes.isEmpty()){
                 cachingNodes.addAll(reachableNodes);
-                cachingNodes.add(pair.getDst());
             }
-            // If there are none, cache next to the source
-            else{
-                if(primary != null) {
-                    cachingNodes.add(primary.getNodes().get(1));
-                    cachingNodes.add(pair.getDst());
-                }
-            }
+            cachingNodes.add(pair.getDst());
             cachingNodes.remove(pair.getSrc());
-            cacheMap.put(pair, cachingNodes);
+            cachingPoints.addAll(cachingNodes);
         }
+        return cachingPoints;
     }
 
-    private void cacheAtDest(Map<SourceDestPair, Set<Node>> cacheMap,  Map<SourceDestPair, Path> primaryPathMap){
+    private Set<Node> cacheAtDest(Map<SourceDestPair, Path> primaryPathMap){
         // Just cache at the destination
+        Set<Node> cachingPoints = new HashSet<>();
         for(SourceDestPair pair : primaryPathMap.keySet()){
             if(primaryPathMap.get(pair) != null) {
-                cacheMap.put(pair, new HashSet<>());
-                cacheMap.get(pair).add(pair.getDst());
+                cachingPoints.add(pair.getDst());
             }
         }
+        return cachingPoints;
     }
 
-    private void cacheAlongPath(Map<SourceDestPair, Set<Node>> cacheMap,  Map<SourceDestPair, Path> primaryPathMap){
+    private Set<Node> cacheAlongPath(Map<SourceDestPair, Path> primaryPathMap){
         // Cache at every node along the path (excluding the source)
+        Set<Node> cachingPoints = new HashSet<>();
         for(SourceDestPair pair : primaryPathMap.keySet()){
-            Set<Node> cachingNodes = new HashSet<>();
             Path primary = primaryPathMap.get(pair);
             if(primary != null) {
-                cachingNodes.addAll(primary.getNodes());
-                cachingNodes.remove(pair.getSrc());
-                cachingNodes.add(pair.getDst());
-                cacheMap.put(pair, cachingNodes);
+                cachingPoints.addAll(primary.getNodes());
+                cachingPoints.remove(pair.getSrc());
+                cachingPoints.add(pair.getDst());
             }
         }
+        return cachingPoints;
     }
 
-    private void cacheNextToSource(Map<SourceDestPair, Set<Node>> cacheMap, Map<SourceDestPair, Path> primaryPathMap) {
+    private Set<Node> cacheNextToSource(Map<SourceDestPair, Path> primaryPathMap) {
         // Cache next to every source.
         // Cache at the first non-source node on every path
+        Set<Node> cachingPoints = new HashSet<>();
         for(SourceDestPair pair : primaryPathMap.keySet()){
-            Set<Node> cachingNodes = new HashSet<>();
             Path primary = primaryPathMap.get(pair);
             if(primary != null) {
                 // Every path has at least two nodes
-                cachingNodes.add(primary.getNodes().get(1));
-                cachingNodes.add(pair.getDst());
-                cacheMap.put(pair, cachingNodes);
+                cachingPoints.add(primary.getNodes().get(1));
+                cachingPoints.add(pair.getDst());
             }
         }
+        return cachingPoints;
     }
 
-    private void cacheLeaveCopyDown(Map<SourceDestPair, Set<Node>> cacheMap, Map<SourceDestPair, Path> primaryPathMap) {
+    private Set<Node> cacheLeaveCopyDown(Map<SourceDestPair, Path> primaryPathMap) {
         // Cache next to every destination
+        Set<Node> cachingPoints = new HashSet<>();
         for(SourceDestPair pair : primaryPathMap.keySet()){
-            Set<Node> cachingNodes = new HashSet<>();
             Path primary = primaryPathMap.get(pair);
             if(primary != null){
                 List<Node> pathNodes = primary.getNodes();
                 Node secondToLast = pathNodes.get(pathNodes.size()-2);
                 // If the second to last is not the source (i.e. there is an intermediate node), then cache there
                 if(!secondToLast.getId().equals(pair.getSrc().getId())) {
-                    cachingNodes.add(secondToLast);
+                    cachingPoints.add(secondToLast);
                 }
-                cachingNodes.add(pair.getDst());
-                cacheMap.put(pair, cachingNodes);
+                cachingPoints.add(pair.getDst());
             }
         }
+        return cachingPoints;
     }
 
 
@@ -206,122 +178,99 @@ public class CachingService {
                                              Collection<Failure> chosenFailures, Integer useMinD) {
 
         Map<SourceDestPair, Path> primaryPathMap = pathMappingService.buildPrimaryPathMap(chosenPaths);
-        Map<SourceDestPair, List<Node>> reachableNodeMap = primaryPathMap.keySet().stream()
-                .filter(pair -> primaryPathMap.get(pair) != null)
-                .collect(Collectors.toMap(pair -> pair,
-                        pair -> pathMappingService.getReachableNodes(primaryPathMap.get(pair), chosenFailures)));
-        for(CachingResult cachingResult : cachingResults){
-            Map<SourceDestPair, Set<Node>> cacheMap = cachingResult.getCachingMap();
+        for (CachingResult cachingResult : cachingResults) {
+            Set<Node> cachingLocations = cachingResult.getCachingLocations();
 
-            Map<Node, Integer> numContentReachablePerSource = new HashMap<>();
-            Map<Node, Integer> srcHopCount = new HashMap<>();
-            Map<Node, Integer> srcNumHits = new HashMap<>();
-
-            Set<SourceDestPair> pairsReachContentThroughBackup = new HashSet<>();
-            Set<SourceDestPair> pairsCantReachContentThroughPrimary = new HashSet<>();
-
-            for(SourceDestPair pair : primaryPathMap.keySet()){
+            Map<Node, Set<Path>> pathsPerSrc = new HashMap<>();
+            Map<Node, Path> primaryPathPerSrc = new HashMap<>();
+            // Go through all of the pairs, get all paths per source
+            for (SourceDestPair pair : chosenPaths.keySet()) {
                 Node src = pair.getSrc();
-                List<Node> reachableNodes = reachableNodeMap.getOrDefault(pair, new ArrayList<>());
-                Set<Node> cachingLocations = cacheMap.get(pair);
-                int hopCount = 0;
-                boolean hit = false;
-                /*if(cachingLocations.contains(src)){
-                    hit = true;
-                }*/
-                for(Node node : reachableNodes) {
-                    hopCount++;
-                    if (cachingLocations.contains(node)) {
-                        // Cache hit
-                        hit = true;
-                        break;
+                Set<Path> paths = chosenPaths.get(pair).values().stream().collect(Collectors.toSet());
+                if(paths.size() > 0) {
+                    // Store all paths for this pair
+                    pathsPerSrc.putIfAbsent(src, new HashSet<>());
+                    pathsPerSrc.get(src).addAll(paths);
+                    // Get the primary path for this pair
+                    Path potentialPrimaryPath = primaryPathMap.get(pair);
+                    if(primaryPathPerSrc.containsKey(src)){
+                        // If this new potential primary path weighs less than the current, replace the current
+                        if(potentialPrimaryPath.getTotalWeight() < primaryPathPerSrc.get(src).getTotalWeight()){
+                            primaryPathPerSrc.put(src, potentialPrimaryPath);
+                        }
+                    } else{
+                        primaryPathPerSrc.put(src, potentialPrimaryPath);
                     }
                 }
-                if(!hit){
-                    hopCount = 0;
-                    pairsCantReachContentThroughPrimary.add(pair);
-                    // If you didn't get a hit on your primary path, see if you can reach the destination on a backup
-                    Collection<Path> otherPaths = chosenPaths.get(pair).values();
-                    otherPaths.remove(primaryPathMap.get(pair));
-                    List<Path> sortedPaths = pathMappingService.sortPathsByWeight(otherPaths);
-                    if(sortedPaths.size() > 0){
-                        // Check each backup path
-                        for(Path backup : sortedPaths){
-                            List<Node> reachableForThisPath = pathMappingService.getReachableNodes(backup, chosenFailures);
-                            hopCount = 0;
-                            for(Node node : reachableForThisPath){
-                                hopCount++;
-                                if(cachingLocations.contains(node)){
-                                    hit = true;
-                                    pairsReachContentThroughBackup.add(pair);
-                                    break;
-                                }
-                            }
-                            if(hit){
-                                break;
-                            }
+
+            }
+
+            Map<Node, Integer> hopCountBefore= new HashMap<>();
+            Map<Node, Integer> hopCountAfter = new HashMap<>();
+            Set<Node> reachOnPrimaryAfter= new HashSet<>();
+            Set<Node> reachOnBackupAfter = new HashSet<>();
+            Set<Node> onlyReachOnBackupAfter = new HashSet<>();
+            // Check for content accesibility
+            for(Node src : pathsPerSrc.keySet()){
+                Integer hopCountToContentBefore = 0;
+                Integer hopCountToContentAfter = 0;
+                // Examine the primary path first
+                Path primary = primaryPathPerSrc.get(src);
+                Set<Path> allPaths = pathsPerSrc.get(src);
+                allPaths.remove(primary);
+                // First, get the hop count to content before failure
+                for(Node node : primary.getNodes()){
+                    if(checkIfHit(node, cachingLocations, src)){
+                        break;
+                    }
+                    hopCountToContentBefore++;
+                }
+
+                // Next, see if we can reach the content on the primary path
+                List<Node> reachableNodes = pathMappingService.getReachableNodes(primary, chosenFailures);
+                boolean primaryHit = false;
+                for(Node node : reachableNodes){
+                    primaryHit = checkIfHit(node, cachingLocations, src);
+                    if(primaryHit){
+                        break;
+                    }
+                    hopCountToContentAfter++;
+                }
+                // Check if you were able to still reach the content on the primary path after failure
+                if(primaryHit){
+                    reachOnPrimaryAfter.add(src);
+                }
+                // If not, you can at best only reach it on the backup path(s)
+                // You weren't able to get it on the primary path, so reset the after failure hop count
+                // For the hop count, keep the minimum hop count that was successful
+                hopCountToContentAfter = 0;
+                boolean backupHit = false;
+                for(Path path : allPaths){
+                    List<Node> reachableBackupNodes = pathMappingService.getReachableNodes(primary, chosenFailures);
+                    int tempHopCount = 0;
+                    boolean pathHit = false;
+                    for(Node node : reachableBackupNodes){
+                        if(checkIfHit(node, cachingLocations, src)){
+                            pathHit = true;
+                            break;
+                        }
+                        tempHopCount++;
+                    }
+                    if(pathHit){
+                        backupHit = true;
+                        if(hopCountToContentAfter > tempHopCount){
+                            hopCountToContentAfter = tempHopCount;
                         }
                     }
                 }
-                // Add to hop count
-                srcHopCount.putIfAbsent(src, 0);
-                srcHopCount.put(src, srcHopCount.get(src) + hopCount);
-                // If there was a hit, increase the num content reachable per source
-                numContentReachablePerSource.putIfAbsent(src, 0);
-                srcNumHits.putIfAbsent(src, 0);
-                if(hit) {
-                    numContentReachablePerSource.put(src, numContentReachablePerSource.get(src) + 1);
-                    srcNumHits.put(src, srcNumHits.get(src) + 1);
-                }
+
+                // Use the backup hit and hop counts to determine if content is reachable after failure!
+
             }
-
-            int totalThatCanReachAllContent = 0;
-            int totalThatCanReachSomeContent = 0;
-            double totalAccessibility = 0.0;
-            for(Node src : numContentReachablePerSource.keySet()){
-                int numContentReachable = numContentReachablePerSource.get(src);
-                int totalContent = useMinD;
-                double reachPercent;
-                if(numContentReachable > totalContent){
-                    reachPercent = 1.0;
-                } else if(totalContent == 0){
-                    reachPercent = numContentReachable > 0 ? 1.0 : 0.0;
-                } else {
-                    reachPercent = numContentReachable / totalContent;
-                }
-
-                if(reachPercent == 1.0){
-                    totalThatCanReachAllContent++;
-                }
-                if(reachPercent > 0.0){
-                    totalThatCanReachSomeContent++;
-                }
-                totalAccessibility += reachPercent;
-            }
-            // Calculate the following metrics:
-            //Content Reachability: The percentage of sources that can still reach all of their desired content.
-            double reachability = 1.0 * totalThatCanReachAllContent / numContentReachablePerSource.keySet().size();
-
-            // Average Content Accessibility: The average percentage of content that can still be accessed per source.
-            // For example, if a source wants to access content from three destinations, and can only access content from two
-            // of them (either from the destination itself, or from a cached location), then it has an accessibility percentage of 66%.
-            double avgAccessibility = 1.0 * totalAccessibility / numContentReachablePerSource.keySet().size();
-
-            // Average Hop Count to Content: The average hop count that will be traversed after failure, per source.
-            Map<Node, Double> avgHopCountPerSrc = srcHopCount.keySet().stream()
-                    .filter(src -> srcNumHits.get(src) > 0)
-                    .collect(Collectors.toMap(src -> src, src ->  1.0 * srcHopCount.get(src) / srcNumHits.get(src)));
-            double avgHopCountToContent = avgHopCountPerSrc.values().stream().reduce(0.0, (h1, h2) -> h1 + h2);
-            avgHopCountToContent = avgHopCountPerSrc.size() > 0 ? avgHopCountToContent / avgHopCountPerSrc.size() : 0;
-            //totalThatCanReachSomeContent > 0 ? 1.0 * totalHopCount / totalThatCanReachSomeContent : 0.0;
-
-            // Percentage of pairs that reach content through backup
-            double pairReachThroughBackup = pairsCantReachContentThroughPrimary.size() > 0 ?
-                    1.0 * pairsReachContentThroughBackup.size() / pairsCantReachContentThroughPrimary.size() : 0.0;
-            cachingResult.setReachability(reachability);
-            cachingResult.setAvgAccessibility(avgAccessibility);
-            cachingResult.setAvgHopCountToContent(avgHopCountToContent);
-            cachingResult.setPairReachThroughBackup(pairReachThroughBackup);
         }
+    }
+
+    private boolean checkIfHit(Node node, Set<Node> cachingLocations, Node src) {
+        return cachingLocations.contains(node) && !node.equals(src);
     }
 }

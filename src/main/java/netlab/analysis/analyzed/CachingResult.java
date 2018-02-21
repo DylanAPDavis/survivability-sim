@@ -18,7 +18,7 @@ import java.util.*;
 public class CachingResult  implements Serializable {
 
     private CachingType type;
-    private Map<SourceDestPair, Set<Node>> cachingMap;
+    private Set<Node> cachingLocations;
 
     //Content Reachability: The percentage of sources that can still reach all of their desired content.
     private double reachability;
@@ -41,7 +41,7 @@ public class CachingResult  implements Serializable {
         avgHopCountToContent = 0.0;
         pairReachThroughBackup = 0.0;
         cachingCost = 0.0;
-        cachingMap = new HashMap<>();
+        cachingLocations = new HashSet<>();
     }
 
 
@@ -54,17 +54,15 @@ public class CachingResult  implements Serializable {
     public String cachingMapToString(){
         String output = "";
         String dash = "--";
-        for(SourceDestPair pair : cachingMap.keySet()){
-            String line = dash + pair.toString() + ": ";
-            List<Node> nodes = new ArrayList<>(cachingMap.get(pair));
-            for(int i = 0; i < nodes.size(); i++){
-                line += nodes.get(i).getId();
-                if(i < nodes.size()-1) {
-                    line += ", ";
-                }
+        String line = dash + "Nodes: ";
+        List<Node> nodes = new ArrayList<>(cachingLocations);
+        for(int i = 0; i < nodes.size(); i++){
+            line += nodes.get(i).getId();
+            if(i < nodes.size()-1) {
+                line += ", ";
             }
-            output += "\n" + line;
         }
+        output += "\n" + line;
         return output;
     }
 }
