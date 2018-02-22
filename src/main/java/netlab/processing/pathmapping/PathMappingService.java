@@ -225,4 +225,37 @@ public class PathMappingService {
         }
     }
 
+
+    public Map<Node,Path> getPrimaryPathPerSrc(Map<Node, Set<Path>> pathsPerSrc) {
+        Map<Node, Path> primaryPathPerSrc = new HashMap<>();
+        for(Node src : pathsPerSrc.keySet()){
+            Set<Path> paths = pathsPerSrc.get(src);
+            Path minPath = null;
+            for(Path path : paths){
+                if(minPath == null || minPath.getTotalWeight() > path.getTotalWeight()){
+                    minPath = path;
+                }
+            }
+            if(minPath != null){
+                primaryPathPerSrc.put(src, minPath);
+            }
+        }
+        return primaryPathPerSrc;
+    }
+
+    public Map<Node, Set<Path>> getPathsPerSrc(Map<SourceDestPair, Map<String, Path>> chosenPaths){
+        Map<Node, Set<Path>> pathsPerSrc = new HashMap<>();
+        // Go through all of the pairs, get all paths per source
+        for (SourceDestPair pair : chosenPaths.keySet()) {
+            Node src = pair.getSrc();
+            Set<Path> paths = chosenPaths.get(pair).values().stream().collect(Collectors.toSet());
+            if(paths.size() > 0) {
+                // Store all paths for this pair
+                pathsPerSrc.putIfAbsent(src, new HashSet<>());
+                pathsPerSrc.get(src).addAll(paths);
+            }
+        }
+        return pathsPerSrc;
+    }
+
 }

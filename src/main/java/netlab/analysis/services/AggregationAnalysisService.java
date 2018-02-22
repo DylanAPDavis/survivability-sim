@@ -150,9 +150,9 @@ public class AggregationAnalysisService {
     }
 
 
-    public AggregateAnalysis aggregateAnalyses(List<Analysis> analyses) {
+    public AggregateAnalysis aggregateAnalyses(List<Analysis> analysisList) {
 
-        if (analyses.isEmpty()) {
+        if (analysisList.isEmpty()) {
             return AggregateAnalysis.builder().build();
         }
 
@@ -160,43 +160,49 @@ public class AggregationAnalysisService {
 
         List<String> requestSetIds = new ArrayList<>();
         List<Long> seeds = new ArrayList<>();
-        String topologyId = analyses.get(0).getTopologyId();
-        Algorithm algorithm = analyses.get(0).getAlgorithm();
-        RoutingType routingType = analyses.get(0).getRoutingType();
-        FailureScenario failureScenario = analyses.get(0).getFailureScenario();
-        Integer numFailureEvents = analyses.get(0).getNumFailuresEvents();
-        TrafficCombinationType trafficCombinationType = analyses.get(0).getTrafficCombinationType();
-        RoutingDescription routingDescription = analyses.get(0).getRoutingDescription();
-        Boolean ignoreFailures = analyses.get(0).getIgnoreFailures();
+        String topologyId = analysisList.get(0).getTopologyId();
+        Algorithm algorithm = analysisList.get(0).getAlgorithm();
+        RoutingType routingType = analysisList.get(0).getRoutingType();
+        FailureScenario failureScenario = analysisList.get(0).getFailureScenario();
+        Integer numFailureEvents = analysisList.get(0).getNumFailuresEvents();
+        TrafficCombinationType trafficCombinationType = analysisList.get(0).getTrafficCombinationType();
+        RoutingDescription routingDescription = analysisList.get(0).getRoutingDescription();
+        Boolean ignoreFailures = analysisList.get(0).getIgnoreFailures();
 
         Double totalWithResults = 0.0;
 
-        Double sumRunningTime = 0.0;
         Double numFeasible = 0.0;
-        Double sumLinksUsed = 0.0;
+        Double sumRunningTime = 0.0;
         Double sumCost = 0.0;
+        Double sumLinksUsed = 0.0;
         Double sumPaths = 0.0;
-        Double sumAveragePrimaryHops = 0.0;
-        Double sumAveragePrimaryCost = 0.0;
-
-        Double sumAveragePathRisk = 0.0;
-        Double sumAverageMinRiskPerPair = 0.0;
-        Double sumAverageMaxRiskPerPair = 0.0;
-        Double sumAveragePrimaryRisk = 0.0;
-
-        Double sumAveragePrimaryHopsPostFailure = 0.0;
-        Double sumAveragePrimaryCostPostFailure = 0.0;
-        Double sumPathsSevered = 0.0;
-        Double sumPathsIntact = 0.0;
+        Double sumPrimaryPaths = 0.0;
+        Double sumBackupPaths = 0.0;
         Double sumConnectionsSevered = 0.0;
         Double sumConnectionsIntact = 0.0;
+        Double sumPathsSevered = 0.0;
+        Double sumPathsIntact = 0.0;
+        Double sumPrimaryPathsSevered = 0.0;
+        Double sumPrimaryPathsIntact = 0.0;
+
+        Double sumAveragePrimaryHops = 0.0;
+        Double sumAveragePrimaryCost = 0.0;
+        Double sumAveragePrimaryRisk = 0.0;
+        Double sumAverageBackupHops = 0.0;
+        Double sumAverageBackupCost = 0.0;
+        Double sumAverageBackupRisk = 0.0;
+        Double sumAverageBackupPaths = 0.0;
+        Double sumAveragePrimaryHopsPostFailure = 0.0;
+        Double sumAveragePrimaryCostPostFailure = 0.0;
+        Double sumAverageBackupPathsIntact = 0.0;
+        Double sumAverageBackupPathsSevered = 0.0;
 
         List<CachingResult> aggregateCaching = new ArrayList<>();
         Map<CachingType, Integer> cachingIndices = new HashMap<>();
 
         int numWithConnectionsIntact = 0;
         int numRequests = 0;
-        for (Analysis analysis : analyses) {
+        for (Analysis analysis : analysisList) {
             if (analysis == null){
                 continue;
             }
@@ -211,22 +217,29 @@ public class AggregationAnalysisService {
             }
             if(analysis.getTotalCost() > 0.0){
                 totalWithResults++;
+
                 sumRunningTime += analysis.getRunningTime();
-                sumLinksUsed += analysis.getTotalLinksUsed();
                 sumCost += analysis.getTotalCost();
+                sumLinksUsed += analysis.getTotalLinksUsed();
                 sumPaths += analysis.getTotalPaths();
-                sumAveragePrimaryCost += analysis.getAveragePrimaryCost();
-                sumAveragePrimaryHops += analysis.getAveragePrimaryHops();
-
-                sumAveragePathRisk += analysis.getAveragePathRisk();
-                sumAverageMinRiskPerPair += analysis.getAverageMinRiskPerPair();
-                sumAverageMaxRiskPerPair += analysis.getAverageMaxRiskPerPair();
-                sumAveragePrimaryRisk += analysis.getAveragePrimaryRisk();
-
-                sumPathsSevered += analysis.getPathsSevered();
-                sumPathsIntact += analysis.getPathsIntact();
+                sumPrimaryPaths += analysis.getTotalPrimaryPaths();
+                sumBackupPaths += analysis.getTotalBackupPaths();
                 sumConnectionsSevered += analysis.getConnectionsSevered();
                 sumConnectionsIntact += analysis.getConnectionsIntact();
+                sumPathsSevered += analysis.getPathsSevered();
+                sumPathsIntact += analysis.getPathsIntact();
+                sumPrimaryPathsSevered += analysis.getPrimaryPathsSevered();
+                sumPrimaryPathsIntact += analysis.getPrimaryPathsIntact();
+
+                sumAveragePrimaryCost += analysis.getAveragePrimaryCost();
+                sumAveragePrimaryHops += analysis.getAveragePrimaryHops();
+                sumAveragePrimaryRisk += analysis.getAveragePrimaryRisk();
+                sumAverageBackupCost += analysis.getAverageBackupCost();
+                sumAverageBackupHops += analysis.getAverageBackupHops();
+                sumAverageBackupRisk += analysis.getAverageBackupRisk();
+                sumAverageBackupPaths += analysis.getAverageBackupPaths();
+                sumAverageBackupPathsIntact += analysis.getAverageBackupPathsIntact();
+                sumAverageBackupPathsSevered += analysis.getAverageBackupPathsSevered();
 
                 if(analysis.getConnectionsIntact() > 0) {
                     sumAveragePrimaryCostPostFailure += analysis.getAveragePrimaryCostPostFailure();
@@ -239,6 +252,9 @@ public class AggregationAnalysisService {
         }
 
         averageCachingResults(aggregateCaching, totalWithResults);
+
+        double totalResultsDivisor = totalWithResults > 0 ? totalWithResults : 1.0;
+        double totalIntactDivisor = numWithConnectionsIntact > 0 ? numWithConnectionsIntact : 1.0;
 
         return AggregateAnalysis.builder()
                 .requestSetIds(requestSetIds)
@@ -253,22 +269,29 @@ public class AggregationAnalysisService {
                 .ignoreFailures(ignoreFailures)
                 .totalFeasible(numFeasible)
                 .percentFeasible(numFeasible / numRequests)
-                .runningTime(totalWithResults > 0 ? sumRunningTime / totalWithResults : 0.0)
-                .totalCost(totalWithResults > 0 ? sumCost / totalWithResults : 0.0)
-                .totalLinksUsed(totalWithResults > 0 ? sumLinksUsed / totalWithResults : 0.0)
-                .totalPaths(totalWithResults > 0 ? sumPaths / totalWithResults : 0.0)
-                .averagePrimaryHops(totalWithResults > 0 ? sumAveragePrimaryHops / totalWithResults : 0.0)
-                .averagePrimaryCost(totalWithResults > 0 ? sumAveragePrimaryCost / totalWithResults : 0.0)
-                .averagePathRisk(totalWithResults > 0 ? sumAveragePathRisk / totalWithResults : 0.0)
-                .averageMinRiskPerPair(totalWithResults > 0 ? sumAverageMinRiskPerPair / totalWithResults : 0.0)
-                .averageMaxRiskPerPair(totalWithResults > 0 ? sumAverageMaxRiskPerPair / totalWithResults : 0.0)
-                .averagePrimaryRisk( totalWithResults > 0 ?sumAveragePrimaryRisk / totalWithResults : 0.0)
-                .averagePrimaryHopsPostFailure(numWithConnectionsIntact > 0 ? sumAveragePrimaryHopsPostFailure / numWithConnectionsIntact : 0)
-                .averagePrimaryCostPostFailure(numWithConnectionsIntact > 0 ?  sumAveragePrimaryCostPostFailure / numWithConnectionsIntact : 0)
-                .pathsSevered(totalWithResults > 0 ? sumPathsSevered / totalWithResults : 0.0)
-                .pathsIntact(totalWithResults > 0 ? sumPathsIntact / totalWithResults : 0.0)
-                .connectionsSevered(totalWithResults > 0 ? sumConnectionsSevered / totalWithResults : 0.0)
-                .connectionsIntact(totalWithResults > 0 ? sumConnectionsIntact / totalWithResults : 0.0)
+                .runningTime(sumRunningTime / totalResultsDivisor)
+                .totalCost(sumCost / totalResultsDivisor)
+                .totalLinksUsed(sumLinksUsed / totalResultsDivisor)
+                .totalPaths(sumPaths / totalResultsDivisor)
+                .totalPrimaryPaths(sumPrimaryPaths / totalResultsDivisor)
+                .totalBackupPaths(sumBackupPaths / totalResultsDivisor)
+                .connectionsSevered(sumConnectionsSevered / totalResultsDivisor)
+                .connectionsIntact(sumConnectionsIntact / totalResultsDivisor)
+                .primaryPathsIntact(sumPrimaryPathsIntact / totalResultsDivisor)
+                .primaryPathsSevered(sumPrimaryPathsSevered / totalResultsDivisor)
+                .pathsSevered(sumPathsSevered / totalResultsDivisor)
+                .pathsIntact(sumPathsIntact / totalResultsDivisor)
+                .averagePrimaryHops(sumAveragePrimaryHops / totalResultsDivisor)
+                .averagePrimaryCost(sumAveragePrimaryCost / totalResultsDivisor)
+                .averagePrimaryRisk(sumAveragePrimaryRisk / totalResultsDivisor)
+                .averageBackupHops(sumAverageBackupHops / totalResultsDivisor)
+                .averageBackupCost(sumAverageBackupCost / totalResultsDivisor)
+                .averageBackupRisk(sumAverageBackupRisk / totalResultsDivisor)
+                .averageBackupPaths(sumBackupPaths / totalResultsDivisor)
+                .averagePrimaryHopsPostFailure(sumAveragePrimaryHopsPostFailure / totalIntactDivisor)
+                .averagePrimaryCostPostFailure(sumAveragePrimaryCostPostFailure / totalIntactDivisor)
+                .averageBackupPathsIntact(sumAverageBackupPathsIntact / totalResultsDivisor)
+                .averageBackupPathsSevered(sumAverageBackupPathsSevered / totalResultsDivisor)
                 .cachingResults(aggregateCaching)
                 .build();
     }
@@ -406,43 +429,45 @@ public class AggregationAnalysisService {
         private Double totalCost;
         private Double totalLinksUsed;
         private Double totalPaths;
-        private Double averagePrimaryHops;
-        private Double averagePrimaryCost;
-
-        private Double averagePathRisk;
-        private Double averageMinRiskPerPair;
-        private Double averageMaxRiskPerPair;
-        private Double averagePrimaryRisk;
-
-        // After failure simulation
-        private Double averagePrimaryHopsPostFailure;
-        private Double averagePrimaryCostPostFailure;
-        private Double pathsSevered;
-        private Double pathsIntact;
+        private Double totalPrimaryPaths;
+        private Double totalBackupPaths;
         private Double connectionsSevered;
         private Double connectionsIntact;
+        private Double pathsSevered;
+        private Double pathsIntact;
+        private Double primaryPathsSevered;
+        private Double primaryPathsIntact;
+
+
+        private Double averagePrimaryHops;
+        private Double averagePrimaryCost;
+        private Double averagePrimaryRisk;
+        private Double averageBackupHops;
+        private Double averageBackupCost;
+        private Double averageBackupRisk;
+        private Double averageBackupPaths;
+        private Double averagePrimaryHopsPostFailure;
+        private Double averagePrimaryCostPostFailure;
+        private Double averageBackupPathsIntact;
+        private Double averageBackupPathsSevered;
 
         // Caching
         private List<CachingResult> cachingResults;
      */
-    private List<String[]> createLines(AggregateAnalysis agAnalysis) {
-        RoutingDescription rd = agAnalysis.getRoutingDescription();
+    private List<String[]> createLines(AggregateAnalysis ag) {
+        RoutingDescription rd = ag.getRoutingDescription();
         String[] header = makeArray( "S: " +rd.getNumSources(), "D: " + rd.getNumDestinations(),
                 "MinS: " + rd.getUseMinS(), "MaxS: " + rd.getUseMaxS(), "MinD: " + rd.getUseMinD(), "MaxD: " + rd.getUseMaxD());
-        String[] metricHeader = makeMetricHeader(agAnalysis.getCachingResults());
-        String[] data = makeDataLine(agAnalysis);
-        makeArray(agAnalysis.getRunningTime(), agAnalysis.getTotalCost(), agAnalysis.getTotalLinksUsed(),
-                agAnalysis.getTotalPaths(), agAnalysis.getAveragePrimaryHops(), agAnalysis.getAveragePrimaryCost(),
-                agAnalysis.getAveragePrimaryHopsPostFailure(), agAnalysis.getAveragePrimaryCostPostFailure(),
-                agAnalysis.getPathsSevered(), agAnalysis.getPathsIntact(), agAnalysis.getConnectionsSevered(),
-                agAnalysis.getConnectionsIntact());
+        String[] metricHeader = makeMetricHeader(ag.getCachingResults());
+        String[] data = makeDataLine(ag);
         return Arrays.asList(header, metricHeader, data, new String[]{});
     }
 
     private String[] makeMetricHeader(List<CachingResult> cachingResults){
-        List<String> headers = Arrays.asList("%Feasible", "runningTime", "totalCost", "totalLinksUsed", "totalPaths", "avgPrimaryHops",
-                "avgPrimaryCost", "avgPathRisk", "avgMinRisk", "avgMaxRisk", "avgPrimaryRisk",
-                "avgPrimaryHopsF", "avgPrimaryCostF", "pathsSevered", "pathsIntact", "connsSevered", "connsIntact");
+        List<String> headers = Arrays.asList("%Feasible", "runningTime", "totalCost", "totalLinksUsed", "totalPaths",
+                "totalPrim", "totalBack", "connsSevered", "connsIntact", "pathsSevered", "pathsIntact", "primSevered",
+                "primIntact", "primHops", "primCost", "primRisk", "backHops", "backCost", "backRisk", "avgBackPaths",
+                "primHopsPF", "primCostPF", "avgBackSevered", "avgBackIntact");
         List<String> cachingHeaders = new ArrayList<>();
         for(CachingResult cachingResult : cachingResults){
             String cType = cachingResult.getType().getCode();
@@ -460,10 +485,13 @@ public class AggregationAnalysisService {
 
     private String[] makeDataLine(AggregateAnalysis ag){
         List<String> dataList = makeList(ag.getPercentFeasible(), ag.getRunningTime(), ag.getTotalCost(), ag.getTotalLinksUsed(),
-                ag.getTotalPaths(), ag.getAveragePrimaryHops(), ag.getAveragePrimaryCost(),
-                ag.getAveragePathRisk(), ag.getAverageMinRiskPerPair(), ag.getAverageMaxRiskPerPair(), ag.getAveragePrimaryRisk(),
-                ag.getAveragePrimaryHopsPostFailure(), ag.getAveragePrimaryCostPostFailure(), ag.getPathsSevered(),
-                ag.getPathsIntact(), ag.getConnectionsSevered(), ag.getConnectionsIntact());
+                ag.getTotalPaths(), ag.getTotalPrimaryPaths(), ag.getTotalBackupPaths(),
+                ag.getConnectionsSevered(), ag.getConnectionsIntact(), ag.getPathsSevered(),
+                ag.getPathsIntact(), ag.getPrimaryPathsSevered(), ag.getPrimaryPathsIntact(),
+                ag.getAveragePrimaryHops(), ag.getAveragePrimaryCost(), ag.getAveragePrimaryRisk(),
+                ag.getAverageBackupHops(), ag.getAverageBackupCost(), ag.getAverageBackupRisk(), ag.getAverageBackupPaths(),
+                ag.getAveragePrimaryHopsPostFailure(), ag.getAveragePrimaryCostPostFailure(), ag.getAverageBackupPathsSevered(),
+                ag.getAverageBackupPathsIntact());
         for(CachingResult cachingResult : ag.getCachingResults()){
             dataList.add(String.valueOf(cachingResult.getCachingCost()));
             dataList.add(String.valueOf(cachingResult.getReachOnPrimary()));

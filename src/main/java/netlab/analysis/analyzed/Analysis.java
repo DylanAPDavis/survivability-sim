@@ -36,23 +36,28 @@ public class Analysis implements Serializable {
     private Double totalCost;
     private Double totalLinksUsed;
     private Double totalPaths;
-    private Double averagePrimaryHops;
-    private Double averagePrimaryCost;
-
-    private Double averagePathRisk;
-    private Double averageMinRiskPerPair;
-    private Double averageMaxRiskPerPair;
-    private Double averagePrimaryRisk;
-
-    // After failure simulation
-    private List<String> chosenFailures;
-    private Double averagePrimaryHopsPostFailure;
-    private Double averagePrimaryCostPostFailure;
-    private Double pathsSevered;
-    private Double pathsIntact;
+    private Double totalPrimaryPaths;
+    private Double totalBackupPaths;
     private Double connectionsSevered;
     private Double connectionsIntact;
+    private Double pathsIntact;
+    private Double pathsSevered;
+    private Double primaryPathsIntact;
+    private Double primaryPathsSevered;
 
+    private Double averagePrimaryHops;
+    private Double averagePrimaryCost;
+    private Double averagePrimaryRisk;
+    private Double averageBackupHops;
+    private Double averageBackupCost;
+    private Double averageBackupRisk;
+    private Double averageBackupPaths;
+    private Double averagePrimaryHopsPostFailure;
+    private Double averagePrimaryCostPostFailure;
+    private Double averageBackupPathsIntact;
+    private Double averageBackupPathsSevered;
+
+    private List<String> chosenFailures;
     private List<CachingResult> cachingResults;
 
 
@@ -71,20 +76,26 @@ public class Analysis implements Serializable {
                 "Total Cost: " + totalCost + "\n" +
                 "Total Links Used: " + totalLinksUsed + "\n" +
                 "Total Paths: " + totalPaths + "\n" +
+                "Total Primary Paths: " + totalPrimaryPaths + "\n" +
+                "Total Backup Paths: " + totalBackupPaths + "\n" +
+                "Avg Backup Paths: " + averageBackupPaths + "\n" +
                 "Avg Primary Hops: " + averagePrimaryHops + "\n" +
                 "Avg Primary Cost: " + averagePrimaryCost + "\n" +
-                "-Risk-" + "\n" +
-                "Avg Path Risk: " + averagePathRisk + "\n" +
-                "Avg Min Path Risk Per Pair: " + averageMinRiskPerPair + "\n" +
-                "Avg Max Path Risk Per Pair: " + averageMaxRiskPerPair + "\n" +
                 "Avg Primary Path Risk: " + averagePrimaryRisk + "\n" +
+                "Avg Backup Hops: " + averageBackupHops + "\n" +
+                "Avg Backup Cost: " + averageBackupCost + "\n" +
+                "Avg Backup Path Risk: " + averageBackupRisk + "\n" +
                 "-Post Failure-" + "\n" +
                 "PF Avg Primary Hops: " + averagePrimaryHopsPostFailure + "\n" +
                 "PF Avg Primary Cost: " + averagePrimaryCostPostFailure + "\n" +
-                "Paths Intact: " + pathsIntact + "\n" +
-                "Paths Severed: " + pathsSevered + "\n" +
                 "Connections Intact: " + connectionsIntact + "\n" +
                 "Connections Severed: " + connectionsSevered + "\n" +
+                "Paths Intact: " + pathsIntact + "\n" +
+                "Paths Severed: " + pathsSevered + "\n" +
+                "Primary Paths Intact: " + primaryPathsIntact + "\n" +
+                "Primary Paths Severed: " + primaryPathsSevered + "\n" +
+                "Avg Backup Paths Intact: " + averageBackupPathsIntact + "\n" +
+                "Avg Backup Paths Severed: " + averageBackupPathsSevered + "\n" +
                 "Chosen Failures: " + chosenFailures.toString() + "\n";
         for(CachingResult result : cachingResults){
             output += "Caching: " + result.toString() + "\n";

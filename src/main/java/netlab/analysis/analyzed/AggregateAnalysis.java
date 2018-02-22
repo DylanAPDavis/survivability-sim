@@ -34,23 +34,30 @@ public class AggregateAnalysis implements Serializable {
     private Double totalCost;
     private Double totalLinksUsed;
     private Double totalPaths;
-    private Double averagePrimaryHops;
-    private Double averagePrimaryCost;
-
-    private Double averagePathRisk;
-    private Double averageMinRiskPerPair;
-    private Double averageMaxRiskPerPair;
-    private Double averagePrimaryRisk;
-
-    // After failure simulation
-    private Double averagePrimaryHopsPostFailure;
-    private Double averagePrimaryCostPostFailure;
-    private Double pathsSevered;
-    private Double pathsIntact;
+    private Double totalPrimaryPaths;
+    private Double totalBackupPaths;
     private Double connectionsSevered;
     private Double connectionsIntact;
+    private Double pathsSevered;
+    private Double pathsIntact;
+    private Double primaryPathsSevered;
+    private Double primaryPathsIntact;
+
+
+    private Double averagePrimaryHops;
+    private Double averagePrimaryCost;
+    private Double averagePrimaryRisk;
+    private Double averageBackupHops;
+    private Double averageBackupCost;
+    private Double averageBackupRisk;
+    private Double averageBackupPaths;
+    private Double averagePrimaryHopsPostFailure;
+    private Double averagePrimaryCostPostFailure;
+    private Double averageBackupPathsIntact;
+    private Double averageBackupPathsSevered;
 
     // Caching
     private List<CachingResult> cachingResults;
+
 
 }

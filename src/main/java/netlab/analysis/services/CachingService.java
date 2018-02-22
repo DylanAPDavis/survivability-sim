@@ -25,8 +25,8 @@ public class CachingService {
 
     public void buildCacheMaps(List<CachingResult> cachingResults, Map<SourceDestPair, Map<String, Path>> chosenPathsMap,
                                 Set<Failure> failures) {
-        Map<Node, Set<Path>> pathsPerSrc = getPathsPerSrc(chosenPathsMap);
-        Map<Node, Path> primaryPathPerSrc = getPrimaryPathPerSrc(pathsPerSrc);
+        Map<Node, Set<Path>> pathsPerSrc = pathMappingService.getPathsPerSrc(chosenPathsMap);
+        Map<Node, Path> primaryPathPerSrc = pathMappingService.getPrimaryPathPerSrc(pathsPerSrc);
         Set<Node> destinations = chosenPathsMap.keySet().stream().map(SourceDestPair::getDst).collect(Collectors.toSet());
         for(CachingResult cachingResult : cachingResults){
             Set<Node> cachingLocations = new HashSet<>();
@@ -173,45 +173,14 @@ public class CachingService {
     public void evaluateContentAccessibility(List<CachingResult> cachingResults,
                                              Map<SourceDestPair, Map<String, Path>> chosenPaths,
                                              Collection<Failure> chosenFailures) {
-        Map<Node, Set<Path>> pathsPerSrc = getPathsPerSrc(chosenPaths);
-        Map<Node, Path> primaryPathPerSrc = getPrimaryPathPerSrc(pathsPerSrc);
+        Map<Node, Set<Path>> pathsPerSrc = pathMappingService.getPathsPerSrc(chosenPaths);
+        Map<Node, Path> primaryPathPerSrc = pathMappingService.getPrimaryPathPerSrc(pathsPerSrc);
         for (CachingResult cachingResult : cachingResults) {
             evaluateCachingResult(cachingResult, pathsPerSrc, primaryPathPerSrc, chosenFailures);
         }
 
     }
 
-    private Map<Node,Path> getPrimaryPathPerSrc(Map<Node, Set<Path>> pathsPerSrc) {
-        Map<Node, Path> primaryPathPerSrc = new HashMap<>();
-        for(Node src : pathsPerSrc.keySet()){
-            Set<Path> paths = pathsPerSrc.get(src);
-            Path minPath = null;
-            for(Path path : paths){
-                if(minPath == null || minPath.getTotalWeight() > path.getTotalWeight()){
-                    minPath = path;
-                }
-            }
-            if(minPath != null){
-                primaryPathPerSrc.put(src, minPath);
-            }
-        }
-        return primaryPathPerSrc;
-    }
-
-    private Map<Node, Set<Path>> getPathsPerSrc(Map<SourceDestPair, Map<String, Path>> chosenPaths){
-        Map<Node, Set<Path>> pathsPerSrc = new HashMap<>();
-        // Go through all of the pairs, get all paths per source
-        for (SourceDestPair pair : chosenPaths.keySet()) {
-            Node src = pair.getSrc();
-            Set<Path> paths = chosenPaths.get(pair).values().stream().collect(Collectors.toSet());
-            if(paths.size() > 0) {
-                // Store all paths for this pair
-                pathsPerSrc.putIfAbsent(src, new HashSet<>());
-                pathsPerSrc.get(src).addAll(paths);
-            }
-        }
-        return pathsPerSrc;
-    }
 
     private void evaluateCachingResult(CachingResult cachingResult, Map<Node, Set<Path>> pathsPerSrc,
                                       Map<Node, Path> primaryPathPerSrc, Collection<Failure> chosenFailures){
