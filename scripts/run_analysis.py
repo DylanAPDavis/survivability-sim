@@ -8,7 +8,7 @@ def run_analysis(request_id, use_aws):
         "requestId": request_id,
         "useAws": use_aws
     }
-    launch_simulator(loop=True, sim_params={}, analysis_params=params, port_num="0", use_web_server="false")
+    launch_simulator(loop=True, sim_params={}, analysis_params=params, use_web_server="false")
     print("Done")
 
 

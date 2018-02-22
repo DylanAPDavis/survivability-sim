@@ -43,7 +43,11 @@ public class AnalysisController {
     @ResponseBody
     public Analysis analyzeRequest(AnalysisParameters params){
         Request request = storageService.retrieveRequestSet(params.getRequestId(), params.getUseAws());
-        log.info("Retrived request for analysis: " + params.getRequestId());
+        log.info("Retrieved request for analysis: " + params.getRequestId());
+        if(request == null){
+            log.info("Request not found! Aborting...");
+            return null;
+        }
         if(!request.isCompleted()) {
             log.info("Request not completed! Aborting...");
             return null;

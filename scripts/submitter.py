@@ -5,7 +5,7 @@ import time
 analysis_job = "ANALYSIS_JOB"
 analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
-aggregate_analysis = True
+aggregate_analysis = False
 
 
 def process_job(job, analysis_type):

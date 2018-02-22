@@ -89,6 +89,12 @@ public class AWSTest {
         analysisController.analyzeSeeds(seeds);
     }
 
+    @Test
+    public void aggregateAnalysis(){
+        List<Long> seeds = Arrays.asList(1L, 2L);
+        analysisController.aggregateSeeds(seeds);
+    }
+
     //@Test
     public void scanDynamoMetaDb() {
         if(dynamoInterface.allFieldsDefined()){

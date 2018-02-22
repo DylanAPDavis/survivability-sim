@@ -71,6 +71,15 @@ public class SubmissionAnalysisControllerTest {
         System.out.println(output);
     }
 
+    @Test
+    public void analysisTest(){
+        AnalysisParameters aParams = AnalysisParameters.builder()
+                .requestId("10_nsfnet_anycast_bhandari_1_2_1_1_1_1_both_alllinks_both_1_none_allow_allow_false_8")
+                .useAws(true)
+                .build();
+        analysisController.analyzeRequest(aParams);
+    }
+
 
     private SimulationParameters makeParameters(Long seed, Boolean completed, String topologyId, Integer numRequests, String alg, String problemClass,
                                                 String objective, Integer numSources, Integer numDestinations, Integer fSetSize,
