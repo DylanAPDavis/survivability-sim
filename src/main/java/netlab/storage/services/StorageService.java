@@ -163,7 +163,7 @@ public class StorageService {
 
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return obj;

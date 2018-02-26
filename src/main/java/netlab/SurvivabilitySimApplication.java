@@ -68,7 +68,7 @@ public class SurvivabilitySimApplication {
 				}
 			}
 			if (option.contains("--defaultAggregate")){
-				defaultAggregate = true;
+				defaultAggregate = Boolean.parseBoolean(value);
 			}
 		}
 
