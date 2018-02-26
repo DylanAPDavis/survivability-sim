@@ -41,9 +41,9 @@ def process_job(job, analysis_type):
 def process_aggregate_job():
     output_file_path = "results/output/" + "aggregate"
     run_time = "3:59"
-    memory = "16000"
+    memory = "8000"
     command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
-                     str(8), "-o", output_file_path, "python", "scripts/run_aggregate.py"]
+                     str(12), "-o", output_file_path, "python", "scripts/run_aggregate.py"]
     process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 if aggregate_analysis:

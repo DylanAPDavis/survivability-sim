@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -93,19 +97,73 @@ public class AnalysisController {
         return "Success";
     }
 
-    @RequestMapping(value = "/analyze/aggregate", method = RequestMethod.POST)
-    @ResponseBody
-    public AggregateAnalysis aggregateAnalyses(SimulationParameters params){
-
-        List<Analysis> analyses = storageService.getAnalyzedSets(params);
-        return aggregationAnalysisService.aggregateAnalyses(analyses);
-    }
 
     @RequestMapping(value = "/analyze/aggregate_params", method = RequestMethod.POST)
     @ResponseBody
     public String aggregateWithParams(AggregationParameters agParams){
         Map<String, List<Analysis>> analysisMap = new HashMap<>();
+        long startTime = System.nanoTime();
+        ExecutorService executor = Executors.newFixedThreadPool(16);
+        List<Future> futures = new ArrayList<>();
         for(Long seed : agParams.getSeeds()){
+            Future f = executor.submit(getAnalysis(seed, analysisMap));
+            futures.add(f);
+        }
+        futures.forEach(f -> {
+            try {
+                f.get();
+            }
+            catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        long endTime = System.nanoTime();
+        double duration = (endTime - startTime)/1e9;
+        log.info("Analysis gathering took: " + duration + " seconds");
+
+        // We now has a map of matching analyses, each list should be an analysis per string
+        // Use this to get an aggregate analysis per hash
+        startTime = System.nanoTime();
+        List<Callable<AggregateAnalysis>> aggregateCallables = new ArrayList<>();
+        for(String hash : analysisMap.keySet()){
+            Callable<AggregateAnalysis> c= aggregate(hash, analysisMap);
+            aggregateCallables.add(c);
+        }
+        Map<String, AggregateAnalysis> aggregateAnalysisMap = null;
+        try {
+            aggregateAnalysisMap = executor.invokeAll(aggregateCallables)
+                    .stream()
+                    .map(c -> {
+                        try {
+                            return c.get();
+                        }
+                        catch (Exception e) {
+                            throw new IllegalStateException(e);
+                        }
+                    })
+                    .collect(Collectors.toMap(AggregateAnalysis::getHash, ag -> ag));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        endTime = System.nanoTime();
+        duration = (endTime - startTime)/1e9;
+        log.info("Aggregation took: " + duration + " seconds");
+        if(aggregateAnalysisMap == null){
+            log.info("Aggregation Failed!");
+            return "Failure!";
+        }
+        return aggregationAnalysisService.createAggregationOutput(agParams, aggregateAnalysisMap);
+    }
+
+    private Callable<AggregateAnalysis> aggregate(String hash, Map<String, List<Analysis>> analysisMap){
+        return () -> {
+            List<Analysis> analyses = analysisMap.get(hash);
+            return aggregationAnalysisService.aggregateAnalyses(hash, analyses);
+        };
+    }
+
+    private synchronized Runnable getAnalysis(Long seed, Map<String, List<Analysis>> analysisMap){
+        return () -> {
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
             for(SimulationParameters params : seedParams){
                 String id = params.getRequestId();
@@ -127,19 +185,9 @@ public class AnalysisController {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
-
-        // We now has a map of matching analyses, each list should be an analysis per string
-        // Use this to get an aggregate analysis per hash
-        Map<String, AggregateAnalysis> aggregateAnalysisMap = new HashMap<>();
-        for(String hash : analysisMap.keySet()){
-            List<Analysis> analyses = analysisMap.get(hash);
-            AggregateAnalysis aggregateAnalysis = aggregationAnalysisService.aggregateAnalyses(analyses);
-            aggregateAnalysisMap.put(hash, aggregateAnalysis);
-        }
-
-        return aggregationAnalysisService.createAggregationOutput(agParams, aggregateAnalysisMap);
+        };
     }
+
 
     @RequestMapping(value = "/analyze/aggregate_seeds", method = RequestMethod.POST)
     @ResponseBody

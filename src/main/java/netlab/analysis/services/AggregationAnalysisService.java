@@ -13,6 +13,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Service
 @Slf4j
@@ -150,7 +153,7 @@ public class AggregationAnalysisService {
     }
 
 
-    public AggregateAnalysis aggregateAnalyses(List<Analysis> analysisList) {
+    public AggregateAnalysis aggregateAnalyses(String hash, List<Analysis> analysisList) {
 
         if (analysisList.isEmpty()) {
             return AggregateAnalysis.builder().build();
@@ -257,6 +260,7 @@ public class AggregationAnalysisService {
         double totalIntactDivisor = numWithConnectionsIntact > 0 ? numWithConnectionsIntact : 1.0;
 
         return AggregateAnalysis.builder()
+                .hash(hash)
                 .requestSetIds(requestSetIds)
                 .seeds(seeds)
                 .topologyId(topologyId)
@@ -287,7 +291,7 @@ public class AggregationAnalysisService {
                 .averageBackupHops(sumAverageBackupHops / totalResultsDivisor)
                 .averageBackupCost(sumAverageBackupCost / totalResultsDivisor)
                 .averageBackupRisk(sumAverageBackupRisk / totalResultsDivisor)
-                .averageBackupPaths(sumBackupPaths / totalResultsDivisor)
+                .averageBackupPaths(sumAverageBackupPaths / totalResultsDivisor)
                 .averagePrimaryHopsPostFailure(sumAveragePrimaryHopsPostFailure / totalIntactDivisor)
                 .averagePrimaryCostPostFailure(sumAveragePrimaryCostPostFailure / totalIntactDivisor)
                 .averageBackupPathsIntact(sumAverageBackupPathsIntact / totalResultsDivisor)
@@ -360,13 +364,14 @@ public class AggregationAnalysisService {
         List<String> topologyIds = agParams.getTopologyIds();
         List<RoutingType> routingTypes = agParams.getRoutingTypes();
         List<FailureScenario> failureScenarios = agParams.getFailureScenarios();
-        List<Integer> nfeValues = agParams.getNfeValues();
         Map<RoutingType, List<Algorithm>> algorithmMap = agParams.getAlgorithmMap();
-        Set<Algorithm> algorithmsThatCanIgnoreFailures = agParams.getAlgorithmsThatCanIgnoreFailures();
         Map<RoutingType, List<TrafficCombinationType>> trafficCombinationTypeMap = agParams.getTrafficCombinationTypeMap();
         Map<RoutingType, List<RoutingDescription>> routingDescriptionMap = agParams.getRoutingDescriptionMap();
 
         List<String> fileNames = new ArrayList<>();
+        List<Future> futures = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(16);
+        long startTime = System.nanoTime();
         for(String topoId : topologyIds) {
             for (RoutingType routingType : routingTypes) {
                 // CSV per Topology-RoutingType-FailureScenario combo
@@ -375,50 +380,76 @@ public class AggregationAnalysisService {
                 List<RoutingDescription> routingDescriptions = routingDescriptionMap.get(routingType);
                 for(FailureScenario failureScenario : failureScenarios) {
                     // Make a CSV
-                    List<String[]> output = new ArrayList<>();
-                    for(Integer nfe : nfeValues){
+                    Future f = executor.submit(outputResults(agParams, topoId, routingType, failureScenario, algorithms,
+                            trafficCombinationTypes, routingDescriptions, outputMap));
+                    futures.add(f);
+                    String name = "results/aggregated/" + topoId + "_" + routingType + "_" + failureScenario.toString();
+                    fileNames.add(name + ".csv");
+                }
+            }
+        }
+        futures.forEach(f -> {
+            try {
+                f.get();
+            }
+            catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        long endTime = System.nanoTime();
+        double duration = (endTime - startTime)/1e9;
+        log.info("File output took: " + duration + " seconds");
+        return fileNames.toString();
+    }
 
-                        for(Algorithm algorithm : algorithms){
-                            List<Boolean> ignoreFValues = algorithmsThatCanIgnoreFailures.contains(algorithm) ?
-                                    Arrays.asList(true, false) : Collections.singletonList(false);
+    private Runnable outputResults(AggregationParameters agParams, String topoId, RoutingType routingType,
+                                   FailureScenario failureScenario, List<Algorithm> algorithms,
+                                   List<TrafficCombinationType> trafficCombinationTypes,
+                                   List<RoutingDescription> routingDescriptions, Map<String, AggregateAnalysis> outputMap){
+        List<Integer> nfeValues = agParams.getNfeValues();
+        Set<Algorithm> algorithmsThatCanIgnoreFailures = agParams.getAlgorithmsThatCanIgnoreFailures();
+        return () -> {
+            List<String[]> output = new ArrayList<>();
+            for(Integer nfe : nfeValues){
 
-                            for(Boolean ignoreF : ignoreFValues){
-                                if(nfe == 0 && (!failureScenario.equals(FailureScenario.Default) || ignoreF)){
-                                    continue;
-                                }
-                                else if(nfe != 0 && failureScenario.equals(FailureScenario.Default)){
-                                    continue;
-                                }
-                                for(TrafficCombinationType trafficCombinationType : trafficCombinationTypes){
-                                    String[] line = makeArray("NFE: " + nfe,  "Algorithm: " + algorithm,
-                                            "IgnoreF: " + ignoreF, "TCombo: " + trafficCombinationType);
-                                    output.add(line);
-                                    for (RoutingDescription routingDescription : routingDescriptions) {
-                                        // Get the matching results from the outputMap
-                                        String hash = hashingService.hashForAggregation(topoId, algorithm, routingType,
-                                                failureScenario, nfe, trafficCombinationType, routingDescription, ignoreF);
-                                        AggregateAnalysis aggregateAnalysis = outputMap.get(hash);
-                                        if(aggregateAnalysis != null) {
-                                            output.addAll(createLines(aggregateAnalysis));
-                                        }
-                                    }
+                for(Algorithm algorithm : algorithms){
+                    List<Boolean> ignoreFValues = algorithmsThatCanIgnoreFailures.contains(algorithm) ?
+                            Arrays.asList(true, false) : Collections.singletonList(false);
+
+                    for(Boolean ignoreF : ignoreFValues){
+                        if(nfe == 0 && (!failureScenario.equals(FailureScenario.Default) || ignoreF)){
+                            continue;
+                        }
+                        else if(nfe != 0 && failureScenario.equals(FailureScenario.Default)){
+                            continue;
+                        }
+                        for(TrafficCombinationType trafficCombinationType : trafficCombinationTypes){
+                            String[] line = makeArray("NFE: " + nfe,  "Algorithm: " + algorithm,
+                                    "IgnoreF: " + ignoreF, "TCombo: " + trafficCombinationType);
+                            output.add(line);
+                            for (RoutingDescription routingDescription : routingDescriptions) {
+                                // Get the matching results from the outputMap
+                                String hash = hashingService.hashForAggregation(topoId, algorithm, routingType,
+                                        failureScenario, nfe, trafficCombinationType, routingDescription, ignoreF);
+                                AggregateAnalysis aggregateAnalysis = outputMap.get(hash);
+                                if(aggregateAnalysis != null) {
+                                    output.addAll(createLines(aggregateAnalysis));
                                 }
                             }
                         }
                     }
-                    try {
-                        String name = "results/aggregated/" + topoId + "_" + routingType + "_" + failureScenario.toString();
-                        fileNames.add(name + ".csv");
-                        CSVWriter writer = new CSVWriter(new FileWriter(name + ".csv"), ',');
-                        writer.writeAll(output);
-                        writer.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
-        }
-        return fileNames.toString();
+            try {
+                String name = "results/aggregated/" + topoId + "_" + routingType + "_" + failureScenario.toString();
+                CSVWriter writer = new CSVWriter(new FileWriter(name + ".csv"), ',');
+                writer.writeAll(output);
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        };
     }
 
     /*

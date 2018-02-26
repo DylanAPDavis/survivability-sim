@@ -16,6 +16,7 @@ import java.util.List;
 public class AggregateAnalysis implements Serializable {
 
     private List<String> requestSetIds;
+    private String hash;
     private List<Long> seeds;
     private String topologyId;
     private Algorithm algorithm;
