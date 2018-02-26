@@ -1,7 +1,7 @@
 import job
 algorithm_dict = {
-    "unicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],
-    "anycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens"],
+    "unicast": ["tabu"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
+    "anycast": ["tabu"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
     "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],

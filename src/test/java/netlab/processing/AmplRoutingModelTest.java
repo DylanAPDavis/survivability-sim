@@ -327,6 +327,28 @@ public class AmplRoutingModelTest {
     }
 
     @Test
+    public void anycast2LinkFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(2)
+                .failureScenario("alllinks")
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
     public void anycastLink9999FailuresTest(){
 
         SimulationParameters params = SimulationParameters.builder()

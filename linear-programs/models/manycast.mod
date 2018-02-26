@@ -45,7 +45,7 @@ param combineSourceTraffic binary default 0;
 param combineDestTraffic binary default 0;
 
 param useMinD default 1;
-param useMaxD default 1;
+param useMaxD default card(D);
 
 # The number of failure events that will happen
 param nfe default 0;

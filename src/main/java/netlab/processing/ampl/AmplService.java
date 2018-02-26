@@ -184,7 +184,7 @@ public class AmplService {
             case Multicast:
             case Manycast:
                 dataLines.add("param useMinD := " + details.getConnections().getUseMinD() + ";");
-                dataLines.add("param useMaxD := " + details.getConnections().getUseMaxD() + ";");
+                dataLines.add("param useMaxD := " + details.getDestinations().size()/*details.getConnections().getUseMaxD()*/ + ";");
                 break;
             case ManyToOne:
                 dataLines.add("param useMinS := " + details.getConnections().getUseMinS() + ";");

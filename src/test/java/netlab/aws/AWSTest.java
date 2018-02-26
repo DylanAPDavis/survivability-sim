@@ -91,7 +91,7 @@ public class AWSTest {
 
     @Test
     public void aggregateAnalysis(){
-        List<Long> seeds = Arrays.asList(1L, 2L);
+        List<Long> seeds = LongStream.rangeClosed(1L, 30L).boxed().collect(Collectors.toList());//Arrays.asList(1L, 2L);
         analysisController.aggregateSeeds(seeds);
     }
 

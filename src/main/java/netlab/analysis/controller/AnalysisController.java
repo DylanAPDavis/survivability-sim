@@ -103,7 +103,7 @@ public class AnalysisController {
     public String aggregateWithParams(AggregationParameters agParams){
         Map<String, List<Analysis>> analysisMap = new HashMap<>();
         long startTime = System.nanoTime();
-        ExecutorService executor = Executors.newFixedThreadPool(16);
+        ExecutorService executor = Executors.newFixedThreadPool(5);
         List<Future> futures = new ArrayList<>();
         for(Long seed : agParams.getSeeds()){
             Future f = executor.submit(getAnalysis(seed, analysisMap));
@@ -168,7 +168,7 @@ public class AnalysisController {
             for(SimulationParameters params : seedParams){
                 String id = params.getRequestId();
                 if(params.getCompleted()) {
-                    Analysis analysis = storageService.retrieveAnalyzedSet(id, true, true);
+                    Analysis analysis = storageService.retrieveAnalyzedSet(id, true, false);
                     if (analysis != null) {
                         String hash = hashingService.hashAnalysis(analysis);
                         analysisMap.putIfAbsent(hash, new ArrayList<>());
