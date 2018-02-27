@@ -54,5 +54,5 @@ else:
         job_list = jobs.create_jobs(seed)
         for j in job_list:
             print(str(j.__dict__))
-            process_job(j, analysis_after_sim)
+            process_job(j, analysis_job)
         time.sleep(2)

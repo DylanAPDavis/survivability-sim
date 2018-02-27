@@ -7,6 +7,9 @@ import netlab.submission.request.Request;
 import netlab.submission.request.RequestParameters;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
+import netlab.submission.services.SimulateService;
+import netlab.submission.simulate.SimRequest;
+import netlab.submission.simulate.SimResponse;
 import netlab.visualization.PrintingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,11 +27,12 @@ public class SubmissionController {
 
     @Autowired
     public SubmissionController(GenerationService generationService, ProcessingService processingService,
-                                StorageService storageService, PrintingService printingService) {
+                                StorageService storageService, PrintingService printingService, SimulateService simulateService) {
         this.generationService = generationService;
         this.processingService = processingService;
         this.storageService = storageService;
         this.printingService = printingService;
+        this.simulateService = simulateService;
     }
 
     private GenerationService generationService;
@@ -38,6 +42,8 @@ public class SubmissionController {
     private StorageService storageService;
 
     private PrintingService printingService;
+
+    private SimulateService simulateService;
 
     @RequestMapping(value = "/submit_sim", method = RequestMethod.POST)
     @ResponseBody
@@ -110,5 +116,18 @@ public class SubmissionController {
         }
 
         return request.getId();
+    }
+
+    @RequestMapping(value = "/simulate", method = RequestMethod.POST)
+    @ResponseBody
+    public SimResponse simulateRequest(SimRequest simRequest){
+        Request request = simulateService.generateRequest(simRequest);
+
+
+        if(request != null){
+            request = processingService.processRequest(request);
+        }
+        // Translate request into sim response
+        return simulateService.formatResponse(request);
     }
 }

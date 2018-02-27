@@ -30,6 +30,8 @@ public class RequestParameters {
     // F - Failure set (shared by all connections)
     private Set<String> failures;
 
+    private String failureScenario;
+
     // Failure probability map
     private Map<String, Double> failureProbabilityMap;
 
