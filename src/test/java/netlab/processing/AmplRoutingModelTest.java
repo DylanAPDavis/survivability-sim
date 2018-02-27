@@ -5,8 +5,11 @@ import netlab.TestConfiguration;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
+import netlab.topology.elements.Node;
 import netlab.topology.elements.Path;
 import netlab.topology.elements.SourceDestPair;
+import netlab.topology.elements.Topology;
+import netlab.topology.services.TopologyService;
 import netlab.visualization.PrintingService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -32,6 +32,9 @@ public class AmplRoutingModelTest {
 
     @Autowired
     private PrintingService printingService;
+
+    @Autowired
+    private TopologyService topologyService;
 
     @Test
     public void unicastTest(){
@@ -343,6 +346,29 @@ public class AmplRoutingModelTest {
                 .useAws(false)
                 .build();
         Request request = generationService.generateFromSimParams(params);
+        Topology topo = topologyService.getTopologyById("NSFnet");
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void anycast3D2LinkFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(3)
+                .failureScenario("alllinks")
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
@@ -384,6 +410,7 @@ public class AmplRoutingModelTest {
                 .numSources(1)
                 .numDestinations(3)
                 .failureScenario("allnodes")
+                .trafficCombinationType("both")
                 .numFailureEvents(1)
                 .useAws(false)
                 .build();
@@ -392,6 +419,29 @@ public class AmplRoutingModelTest {
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
+
+    @Test
+    public void anycast2NodeFailuresTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(3)
+                .failureScenario("allnodes")
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
 
     @Test
     public void anycastNodeNoDestFailuresTest(){
@@ -409,6 +459,28 @@ public class AmplRoutingModelTest {
                 .failureScenario("allNodes")
                 .destFailureType("prevent")
                 .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void anycastOnlyMembersFail(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("anycast")
+                .numSources(1)
+                .numDestinations(3)
+                .failureScenario("members")
+                .numFailureEvents(2)
                 .useAws(false)
                 .build();
         Request request = generationService.generateFromSimParams(params);
@@ -738,7 +810,7 @@ public class AmplRoutingModelTest {
         System.out.println(printingService.outputPaths(request));
     }
 
-    @Test
+    //@Test
     public void manyToManyAllLinks1TestTW(){
 
         SimulationParameters params = SimulationParameters.builder()
@@ -798,6 +870,31 @@ public class AmplRoutingModelTest {
                 .useMinS(6)
                 .useMaxS(7)
                 .useMinD(6)
+                .useMaxD(7)
+                .failureScenario("allnodes")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void manyToManyAllSrcsNodeFailuresTest(){
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("NSFnet")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manytomany")
+                .numSources(7)
+                .numDestinations(7)
+                .useMinS(7)
+                .useMaxS(7)
+                .useMinD(1)
                 .useMaxD(7)
                 .failureScenario("allnodes")
                 .numFailureEvents(1)

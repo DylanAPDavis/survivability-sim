@@ -49,10 +49,10 @@ public class AmplService {
             com.ampl.Objective obj = ampl.getObjective(request.getObjective().getCode());
             String result = obj.result();
             String message = obj.message();
+            DataFrame flows = ampl.getData("L");
 
             if(result.toLowerCase().contains("solved") || message.toLowerCase().contains("objective")){
                 details.setIsFeasible(true);
-                DataFrame flows = ampl.getData("L");
                 paths = translateFlowsIntoPaths(flows, details.getPairs(), topology);
             }
             else{
@@ -188,13 +188,13 @@ public class AmplService {
                 break;
             case ManyToOne:
                 dataLines.add("param useMinS := " + details.getConnections().getUseMinS() + ";");
-                dataLines.add("param useMaxS := " + details.getConnections().getUseMaxS() + ";");
+                dataLines.add("param useMaxS := " + details.getSources().size() + ";");
                 break;
             default:
                 dataLines.add("param useMinS := " + details.getConnections().getUseMinS() + ";");
-                dataLines.add("param useMaxS := " + details.getConnections().getUseMaxS() + ";");
+                dataLines.add("param useMaxS := " + details.getSources().size() + ";");
                 dataLines.add("param useMinD := " + details.getConnections().getUseMinD() + ";");
-                dataLines.add("param useMaxD := " + details.getConnections().getUseMaxD() + ";");
+                dataLines.add("param useMaxD := " + details.getDestinations().size() + ";");
         }
 
         // Traffic Combination

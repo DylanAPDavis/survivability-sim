@@ -270,17 +270,17 @@ subject to maxNumConnectionsNeededDestNoFails{d in D}:
 ##### SRC/DEST REACHABILITY CONSTRAINTS
 
 ### SOURCES
-subject to connSurvivesFromS_1_LessThanS{s in S, g in GroupIndices: sRequired < card(S)}:
+subject to connSurvivesFromS_1_LessThanS{s in S, g in GroupIndices}:#: sRequired < card(S)}:
    connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
 
-subject to connSurvivesFromS_2_LessThanS{s in S, g in GroupIndices: sRequired < card(S)}:
+subject to connSurvivesFromS_2_LessThanS{s in S, g in GroupIndices}:#: sRequired < card(S)}:
    connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
 
-subject to connSurvivesFromS_1_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
-	connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+#subject to connSurvivesFromS_1_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
+#	connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to connSurvivesFromS_2_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
-	connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+#subject to connSurvivesFromS_2_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
+#	connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
 
 subject to srcConnected_1{s in S}:
@@ -302,7 +302,7 @@ subject to maxSourcesThatMustBeConnected_LessThanS{if sRequired < card(S)}:
 	sum{s in S} srcConnected[s] <= useMaxS + maxSrcsDisconnected;
 
 subject to minSourcesThatMustBeConnected_GreaterThanS{g in GroupIndices: sRequired >= card(S)}:
-	sum{s in S} connSurvivesFromS[s,g] = card(S);
+	sum{s in S} connSurvivesFromS[s,g] >= card(S);
 ### END SOURCES
 
 ### START DESTINATIONS
@@ -336,8 +336,11 @@ subject to minDestsThatMustBeConnected_LessThanD{if dRequired < card(D)}:
 subject to maxDestsThatMustBeConnected_LessThanD{if dRequired < card(D)}:
 	sum{d in D} destConnected[d] <= useMaxD + maxDestsDisconnected;
 
-subject to minDestsThatMustBeConnected_GreaterThanD{g in GroupIndices: dRequired >= card(D)}:
-	sum{d in D} connSurvivesToD[d,g] = card(D);
+subject to minDestsThatMustBeConnected_NeedAll{g in GroupIndices: useMinD >= card(D)}:
+	sum{d in D} connSurvivesToD[d,g] = card(D)
+		;
+subject to minDestsThatMustBeConnected_GreaterThanD{if dRequired >= card(D)}:
+	sum{d in D} destConnected[d] = card(D);
 
 ### END DESTINATIONS
 
@@ -418,18 +421,14 @@ subject to groupCausesConnectionToFail_2{(s,d) in SD, i in I, g in GroupIndices}
 
 # Track connections that fail due to the removal of a failure group - including the src/dest of a connection.
 subject to groupCausesConnectionToFailIncludeEndpoints_1{(s,d) in SD, i in I, g in GroupIndices}:
-	FG_Conn_include_endpoints[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
+	FG_Conn_include_endpoints[s,d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g] and v != s} NC[s,d,i,v];
 
 subject to groupCausesConnectionToFailIncludeEndpoints_2{(s,d) in SD, i in I, g in GroupIndices}:
-	FG_Conn_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g]} NC[s,d,i,v];
+	FG_Conn_include_endpoints[s,d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g] and v != s} NC[s,d,i,v];
 
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:
 	FG_Sum[g] = sum{(s,d) in SD, i in I} FG_Conn[s,d,i,g];
-
-# Put limits on the number of connections between a pair  that can share a FG
-subject to connectionsBetweenPairDoNotShareFG{(s,d) in SD, g in GroupIndices}:
-    sum{i in I} FG_Conn[s,d,i,g] <= 1;
 
 
 # INDICATOR VARIABLE CONSTRAINTS
@@ -478,7 +477,11 @@ subject to atLeastOneConnFailsForDAny_2{d in D}:
     FG_Conn_d_any[d] * card(V) ^ 4 >= sum{g in GroupIndices} FG_Conn_d[d,g];
 
 
+# A failure element should only appear at most once in a pair's connections
+subject to fAtMostOncePair{s in S, d in D, u in V, v in V, g in GroupIndices: u != v and ((u,v) in FG[g] or (v,u) in FG[g])}:
+	sum{i in I} L[s,d,i,u,v] <= 1;
 
-
+subject to fAtMostOncePair_nodes{s in S, d in D, v in V, g in GroupIndices: (v,v) in FG[g] and v != s and v != d}:
+	sum{i in I} NC[s,d,i,v] <= 1;
 
 #-------------------------------------------------------

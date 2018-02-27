@@ -209,9 +209,11 @@ subject to minDestsThatMustBeConnected_LessThanD{if dRequired < card(D)}:
 subject to maxDestsThatMustBeConnected_LessThanD{if dRequired < card(D)}:
     sum{d in D} destConnected[d] <= useMaxD + maxDestsDisconnected;
 
-subject to minDestsThatMustBeConnected_GreaterThanD{g in GroupIndices: dRequired >= card(D)}:
+subject to minDestsThatMustBeConnected_NeedAll{g in GroupIndices: useMinD >= card(D)}:
     sum{d in D} connSurvivesToD[d,g] = card(D);
 
+subject to minDestsThatMustBeConnected_GreaterThanD{if dRequired >= card(D)}:
+    sum{d in D} destConnected[d] = card(D);
 
 
 # Flow constraints
@@ -291,18 +293,22 @@ subject to atLeastOneConnFailsForDAny_2{d in D}:
 
 # Track connections that fail due to the removal of a failure group - including the src/dest of a connection.
 subject to groupCausesConnectionToFailIncludeEndpoints_1{d in D, i in I, g in GroupIndices}:
-	FG_Conn_include_endpoints[d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: v != s and (v,v) in FG[g]} NC[d,i,v];
+    FG_Conn_include_endpoints[d,i,g] <= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g] and v != s} NC[d,i,v];
 
 subject to groupCausesConnectionToFailIncludeEndpoints_2{d in D, i in I, g in GroupIndices}:
-	FG_Conn_include_endpoints[d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: v != s and (v,v) in FG[g]} NC[d,i,v];
+    FG_Conn_include_endpoints[d,i,g] * card(V)^4 >= sum{u in V, v in V: u != v and ((u,v) in FG[g] or (v,u) in FG[g])} L[s,d,i,u,v] + sum{v in V: (v,v) in FG[g] and v != s} NC[d,i,v];
 
 # Sum up the number of failed connections due to FG[g]
 subject to numFailsDueToGroup{g in GroupIndices}:
 	FG_Sum[g] = sum{d in D, i in I} FG_Conn[d,i,g];
 
-# Put limits on the number of connections between a pair  that can share a FG
-subject to connectionsBetweenPairDoNotShareFG{d in D, g in GroupIndices}:
-    sum{i in I} FG_Conn[d,i,g] <= 1;
+
+# A failure element should only appear at most once in a pair's connections
+subject to fAtMostOncePair{d in D, u in V, v in V, g in GroupIndices: u != v and ((u,v) in FG[g] or (v,u) in FG[g])}:
+    sum{i in I} L[s,d,i,u,v] <= 1;
+
+subject to fAtMostOncePair_nodes{d in D, v in V, g in GroupIndices: (v,v) in FG[g] and v != s and v != d}:
+    sum{i in I} NC[d,i,v] <= 1;
 
 
 

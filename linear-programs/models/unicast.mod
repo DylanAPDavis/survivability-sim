@@ -180,7 +180,10 @@ subject to groupCausesConnectionToFail_2{ i in I, g in GroupIndices}:
 subject to numFailsDueToGroup{g in GroupIndices}:
 	FG_Sum[g] = sum{i in I} FG_Conn[i,g];
 
-# Put limits on the number of connections between a pair  that can share a FG
-subject to connectionsBetweenPairDoNotShareFG{g in GroupIndices}:
-    sum{i in I} FG_Conn[i,g] <= 1;
+# A failure element should only appear at most once in a pair's connections
+subject to fAtMostOncePair{u in V, v in V, g in GroupIndices: u != v and ((u,v) in FG[g] or (v,u) in FG[g])}:
+	sum{i in I} L[s,d,i,u,v] <= 1;
+
+subject to fAtMostOncePair_nodes{v in V, g in GroupIndices: (v,v) in FG[g] and v != s and v != d}:
+	sum{i in I} NC[i,v] <= 1;
 

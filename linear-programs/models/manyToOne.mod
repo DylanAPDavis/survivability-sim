@@ -212,8 +212,6 @@ subject to minSourcesThatMustBeConnected_GreaterThanS{g in GroupIndices: sRequir
     sum{s in S} connSurvivesFromS[s,g] = card(S);
 
 
-
-
 subject to flowOnlyIfConnectionAndLinkExists{s in S, i in I, u in V, v in V}:
     L[s,d,i,u,v] <= A[u,v] * C[s,i];
 
@@ -302,7 +300,11 @@ subject to groupCausesConnectionToFailIncludeEndpoints_2{s in S, i in I, g in Gr
 subject to numFailsDueToGroup{g in GroupIndices}:
     FG_Sum[g] = sum{s in S, i in I} FG_Conn[s,i,g];
 
-# Put limits on the number of connections between a pair  that can share a FG
-subject to connectionsBetweenPairDoNotShareFG{s in S, g in GroupIndices}:
-    sum{i in I} FG_Conn[s,i,g] <= 1;
+# A failure element should only appear at most once in a pair's connections
+subject to fAtMostOncePair{s in S, u in V, v in V, g in GroupIndices: u != v and ((u,v) in FG[g] or (v,u) in FG[g])}:
+    sum{i in I} L[s,d,i,u,v] <= 1;
+
+subject to fAtMostOncePair_nodes{s in S, v in V, g in GroupIndices: (v,v) in FG[g] and v != s and v != d}:
+    sum{i in I} NC[s,i,v] <= 1;
+
 
