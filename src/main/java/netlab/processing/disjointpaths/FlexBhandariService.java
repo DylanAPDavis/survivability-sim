@@ -79,6 +79,7 @@ public class FlexBhandariService {
         // Get relevant parameters from input
         Integer numConnections = connCollection.getNumConnections();
         Map<SourceDestPair, Integer> pairMinConnMap = connCollection.getPairMinConnectionsMap();
+        Map<SourceDestPair, Integer> pairMaxConnMap = connCollection.getPairMaxConnectionsMap();
         Map<Node, Integer> srcMinConnMap = connCollection.getSrcMinConnectionsMap();
         Map<Node, Integer> dstMinConnMap = connCollection.getDstMinConnectionsMap();
         Integer reachMinS = connCollection.getUseMinS();
@@ -107,6 +108,10 @@ public class FlexBhandariService {
             //int minForSrc = srcMinConnMap.get(src);
             //int minForDst = dstMinConnMap.get(dst);
             int minForPair = pairMinConnMap.get(pair);
+            int maxForPair = pairMaxConnMap.get(pair);
+            if(maxForPair == 0){
+                continue;
+            }
             //int numC = Math.max(1, Math.max(minForSrc, Math.max(minForDst, minForPair)));
             int numC = Math.max(1, minForPair);
             List<List<Link>> pathLinks = bhandariService.computeDisjointPaths(modifiedTopo, src, dst, numC, nfe, nodesCanFail,
@@ -150,7 +155,7 @@ public class FlexBhandariService {
         Set<SourceDestPair> srcFails = new HashSet<>();
         Set<SourceDestPair> dstFails = new HashSet<>();
         Set<SourceDestPair> srcDstFail = new HashSet<>();
-        for(SourceDestPair pair : pairs){
+        for(SourceDestPair pair : pathsPerPair.keySet()){
             Node src = pair.getSrc();
             Node dst = pair.getDst();
             List<Path> paths = pathsPerPair.get(pair);
@@ -187,7 +192,8 @@ public class FlexBhandariService {
         // Build a map of paths and failures associated with those paths.
         Map<Node, Integer> intactPathsPerSrc = sources.stream().collect(Collectors.toMap(s -> s, s -> 0));
         Map<Node, Integer> intactPathsPerDst = destinations.stream().collect(Collectors.toMap(d -> d, d -> 0));
-        Map<SourceDestPair, Integer> intactPathsPerPair = pairs.stream().collect(Collectors.toMap(p -> p, p -> 0));
+        Map<SourceDestPair, Integer> intactPathsPerPair = pathsPerPair.keySet().stream()
+                .collect(Collectors.toMap(p -> p, p -> 0));
         Map<SourceDestPair, Map<String, Path>> chosenPathsMap = new HashMap<>();
         Map<Node, Set<Path>> pathsPerSrc = sources.stream().collect(Collectors.toMap(s -> s, s -> new HashSet<>()));
         Map<Node, Set<Path>> pathsPerDst = destinations.stream().collect(Collectors.toMap(d -> d, d -> new HashSet<>()));

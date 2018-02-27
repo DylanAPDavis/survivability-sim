@@ -3,10 +3,7 @@ package netlab.aws;
 
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import netlab.TestConfiguration;
-import netlab.analysis.analyzed.AggregationParameters;
-import netlab.analysis.analyzed.Analysis;
-import netlab.analysis.analyzed.FailureDescription;
-import netlab.analysis.analyzed.RoutingDescription;
+import netlab.analysis.analyzed.*;
 import netlab.analysis.controller.AnalysisController;
 import netlab.analysis.services.AnalysisService;
 import netlab.storage.aws.dynamo.DynamoInterface;
@@ -155,15 +152,17 @@ public class AWSTest {
         }
     }
 
-    //@Test
+    @Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
             String id = "1_nsfnet_anycast_ilp_1_2_1_1_1_1_both_alllinks_both_2_none_allow_allow_false_8";
             Request r = storageController.getRequest(id, true);
             Analysis a = storageController.getAnalysis(id, true);
             Analysis analysis = analysisService.analyzeRequest(r);
+            //analysisController.analyzeRequest(AnalysisParameters.builder().requestId(id).useAws(true).build());
             System.out.println(r);
             System.out.println(a);
+            System.out.println(analysis);
         }
     }
 }

@@ -107,7 +107,7 @@ public class SubmissionController {
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
     @ResponseBody
     public String submitRequest(RequestParameters requestParameters){
-        Request request = generationService.generateFromRequestParams(requestParameters);
+        Request request = generationService.generateFromRequestParams(requestParameters, null);
 
         if(request != null) {
             request = processingService.processRequest(request);
@@ -115,7 +115,7 @@ public class SubmissionController {
             storageService.storeRequestSet(request, request.isUseAws());
         }
 
-        return request.getId();
+        return request != null ? request.getId() : "Failed!";
     }
 
     @RequestMapping(value = "/simulate", method = RequestMethod.POST)

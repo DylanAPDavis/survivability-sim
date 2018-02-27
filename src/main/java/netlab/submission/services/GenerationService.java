@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.services.HashingService;
 import netlab.submission.enums.*;
 import netlab.submission.request.*;
+import netlab.submission.simulate.Network;
 import netlab.topology.elements.*;
 import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,9 +74,9 @@ public class GenerationService {
     }
 
 
-    public Request generateFromRequestParams(RequestParameters params) {
+    public Request generateFromRequestParams(RequestParameters params, Network network) {
         params = defaultValueService.assignDefaults(params);
-        Details details = createDetailsFromRequestParameters(params);
+        Details details = createDetailsFromRequestParameters(params, network);
         String requestId = UUID.randomUUID().toString();
         Random rng = new Random();
         Long seed = ((long) (rng.nextDouble() * (1000L)));
@@ -102,8 +103,13 @@ public class GenerationService {
                 .build();
     }
 
-    private Details createDetailsFromRequestParameters(RequestParameters params) {
-        Topology topo = topologyService.getTopologyById(params.getTopologyId());
+    private Details createDetailsFromRequestParameters(RequestParameters params, Network network) {
+        Topology topo = null;
+        if(params.getTopologyId().equals("generated") && network != null){
+            topo = topologyService.convert(network);
+        } else{
+            topo = topologyService.getTopologyById(params.getTopologyId());
+        }
         if(topo == null){
             return null;
         }

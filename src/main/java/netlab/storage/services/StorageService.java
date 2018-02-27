@@ -45,7 +45,7 @@ public class StorageService {
     public Request retrieveRequestSet(String requestSetId, boolean useAws){
         Request rs = null;
         File f = new File(System.getProperty("user.dir") + "/results/raw/" + requestSetId);
-        if(!f.exists() && useAws){
+        if(useAws){
             f = s3Interface.downloadFromRaw(f, requestSetId);
         }
         if(f != null && f.exists()){
@@ -72,7 +72,7 @@ public class StorageService {
     public Analysis retrieveAnalyzedSet(String requestSetId, boolean useAws, boolean deleteAfter){
         Analysis as = null;
         File f = new File(System.getProperty("user.dir") + "/results/analyzed/" + requestSetId);
-        if(!f.exists() && useAws){
+        if(useAws){
             f = s3Interface.downloadFromAnalyzed(f, requestSetId);
         }
         if(f != null && f.exists()){

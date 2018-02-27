@@ -13,5 +13,5 @@ public class Network implements Serializable{
     @NonNull
     private List<String> nodes;
     @NonNull
-    private List<List<String>> links;
+    private List<String> links;
 }

@@ -15,6 +15,7 @@ import netlab.processing.shortestPaths.YensService;
 import netlab.processing.tabu.TabuSearchService;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
+import netlab.submission.simulate.Network;
 import netlab.topology.elements.Topology;
 import netlab.topology.services.TopologyService;
 import netlab.visualization.PrintingService;
@@ -80,7 +81,16 @@ public class ProcessingService {
     }
 
     public Request processRequest(Request request) {
-        Topology topo = topoService.getTopologyById(request.getTopologyId());
+        return processRequest(request, null);
+    }
+
+    public Request processRequest(Request request, Network network){
+        Topology topo;
+        if(request.getTopologyId().equals("generated") && network != null){
+            topo = topoService.convert(network);
+        } else{
+            topo = topoService.getTopologyById(request.getTopologyId());
+        }
         Details details = request.getDetails();
         switch(request.getAlgorithm()){
             case ILP:

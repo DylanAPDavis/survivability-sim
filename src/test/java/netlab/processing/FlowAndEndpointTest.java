@@ -680,7 +680,7 @@ public class FlowAndEndpointTest {
                 .pairMaxNumConnectionsMap(pairMaxNumConnections)
                 .numConnections(numConnections)
                 .build();
-        Request rs = generationService.generateFromRequestParams(params);
+        Request rs = generationService.generateFromRequestParams(params, null);
         processingService.processRequest(rs);
         return rs;
     }
@@ -702,7 +702,7 @@ public class FlowAndEndpointTest {
                 .destMaxNumConnectionsMap(dstMaxNumConnections)
                 .numConnections(numConnections)
                 .build();
-        Request rs = generationService.generateFromRequestParams(params);
+        Request rs = generationService.generateFromRequestParams(params, null);
         processingService.processRequest(rs);
         return rs;
     }

@@ -28,7 +28,7 @@ public class SimulateService {
         assignDefaults(simRequest);
         RequestParameters requestParameters = makeRequestParameters(simRequest);
 
-        return generationService.generateFromRequestParams(requestParameters);
+        return generationService.generateFromRequestParams(requestParameters, simRequest.getNetwork());
     }
 
     private void assignDefaults(SimRequest simRequest) {
@@ -74,8 +74,32 @@ public class SimulateService {
             numConnections += neededD;
             srcConnectionsMap.putIfAbsent(src, 0);
             srcConnectionsMap.put(src, srcConnectionsMap.get(src) + neededD);
-            for(String dst : dsts){
+            srcDestsMap.putIfAbsent(src, new HashSet<>());
+            srcDestsMap.get(src).addAll(destinations);
+            srcNeededDMap.putIfAbsent(src, 0);
+            srcNeededDMap.put(src, srcNeededDMap.get(src) + neededD);
+        }
 
+        Integer maxNeededD = 0;
+        for(String src : srcDestsMap.keySet()){
+            Set<String> srcDests = srcDestsMap.get(src);
+            Integer neededD = srcNeededDMap.get(src);
+            if(neededD > maxNeededD){
+                maxNeededD = neededD;
+            }
+            int min = neededD == srcDests.size() ? 1 : 0;
+            for(String dest : destinations){
+                List<String> pair = Arrays.asList(src, dest);
+                // If this dest has been specified for this src, let it establish connections
+                if(srcDests.contains(dest)){
+                    pairMinConnectionsMap.put(pair, min);
+                    pairMaxConnectionsMap.put(pair, Integer.MAX_VALUE);
+                }
+                // Otherwise, don't let src connect to this dest
+                else{
+                    pairMinConnectionsMap.put(pair, 0);
+                    pairMaxConnectionsMap.put(pair, 0);
+                }
             }
         }
 
@@ -94,16 +118,16 @@ public class SimulateService {
                 .failureProbabilityMap(failureProbabiltyMap)
                 .numFailureEvents(survivability.getNumFailureEvents())
                 .numConnections(numConnections)
-                /*.pairNumConnectionsMap()
-                .sourceNumConnectionsMap()
-                .destNumConnectionsMap()
-                .useMinS()
-                .useMaxS()
-                .useMinD()
-                .useMaxD()
+                .pairMinNumConnectionsMap(pairMinConnectionsMap)
+                .pairMaxNumConnectionsMap(pairMaxConnectionsMap)
+                .sourceNumConnectionsMap(srcConnectionsMap)
+                .useMinS(sources.size())
+                .useMaxS(sources.size())
+                .useMinD(Math.min(maxNeededD, destinations.size()))
+                .useMaxD(destinations.size())
                 .trafficCombinationType("none")
                 .ignoreFailures(false)
-                .numThreads(8)*/
+                .numThreads(8)
                 .build();
     }
     /*

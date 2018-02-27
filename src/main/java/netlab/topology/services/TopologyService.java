@@ -3,6 +3,7 @@ package netlab.topology.services;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.shortestPaths.MinimumCostPathService;
+import netlab.submission.simulate.Network;
 import netlab.topology.elements.*;
 import netlab.topology.elements.Node;
 import netlab.topology.elements.Path;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.awt.*;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -277,4 +279,16 @@ public class TopologyService {
         return metrics;
     }
 
+    public Topology convert(Network network) {
+
+        List<String> nodeStrings = network.getNodes();
+        List<String> linkStrings = network.getLinks();
+
+        Set<Node> nodes = new HashSet<>();
+        Set<Link> links = new HashSet<>();
+
+        //TODO: Convert!
+
+        return new Topology("generated", nodes, links);
+    }
 }
