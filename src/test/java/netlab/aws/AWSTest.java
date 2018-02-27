@@ -4,15 +4,18 @@ package netlab.aws;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import netlab.TestConfiguration;
 import netlab.analysis.analyzed.AggregationParameters;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.analyzed.FailureDescription;
 import netlab.analysis.analyzed.RoutingDescription;
 import netlab.analysis.controller.AnalysisController;
+import netlab.analysis.services.AnalysisService;
 import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
 import netlab.storage.controller.StorageController;
 import netlab.storage.services.StorageService;
 import netlab.submission.controller.SubmissionController;
 import netlab.submission.enums.*;
+import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.topology.elements.Topology;
 import netlab.topology.services.TopologyService;
@@ -52,6 +55,9 @@ public class AWSTest {
     private AnalysisController analysisController;
 
     @Autowired
+    private AnalysisService analysisService;
+
+    @Autowired
     private TopologyService topologyService;
 
     //@Test
@@ -74,9 +80,11 @@ public class AWSTest {
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
         String algorithm = "ilp";
+        boolean deleteRecords = false;
+        boolean deleteAnalysis = true;
         for(Long seed : seeds) {
             long startTime = System.nanoTime();
-            boolean success = storageController.deleteRecordsAndRequests(seed, algorithm);
+            boolean success = storageController.deleteRecordsAndRequests(seed, algorithm, deleteRecords, deleteAnalysis);
             assert (success);
             long endTime = System.nanoTime();
             double duration = (endTime - startTime)/1e9;
@@ -150,9 +158,12 @@ public class AWSTest {
     //@Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            File f = new File("test4.txt");
-            f = s3Interface.downloadFromAnalyzed(f, "test.txt");
-            assert(f != null);
+            String id = "1_nsfnet_anycast_ilp_1_2_1_1_1_1_both_alllinks_both_2_none_allow_allow_false_8";
+            Request r = storageController.getRequest(id, true);
+            Analysis a = storageController.getAnalysis(id, true);
+            Analysis analysis = analysisService.analyzeRequest(r);
+            System.out.println(r);
+            System.out.println(a);
         }
     }
 }

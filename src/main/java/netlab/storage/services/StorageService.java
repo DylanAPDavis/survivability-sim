@@ -130,16 +130,23 @@ public class StorageService {
         return sets;
     }
 
-    public Boolean deleteRequests(Long seed, String algorithm){
+    public Boolean deleteRequests(Long seed, String algorithm, boolean deleteRecords, boolean deleteAnalysis){
         List<SimulationParameters> matchingParams = dynamoInterface.queryForSeed(seed);
         //List<String> requestSetIds = matchingParams.stream().map(SimulationParameters::getRequestId).collect(Collectors.toList());
         //Boolean deleteRequests = s3Interface.deleteFromBucket(requestSetIds, "raw") && s3Interface.deleteFromBucket(requestSetIds, "analyzed");
-        Boolean deleteRecords = false;
+
         List<SimulationParameters> paramsToDelete = matchingParams.stream()
                 .filter(p -> p.getAlgorithm().toLowerCase().equals(algorithm.toLowerCase()))
                 .collect(Collectors.toList());
-        deleteRecords = dynamoInterface.deleteRecords(paramsToDelete);
-        return deleteRecords;
+        boolean success = true;
+        if(deleteRecords) {
+            success =  dynamoInterface.deleteRecords(paramsToDelete);
+        }
+        if(deleteAnalysis){
+            List<String> requestSetIds = paramsToDelete.stream().map(SimulationParameters::getRequestId).collect(Collectors.toList());
+            success = s3Interface.deleteFromBucket(requestSetIds, "analyzed");
+        }
+        return success;
     }
 
     // Private subfunctions

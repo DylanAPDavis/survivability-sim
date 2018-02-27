@@ -101,29 +101,67 @@ public class AnalysisController {
     @RequestMapping(value = "/analyze/aggregate_params", method = RequestMethod.POST)
     @ResponseBody
     public String aggregateWithParams(AggregationParameters agParams){
-        Map<String, List<Analysis>> analysisMap = new HashMap<>();
         long startTime = System.nanoTime();
         ExecutorService executor = Executors.newFixedThreadPool(5);
-        List<Future> futures = new ArrayList<>();
-        for(Long seed : agParams.getSeeds()){
-            Future f = executor.submit(getAnalysis(seed, analysisMap));
-            futures.add(f);
-        }
-        futures.forEach(f -> {
-            try {
-                f.get();
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        });
+        Map<String, List<Analysis>> analysisMap = buildAnalysisMap(agParams.getSeeds(), executor);
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
         log.info("Analysis gathering took: " + duration + " seconds");
+        if(analysisMap == null || analysisMap.isEmpty()){
+            log.info("Analysis gathering failed! Aborting...");
+            return "Failure!";
+        }
 
         // We now has a map of matching analyses, each list should be an analysis per string
         // Use this to get an aggregate analysis per hash
         startTime = System.nanoTime();
+        Map<String, AggregateAnalysis> aggregateAnalysisMap = buildAggregateAnalysisMap(analysisMap, executor);
+        endTime = System.nanoTime();
+        duration = (endTime - startTime)/1e9;
+        log.info("Aggregation took: " + duration + " seconds");
+        if(aggregateAnalysisMap == null){
+            log.info("Aggregation Failed!");
+            return "Failure!";
+        }
+        return aggregationAnalysisService.createAggregationOutput(agParams, aggregateAnalysisMap);
+    }
+
+    private Map<String, List<Analysis>> buildAnalysisMap(List<Long> seeds, ExecutorService executor){
+        List<Callable<Map<String, List<Analysis>>>> analysisCallables = new ArrayList<>();
+        for(Long seed : seeds){
+            Callable<Map<String, List<Analysis>>> c = getAnalysis(seed);
+            analysisCallables.add(c);
+        }
+        Set<Map<String, List<Analysis>>> analysisMaps = null;
+        try {
+            analysisMaps = executor.invokeAll(analysisCallables)
+                    .stream()
+                    .map(c -> {
+                        try {
+                            return c.get();
+                        } catch (Exception e) {
+                            throw new IllegalStateException(e);
+                        }
+                    })
+                    .collect(Collectors.toSet());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if(analysisMaps == null){
+            return null;
+        }
+        Map<String, List<Analysis>> totalMap = new HashMap<>();
+        for(Map<String, List<Analysis>> analysisMap : analysisMaps){
+            for(String hash : analysisMap.keySet()){
+                totalMap.putIfAbsent(hash, new ArrayList<>());
+                totalMap.get(hash).addAll(analysisMap.get(hash));
+            }
+        }
+        return totalMap;
+    }
+
+    private Map<String, AggregateAnalysis> buildAggregateAnalysisMap(Map<String, List<Analysis>> analysisMap,
+                                                                     ExecutorService executor){
         List<Callable<AggregateAnalysis>> aggregateCallables = new ArrayList<>();
         for(String hash : analysisMap.keySet()){
             Callable<AggregateAnalysis> c= aggregate(hash, analysisMap);
@@ -145,14 +183,7 @@ public class AnalysisController {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        endTime = System.nanoTime();
-        duration = (endTime - startTime)/1e9;
-        log.info("Aggregation took: " + duration + " seconds");
-        if(aggregateAnalysisMap == null){
-            log.info("Aggregation Failed!");
-            return "Failure!";
-        }
-        return aggregationAnalysisService.createAggregationOutput(agParams, aggregateAnalysisMap);
+        return aggregateAnalysisMap;
     }
 
     private Callable<AggregateAnalysis> aggregate(String hash, Map<String, List<Analysis>> analysisMap){
@@ -162,8 +193,9 @@ public class AnalysisController {
         };
     }
 
-    private synchronized Runnable getAnalysis(Long seed, Map<String, List<Analysis>> analysisMap){
+    private Callable<Map<String, List<Analysis>>> getAnalysis(Long seed){
         return () -> {
+            Map<String, List<Analysis>> analysisMap = new HashMap<>();
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
             for(SimulationParameters params : seedParams){
                 String id = params.getRequestId();
@@ -185,6 +217,7 @@ public class AnalysisController {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            return analysisMap;
         };
     }
 

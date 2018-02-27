@@ -342,6 +342,7 @@ public class AmplRoutingModelTest {
                 .numSources(1)
                 .numDestinations(2)
                 .failureScenario("alllinks")
+                .trafficCombinationType("both")
                 .numFailureEvents(2)
                 .useAws(false)
                 .build();
