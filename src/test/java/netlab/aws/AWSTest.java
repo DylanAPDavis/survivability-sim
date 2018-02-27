@@ -73,9 +73,10 @@ public class AWSTest {
     //@Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
+        String algorithm = "ilp";
         for(Long seed : seeds) {
             long startTime = System.nanoTime();
-            boolean success = storageController.deleteRecordsAndRequests(seed);
+            boolean success = storageController.deleteRecordsAndRequests(seed, algorithm);
             assert (success);
             long endTime = System.nanoTime();
             double duration = (endTime - startTime)/1e9;

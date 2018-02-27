@@ -60,8 +60,8 @@ public class StorageController {
 
     @RequestMapping(value="/storage/delete_seed", method = RequestMethod.POST)
     @ResponseBody
-    public Boolean deleteRecordsAndRequests(Long seed){
-        return storageService.deleteRequests(seed);
+    public Boolean deleteRecordsAndRequests(Long seed, String algorithm){
+        return storageService.deleteRequests(seed, algorithm);
     }
 
     @RequestMapping(value="storage/get_seed", method = RequestMethod.GET)
