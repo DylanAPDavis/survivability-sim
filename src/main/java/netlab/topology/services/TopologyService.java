@@ -288,6 +288,27 @@ public class TopologyService {
         Set<Link> links = new HashSet<>();
 
         //TODO: Convert!
+        double count = 0.0;
+        Map<String, Node> nodeIdMap = new HashMap<>();
+        for(String nodeString : nodeStrings){
+            Node newNode = new Node(nodeString, count, count);
+            nodes.add(newNode);
+            nodeIdMap.put(nodeString, newNode);
+            count += 1.0;
+        }
+
+        for(String linkString : linkStrings){
+            String[] linkComponents = linkString.split("-");
+            if(linkComponents.length != 2){
+                continue;
+            }
+            String origin = linkComponents[0];
+            String target = linkComponents[1];
+            Link newLink = new Link(nodeIdMap.get(origin), nodeIdMap.get(target));
+            Link revLink = newLink.reverse();
+            links.add(newLink);
+            links.add(revLink);
+        }
 
         return new Topology("generated", nodes, links);
     }

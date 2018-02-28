@@ -122,11 +122,10 @@ public class GenerationService {
         }
         Set<SourceDestPair> pairs = createPairs(sources, destinations);
 
-        Connections conns = makeConnectionsFromRequestParams(params, pairs, sources, destinations);
-        NumFailureEvents nfe = failureGenerationService.makeNumFailureEventsFromRequestParams(params, pairs, sources, destinations);
+        Connections conns = makeConnectionsFromRequestParams(params, pairs, sources, destinations, topo.getNodeIdMap());
+        NumFailureEvents nfe = failureGenerationService.makeNumFailureEventsFromRequestParams(params, pairs, sources, destinations, topo.getNodeIdMap());
         Failures fails = failureGenerationService.makeFailuresFromRequestParams(params, pairs, sources, destinations, nodeIdMap, linkIdMap,
-                nfe.getTotalNumFailureEvents(), nfe.getPairNumFailureEvents(), nfe.getSrcNumFailureEvents(),
-                nfe.getDstNumFailureEvents());
+                nfe.getTotalNumFailureEvents());
 
         return Details.builder()
                 .sources(sources)
@@ -142,7 +141,7 @@ public class GenerationService {
     }
 
     private Connections makeConnectionsFromRequestParams(RequestParameters params, Set<SourceDestPair> pairs,
-                                                         Set<Node> sources, Set<Node> destinations){
+                                                         Set<Node> sources, Set<Node> destinations, Map<String, Node> nodeIdMap){
 
         RoutingType routingType = enumGenerationService.getRoutingType(params.getRoutingType());
         /*(if(routingType != RoutingType.Default){
@@ -151,27 +150,27 @@ public class GenerationService {
         }*/
         // Map for pairs
         Map<SourceDestPair, Integer> pairMinConnectionsMap = params.getPairNumConnectionsMap().size() > 0 ?
-                selectionService.makePairIntegerMap(pairs, params.getPairNumConnectionsMap(), 0) :
-                selectionService.makePairIntegerMap(pairs, params.getPairMinNumConnectionsMap(), 0);
+                selectionService.makePairIntegerMap(pairs, params.getPairNumConnectionsMap(), 0, nodeIdMap) :
+                selectionService.makePairIntegerMap(pairs, params.getPairMinNumConnectionsMap(), 0, nodeIdMap);
         Map<SourceDestPair, Integer> pairMaxConnectionsMap = params.getPairNumConnectionsMap().size() > 0 ?
-                selectionService.makePairIntegerMap(pairs, params.getPairNumConnectionsMap(), params.getNumConnections()) :
-                selectionService.makePairIntegerMap(pairs, params.getPairMaxNumConnectionsMap(), params.getNumConnections());
+                selectionService.makePairIntegerMap(pairs, params.getPairNumConnectionsMap(), params.getNumConnections(), nodeIdMap) :
+                selectionService.makePairIntegerMap(pairs, params.getPairMaxNumConnectionsMap(), params.getNumConnections(), nodeIdMap);
 
         // Map for sources
         Map<Node, Integer> srcMinConnectionsMap = params.getSourceNumConnectionsMap().size() > 0 ?
-                selectionService.makeNodeIntegerMap(sources, params.getSourceNumConnectionsMap(), 0) :
-                selectionService.makeNodeIntegerMap(sources, params.getSourceMinNumConnectionsMap(), 0);
+                selectionService.makeNodeIntegerMap(sources, params.getSourceNumConnectionsMap(), 0, nodeIdMap) :
+                selectionService.makeNodeIntegerMap(sources, params.getSourceMinNumConnectionsMap(), 0, nodeIdMap);
         Map<Node, Integer> srcMaxConnectionsMap = params.getSourceNumConnectionsMap().size() > 0 ?
-                selectionService.makeNodeIntegerMap(sources, params.getSourceNumConnectionsMap(), params.getNumConnections()) :
-                selectionService.makeNodeIntegerMap(sources, params.getSourceMaxNumConnectionsMap(), params.getNumConnections());
+                selectionService.makeNodeIntegerMap(sources, params.getSourceNumConnectionsMap(), params.getNumConnections(), nodeIdMap) :
+                selectionService.makeNodeIntegerMap(sources, params.getSourceMaxNumConnectionsMap(), params.getNumConnections(), nodeIdMap);
 
         // Map for destinations
         Map<Node, Integer> dstMinConnectionsMap = params.getDestNumConnectionsMap().size() > 0 ?
-                selectionService.makeNodeIntegerMap(destinations, params.getDestNumConnectionsMap(), 0) :
-                selectionService.makeNodeIntegerMap(destinations, params.getDestMinNumConnectionsMap(), 0);
+                selectionService.makeNodeIntegerMap(destinations, params.getDestNumConnectionsMap(), 0, nodeIdMap) :
+                selectionService.makeNodeIntegerMap(destinations, params.getDestMinNumConnectionsMap(), 0, nodeIdMap);
         Map<Node, Integer> dstMaxConnectionsMap = params.getDestNumConnectionsMap().size() > 0 ?
-                selectionService.makeNodeIntegerMap(destinations, params.getDestNumConnectionsMap(), params.getNumConnections()) :
-                selectionService.makeNodeIntegerMap(destinations, params.getDestMaxNumConnectionsMap(), params.getNumConnections());
+                selectionService.makeNodeIntegerMap(destinations, params.getDestNumConnectionsMap(), params.getNumConnections(), nodeIdMap) :
+                selectionService.makeNodeIntegerMap(destinations, params.getDestMaxNumConnectionsMap(), params.getNumConnections(), nodeIdMap);
 
         return Connections.builder()
                 .numConnections(params.getNumConnections())

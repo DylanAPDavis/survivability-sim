@@ -125,7 +125,7 @@ public class SubmissionController {
 
 
         if(request != null){
-            request = processingService.processRequest(request);
+            request = processingService.processRequest(request, simRequest.getNetwork());
         }
         // Translate request into sim response
         return simulateService.formatResponse(request);

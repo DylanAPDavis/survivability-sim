@@ -106,22 +106,23 @@ public class SelectionService {
         return rng.nextInt((max - min) + 1) + min;
     }
 
-    public Map<Node, Integer> makeNodeIntegerMap(Set<Node> members, Map<String, Integer> memberConnMap, Integer defaultValue){
+    public Map<Node, Integer> makeNodeIntegerMap(Set<Node> members, Map<String, Integer> memberConnMap,
+                                                 Integer defaultValue, Map<String, Node> nodeIdMap){
         Map<Node, Integer> memberMap = members.stream().collect(Collectors.toMap(m -> m, m -> defaultValue));
         for(String nodeName : memberConnMap.keySet()){
-            Node node = topologyService.getNodeById(nodeName);
+            Node node = nodeIdMap.get(nodeName);
             memberMap.put(node, memberConnMap.get(nodeName));
         }
         return memberMap;
     }
 
     public Map<SourceDestPair, Integer> makePairIntegerMap(Set<SourceDestPair> pairs, Map<List<String>, Integer> pairConnMap,
-                                                           Integer defaultValue){
+                                                           Integer defaultValue, Map<String, Node> nodeIdMap){
         Map<SourceDestPair, Integer> pairMap = pairs.stream().collect(Collectors.toMap(p -> p, p -> defaultValue));
         for(List<String> pairList : pairConnMap.keySet()){
             SourceDestPair pair = SourceDestPair.builder()
-                    .src(topologyService.getNodeById(pairList.get(0)))
-                    .dst(topologyService.getNodeById(pairList.get(1)))
+                    .src(nodeIdMap.get(pairList.get(0)))
+                    .dst(nodeIdMap.get(pairList.get(1)))
                     .build();
             pairMap.put(pair, pairConnMap.get(pairList));
         }

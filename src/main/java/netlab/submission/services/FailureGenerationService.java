@@ -43,11 +43,10 @@ public class FailureGenerationService {
     public Failures makeFailuresFromRequestParams(RequestParameters params, Set<SourceDestPair> pairs,
                                                   Set<Node> sources, Set<Node> destinations,
                                                   Map<String, Node> nodeIdMap, Map<String, Link> linkIdMap,
-                                                  Integer numFailsAllowed, Map<SourceDestPair, Integer> pairNumFailsAllowed,
-                                                  Map<Node, Integer> srcNumFailsAllowed, Map<Node, Integer> dstNumFailsAllowed){
+                                                  Integer numFailsAllowed){
 
         // Failures for the whole request
-        Set<Failure> failures = makeFailureSet(params.getFailures(), params.getFailureProbabilityMap(), nodeIdMap, linkIdMap);
+        Set<Failure> failures = makeFailureSet(params.getFailures(), params.getFailureProbabilityMap(), params.getFailureScenario(), nodeIdMap, linkIdMap);
         List<List<Failure>> failureGroups = generateFailureGroups(numFailsAllowed, failures);
 
         // Failure for pairs
@@ -110,31 +109,59 @@ public class FailureGenerationService {
     }
 
 
-    private Set<Failure> makeFailureSet(Set<String> failureStrings, Map<String, Double> probabilityMap,  Map<String, Node> nodeIdMap,
-                                        Map<String, Link> linkIdMap){
+    private Set<Failure> makeFailureSet(Set<String> failureStrings, Map<String, Double> probabilityMap, String scenario,
+                                        Map<String, Node> nodeIdMap, Map<String, Link> linkIdMap){
         Set<Failure> failures = new HashSet<>();
-        for(String failString : failureStrings){
-            Double prob = probabilityMap.getOrDefault(failString, 1.0);
-            if(nodeIdMap.containsKey(failString)){
-                failures.add(new Failure(nodeIdMap.get(failString), null, prob));
+        FailureScenario failureScenario = enumGenerationService.getFailureScenario(scenario);
+        if(failureScenario.equals(FailureScenario.Default)) {
+            for (String failString : failureStrings) {
+                Double prob = probabilityMap.getOrDefault(failString, 1.0);
+                if (nodeIdMap.containsKey(failString)) {
+                    failures.add(new Failure(nodeIdMap.get(failString), null, prob));
+                } else if (linkIdMap.containsKey(failString)) {
+                    failures.add(new Failure(null, linkIdMap.get(failString), prob));
+                }
             }
-            else if(linkIdMap.containsKey(failString)){
-                failures.add(new Failure(null, linkIdMap.get(failString), prob));
+            return failures;
+        } else{
+            List<Node> chosenNodes = new ArrayList<>();
+            List<Link> chosenLinks = new ArrayList<>();
+            switch(failureScenario){
+                case AllLinks:
+                    chosenLinks = new ArrayList<>(linkIdMap.values());
+                    break;
+                case AllNodes:
+                    chosenNodes = new ArrayList<>(nodeIdMap.values());
+                    break;
+                case Network:
+                    chosenLinks = new ArrayList<>(linkIdMap.values());
+                    chosenNodes = new ArrayList<>(nodeIdMap.values());
+                    break;
             }
+            int total = chosenLinks.size() + chosenNodes.size();
+            List<Double> probabilities = new ArrayList<>();
+            for(int i = 0; i < total; i++){
+                probabilities.add(1.0);
+            }
+
+            return generateFailuresFromNodeLinks(chosenNodes, chosenLinks, probabilities);
         }
-        return failures;
     }
 
     public NumFailureEvents makeNumFailureEventsFromRequestParams(RequestParameters params, Set<SourceDestPair> pairs,
-                                                                  Set<Node> sources, Set<Node> destinations) {
+                                                                  Set<Node> sources, Set<Node> destinations,
+                                                                  Map<String, Node> nodeIdMap) {
         // Map for pairs
-        Map<SourceDestPair, Integer> pairNumFailsMap = selectionService.makePairIntegerMap(pairs, new HashMap<>(), 0);
+        Map<SourceDestPair, Integer> pairNumFailsMap = selectionService.makePairIntegerMap(pairs, new HashMap<>(), 0,
+                nodeIdMap);
 
         // Map for sources
-        Map<Node, Integer> srcNumFailsMap = selectionService.makeNodeIntegerMap(sources, new HashMap<>(), 0);
+        Map<Node, Integer> srcNumFailsMap = selectionService.makeNodeIntegerMap(sources, new HashMap<>(), 0,
+                nodeIdMap);
 
         // Map for destinations
-        Map<Node, Integer> dstNumFailsMap = selectionService.makeNodeIntegerMap(destinations, new HashMap<>(), 0);
+        Map<Node, Integer> dstNumFailsMap = selectionService.makeNodeIntegerMap(destinations, new HashMap<>(), 0,
+                nodeIdMap);
 
         return NumFailureEvents.builder()
                 .totalNumFailureEvents(params.getNumFailureEvents())

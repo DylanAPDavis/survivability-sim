@@ -139,14 +139,14 @@ public class SimulateService {
      */
 
     public SimResponse formatResponse(Request request) {
-        String status = "success";
+        Boolean status = true;
         List<Connection> connectionList = new ArrayList<>();
         if(request == null){
-            status = "failed";
+            status = false;
         } else{
             Map<SourceDestPair, Map<String, Path>> pathMap = request.getDetails().getChosenPaths();
             if(pathMap.values().stream().allMatch(map -> map.size() == 0)){
-                status = "failed";
+                status = false;
             } else{
                 connectionList = convertPathMap(pathMap);
             }
@@ -154,7 +154,7 @@ public class SimulateService {
 
         return SimResponse.builder()
                 .connections(connectionList)
-                .status(status)
+                .succeeded(status)
                 .build();
     }
 
