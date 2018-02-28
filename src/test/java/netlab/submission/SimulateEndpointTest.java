@@ -102,6 +102,54 @@ public class SimulateEndpointTest {
         test(simRequest, true);
     }
 
+    @Test
+    public void manyToManyAllLinksFailNfe2(){
+        List<RoutingParam> routingParams = new ArrayList<>();
+        RoutingParam unicast1 = RoutingParam.builder()
+                .source("1")
+                .destinations(Arrays.asList("4"))
+                .build();
+        RoutingParam unicast2 = RoutingParam.builder()
+                .source("2")
+                .destinations(Arrays.asList("3"))
+                .build();
+        routingParams.add(unicast1);
+        routingParams.add(unicast2);
+
+        SimRequest simRequest = SimRequest.builder()
+                .routingParams(routingParams)
+                .network(buildOnlyForwardLinkNetwork())
+                .survivability(buildAllLinksFailuresNfe2())
+                .build();
+
+        test(simRequest, true);
+    }
+
+    @Test
+    public void manyToManyAllNodesFailNfe1(){
+        //TODO: Double check that connecting to all dests is actually desired behavior
+        List<RoutingParam> routingParams = new ArrayList<>();
+        RoutingParam unicast1 = RoutingParam.builder()
+                .source("1")
+                .destinations(Arrays.asList("4", "3"))
+                .neededD(1)
+                .build();
+        RoutingParam unicast2 = RoutingParam.builder()
+                .source("2")
+                .destinations(Arrays.asList("3", "6"))
+                .build();
+        routingParams.add(unicast1);
+        routingParams.add(unicast2);
+
+        SimRequest simRequest = SimRequest.builder()
+                .routingParams(routingParams)
+                .network(buildOnlyForwardLinkNetwork())
+                .survivability(buildAllLinksFailuresNfe1())
+                .build();
+
+        test(simRequest, true);
+    }
+
 
     private void test(SimRequest simRequest, Boolean succeed){
         SimResponse response = submissionController.simulateRequest(simRequest);

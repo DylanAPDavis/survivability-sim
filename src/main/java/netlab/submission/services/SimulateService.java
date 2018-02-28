@@ -66,16 +66,16 @@ public class SimulateService {
         int numConnections = 0;
         for(RoutingParam rp : routingParams){
             String src = rp.getSource();
-            List<String> dsts = rp.getDestinations();
+            List<String> dests = rp.getDestinations();
             Integer neededD = rp.getNeededD();
 
             sources.add(src);
-            destinations.addAll(dsts);
+            destinations.addAll(dests);
             numConnections += neededD;
             srcConnectionsMap.putIfAbsent(src, 0);
             srcConnectionsMap.put(src, srcConnectionsMap.get(src) + neededD);
             srcDestsMap.putIfAbsent(src, new HashSet<>());
-            srcDestsMap.get(src).addAll(destinations);
+            srcDestsMap.get(src).addAll(dests);
             srcNeededDMap.putIfAbsent(src, 0);
             srcNeededDMap.put(src, srcNeededDMap.get(src) + neededD);
         }

@@ -110,6 +110,7 @@ public class FlexBhandariService {
             int minForPair = pairMinConnMap.get(pair);
             int maxForPair = pairMaxConnMap.get(pair);
             if(maxForPair == 0){
+                pathsPerPair.put(pair, new ArrayList<>());
                 continue;
             }
             //int numC = Math.max(1, Math.max(minForSrc, Math.max(minForDst, minForPair)));
