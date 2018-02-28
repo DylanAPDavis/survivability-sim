@@ -13,10 +13,12 @@ import netlab.submission.simulate.SimResponse;
 import netlab.visualization.PrintingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,7 +49,7 @@ public class SubmissionController {
 
     @RequestMapping(value = "/submit_sim", method = RequestMethod.POST)
     @ResponseBody
-    public String submitRequest(SimulationParameters simulationParameters){
+    public String submitRequest(@RequestBody SimulationParameters simulationParameters){
         Request request = generationService.generateFromSimParams(simulationParameters);
         log.info("Generated request set: " + request.getId());
         // Find solutions as long as request has successfully been generated
@@ -94,7 +96,7 @@ public class SubmissionController {
 
     @RequestMapping(value = "/submit_rerun", method = RequestMethod.POST)
     @ResponseBody
-    public List<String> rerunRequests(List<Long> seeds){
+    public List<String> rerunRequests(@RequestBody List<Long> seeds){
         List<String> ids = new ArrayList<>();
         for(Long seed : seeds) {
             List<SimulationParameters> matchingParams = storageService.queryForSeed(seed).parallelStream().filter(p -> !p.getCompleted()).collect(Collectors.toList());
@@ -106,7 +108,7 @@ public class SubmissionController {
 
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
     @ResponseBody
-    public String submitRequest(RequestParameters requestParameters){
+    public String submitRequest(@RequestBody RequestParameters requestParameters){
         Request request = generationService.generateFromRequestParams(requestParameters, null);
 
         if(request != null) {
@@ -120,7 +122,9 @@ public class SubmissionController {
 
     @RequestMapping(value = "/simulate", method = RequestMethod.POST)
     @ResponseBody
-    public SimResponse simulateRequest(SimRequest simRequest){
+    @Valid
+    public SimResponse simulateRequest(@RequestBody SimRequest simRequest){
+
         Request request = simulateService.generateRequest(simRequest);
 
 

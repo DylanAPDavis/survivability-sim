@@ -16,4 +16,8 @@ public class RoutingParam implements Serializable {
     private List<String> destinations;
 
     private Integer neededD;
+
+    public String toString(){
+        return "Src: " + source + ", Dests: " + destinations + ", neededD: " + neededD;
+    }
 }

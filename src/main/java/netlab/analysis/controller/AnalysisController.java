@@ -13,6 +13,7 @@ import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -45,7 +46,7 @@ public class AnalysisController {
 
     @RequestMapping(value = "/analyze", method = RequestMethod.POST)
     @ResponseBody
-    public Analysis analyzeRequest(AnalysisParameters params){
+    public Analysis analyzeRequest(@RequestBody AnalysisParameters params){
         Request request = storageService.retrieveRequestSet(params.getRequestId(), params.getUseAws());
         log.info("Retrieved request for analysis: " + params.getRequestId());
         if(request == null){
@@ -73,7 +74,7 @@ public class AnalysisController {
 
     @RequestMapping(value="/analyze_seed", method = RequestMethod.POST)
     @ResponseBody
-    public String analyzeSeeds(List<Long> seeds){
+    public String analyzeSeeds(@RequestBody List<Long> seeds){
         for(Long seed : seeds) {
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
             seedParams.stream()
@@ -100,7 +101,7 @@ public class AnalysisController {
 
     @RequestMapping(value = "/analyze/aggregate_params", method = RequestMethod.POST)
     @ResponseBody
-    public String aggregateWithParams(AggregationParameters agParams){
+    public String aggregateWithParams(@RequestBody AggregationParameters agParams){
         long startTime = System.nanoTime();
         ExecutorService executor = Executors.newFixedThreadPool(5);
         Map<String, List<Analysis>> analysisMap = buildAnalysisMap(agParams.getSeeds(), executor);
@@ -224,7 +225,7 @@ public class AnalysisController {
 
     @RequestMapping(value = "/analyze/aggregate_seeds", method = RequestMethod.POST)
     @ResponseBody
-    public String aggregateSeeds(List<Long> seeds){
+    public String aggregateSeeds(@RequestBody List<Long> seeds){
         AggregationParameters agParams = aggregationAnalysisService.makeDefaultParameters(seeds);
         return aggregateWithParams(agParams);
     }

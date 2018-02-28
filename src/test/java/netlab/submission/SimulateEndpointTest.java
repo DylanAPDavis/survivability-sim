@@ -127,7 +127,6 @@ public class SimulateEndpointTest {
 
     @Test
     public void manyToManyAllNodesFailNfe1(){
-        //TODO: Double check that connecting to all dests is actually desired behavior
         List<RoutingParam> routingParams = new ArrayList<>();
         RoutingParam unicast1 = RoutingParam.builder()
                 .source("1")

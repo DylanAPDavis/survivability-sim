@@ -32,6 +32,7 @@ public class SimulateService {
     }
 
     private void assignDefaults(SimRequest simRequest) {
+        System.out.println(simRequest);
         List<RoutingParam> routingParams = simRequest.getRoutingParams();
         for(RoutingParam rp : routingParams){
             if(rp.getNeededD() == null){

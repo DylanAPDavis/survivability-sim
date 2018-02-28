@@ -52,4 +52,4 @@ if __name__ == "__main__":
         sys.exit(-1)
     loop_val = sys.argv[1] if len(sys.argv) > 1 else 1
     port_val = sys.argv[2] if len(sys.argv) == 3 else "9867"
-    launch_simulator(loop_val, {}, {}, port_val, "true")
+    launch_simulator(loop_val, {}, {}, port_val, "true", "false")
