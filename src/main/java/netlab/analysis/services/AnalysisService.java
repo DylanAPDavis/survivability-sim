@@ -83,6 +83,7 @@ public class AnalysisService {
         Map<Link, Set<Node>> sourceLinkMap = new HashMap<>();
         Map<Link, Set<Node>> destLinkMap = new HashMap<>();
 
+        Set<Node> connectedDests = new HashSet<>();
         for(Node src : primaryPathPerSrc.keySet()){
             List<Path> allPaths = pathsPerSrc.get(src).stream()
                     .sorted(Comparator.comparing(Path::getTotalWeight))
@@ -93,6 +94,7 @@ public class AnalysisService {
                  Path path = allPaths.get(i);
                  List<Link> pathLinks = path.getLinks();
                  Node dst = pathLinks.get(pathLinks.size()-1).getTarget();
+                 connectedDests.add(dst);
                  for(Link link : pathLinks){
                      sourceLinkMap.putIfAbsent(link, new HashSet<>());
                      sourceLinkMap.get(link).add(src);
@@ -159,17 +161,17 @@ public class AnalysisService {
 
         }
 
-        Double averagePrimaryHops = totalPrimaryHops / numSrcs;
-        Double averagePrimaryCost = totalPrimaryCost / numSrcs;
-        Double averagePrimaryRisk = totalPrimaryRisk / numSrcs;
+        Double averagePrimaryHops = numSrcs > 0 ? totalPrimaryHops / numSrcs : 0.0;
+        Double averagePrimaryCost = numSrcs > 0 ? totalPrimaryCost / numSrcs : 0.0;
+        Double averagePrimaryRisk = numSrcs > 0 ? totalPrimaryRisk / numSrcs : 0.0;
         Double averageBackupHops = totalBackupPaths > 0 ? totalBackupHops / totalBackupPaths : 0.0;
         Double averageBackupCost = totalBackupPaths > 0 ? totalBackupCost / totalBackupPaths : 0.0;
         Double averageBackupRisk = totalBackupPaths > 0 ? totalBackupRisk / totalBackupPaths : 0.0;
-        Double averageBackupPaths = totalBackupPaths / numSrcs;
+        Double averageBackupPaths = numSrcs > 0 ? totalBackupPaths / numSrcs : 0.0;
         Double averagePrimaryHopsPostFailure = connectionsIntact > 0 ? totalPrimaryHopsPostFailure / connectionsIntact : 0.0;
         Double averagePrimaryCostPostFailure = connectionsIntact > 0 ? totalPrimaryCostPostFailure / connectionsIntact : 0.0;
-        Double averageBackupPathsIntact = backupPathsIntact / numSrcs;
-        Double averageBackupPathsSevered = backupPathsSevered / numSrcs;
+        Double averageBackupPathsIntact = numSrcs > 0 ? backupPathsIntact / numSrcs : 0.0;
+        Double averageBackupPathsSevered = numSrcs > 0 ? backupPathsSevered / numSrcs : 0.0;
 
 
         // Content analysis
@@ -204,6 +206,7 @@ public class AnalysisService {
                 .primaryPathsIntact(primaryPathsIntact)
                 .pathsIntact(pathsIntact)
                 .pathsSevered(pathsSevered)
+                .destsConnected(1.0 * connectedDests.size())
                 .averagePrimaryHops(averagePrimaryHops)
                 .averagePrimaryCost(averagePrimaryCost)
                 .averagePrimaryRisk(averagePrimaryRisk)

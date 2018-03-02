@@ -43,6 +43,7 @@ public class AggregateAnalysis implements Serializable {
     private Double pathsIntact;
     private Double primaryPathsSevered;
     private Double primaryPathsIntact;
+    private Double destsConnected;
 
 
     private Double averagePrimaryHops;

@@ -135,9 +135,12 @@ public class StorageService {
         //List<String> requestSetIds = matchingParams.stream().map(SimulationParameters::getRequestId).collect(Collectors.toList());
         //Boolean deleteRequests = s3Interface.deleteFromBucket(requestSetIds, "raw") && s3Interface.deleteFromBucket(requestSetIds, "analyzed");
 
-        List<SimulationParameters> paramsToDelete = matchingParams.stream()
-                .filter(p -> p.getAlgorithm().toLowerCase().equals(algorithm.toLowerCase()))
-                .collect(Collectors.toList());
+        List<SimulationParameters> paramsToDelete = matchingParams;
+        if(algorithm != null) {
+            paramsToDelete = matchingParams.stream()
+                    .filter(p -> p.getAlgorithm().toLowerCase().equals(algorithm.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
         boolean success = true;
         if(deleteRecords) {
             success =  dynamoInterface.deleteRecords(paramsToDelete);

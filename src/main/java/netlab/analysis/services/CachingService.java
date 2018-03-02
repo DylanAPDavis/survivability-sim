@@ -50,6 +50,7 @@ public class CachingService {
                     cachingLocations = cacheLeaveCopyDown(primaryPathPerSrc);
             }
             // Add destination caches
+            // TODO: Rerun with the destinations added in as caching locations
             cachingLocations.addAll(destinations);
             cachingResult.setCachingCost(evaluateCost(cachingLocations));
             cachingResult.setCachingLocations(cachingLocations);
@@ -67,7 +68,8 @@ public class CachingService {
         Set<Path> allPaths = otherPathsMap.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         for(Node src : primaryPathMap.keySet()){
             Path primary = primaryPathMap.get(src);
-            List<Node> primaryNodes = primary.getNodes();
+            List<Node> primaryNodes = primary.getNodes().stream().collect(Collectors.toList());
+
             allPaths.remove(primary);
             Set<Node> nodesInOtherPaths = allPaths.stream().map(Path::getNodes).flatMap(Collection::stream).collect(Collectors.toSet());
             // Check to see if any nodes from all other paths are shared by the primary path
@@ -268,9 +270,10 @@ public class CachingService {
                 .collect(Collectors.toSet());
         Double averageHopAfter = calculateAverage(hopCountAfter, srcsThatReachContentAfter);
 
-        Double avgReachOnPrimary = 1.0 * reachOnPrimaryAfter.size() / pathsPerSrc.keySet().size();
-        Double avgReachOnBakcup = 1.0 * reachOnBackupAfter.size() / pathsPerSrc.keySet().size();
-        Double avgReachOnlyBakcup = 1.0 * onlyReachOnBackupAfter.size() / pathsPerSrc.keySet().size();
+        Double divisor = pathsPerSrc.keySet().size() > 0 ? pathsPerSrc.keySet().size() : 1.0;
+        Double avgReachOnPrimary = 1.0 * reachOnPrimaryAfter.size() / divisor;
+        Double avgReachOnBakcup = 1.0 * reachOnBackupAfter.size() / divisor;
+        Double avgReachOnlyBakcup = 1.0 * onlyReachOnBackupAfter.size() / divisor;
 
         cachingResult.setAvgHopCountBefore(averageHopBefore);
         cachingResult.setAvgHopCountAfter(averageHopAfter);

@@ -73,12 +73,12 @@ public class AWSTest {
         submissionController.rerunRequests(seeds);
     }
 
-    //@Test
+    @Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
-        String algorithm = "ilp";
-        boolean deleteRecords = false;
-        boolean deleteAnalysis = true;
+        String algorithm = null;
+        boolean deleteRecords = true;
+        boolean deleteAnalysis = false;
         for(Long seed : seeds) {
             long startTime = System.nanoTime();
             boolean success = storageController.deleteRecordsAndRequests(seed, algorithm, deleteRecords, deleteAnalysis);
@@ -155,7 +155,7 @@ public class AWSTest {
     @Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            String id = "1_nsfnet_anycast_ilp_1_2_1_1_1_1_both_alllinks_both_2_none_allow_allow_false_8";
+            String id = "10_tw_anycast_ilp_1_3_1_1_1_1_both_alllinks_both_1_none_allow_allow_false_8";
             Request r = storageController.getRequest(id, true);
             Analysis a = storageController.getAnalysis(id, true);
             Analysis analysis = analysisService.analyzeRequest(r);

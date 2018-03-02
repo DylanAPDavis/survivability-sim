@@ -39,7 +39,13 @@ public class BhandariService {
         // Get sorted pairs
         List<SourceDestPair> pairs = topologyService.sortPairsByPathCost(details.getPairs(), topo);
 
-        FailureClass failureClass = request.getFailureClass();
+        FailureClass failureClass;
+        Set<Failure> failures = request.getDetails().getFailures().getFailureSet();
+        if(failures.stream().anyMatch(f -> f.getNode() != null)){
+            failureClass = FailureClass.Both;
+        } else{
+            failureClass = FailureClass.Link;
+        }
         long startTime = System.nanoTime();
         if(request.getRoutingType().equals(RoutingType.Unicast)){
             SourceDestPair pair = pairs.iterator().next();

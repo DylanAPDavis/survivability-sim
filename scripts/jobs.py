@@ -1,7 +1,7 @@
 import job
 algorithm_dict = {
-    "unicast": ["ilp"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
-    "anycast": ["ilp"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
+    "unicast": ["flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
+    "anycast": ["flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
     "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
@@ -56,20 +56,20 @@ s_d_value_dict = {
     ],
 }
 traffic_combo_dict = {
-    "unicast": ["both"],  # ["none"],
-    "anycast": ["both"],  # ["none"],
-    "multicast": ["both"],  # ["none", "source", "dest", "both"],
-    "manycast": ["both"],  # ["none", "source", "dest", "both"],
-    "manytoone": ["both"],  # ["none", "source", "dest", "both"],
-    "manytomany": ["both"],  # ["none", "source", "dest", "both"],
-    "broadcast": ["both"],  # ["none", "source", "dest", "both"],
+    "unicast": ["none"],  # ["none"],
+    "anycast": ["none"],  # ["none"],
+    "multicast": ["none"],  # ["none", "source", "dest", "both"],
+    "manycast": ["none"],  # ["none", "source", "dest", "both"],
+    "manytoone": ["none"],  # ["none", "source", "dest", "both"],
+    "manytomany": ["none"],  # ["none", "source", "dest", "both"],
+    "broadcast": ["none"],  # ["none", "source", "dest", "both"],
 }
 
 # routing_types = ["unicast", "anycast", "manycast", "multicast", "manytoone", "manytomany", "broadcast"]
-routing_types = ["unicast","anycast"]
-failure_scenarios = ["default", "alllinks", "allnodes", "quake1", "quake2", "quake3"]
+routing_types = ["unicast", "anycast"]
+failure_scenarios = ["alllinks", "allnodes", "quake2"]
 # failure_scenarios = ["default", "alllinks", "allnodes", "quake1", "quake2", "quake3", "quake12", "quake13", "quake23", "quake123"]
-nfe_values = [0, 1, 2, 3, 9999]
+nfe_values = [1, 2]# [0, 1, 2, 3, 9999]
 topologies = ["nsfnet", "tw"]
 
 
@@ -90,8 +90,8 @@ def create_jobs(seed):
                         use_min_d = sd_value["use_min_d"]
                         use_max_d = sd_value["use_max_d"]
                         ignore_values = ["false"]
-                        if algorithm == "ilp":
-                            ignore_values.append("true")
+                        #if algorithm == "ilp":
+                        #    ignore_values.append("true")
                         for scenario in failure_scenarios:
                             for nfe in nfe_values:
                                 # Only use a nfe of 0 if you're doing default scenario

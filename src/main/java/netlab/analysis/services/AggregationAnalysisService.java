@@ -27,6 +27,7 @@ public class AggregationAnalysisService {
     private final String avgBackupCost = "avgBackupCost";
     private final String totalPaths = "totalPaths";
     private final String runningTime = "runningTime";
+    private final String destsConnected = "destsConnected";
     private final String primaryIntact = "primaryIntact";
     private final String connectionsIntact = "connectionsIntact";
     private final String postFailureCost = "postFailureCost";
@@ -46,14 +47,14 @@ public class AggregationAnalysisService {
         /*List<RoutingType> routingTypes = Arrays.asList(RoutingType.Unicast, RoutingType.Anycast, RoutingType.Manycast, RoutingType.Multicast,
                 RoutingType.ManyToOne, RoutingType.ManyToMany, RoutingType.Broadcast);*/
         List<RoutingType> routingTypes = Arrays.asList(RoutingType.Unicast, RoutingType.Anycast);
-        List<FailureScenario> failureScenarios = Arrays.asList(FailureScenario.Default, FailureScenario.AllLinks, FailureScenario.AllNodes,
-                FailureScenario.Quake_1, FailureScenario.Quake_2, FailureScenario.Quake_3);
-        List<Integer> nfeValues = Arrays.asList(0, 1, 2, 3, 9999);
+        List<FailureScenario> failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.AllNodes,
+                FailureScenario.Quake_2);
+        List<Integer> nfeValues = Arrays.asList(1, 2);
         Map<RoutingType, List<Algorithm>> algorithmMap = makeAlgorithmMap();
         Map<RoutingType, List<RoutingDescription>> routingDescriptionMap = makeRoutingDescriptionMap();
         Map<RoutingType, List<TrafficCombinationType>> trafficCombinationTypeMap = makeTrafficCombinationMap();
         Set<Algorithm> algorithmsThatCanIgnoreFailures = new HashSet<>();
-        algorithmsThatCanIgnoreFailures.add(Algorithm.ILP);
+        //algorithmsThatCanIgnoreFailures.add(Algorithm.ILP);
         /*
         # Only use a nfe of 0 if you're doing default scenario
         if nfe == 0 and scenario != "default":
@@ -154,7 +155,7 @@ public class AggregationAnalysisService {
         /*List<TrafficCombinationType> trafficList = Arrays.asList(TrafficCombinationType.None,
                 TrafficCombinationType.Source, TrafficCombinationType.Destination, TrafficCombinationType.Both);
                 */
-        List<TrafficCombinationType> trafficList = Collections.singletonList(TrafficCombinationType.Both);
+        List<TrafficCombinationType> trafficList = Collections.singletonList(TrafficCombinationType.None);
         trafficCombinationMap.put(RoutingType.Unicast, trafficList);
         trafficCombinationMap.put(RoutingType.Anycast, trafficList);
         trafficCombinationMap.put(RoutingType.Multicast, trafficList);
@@ -200,6 +201,7 @@ public class AggregationAnalysisService {
         Double sumPathsIntact = 0.0;
         Double sumPrimaryPathsSevered = 0.0;
         Double sumPrimaryPathsIntact = 0.0;
+        Double sumDestsConnected = 0.0;
 
         Double sumAveragePrimaryHops = 0.0;
         Double sumAveragePrimaryCost = 0.0;
@@ -246,6 +248,7 @@ public class AggregationAnalysisService {
                 sumPathsIntact += analysis.getPathsIntact();
                 sumPrimaryPathsSevered += analysis.getPrimaryPathsSevered();
                 sumPrimaryPathsIntact += analysis.getPrimaryPathsIntact();
+                sumDestsConnected += analysis.getDestsConnected();
 
                 sumAveragePrimaryCost += analysis.getAveragePrimaryCost();
                 sumAveragePrimaryHops += analysis.getAveragePrimaryHops();
@@ -298,6 +301,7 @@ public class AggregationAnalysisService {
                 .primaryPathsSevered(sumPrimaryPathsSevered / totalResultsDivisor)
                 .pathsSevered(sumPathsSevered / totalResultsDivisor)
                 .pathsIntact(sumPathsIntact / totalResultsDivisor)
+                .destsConnected(sumDestsConnected / totalResultsDivisor)
                 .averagePrimaryHops(sumAveragePrimaryHops / totalResultsDivisor)
                 .averagePrimaryCost(sumAveragePrimaryCost / totalResultsDivisor)
                 .averagePrimaryRisk(sumAveragePrimaryRisk / totalResultsDivisor)
@@ -428,7 +432,8 @@ public class AggregationAnalysisService {
         for(String topology : topologies) {
             for (FailureScenario failureScenario : failureScenarios) {
                 for (Integer nfe : nfeValues) {
-                    output.add(new String[]{});
+                    output.add(new String[]{"------"});
+                    output.add(new String[]{"------"});
                     String hash = hashingService.hash(topology, failureScenario.getCode(), nfe);
                     Map<Integer, List<AggregateAnalysis>> mapForTable = tableMap.get(hash);
                     for(int categoryNumber = 0; categoryNumber < metricCategories.size(); categoryNumber++) {
@@ -465,6 +470,7 @@ public class AggregationAnalysisService {
                                 }
                             }
                         }
+                        output.add(new String[]{});
                     }
                 }
             }
@@ -507,7 +513,7 @@ public class AggregationAnalysisService {
     }
 
     private String[] makeCachingHeader(List<Algorithm> algs, CachingType cachingType) {
-        String cache = "Anycast 1/3 Caching: " + cachingType;
+        String cache = "Caching: " + cachingType;
         List<String> temp = algs.stream().map(Algorithm::getCode).collect(Collectors.toList());
         temp.add(0, cache);
         return makeArrayFromList(temp);
@@ -566,6 +572,8 @@ public class AggregationAnalysisService {
                 return agAn.getTotalPaths();
             case avgBackupCost:
                 return agAn.getAverageBackupCost();
+            case destsConnected:
+                return agAn.getDestsConnected();
             case primaryIntact:
                 return agAn.getPrimaryPathsIntact();
             case connectionsIntact:

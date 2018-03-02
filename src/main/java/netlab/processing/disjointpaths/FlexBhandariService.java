@@ -90,7 +90,14 @@ public class FlexBhandariService {
         List<List<Failure>> failureGroups = failCollection.getFailureGroups();
         Integer nfe = nfeCollection.getTotalNumFailureEvents();
 
-        boolean nodesCanFail = failureClass == FailureClass.Both || failureClass == FailureClass.Node;
+        Set<Failure> failures = failCollection.getFailureSet();
+        if(failures.stream().anyMatch(f -> f.getNode() != null)){
+            failureClass = FailureClass.Both;
+        } else{
+            failureClass = FailureClass.Link;
+        }
+
+        boolean nodesCanFail = failureClass == FailureClass.Both;
 
         if(!checkIfInputIsValid(srcMinConnMap, dstMinConnMap, pairMinConnMap, reachMinS, reachMinD, reachMaxS, reachMaxD, numConnections)){
             return pairs.stream().collect(Collectors.toMap(p -> p, p -> new HashMap<>()));

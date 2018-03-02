@@ -2,6 +2,7 @@ package netlab.processing.shortestPaths;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.pathmapping.PathMappingService;
+import netlab.submission.enums.FailureScenario;
 import netlab.submission.enums.RoutingType;
 import netlab.submission.enums.TrafficCombinationType;
 import netlab.submission.request.Details;
@@ -37,6 +38,10 @@ public class MinimumRiskPathService {
         Set<Failure> failures = request.getDetails().getFailures().getFailureSet();
 
         //Topology adjustedTopo = topologyAdjustmentService.adjustWeightsWithFailureProbs(topo, failures);
+
+        if(request.getFailureScenario().equals(FailureScenario.AllLinks) || request.getFailureScenario().equals(FailureScenario.AllNodes)){
+            return minimumCostPathService.solve(request, topo);
+        }
         long startTime = System.nanoTime();
         Map<Link, Double> riskWeightMap = createRiskMap(topo.getLinks(), failures);
         Map<SourceDestPair, Map<String, Path>> pathMap = minimumCostPathService.findPaths(request.getDetails(),

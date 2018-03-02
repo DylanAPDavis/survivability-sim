@@ -44,6 +44,7 @@ public class Analysis implements Serializable {
     private Double pathsSevered;
     private Double primaryPathsIntact;
     private Double primaryPathsSevered;
+    private Double destsConnected;
 
     private Double averagePrimaryHops;
     private Double averagePrimaryCost;
@@ -85,6 +86,7 @@ public class Analysis implements Serializable {
                 "Avg Backup Hops: " + averageBackupHops + "\n" +
                 "Avg Backup Cost: " + averageBackupCost + "\n" +
                 "Avg Backup Path Risk: " + averageBackupRisk + "\n" +
+                "Dests Connected: " + destsConnected + "\n" +
                 "-Post Failure-" + "\n" +
                 "PF Avg Primary Hops: " + averagePrimaryHopsPostFailure + "\n" +
                 "PF Avg Primary Cost: " + averagePrimaryCostPostFailure + "\n" +
