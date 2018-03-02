@@ -124,7 +124,8 @@ public class AnalysisController {
             log.info("Aggregation Failed!");
             return "Failure!";
         }
-        return aggregationAnalysisService.createAggregationOutput(agParams, aggregateAnalysisMap);
+        //return aggregationAnalysisService.createAggregationOutput(agParams, aggregateAnalysisMap);
+        return aggregationAnalysisService.createAltAggregationOutput(aggregateAnalysisMap);
     }
 
     private Map<String, List<Analysis>> buildAnalysisMap(List<Long> seeds, ExecutorService executor){
@@ -201,7 +202,7 @@ public class AnalysisController {
             for(SimulationParameters params : seedParams){
                 String id = params.getRequestId();
                 if(params.getCompleted()) {
-                    Analysis analysis = storageService.retrieveAnalyzedSet(id, true, false);
+                    Analysis analysis = storageService.retrieveAnalyzedSet(id, false, false);
                     if (analysis != null) {
                         String hash = hashingService.hashAnalysis(analysis);
                         analysisMap.putIfAbsent(hash, new ArrayList<>());
