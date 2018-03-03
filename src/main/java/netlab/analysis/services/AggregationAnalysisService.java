@@ -34,6 +34,8 @@ public class AggregationAnalysisService {
     private final String reachOnPrimary = "reachOnPrimary";
     private final String reachOnBackup = "reachOnBackup";
     private final String reachOnlyBackup = "reachOnlyBackup";
+    private final String beforeHopsContent = "beforeHopsContent";
+    private final String afterHopsContent = "afterHopsContent";
     private final String cachingCost = "cachingCost";
 
     private HashingService hashingService;
@@ -417,9 +419,10 @@ public class AggregationAnalysisService {
         List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown,
                 CachingType.SourceAdjacent, CachingType.FailureAware, CachingType.BranchingPoint);
 
-        List<String> beforeMetrics = Arrays.asList(primaryCost, avgBackupCost, totalPaths, runningTime);
+        List<String> beforeMetrics = Arrays.asList(primaryCost, avgBackupCost, totalPaths, destsConnected, runningTime);
         List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
-        List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, reachOnlyBackup, cachingCost);
+        List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, reachOnlyBackup, beforeHopsContent,
+                afterHopsContent, cachingCost);
 
         Map<Integer, List<String>> metricCategories = new HashMap<>();
         metricCategories.put(0, beforeMetrics);
@@ -520,7 +523,7 @@ public class AggregationAnalysisService {
     }
 
     private String[] makeAnycastHeader(List<Algorithm> algs, Integer d){
-        String any = "1/" + d;
+        String any = "1_" + d;
         List<String> temp = algs.stream().map(Algorithm::getCode).collect(Collectors.toList());
         temp.add(0, any);
         return makeArrayFromList(temp);
@@ -592,6 +595,10 @@ public class AggregationAnalysisService {
                 return cachingResult.getReachOnBackup();
             case reachOnlyBackup:
                 return cachingResult.getReachOnlyBackup();
+            case beforeHopsContent:
+                return cachingResult.getAvgHopCountBefore();
+            case afterHopsContent:
+                return cachingResult.getAvgHopCountAfter();
             case cachingCost:
                 return cachingResult.getCachingCost();
         }
