@@ -427,7 +427,7 @@ public class AggregationAnalysisService {
         metricCategories.put(2, cachingMetrics);
 
 
-        DecimalFormat format = new DecimalFormat("#####.##");
+        DecimalFormat format = new DecimalFormat("#####.###");
         List<String[]> output = new ArrayList<>();
         for(String topology : topologies) {
             for (FailureScenario failureScenario : failureScenarios) {
@@ -513,14 +513,14 @@ public class AggregationAnalysisService {
     }
 
     private String[] makeCachingHeader(List<Algorithm> algs, CachingType cachingType) {
-        String cache = "Caching: " + cachingType;
+        String cache = cachingType.getCode();
         List<String> temp = algs.stream().map(Algorithm::getCode).collect(Collectors.toList());
         temp.add(0, cache);
         return makeArrayFromList(temp);
     }
 
     private String[] makeAnycastHeader(List<Algorithm> algs, Integer d){
-        String any = "Anycast 1/" + d;
+        String any = "1/" + d;
         List<String> temp = algs.stream().map(Algorithm::getCode).collect(Collectors.toList());
         temp.add(0, any);
         return makeArrayFromList(temp);

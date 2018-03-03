@@ -73,7 +73,7 @@ public class AWSTest {
         submissionController.rerunRequests(seeds);
     }
 
-    @Test
+    //@Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
         String algorithm = null;
