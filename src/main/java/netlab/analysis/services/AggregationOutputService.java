@@ -166,8 +166,8 @@ public class AggregationOutputService {
                         }
                         output.add(new String[]{});
                         tempOutput.add(new String[]{});
-                        linesPerNfe.add(tempOutput);
                     }
+                    linesPerNfe.add(tempOutput);
                 }
                 // We now have metrics and headers for each NFE value for this topo-failure scenario
                 // Stored in linesPerNfe
@@ -180,17 +180,23 @@ public class AggregationOutputService {
                     for(String component : line){
                         combinedLine.add(component);
                     }
-                    for(int nfeI = 1; nfeI < nfeValues.size(); nfeI++){
-                        String[] adjacentLine = linesPerNfe.get(nfeI).get(i);
-                        for(int adjacentI = 0; adjacentI < adjacentLine.length; adjacentI++){
-                            if(i != 0 && adjacentI == 0){
-                                continue;
+                    boolean endLine = true;
+                    if(!Arrays.equals(line, new String[]{"\\hline"})) {
+                        for (int nfeI = 1; nfeI < nfeValues.size(); nfeI++) {
+                            String[] adjacentLine = linesPerNfe.get(nfeI).get(i);
+                            for (int adjacentI = 0; adjacentI < adjacentLine.length; adjacentI++) {
+                                if (i != 0 && adjacentI == 0) {
+                                    continue;
+                                }
+                                combinedLine.add(adjacentLine[adjacentI]);
                             }
-                            combinedLine.add(adjacentLine[adjacentI]);
                         }
                     }
+                    else{
+                        endLine = false;
+                    }
                     // Now we've got a combined line, have to append with ampersand
-                    String[] joined = joinWithAmpersand(combinedLine, true);
+                    String[] joined = joinWithAmpersand(combinedLine, endLine);
                     altOutput.add(joined);
                 }
 
@@ -317,14 +323,14 @@ public class AggregationOutputService {
 
     private String[] makeCachingHeader(List<Algorithm> algs, CachingType cachingType, Map<Algorithm, String> algFormatMap,
                                        Map<CachingType, String> cacheFormatMap) {
-        String cache = cacheFormatMap.get(cachingType);
+        String cache = "\\textbf{" + cacheFormatMap.get(cachingType) +"}";
         List<String> temp = algs.stream().map(algFormatMap::get).collect(Collectors.toList());
         temp.add(0, cache);
         return makeArrayFromList(temp);
     }
 
     private String[] makeAnycastHeader(List<Algorithm> algs, Integer d, Map<Algorithm, String> algFormatMap){
-        String any = "1/" + d;
+        String any = "\\textbf{Anycast 1/" + d + "}";
         List<String> temp = algs.stream().map(algFormatMap::get).collect(Collectors.toList());
         temp.add(0, any);
         return makeArrayFromList(temp);

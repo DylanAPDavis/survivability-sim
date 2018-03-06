@@ -72,7 +72,7 @@ public class StorageService {
     public Analysis retrieveAnalyzedSet(String requestSetId, boolean useAws, boolean deleteAfter){
         Analysis as = null;
         File f = new File(System.getProperty("user.dir") + "/results/analyzed/" + requestSetId);
-        if(useAws){
+        if(useAws && !f.exists()){
             f = s3Interface.downloadFromAnalyzed(f, requestSetId);
         }
         if(f != null && f.exists()){
