@@ -48,6 +48,14 @@ public class HamiltonianCycleServiceTest {
     }
 
     @Test
+    public void TWCycleTest(){
+        Topology topo = topologyService.getTopologyById("tw");
+        List<Node> path = hamiltonianCycleService.findHamiltonianCycle(topo);
+        assert(path.get(0).equals(path.get(path.size()-1)));
+        System.out.println(path);
+    }
+
+    @Test
     public void NSFCyclePathMapTest(){
         Topology topo = topologyService.getTopologyById("NSFnet");
 

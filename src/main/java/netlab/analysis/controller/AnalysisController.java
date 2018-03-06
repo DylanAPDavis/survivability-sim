@@ -6,6 +6,7 @@ import netlab.analysis.analyzed.AggregationParameters;
 import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.analyzed.AnalysisParameters;
 import netlab.analysis.services.AggregationAnalysisService;
+import netlab.analysis.services.AggregationOutputService;
 import netlab.analysis.services.AnalysisService;
 import netlab.analysis.services.HashingService;
 import netlab.storage.services.StorageService;
@@ -32,15 +33,17 @@ public class AnalysisController {
 
     @Autowired
     private AnalysisController(AnalysisService analysisService, AggregationAnalysisService aggregationAnalysisService,
-                               StorageService storageService, HashingService hashingService){
+                               StorageService storageService, HashingService hashingService, AggregationOutputService aggregationOutputService){
         this.analysisService = analysisService;
         this.aggregationAnalysisService = aggregationAnalysisService;
         this.storageService = storageService;
         this.hashingService = hashingService;
+        this.aggregationOutputService = aggregationOutputService;
     }
 
     private AnalysisService analysisService;
     private AggregationAnalysisService aggregationAnalysisService;
+    private AggregationOutputService aggregationOutputService;
     private StorageService storageService;
     private HashingService hashingService;
 
@@ -125,7 +128,7 @@ public class AnalysisController {
             return "Failure!";
         }
         //return aggregationAnalysisService.createAggregationOutput(agParams, aggregateAnalysisMap);
-        return aggregationAnalysisService.createAltAggregationOutput(aggregateAnalysisMap);
+        return aggregationOutputService.createAltAggregationOutput(aggregateAnalysisMap);
     }
 
     private Map<String, List<Analysis>> buildAnalysisMap(List<Long> seeds, ExecutorService executor){

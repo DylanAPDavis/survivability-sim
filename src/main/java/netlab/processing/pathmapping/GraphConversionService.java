@@ -9,6 +9,7 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
+import org.jgrapht.graph.WeightedMultigraph;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,8 +22,10 @@ import java.util.stream.Collectors;
 @Service
 public class GraphConversionService {
 
-    public DirectedWeightedMultigraph<Node, DefaultWeightedEdge> convertToGraph(Topology topo, Map<DefaultWeightedEdge, Link> edgeToLinkMap){
+    public DirectedWeightedMultigraph<Node, DefaultWeightedEdge> convertToGraph(Topology topo,
+                                                                                Map<DefaultWeightedEdge, Link> edgeToLinkMap){
         DirectedWeightedMultigraph<Node, DefaultWeightedEdge> graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
+
         for(Node node : topo.getNodes()){
             graph.addVertex(node);
         }
@@ -35,6 +38,23 @@ public class GraphConversionService {
         }
         return graph;
     }
+
+    public WeightedMultigraph<Node,DefaultWeightedEdge> convertToUndirectedGraph(Topology topo,
+                                                                                 Map<DefaultWeightedEdge, Link> edgeToLinkMap) {
+        WeightedMultigraph<Node, DefaultWeightedEdge> graph = new WeightedMultigraph<>(DefaultWeightedEdge.class);
+        for(Node node : topo.getNodes()){
+            graph.addVertex(node);
+        }
+        for(Link link : topo.getLinks()){
+            if(topo.getNodes().contains(link.getOrigin()) && topo.getNodes().contains(link.getTarget())) {
+                DefaultWeightedEdge e = graph.addEdge(link.getOrigin(), link.getTarget());
+                graph.setEdgeWeight(e, link.getWeight());
+                edgeToLinkMap.put(e, link);
+            }
+        }
+        return graph;
+    }
+
 
     public List<Link> convertToLinks(GraphPath<Node,DefaultWeightedEdge> graphPath, Map<DefaultWeightedEdge, Link> edgeToLinkMap){
         if(graphPath != null) {
@@ -62,4 +82,5 @@ public class GraphConversionService {
         }
         return shortestPathMap;
     }
+
 }
