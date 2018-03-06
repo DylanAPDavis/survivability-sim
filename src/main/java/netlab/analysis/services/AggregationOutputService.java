@@ -106,7 +106,10 @@ public class AggregationOutputService {
         metricCategories.put(2, cachingMetrics);
 
 
-        DecimalFormat format = new DecimalFormat("#####.###");
+        DecimalFormat bigFormat = new DecimalFormat("####.##");
+
+        DecimalFormat littleFormat = new DecimalFormat("####.###");
+
         List<String[]> output = new ArrayList<>();
         List<String[]> altOutput = new ArrayList<>();
         for(String topology : topologies) {
@@ -134,7 +137,7 @@ public class AggregationOutputService {
                                 // Sort these analyses by which algorithm they're using
                                 agForD.sort(Comparator.comparing(ag -> algOrder.get(ag.getAlgorithm())));
                                 // Get the lines for the caching metrics
-                                List<String[]> metricsLines = makeMetricLines(metrics, agForD, format, cachingType);
+                                List<String[]> metricsLines = makeMetricLines(metrics, agForD, bigFormat, littleFormat, cachingType);
                                 for(String[] metricLine : metricsLines){
                                     output.add(metricLine);
                                     altOutput.add(joinWithAmpersand(metricLine)); // add alt & output
@@ -151,7 +154,7 @@ public class AggregationOutputService {
                                 // Sort these analyses by which algorithm they're using
                                  agForD.sort(Comparator.comparing(ag -> algOrder.get(ag.getAlgorithm())));
                                 // For each line: metric - value for Ag 1 - value for Ag 2 - value for Ag 3 - ...
-                                List<String[]> metricsLines = makeMetricLines(metrics, agForD, format, null);
+                                List<String[]> metricsLines = makeMetricLines(metrics, agForD, bigFormat, littleFormat, null);
                                 for(String[] metricLine : metricsLines){
                                     output.add(metricLine);
                                     altOutput.add(joinWithAmpersand(metricLine)); // add alt & output
@@ -238,7 +241,7 @@ public class AggregationOutputService {
         return new String[]{output};
     }
 
-    private List<String[]> makeMetricLines(List<String> metrics, List<AggregateAnalysis> agForD, DecimalFormat format,
+    private List<String[]> makeMetricLines(List<String> metrics, List<AggregateAnalysis> agForD, DecimalFormat bigFormat, DecimalFormat littleFormat,
                                            CachingType cachingType){
         List<String[]> output = new ArrayList<>();
         for (String metric : metrics) {
@@ -256,12 +259,29 @@ public class AggregationOutputService {
                 else{
                     value = getMetricValue(metric, agAn);
                 }
-                metricValueList.add(format.format(value));
+                if(useBigFormat(metric)){
+                    metricValueList.add(bigFormat.format(value));
+                }else{
+                    metricValueList.add(littleFormat.format(value));
+                }
             }
             String[] metricLine = makeArrayFromList(metricValueList);
             output.add(metricLine);
         }
         return output;
+    }
+
+    private Boolean useBigFormat(String metric){
+        switch(metric){
+            case primaryCost:
+                return true;
+            case avgBackupCost:
+                return true;
+            case postFailureCost:
+                return true;
+            default:
+                return false;
+        }
     }
 
     private String[] makeCachingHeader(List<Algorithm> algs, CachingType cachingType, Map<Algorithm, String> algFormatMap,
