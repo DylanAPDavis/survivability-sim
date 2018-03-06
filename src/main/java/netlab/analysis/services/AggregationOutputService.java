@@ -114,17 +114,19 @@ public class AggregationOutputService {
         List<String[]> altOutput = new ArrayList<>();
         for(String topology : topologies) {
             for (FailureScenario failureScenario : failureScenarios) {
+                List<List<String[]>> linesPerNfe = new ArrayList<>();
                 for (Integer nfe : nfeValues) {
+                    List<String[]> tempOutput = new ArrayList<>();
                     output.add(new String[]{"------"});
                     output.add(new String[]{"------"});
-                    altOutput.add(new String[]{"------"});
-                    altOutput.add(new String[]{"------"});
+                    tempOutput.add(new String[]{"------"});
+                    tempOutput.add(new String[]{"------"});
                     String hash = hashingService.hash(topology, failureScenario.getCode(), nfe);
                     Map<Integer, List<AggregateAnalysis>> mapForTable = tableMap.get(hash);
                     for(int categoryNumber = 0; categoryNumber < metricCategories.size(); categoryNumber++) {
                         // Add header line for this table
                         output.add(makeArray(topology, failureScenario.getCode(), nfe, determineCategory(categoryNumber)));
-                        altOutput.add(makeArray(topology, failureScenario.getCode(), nfe, determineCategory(categoryNumber)));
+                        tempOutput.add(makeArray(topology, failureScenario.getCode(), nfe, determineCategory(categoryNumber)));
                         List<String> metrics = metricCategories.get(categoryNumber);
                         if(categoryNumber == 2){
                             // Caching Metrics
@@ -132,7 +134,7 @@ public class AggregationOutputService {
                             for(CachingType cachingType : cachingTypes) {
                                 String[] cachingHeader = makeCachingHeader(algs, cachingType, algFormatMap, cacheFormatMap);
                                 output.add(cachingHeader);
-                                altOutput.add(joinWithAmpersand(cachingHeader)); // add alt & output
+                                tempOutput.add(cachingHeader); // add alt & output
                                 List<AggregateAnalysis> agForD = mapForTable.get(3);
                                 // Sort these analyses by which algorithm they're using
                                 agForD.sort(Comparator.comparing(ag -> algOrder.get(ag.getAlgorithm())));
@@ -140,16 +142,16 @@ public class AggregationOutputService {
                                 List<String[]> metricsLines = makeMetricLines(metrics, agForD, bigFormat, littleFormat, cachingType);
                                 for(String[] metricLine : metricsLines){
                                     output.add(metricLine);
-                                    altOutput.add(joinWithAmpersand(metricLine)); // add alt & output
+                                    tempOutput.add(metricLine); // add alt & output
                                 }
-                                altOutput.add(new String[]{"\\hline"});
+                                tempOutput.add(new String[]{"\\hline"});
                             }
                         } else {
                             for (Integer d : numD) {
                                 // Sub header for Anycast # and Algorithms
                                 String[] anycastHeader = makeAnycastHeader(algs, d, algFormatMap);
                                 output.add(anycastHeader);
-                                altOutput.add(joinWithAmpersand(anycastHeader)); // add alt & output
+                                tempOutput.add(anycastHeader); // add alt & output
                                 List<AggregateAnalysis> agForD = mapForTable.get(d);
                                 // Sort these analyses by which algorithm they're using
                                  agForD.sort(Comparator.comparing(ag -> algOrder.get(ag.getAlgorithm())));
@@ -157,15 +159,41 @@ public class AggregationOutputService {
                                 List<String[]> metricsLines = makeMetricLines(metrics, agForD, bigFormat, littleFormat, null);
                                 for(String[] metricLine : metricsLines){
                                     output.add(metricLine);
-                                    altOutput.add(joinWithAmpersand(metricLine)); // add alt & output
+                                    tempOutput.add(metricLine); // add alt & output
                                 }
-                                altOutput.add(new String[]{"\\hline"});
+                                tempOutput.add(new String[]{"\\hline"});
                             }
                         }
                         output.add(new String[]{});
-                        altOutput.add(new String[]{});
+                        tempOutput.add(new String[]{});
+                        linesPerNfe.add(tempOutput);
                     }
                 }
+                // We now have metrics and headers for each NFE value for this topo-failure scenario
+                // Stored in linesPerNfe
+                // Take each of these lines, and merge them together
+                // Ignore first column for later nfes
+                List<String[]> outputForZero = linesPerNfe.get(0);
+                for(int i = 0; i < outputForZero.size(); i++){
+                    String[] line = outputForZero.get(i);
+                    List<String> combinedLine = new ArrayList<>();
+                    for(String component : line){
+                        combinedLine.add(component);
+                    }
+                    for(int nfeI = 1; nfeI < nfeValues.size(); nfeI++){
+                        String[] adjacentLine = linesPerNfe.get(nfeI).get(i);
+                        for(int adjacentI = 0; adjacentI < adjacentLine.length; adjacentI++){
+                            if(i != 0 && adjacentI == 0){
+                                continue;
+                            }
+                            combinedLine.add(adjacentLine[adjacentI]);
+                        }
+                    }
+                    // Now we've got a combined line, have to append with ampersand
+                    String[] joined = joinWithAmpersand(combinedLine, true);
+                    altOutput.add(joined);
+                }
+
             }
         }
         try {
@@ -236,8 +264,11 @@ public class AggregationOutputService {
         return algFormatMap;
     }
 
-    private String[] joinWithAmpersand(String[] line){
-        String output = String.join(" & ", line) + "\\\\ \\hline";
+    private String[] joinWithAmpersand(List<String> line, boolean end){
+        String output = String.join(" & ", line);
+        if(end){
+            output += "\\\\ \\hline";
+        }
         return new String[]{output};
     }
 

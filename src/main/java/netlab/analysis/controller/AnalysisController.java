@@ -205,7 +205,7 @@ public class AnalysisController {
             for(SimulationParameters params : seedParams){
                 String id = params.getRequestId();
                 if(params.getCompleted()) {
-                    Analysis analysis = storageService.retrieveAnalyzedSet(id, true, false);
+                    Analysis analysis = storageService.retrieveAnalyzedSet(id, false, false);
                     if (analysis != null) {
                         String hash = hashingService.hashAnalysis(analysis);
                         analysisMap.putIfAbsent(hash, new ArrayList<>());
