@@ -90,6 +90,8 @@ public class AnalysisService {
                     .collect(Collectors.toList());
             boolean primarySevered = false;
             boolean foundIntactBackup = false;
+            Double postFailureHops = 0.0;
+            Double postFailureCost = 0.0;
             for(int i = 0; i < allPaths.size(); i++){
                  Path path = allPaths.get(i);
                  List<Link> pathLinks = path.getLinks();
@@ -116,6 +118,7 @@ public class AnalysisService {
                      pathsIntact++;
                  }
 
+
                  // First path is the primary path
                  if(i == 0){
                      totalPrimaryPaths++;
@@ -127,8 +130,8 @@ public class AnalysisService {
                          primarySevered = true;
                      } else{
                          primaryPathsIntact++;
-                         totalPrimaryHopsPostFailure += pathLinks.size();
-                         totalPrimaryCostPostFailure += cost;
+                         postFailureHops = 1.0 * path.getLinks().size();
+                         postFailureCost = path.getTotalWeight();
                      }
                  }
                  else{
@@ -143,10 +146,10 @@ public class AnalysisService {
                      // Take this as the backup path
                      else{
                          backupPathsIntact++;
-                         if(!foundIntactBackup) {
+                         if(!foundIntactBackup && primarySevered) {
                              foundIntactBackup = true;
-                             totalPrimaryHopsPostFailure += pathLinks.size();
-                             totalPrimaryCostPostFailure += cost;
+                             postFailureHops = 1.0 * path.getLinks().size();
+                             postFailureCost = path.getTotalWeight();
                          }
                      }
                  }
@@ -158,6 +161,9 @@ public class AnalysisService {
             else{
                 connectionsIntact++;
             }
+
+            totalPrimaryHopsPostFailure += postFailureHops;
+            totalPrimaryCostPostFailure += postFailureCost;
 
         }
 

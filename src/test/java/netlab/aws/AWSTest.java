@@ -155,7 +155,7 @@ public class AWSTest {
     @Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            String id = "20_tw_anycast_hamiltonian_1_3_1_1_1_1_none_alllinks_both_1_none_allow_allow_false_8";
+            String id = "24_tw_anycast_ilp_1_3_1_1_1_1_none_alllinks_both_2_none_allow_allow_false_8";
             Request r = storageController.getRequest(id, true);
             Analysis a = storageController.getAnalysis(id, true);
             Analysis analysis = analysisService.analyzeRequest(r);

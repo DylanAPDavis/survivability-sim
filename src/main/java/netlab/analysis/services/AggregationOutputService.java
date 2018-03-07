@@ -42,6 +42,8 @@ public class AggregationOutputService {
     private final String afterHopsContent = "Content Hops After";
     private final String cachingCost = "Caching Cost";
 
+    private final String feasible = "Feasibility";
+
     List<Algorithm> algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MinimumCostPath,
             Algorithm.MinimumRiskPath, Algorithm.Yens, Algorithm.Bhandari);
 
@@ -92,7 +94,7 @@ public class AggregationOutputService {
         List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown,
                 CachingType.SourceAdjacent, CachingType.FailureAware, CachingType.BranchingPoint);
 
-        List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, primaryCost, avgBackupCost, runningTime);
+        List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, primaryCost, avgBackupCost, runningTime, feasible);
         List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
         List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, reachOnlyBackup, beforeHopsContent,
                 afterHopsContent, cachingCost);
@@ -390,6 +392,8 @@ public class AggregationOutputService {
                 return agAn.getConnectionsIntact();
             case postFailureCost:
                 return agAn.getAveragePrimaryCostPostFailure();
+            case feasible:
+                return agAn.getPercentFeasible();
         }
         return -1.0;
     }

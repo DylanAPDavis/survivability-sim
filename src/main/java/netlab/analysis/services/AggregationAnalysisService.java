@@ -169,6 +169,7 @@ public class AggregationAnalysisService {
         Boolean ignoreFailures = analysisList.get(0).getIgnoreFailures();
 
         Double totalWithResults = 0.0;
+        Double totalWithBackup = 0.0;
 
         Double numFeasible = 0.0;
         Double sumRunningTime = 0.0;
@@ -224,6 +225,9 @@ public class AggregationAnalysisService {
                 sumPaths += analysis.getTotalPaths();
                 sumPrimaryPaths += analysis.getTotalPrimaryPaths();
                 sumBackupPaths += analysis.getTotalBackupPaths();
+                if(analysis.getTotalBackupPaths() > 0){
+                    totalWithBackup++;
+                }
                 sumConnectionsSevered += analysis.getConnectionsSevered();
                 sumConnectionsIntact += analysis.getConnectionsIntact();
                 sumPathsSevered += analysis.getPathsSevered();
@@ -256,6 +260,7 @@ public class AggregationAnalysisService {
 
         double totalResultsDivisor = totalWithResults > 0 ? totalWithResults : 1.0;
         double totalIntactDivisor = numWithConnectionsIntact > 0 ? numWithConnectionsIntact : 1.0;
+        double totalBackupDivisor = totalWithBackup > 0 ? totalWithBackup : 1.0;
 
         return AggregateAnalysis.builder()
                 .hash(hash)
@@ -287,10 +292,10 @@ public class AggregationAnalysisService {
                 .averagePrimaryHops(sumAveragePrimaryHops / totalResultsDivisor)
                 .averagePrimaryCost(sumAveragePrimaryCost / totalResultsDivisor)
                 .averagePrimaryRisk(sumAveragePrimaryRisk / totalResultsDivisor)
-                .averageBackupHops(sumAverageBackupHops / totalResultsDivisor)
-                .averageBackupCost(sumAverageBackupCost / totalResultsDivisor)
-                .averageBackupRisk(sumAverageBackupRisk / totalResultsDivisor)
-                .averageBackupPaths(sumAverageBackupPaths / totalResultsDivisor)
+                .averageBackupHops(sumAverageBackupHops / totalBackupDivisor)
+                .averageBackupCost(sumAverageBackupCost / totalBackupDivisor)
+                .averageBackupRisk(sumAverageBackupRisk / totalBackupDivisor)
+                .averageBackupPaths(sumAverageBackupPaths / totalBackupDivisor)
                 .averagePrimaryHopsPostFailure(sumAveragePrimaryHopsPostFailure / totalIntactDivisor)
                 .averagePrimaryCostPostFailure(sumAveragePrimaryCostPostFailure / totalIntactDivisor)
                 .averageBackupPathsIntact(sumAverageBackupPathsIntact / totalResultsDivisor)
