@@ -6,6 +6,7 @@ import netlab.TestConfiguration;
 import netlab.analysis.analyzed.*;
 import netlab.analysis.controller.AnalysisController;
 import netlab.analysis.services.AnalysisService;
+import netlab.processing.pathmapping.PathMappingService;
 import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
 import netlab.storage.controller.StorageController;
@@ -16,6 +17,7 @@ import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.topology.elements.Topology;
 import netlab.topology.services.TopologyService;
+import netlab.visualization.PrintingService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +59,9 @@ public class AWSTest {
     @Autowired
     private TopologyService topologyService;
 
+    @Autowired
+    private PrintingService printingService;
+
     //@Test
     public void updateRows(){
         SimulationParameters seedParams = SimulationParameters.builder().seed(1L).build();
@@ -76,7 +81,7 @@ public class AWSTest {
     //@Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
-        String algorithm = null;
+        String algorithm = "hamiltonian";
         boolean deleteRecords = true;
         boolean deleteAnalysis = false;
         for(Long seed : seeds) {
@@ -155,13 +160,13 @@ public class AWSTest {
     @Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            String id = "24_tw_anycast_ilp_1_3_1_1_1_1_none_alllinks_both_2_none_allow_allow_false_8";
+            String id = "10_tw_anycast_flexbhandari_1_3_1_1_1_1_none_alllinks_both_2_none_allow_allow_false_8";
             Request r = storageController.getRequest(id, true);
-            Analysis a = storageController.getAnalysis(id, true);
+            //Analysis a = storageController.getAnalysis(id, true);
             Analysis analysis = analysisService.analyzeRequest(r);
             //analysisController.analyzeRequest(AnalysisParameters.builder().requestId(id).useAws(true).build());
-            System.out.println(r);
-            System.out.println(a);
+            System.out.println(printingService.outputPaths(r));
+            //System.out.println(a);
             System.out.println(analysis);
         }
     }

@@ -198,6 +198,7 @@ public class AggregationAnalysisService {
         Double sumAverageBackupPathsIntact = 0.0;
         Double sumAverageBackupPathsSevered = 0.0;
 
+
         List<CachingResult> aggregateCaching = new ArrayList<>();
         Map<CachingType, Integer> cachingIndices = new HashMap<>();
 
@@ -247,9 +248,9 @@ public class AggregationAnalysisService {
                 sumAverageBackupPathsSevered += analysis.getAverageBackupPathsSevered();
 
                 if(analysis.getConnectionsIntact() > 0) {
+                    numWithConnectionsIntact++;
                     sumAveragePrimaryCostPostFailure += analysis.getAveragePrimaryCostPostFailure();
                     sumAveragePrimaryHopsPostFailure += analysis.getAveragePrimaryHopsPostFailure();
-                    numWithConnectionsIntact++;
                 }
 
                 updateCachingResults(aggregateCaching, analysis.getCachingResults(), cachingIndices);

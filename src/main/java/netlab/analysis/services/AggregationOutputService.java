@@ -34,7 +34,7 @@ public class AggregationOutputService {
     private final String destsConnected = "Connected D";
     private final String primaryIntact = "Primary Intact";
     private final String connectionsIntact = "Connection Intact";
-    private final String postFailureCost = "Post Failure Cost";
+    private final String postFailureCost = "Post-Failure Cost";
     private final String reachOnPrimary = "Reach on Primary";
     private final String reachOnBackup = "Reach on Backup";
     private final String reachOnlyBackup = "Reach only Backup";
@@ -92,12 +92,11 @@ public class AggregationOutputService {
         Map<String, Map<Integer, List<AggregateAnalysis>>> tableMap = buildTableMap(outputMap);
 
         List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown,
-                CachingType.SourceAdjacent, CachingType.FailureAware, CachingType.BranchingPoint);
+                CachingType.SourceAdjacent, CachingType.FailureAware);
 
         List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, primaryCost, avgBackupCost, runningTime, feasible);
         List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
-        List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, reachOnlyBackup, beforeHopsContent,
-                afterHopsContent, cachingCost);
+        List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, beforeHopsContent, afterHopsContent, cachingCost);
 
         Map<Algorithm, String> algFormatMap = createAlgFormatMap(algs);
         Map<CachingType, String> cacheFormatMap = createCacheFormatMap(cachingTypes);
