@@ -49,9 +49,8 @@ public class CachingService {
                 case LeaveCopyDown:
                     cachingLocations = cacheLeaveCopyDown(primaryPathPerSrc);
             }
-            // Add destination caches
-            // TODO: Rerun with the destinations added in as caching locations
-            cachingLocations.addAll(destinations);
+            // Remove all source and destination caches
+            cachingLocations.removeAll(destinations);
             cachingResult.setCachingCost(evaluateCost(cachingLocations));
             cachingResult.setCachingLocations(cachingLocations);
         }
@@ -96,16 +95,19 @@ public class CachingService {
         // For each path, determine which nodes remain reachable.
         // Cache at the closest one
         Set<Node> cachingPoints = new HashSet<>();
+        Set<Node> failureNodes = failures.stream().filter(f -> f.getNode() != null).map(Failure::getNode).collect(Collectors.toSet());
         for(Node src : primaryPathMap.keySet()){
             Set<Node> cachingNodes = new HashSet<>();
             Path primary = primaryPathMap.get(src);
             List<Node> primaryNodes = primary.getNodes();
-            List<Node> reachableNodes = pathMappingService.getReachableNodes(primary, failures);
-            // Cache at the first reachable node along the path
-            if(!reachableNodes.isEmpty()){
-                cachingNodes.addAll(reachableNodes);
+            List<Node> nonFailureNodes = primaryNodes.stream().filter(n -> !failureNodes.contains(n)).collect(Collectors.toList());
+            //List<Node> reachableNodes = pathMappingService.getReachableNodes(primary, failures);
+            // Cache at all non-failure nodes
+            if(!nonFailureNodes.isEmpty()){
+                cachingNodes.addAll(nonFailureNodes);
             }
-            cachingNodes.add(primaryNodes.get(primaryNodes.size()-1));
+            // Remove the src and the dest
+            cachingNodes.remove(primaryNodes.get(primaryNodes.size()-1));
             cachingNodes.remove(src);
             cachingPoints.addAll(cachingNodes);
         }
@@ -113,17 +115,16 @@ public class CachingService {
     }
 
     private Set<Node> cacheAtDest(Map<Node, Path> primaryPathMap){
-        // Just cache at the destination
         Set<Node> cachingPoints = new HashSet<>();
-        for(Node src : primaryPathMap.keySet()){
+        /*for(Node src : primaryPathMap.keySet()){
             List<Node> primaryNodes = primaryPathMap.get(src).getNodes();
             cachingPoints.add(primaryNodes.get(primaryNodes.size()-1));
-        }
+        }*/
         return cachingPoints;
     }
 
     private Set<Node> cacheAlongPath(Map<Node, Path> primaryPathMap){
-        // Cache at every node along the path (excluding the source)
+        // Cache at every node along the path (excluding the source and destination)
         Set<Node> cachingPoints = new HashSet<>();
         for(Node src : primaryPathMap.keySet()){
             Path primary = primaryPathMap.get(src);
@@ -131,6 +132,7 @@ public class CachingService {
                 List<Node> primaryNodes = primary.getNodes();
                 cachingPoints.addAll(primaryNodes);
                 cachingPoints.remove(src);
+                cachingPoints.remove(primaryNodes.get(primaryNodes.size()-1));
             }
         }
         return cachingPoints;
@@ -145,8 +147,10 @@ public class CachingService {
             if(primary != null) {
                 List<Node> primaryNodes = primary.getNodes();
                 // Every path has at least two nodes
-                cachingPoints.add(primaryNodes.get(1));
-                cachingPoints.add(primaryNodes.get(primaryNodes.size()-1));
+                if(primaryNodes.get(1) != src) {
+                    cachingPoints.add(primaryNodes.get(1));
+                }
+                //cachingPoints.add(primaryNodes.get(primaryNodes.size()-1));
             }
         }
         return cachingPoints;
@@ -165,7 +169,7 @@ public class CachingService {
                     cachingPoints.add(secondToLast);
                 }
                 // And add the dest
-                cachingPoints.add(pathNodes.get(pathNodes.size()-1));
+                //cachingPoints.add(pathNodes.get(pathNodes.size()-1));
             }
         }
         return cachingPoints;
@@ -174,18 +178,18 @@ public class CachingService {
 
     public void evaluateContentAccessibility(List<CachingResult> cachingResults,
                                              Map<SourceDestPair, Map<String, Path>> chosenPaths,
-                                             Collection<Failure> chosenFailures) {
+                                             Collection<Failure> chosenFailures, Set<Node> dests) {
         Map<Node, Set<Path>> pathsPerSrc = pathMappingService.getPathsPerSrc(chosenPaths);
         Map<Node, Path> primaryPathPerSrc = pathMappingService.getPrimaryPathPerSrc(pathsPerSrc);
         for (CachingResult cachingResult : cachingResults) {
-            evaluateCachingResult(cachingResult, pathsPerSrc, primaryPathPerSrc, chosenFailures);
+            evaluateCachingResult(cachingResult, pathsPerSrc, primaryPathPerSrc, chosenFailures, dests);
         }
 
     }
 
 
     private void evaluateCachingResult(CachingResult cachingResult, Map<Node, Set<Path>> pathsPerSrc,
-                                      Map<Node, Path> primaryPathPerSrc, Collection<Failure> chosenFailures){
+                                      Map<Node, Path> primaryPathPerSrc, Collection<Failure> chosenFailures, Set<Node> dests){
         Set<Node> cachingLocations = cachingResult.getCachingLocations();
 
         Map<Node, Integer> hopCountBefore= new HashMap<>();
@@ -203,7 +207,7 @@ public class CachingService {
             allPaths.remove(primary);
             // First, get the hop count to content before failure
             for(Node node : primary.getNodes()){
-                if(checkIfHit(node, cachingLocations, src)){
+                if(checkIfHit(node, cachingLocations, src, dests)){
                     break;
                 }
                 hopCountToContentBefore++;
@@ -213,7 +217,7 @@ public class CachingService {
             List<Node> reachableNodes = pathMappingService.getReachableNodes(primary, chosenFailures);
             boolean primaryHit = false;
             for(Node node : reachableNodes){
-                primaryHit = checkIfHit(node, cachingLocations, src);
+                primaryHit = checkIfHit(node, cachingLocations, src, dests);
                 if(primaryHit){
                     break;
                 }
@@ -235,7 +239,7 @@ public class CachingService {
                 int tempHopCount = 0;
                 boolean pathHit = false;
                 for(Node node : reachableBackupNodes){
-                    if(checkIfHit(node, cachingLocations, src)){
+                    if(checkIfHit(node, cachingLocations, src, dests)){
                         pathHit = true;
                         break;
                     }
@@ -291,7 +295,7 @@ public class CachingService {
         return validKeys.size() > 0 ? sum / validKeys.size() : 0.0;
     }
 
-    private boolean checkIfHit(Node node, Set<Node> cachingLocations, Node src) {
-        return cachingLocations.contains(node) && !node.equals(src);
+    private boolean checkIfHit(Node node, Set<Node> cachingLocations, Node src, Set<Node> dests) {
+        return !node.equals(src) && (cachingLocations.contains(node) || dests.contains(node));
     }
 }

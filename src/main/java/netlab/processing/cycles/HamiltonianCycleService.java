@@ -1,22 +1,15 @@
 package netlab.processing.cycles;
 
-import com.sun.xml.internal.ws.api.streaming.XMLStreamReaderFactory;
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.pathmapping.GraphConversionService;
 import netlab.processing.pathmapping.PathMappingService;
 import netlab.submission.enums.FailureClass;
-import netlab.submission.request.Connections;
 import netlab.submission.request.Details;
 import netlab.submission.request.NumFailureEvents;
 import netlab.submission.request.Request;
 import netlab.topology.elements.*;
 import netlab.topology.services.TopologyAdjustmentService;
-import org.jgrapht.alg.cycle.SzwarcfiterLauerSimpleCycles;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.DirectedWeightedMultigraph;
-import org.jgrapht.graph.WeightedMultigraph;
-import org.jgrapht.alg.tour.TwoApproxMetricTSP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

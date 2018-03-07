@@ -181,7 +181,7 @@ public class AnalysisService {
 
 
         // Content analysis
-        cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, chosenFailures);
+        cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, chosenFailures, details.getDestinations());
 
         Connections conns = details.getConnections();
         RoutingDescription routingDescription = new RoutingDescription(details.getSources().size(),
