@@ -376,25 +376,25 @@ public class AmplRoutingModelTest {
     }
 
     @Test
-    public void anycastLink9999FailuresTest(){
+    public void anycastQuake2FailuresTest(){
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
-                .topologyId("NSFnet")
+                .topologyId("tw")
                 .algorithm("ilp")
                 .problemClass("combined")
                 .objective("totalcost")
                 .routingType("anycast")
                 .numSources(1)
                 .numDestinations(3)
-                .failureScenario("alllinks")
-                .numFailureEvents(9999)
+                .failureScenario("quake2")
+                .numFailureEvents(2)
                 .ignoreFailures(false)
                 .useAws(false)
                 .build();
         Request request = generationService.generateFromSimParams(params);
         request = processingService.processRequest(request);
-        assert(!request.getDetails().getIsFeasible());
+        assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
 

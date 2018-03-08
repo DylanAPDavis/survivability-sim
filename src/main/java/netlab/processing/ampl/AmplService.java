@@ -248,9 +248,10 @@ public class AmplService {
         String numGroups = "param NumGroups := " + failureGroups.size() + ";";
         flexLines.add(numGroups);
         flexLines.addAll(createFailureGroupLines(failureGroups, ProblemClass.Flex, null, null, false));
+        int nfe = Math.min(details.getNumFailureEvents().getTotalNumFailureEvents(), details.getFailures().getFailureSet().size());
         if(!ignoreFailures) {
-            String nfe = "param nfe := " + details.getNumFailureEvents().getTotalNumFailureEvents() + ";";
-            flexLines.add(nfe);
+            String nfeString = "param nfe := " + nfe + ";";
+            flexLines.add(nfeString);
             flexLines.add(createFailureSetLine(details.getFailures().getFailureSet()));
         }
         return flexLines;
