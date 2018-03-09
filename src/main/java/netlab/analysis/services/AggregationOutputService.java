@@ -45,7 +45,7 @@ public class AggregationOutputService {
     private final String feasible = "Feasibility";
 
     List<Algorithm> algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MinimumCostPath,
-            Algorithm.MinimumRiskPath, Algorithm.Yens, Algorithm.Bhandari);
+            Algorithm.MinimumRiskPath, Algorithm.Bhandari);
 
 
     private HashingService hashingService;
