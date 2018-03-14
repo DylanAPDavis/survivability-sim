@@ -198,6 +198,9 @@ public class AggregationAnalysisService {
         Double sumAverageBackupPathsIntact = 0.0;
         Double sumAverageBackupPathsSevered = 0.0;
 
+        Double sumPrimaryIntactPerSrc = 0.0;
+        Double sumDestsConnectedPerSrc = 0.0;
+
 
         List<CachingResult> aggregateCaching = new ArrayList<>();
         Map<CachingType, Integer> cachingIndices = new HashMap<>();
@@ -246,6 +249,9 @@ public class AggregationAnalysisService {
                 sumAverageBackupPaths += analysis.getAverageBackupPaths();
                 sumAverageBackupPathsIntact += analysis.getAverageBackupPathsIntact();
                 sumAverageBackupPathsSevered += analysis.getAverageBackupPathsSevered();
+
+                sumDestsConnectedPerSrc += analysis.getDestsConnectedPerSrc();
+                sumPrimaryIntactPerSrc += analysis.getPrimaryIntactPerSrc();
 
                 if(analysis.getConnectionsIntact() > 0) {
                     numWithConnectionsIntact++;
@@ -301,6 +307,8 @@ public class AggregationAnalysisService {
                 .averagePrimaryCostPostFailure(sumAveragePrimaryCostPostFailure / totalIntactDivisor)
                 .averageBackupPathsIntact(sumAverageBackupPathsIntact / totalResultsDivisor)
                 .averageBackupPathsSevered(sumAverageBackupPathsSevered / totalResultsDivisor)
+                .destsConnectedPerSrc(sumDestsConnectedPerSrc / totalResultsDivisor)
+                .primaryIntactPerSrc(sumPrimaryIntactPerSrc / totalResultsDivisor)
                 .cachingResults(aggregateCaching)
                 .build();
     }

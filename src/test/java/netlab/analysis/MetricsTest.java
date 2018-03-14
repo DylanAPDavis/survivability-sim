@@ -656,7 +656,7 @@ public class MetricsTest {
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
-                .topologyId("NSFnet")
+                .topologyId("TW")
                 .algorithm("ilp")
                 .problemClass("combined")
                 .objective("totalcost")
@@ -795,6 +795,28 @@ public class MetricsTest {
                 .useMaxS(2)
                 .numFailureEvents(0)
                 .trafficCombinationType("dest")
+                .useAws(false)
+                .build();
+        evaluate(params);
+    }
+
+    @Test
+    public void ilpManyToManyDestLinkFailureTrafficTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("TW")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manytomany")
+                .numSources(5)
+                .numDestinations(3)
+                .useMinS(5)
+                .useMaxS(5)
+                .useMinD(1)
+                .failureScenario("AllLinks")
+                .numFailureEvents(1)
                 .useAws(false)
                 .build();
         evaluate(params);

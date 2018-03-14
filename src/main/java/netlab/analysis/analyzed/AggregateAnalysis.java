@@ -58,6 +58,9 @@ public class AggregateAnalysis implements Serializable {
     private Double averageBackupPathsIntact;
     private Double averageBackupPathsSevered;
 
+    private Double primaryIntactPerSrc;
+    private Double destsConnectedPerSrc;
+
     // Caching
     private List<CachingResult> cachingResults;
 

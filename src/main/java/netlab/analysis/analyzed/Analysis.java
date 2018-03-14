@@ -58,6 +58,9 @@ public class Analysis implements Serializable {
     private Double averageBackupPathsIntact;
     private Double averageBackupPathsSevered;
 
+    private Double primaryIntactPerSrc;
+    private Double destsConnectedPerSrc;
+
     private List<String> chosenFailures;
     private List<CachingResult> cachingResults;
 
@@ -87,6 +90,7 @@ public class Analysis implements Serializable {
                 "Avg Backup Cost: " + averageBackupCost + "\n" +
                 "Avg Backup Path Risk: " + averageBackupRisk + "\n" +
                 "Dests Connected: " + destsConnected + "\n" +
+                "Dests Connected Per Src: " + destsConnectedPerSrc + "\n" +
                 "-Post Failure-" + "\n" +
                 "PF Avg Primary Hops: " + averagePrimaryHopsPostFailure + "\n" +
                 "PF Avg Primary Cost: " + averagePrimaryCostPostFailure + "\n" +
@@ -96,6 +100,7 @@ public class Analysis implements Serializable {
                 "Paths Severed: " + pathsSevered + "\n" +
                 "Primary Paths Intact: " + primaryPathsIntact + "\n" +
                 "Primary Paths Severed: " + primaryPathsSevered + "\n" +
+                "Primary Paths Intact Per Src: " + primaryIntactPerSrc + "\n" +
                 "Avg Backup Paths Intact: " + averageBackupPathsIntact + "\n" +
                 "Avg Backup Paths Severed: " + averageBackupPathsSevered + "\n" +
                 "Chosen Failures: " + chosenFailures.toString() + "\n";

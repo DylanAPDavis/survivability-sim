@@ -3,7 +3,6 @@ package netlab.analysis.services;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.CachingResult;
 import netlab.processing.pathmapping.PathMappingService;
-import netlab.submission.enums.RoutingType;
 import netlab.topology.elements.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -178,18 +177,19 @@ public class CachingService {
 
     public void evaluateContentAccessibility(List<CachingResult> cachingResults,
                                              Map<SourceDestPair, Map<String, Path>> chosenPaths,
-                                             Collection<Failure> chosenFailures, Set<Node> dests) {
+                                             Collection<Failure> chosenFailures, Set<Node> dests, boolean additive) {
         Map<Node, Set<Path>> pathsPerSrc = pathMappingService.getPathsPerSrc(chosenPaths);
         Map<Node, Path> primaryPathPerSrc = pathMappingService.getPrimaryPathPerSrc(pathsPerSrc);
         for (CachingResult cachingResult : cachingResults) {
-            evaluateCachingResult(cachingResult, pathsPerSrc, primaryPathPerSrc, chosenFailures, dests);
+            evaluateCachingResult(cachingResult, pathsPerSrc, primaryPathPerSrc, chosenFailures, dests, additive);
         }
 
     }
 
 
     private void evaluateCachingResult(CachingResult cachingResult, Map<Node, Set<Path>> pathsPerSrc,
-                                      Map<Node, Path> primaryPathPerSrc, Collection<Failure> chosenFailures, Set<Node> dests){
+                                      Map<Node, Path> primaryPathPerSrc, Collection<Failure> chosenFailures, Set<Node> dests,
+                                       boolean additive){
         Set<Node> cachingLocations = cachingResult.getCachingLocations();
 
         Map<Node, Integer> hopCountBefore= new HashMap<>();
@@ -276,14 +276,22 @@ public class CachingService {
 
         Double divisor = pathsPerSrc.keySet().size() > 0 ? pathsPerSrc.keySet().size() : 1.0;
         Double avgReachOnPrimary = 1.0 * reachOnPrimaryAfter.size() / divisor;
-        Double avgReachOnBakcup = 1.0 * reachOnBackupAfter.size() / divisor;
-        Double avgReachOnlyBakcup = 1.0 * onlyReachOnBackupAfter.size() / divisor;
+        Double avgReachOnBackup = 1.0 * reachOnBackupAfter.size() / divisor;
+        Double avgReachOnlyBackup = 1.0 * onlyReachOnBackupAfter.size() / divisor;
 
-        cachingResult.setAvgHopCountBefore(averageHopBefore);
-        cachingResult.setAvgHopCountAfter(averageHopAfter);
-        cachingResult.setReachOnPrimary(avgReachOnPrimary);
-        cachingResult.setReachOnBackup(avgReachOnBakcup);
-        cachingResult.setReachOnlyBackup(avgReachOnlyBakcup);
+        if(!additive) {
+            cachingResult.setAvgHopCountBefore(averageHopBefore);
+            cachingResult.setAvgHopCountAfter(averageHopAfter);
+            cachingResult.setReachOnPrimary(avgReachOnPrimary);
+            cachingResult.setReachOnBackup(avgReachOnBackup);
+            cachingResult.setReachOnlyBackup(avgReachOnlyBackup);
+        } else{
+            cachingResult.setAvgHopCountBefore(cachingResult.getAvgHopCountBefore() + averageHopBefore);
+            cachingResult.setAvgHopCountAfter(cachingResult.getAvgHopCountAfter() + averageHopAfter);
+            cachingResult.setReachOnPrimary(cachingResult.getReachOnPrimary() + avgReachOnPrimary);
+            cachingResult.setReachOnBackup(cachingResult.getReachOnBackup() + avgReachOnBackup);
+            cachingResult.setReachOnlyBackup(cachingResult.getReachOnlyBackup() + avgReachOnlyBackup);
+        }
     }
 
     private Double calculateAverage(Map<Node, Integer> valueMap, Set<Node> validKeys) {
@@ -297,5 +305,16 @@ public class CachingService {
 
     private boolean checkIfHit(Node node, Set<Node> cachingLocations, Node src, Set<Node> dests) {
         return !node.equals(src) && (cachingLocations.contains(node) || dests.contains(node));
+    }
+
+    public void averageContentAccessibility(List<CachingResult> cachingResults, int size) {
+        int divisor = size > 0 ? size : 1;
+        for(CachingResult cachingResult : cachingResults){
+            cachingResult.setAvgHopCountBefore(cachingResult.getAvgHopCountBefore() / divisor);
+            cachingResult.setAvgHopCountAfter(cachingResult.getAvgHopCountAfter() / divisor);
+            cachingResult.setReachOnPrimary(cachingResult.getReachOnPrimary() / divisor);
+            cachingResult.setReachOnBackup(cachingResult.getReachOnBackup() / divisor);
+            cachingResult.setReachOnlyBackup(cachingResult.getReachOnlyBackup() / divisor);
+        }
     }
 }

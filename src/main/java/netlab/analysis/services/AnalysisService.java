@@ -7,7 +7,6 @@ import netlab.processing.pathmapping.PathMappingService;
 import netlab.submission.enums.*;
 import netlab.submission.request.*;
 import netlab.topology.elements.*;
-import netlab.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +42,6 @@ public class AnalysisService {
         int numSrcs = primaryPathPerSrc.size();
 
 
-        List<Failure> chosenFailures = chooseFailuresBasedOnProb(failureGroups);
         List<CachingResult> cachingResults = Arrays.asList(
                 new CachingResult(CachingType.None),
                 new CachingResult(CachingType.SourceAdjacent),
@@ -84,87 +82,136 @@ public class AnalysisService {
         Map<Link, Set<Node>> destLinkMap = new HashMap<>();
 
         Set<Node> connectedDests = new HashSet<>();
-        for(Node src : primaryPathPerSrc.keySet()){
-            List<Path> allPaths = pathsPerSrc.get(src).stream()
-                    .sorted(Comparator.comparing(Path::getTotalWeight))
-                    .collect(Collectors.toList());
-            boolean primarySevered = false;
-            boolean foundIntactBackup = false;
-            Double postFailureHops = 0.0;
-            Double postFailureCost = 0.0;
-            for(int i = 0; i < allPaths.size(); i++){
-                 Path path = allPaths.get(i);
-                 List<Link> pathLinks = path.getLinks();
-                 Node dst = pathLinks.get(pathLinks.size()-1).getTarget();
-                 connectedDests.add(dst);
-                 for(Link link : pathLinks){
-                     sourceLinkMap.putIfAbsent(link, new HashSet<>());
-                     sourceLinkMap.get(link).add(src);
-                     destLinkMap.putIfAbsent(link, new HashSet<>());
-                     destLinkMap.get(link).add(dst);
-                 }
 
-                 Double cost = path.getTotalWeight();
-                 totalCost += cost;
-                 totalLinksUsed += pathLinks.size();
-                 totalPaths++;
-                 Double risk = calculatePathRisk(path, failureIdMap);
+        // Primary intact per src and dests connected per src
+        Map<Node, Set<Node>> destsPerSrc = new HashMap<>();
 
-                // Evaluate how the path stands up to failure
-                 boolean severed = path.containsFailures(chosenFailures);
-                 if(severed){
-                     pathsSevered++;
-                 } else{
-                     pathsIntact++;
-                 }
+        boolean justOnce = false;
+        List<List<Failure>> sortedFailureGroups = sortFailuresBasedOnProb(failureGroups);
+        for(int fIndex = 0; fIndex < sortedFailureGroups.size(); fIndex++) {
+
+            // Need to average the failure related values across all failure groups (if you're not averaging just once)
+            // Values you need to average - connections severed/intact, primary intact/severed,
+            // backupPaths severed/intact, primary hops/cost post failure
+            // divide these values at the end by the number of failure groups, and whatever you're normally dividing by
+            List<Failure> chosenFailures = sortedFailureGroups.get(fIndex);
+            for (Node src : primaryPathPerSrc.keySet()) {
+                List<Path> allPaths = pathsPerSrc.get(src).stream()
+                        .sorted(Comparator.comparing(Path::getTotalWeight))
+                        .collect(Collectors.toList());
+                boolean primarySevered = false;
+                boolean foundIntactBackup = false;
+                Double postFailureHops = 0.0;
+                Double postFailureCost = 0.0;
+                destsPerSrc.putIfAbsent(src, new HashSet<>());
+                for (int i = 0; i < allPaths.size(); i++) {
+                    Path path = allPaths.get(i);
+                    List<Link> pathLinks = path.getLinks();
+                    Node dst = pathLinks.get(pathLinks.size() - 1).getTarget();
+                    connectedDests.add(dst);
+                    destsPerSrc.get(src).add(dst);
+                    for (Link link : pathLinks) {
+                        sourceLinkMap.putIfAbsent(link, new HashSet<>());
+                        sourceLinkMap.get(link).add(src);
+                        destLinkMap.putIfAbsent(link, new HashSet<>());
+                        destLinkMap.get(link).add(dst);
+                    }
+
+                    Double cost = path.getTotalWeight();
+                    totalCost += cost;
+                    totalLinksUsed += pathLinks.size();
+                    totalPaths++;
+                    Double risk = calculatePathRisk(path, failureIdMap);
+
+                    // Evaluate how the path stands up to failure
+                    boolean severed = path.containsFailures(chosenFailures);
+                    if (severed) {
+                        pathsSevered++;
+                    } else {
+                        pathsIntact++;
+                    }
 
 
-                 // First path is the primary path
-                 if(i == 0){
-                     totalPrimaryPaths++;
-                     totalPrimaryRisk += risk;
-                     totalPrimaryHops += pathLinks.size();
-                     totalPrimaryCost += cost;
-                     if(severed){
-                         primaryPathsSevered++;
-                         primarySevered = true;
-                     } else{
-                         primaryPathsIntact++;
-                         postFailureHops = 1.0 * path.getLinks().size();
-                         postFailureCost = path.getTotalWeight();
-                     }
-                 }
-                 else{
-                     totalBackupPaths++;
-                     totalBackupRisk += risk;
-                     totalBackupHops += pathLinks.size();
-                     totalBackupCost += cost;
-                     if(severed){
-                         backupPathsSevered++;
-                     }
-                     // If this backup path is not severed, and you haven't already picked a primary backup
-                     // Take this as the backup path
-                     else{
-                         backupPathsIntact++;
-                         if(!foundIntactBackup && primarySevered) {
-                             foundIntactBackup = true;
-                             postFailureHops = 1.0 * path.getLinks().size();
-                             postFailureCost = path.getTotalWeight();
-                         }
-                     }
-                 }
+                    // First path is the primary path
+                    if (i == 0) {
+                        totalPrimaryPaths++;
+                        totalPrimaryRisk += risk;
+                        totalPrimaryHops += pathLinks.size();
+                        totalPrimaryCost += cost;
+                        if (severed) {
+                            primaryPathsSevered++;
+                            primarySevered = true;
+                        } else {
+                            primaryPathsIntact++;
+                            postFailureHops = 1.0 * path.getLinks().size();
+                            postFailureCost = path.getTotalWeight();
+                        }
+                    } else {
+                        totalBackupPaths++;
+                        totalBackupRisk += risk;
+                        totalBackupHops += pathLinks.size();
+                        totalBackupCost += cost;
+                        if (severed) {
+                            backupPathsSevered++;
+                        }
+                        // If this backup path is not severed, and you haven't already picked a primary backup
+                        // Take this as the backup path
+                        else {
+                            backupPathsIntact++;
+                            if (!foundIntactBackup && primarySevered) {
+                                foundIntactBackup = true;
+                                postFailureHops = 1.0 * path.getLinks().size();
+                                postFailureCost = path.getTotalWeight();
+                            }
+                        }
+                    }
+                }
+                // If the primary path was severed, and you never found an intact backup path, then the connection is lost
+                if (primarySevered && !foundIntactBackup) {
+                    connectionsSevered++;
+                } else {
+                    connectionsIntact++;
+                }
+
+                totalPrimaryHopsPostFailure += postFailureHops;
+                totalPrimaryCostPostFailure += postFailureCost;
+
             }
-            // If the primary path was severed, and you never found an intact backup path, then the connection is lost
-            if(primarySevered && !foundIntactBackup){
-                connectionsSevered++;
+            // End of analysis for this FG
+            // Content analysis
+            cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, chosenFailures, details.getDestinations(), true);
+            if(justOnce){
+                break;
             }
-            else{
-                connectionsIntact++;
-            }
+        }
 
-            totalPrimaryHopsPostFailure += postFailureHops;
-            totalPrimaryCostPostFailure += postFailureCost;
+        // If you're considering all failure groups, divide the totals by the number of failure groups
+        if(!justOnce){
+            totalCost /= failureGroups.size();
+            totalLinksUsed /= failureGroups.size();
+            totalPaths /= failureGroups.size();
+            totalPrimaryPaths /= failureGroups.size();
+            totalBackupPaths /= failureGroups.size();
+            connectionsSevered /= failureGroups.size();
+            connectionsIntact /= failureGroups.size();
+            pathsSevered /= failureGroups.size();
+            pathsIntact /= failureGroups.size();
+            primaryPathsSevered /= failureGroups.size();
+            primaryPathsIntact /= failureGroups.size();
+            backupPathsSevered /= failureGroups.size();
+            backupPathsIntact /= failureGroups.size();
 
+            totalPrimaryHops /= failureGroups.size();
+            totalPrimaryCost /= failureGroups.size();
+            totalBackupHops /= failureGroups.size();
+            totalBackupCost /= failureGroups.size();
+            totalPrimaryHopsPostFailure /= failureGroups.size();
+            totalPrimaryCostPostFailure /= failureGroups.size();
+            totalPrimaryRisk /= failureGroups.size();
+            totalBackupRisk /= failureGroups.size();
+
+            // Average post-failure content accessibility values
+            cachingService.averageContentAccessibility(cachingResults, failureGroups.size());
         }
 
         Double averagePrimaryHops = numSrcs > 0 ? totalPrimaryHops / numSrcs : 0.0;
@@ -174,14 +221,16 @@ public class AnalysisService {
         Double averageBackupCost = totalBackupPaths > 0 ? totalBackupCost / totalBackupPaths : 0.0;
         Double averageBackupRisk = totalBackupPaths > 0 ? totalBackupRisk / totalBackupPaths : 0.0;
         Double averageBackupPaths = numSrcs > 0 ? totalBackupPaths / numSrcs : 0.0;
+
         Double averagePrimaryHopsPostFailure = connectionsIntact > 0 ? totalPrimaryHopsPostFailure / connectionsIntact : 0.0;
         Double averagePrimaryCostPostFailure = connectionsIntact > 0 ? totalPrimaryCostPostFailure / connectionsIntact : 0.0;
         Double averageBackupPathsIntact = numSrcs > 0 ? backupPathsIntact / numSrcs : 0.0;
         Double averageBackupPathsSevered = numSrcs > 0 ? backupPathsSevered / numSrcs : 0.0;
 
 
-        // Content analysis
-        cachingService.evaluateContentAccessibility(cachingResults, chosenPaths, chosenFailures, details.getDestinations());
+        Double primaryIntactPerSrc =  numSrcs > 0 ? primaryPathsIntact / numSrcs : 0.0;
+        Double destsConnectedPerSrc = numSrcs > 0 ? destsPerSrc.keySet().stream().mapToDouble(s -> destsPerSrc.get(s).size()).sum() / numSrcs : 0.0;
+
 
         Connections conns = details.getConnections();
         RoutingDescription routingDescription = new RoutingDescription(details.getSources().size(),
@@ -224,7 +273,9 @@ public class AnalysisService {
                 .averagePrimaryCostPostFailure(averagePrimaryCostPostFailure)
                 .averageBackupPathsIntact(averageBackupPathsIntact)
                 .averageBackupPathsSevered(averageBackupPathsSevered)
-                .chosenFailures(convertFailuresToString(chosenFailures))
+                .primaryIntactPerSrc(primaryIntactPerSrc)
+                .destsConnectedPerSrc(destsConnectedPerSrc)
+                .chosenFailures(convertFailuresToString(sortedFailureGroups.get(0)))
                 .cachingResults(cachingResults)
                 .build();
 
@@ -235,6 +286,8 @@ public class AnalysisService {
         return analysis;
 
     }
+
+
 
     private double calculatePathRisk(Path path, Map<String, Failure> failureIdMap) {
         /*Set<String> pathIds = new HashSet<>(path.getNodeIds());
@@ -293,7 +346,7 @@ public class AnalysisService {
         analysis.setTotalLinksUsed(totalLinksUsed);
     }
 
-    private List<Failure> chooseFailuresBasedOnProb(List<List<Failure>> failureGroups) {
+    private List<List<Failure>> sortFailuresBasedOnProb(List<List<Failure>> failureGroups) {
         if(failureGroups.isEmpty()){
             return new ArrayList<>();
         }
@@ -316,7 +369,7 @@ public class AnalysisService {
                 .collect(Collectors.toList());
 
 
-        return sortedGroups.get(0);
+        return sortedGroups;
     }
 
     private String invertLinkId(Link link) {

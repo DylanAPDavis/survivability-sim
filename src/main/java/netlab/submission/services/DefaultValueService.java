@@ -265,13 +265,13 @@ public class DefaultValueService {
             params.setMaxDstConnections(params.getMinConnections());
         }
         if(params.getUseMinS() == null){
-            params.setUseMinS(0);
+            params.setUseMinS(1);
         }
         if(params.getUseMaxS() == null){
             params.setUseMaxS(params.getNumSources());
         }
         if(params.getUseMinD() == null){
-            params.setUseMinD(0);
+            params.setUseMinD(1);
         }
         if(params.getUseMaxD() == null){
             params.setUseMaxD(params.getNumDestinations());
