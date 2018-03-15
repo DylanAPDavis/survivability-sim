@@ -25,12 +25,11 @@ public class AggregationAnalysisService {
 
 
     public AggregationParameters makeDefaultParameters(List<Long> seeds){
-        List<String> topologyIds = Arrays.asList("nsfnet", "tw");
+        List<String> topologyIds = Arrays.asList("tw");
         /*List<RoutingType> routingTypes = Arrays.asList(RoutingType.Unicast, RoutingType.Anycast, RoutingType.Manycast, RoutingType.Multicast,
                 RoutingType.ManyToOne, RoutingType.ManyToMany, RoutingType.Broadcast);*/
-        List<RoutingType> routingTypes = Arrays.asList(RoutingType.Unicast, RoutingType.Anycast);
-        List<FailureScenario> failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.AllNodes,
-                FailureScenario.Quake_2);
+        List<RoutingType> routingTypes = Arrays.asList(RoutingType.ManyToMany);
+        List<FailureScenario> failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
         List<Integer> nfeValues = Arrays.asList(1, 2);
         Map<RoutingType, List<Algorithm>> algorithmMap = makeAlgorithmMap();
         Map<RoutingType, List<RoutingDescription>> routingDescriptionMap = makeRoutingDescriptionMap();
@@ -113,15 +112,20 @@ public class AggregationAnalysisService {
                 routingList.add(new RoutingDescription(3, 1, 3, 3, 1, 1));
                 break;
             case ManyToMany:
-                //routingList.add(new RoutingDescription(2, 2, 2, 2, 1, 1));
-                routingList.add(new RoutingDescription(2, 2, 2, 2, 1, 2));
-                routingList.add(new RoutingDescription(2, 2, 2, 2, 2, 2));
-                //routingList.add(new RoutingDescription(3, 3, 3, 3, 1, 1));
-                //routingList.add(new RoutingDescription(3, 3, 3, 3, 1, 2));
-                //routingList.add(new RoutingDescription(3, 3, 3, 3, 2, 2));
-                routingList.add(new RoutingDescription(3, 3, 3, 3, 1, 3));
-                routingList.add(new RoutingDescription(3, 3, 3, 3, 2, 3));
-                routingList.add(new RoutingDescription(3, 3, 3, 3, 3, 3));
+                routingList.add(new RoutingDescription(5, 1, 5, 5, 1, 1));
+                routingList.add(new RoutingDescription(10, 1, 10, 10, 1, 1));
+                routingList.add(new RoutingDescription(5, 2, 5, 5, 1, 2));
+                routingList.add(new RoutingDescription(10, 2, 10, 10, 1, 2));
+                routingList.add(new RoutingDescription(5, 2, 5, 5, 1, 3));
+                routingList.add(new RoutingDescription(10, 2, 10, 10, 1, 3));
+                /*
+                {"num_s": 5, "num_d": 1, "use_min_s": 5, "use_max_s": 5, "use_min_d": 1, "use_max_d": 1},
+                {"num_s": 10, "num_d": 1, "use_min_s": 10, "use_max_s": 10, "use_min_d": 1, "use_max_d": 1},
+                {"num_s": 5, "num_d": 2, "use_min_s": 5, "use_max_s": 5, "use_min_d": 1, "use_max_d": 2},
+                {"num_s": 10, "num_d": 2, "use_min_s": 10, "use_max_s": 10, "use_min_d": 1, "use_max_d": 2},
+                {"num_s": 5, "num_d": 3, "use_min_s": 5, "use_max_s": 5, "use_min_d": 1, "use_max_d": 3},
+                {"num_s": 10, "num_d": 3, "use_min_s": 10, "use_max_s": 10, "use_min_d": 1, "use_max_d": 3},
+                 */
                 break;
             case Broadcast:
                 routingList.add(new RoutingDescription(2, 2, 2, 2, 2, 2));

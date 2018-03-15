@@ -3,10 +3,7 @@ package netlab.analysis.services;
 
 import com.opencsv.CSVWriter;
 import lombok.extern.slf4j.Slf4j;
-import netlab.analysis.analyzed.AggregateAnalysis;
-import netlab.analysis.analyzed.AggregationParameters;
-import netlab.analysis.analyzed.CachingResult;
-import netlab.analysis.analyzed.RoutingDescription;
+import netlab.analysis.analyzed.*;
 import netlab.analysis.enums.CachingType;
 import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.FailureScenario;
@@ -32,8 +29,10 @@ public class AggregationOutputService {
     private final String totalPaths = "Total paths";
     private final String runningTime = "Running Time";
     private final String destsConnected = "Connected D";
+    private final String destsConnectedPerSrc = "Avg. Connected D";
     private final String primaryIntact = "Primary Intact";
-    private final String connectionsIntact = "Connection Intact";
+    private final String primaryIntactPerSrc = "Primary Intact %";
+    private final String connectionsIntact = "Connections Intact";
     private final String postFailureCost = "Post-Failure Cost";
     private final String reachOnPrimary = "Reach on Primary";
     private final String reachOnBackup = "Reach on Backup";
@@ -44,8 +43,7 @@ public class AggregationOutputService {
 
     private final String feasible = "Feasibility";
 
-    List<Algorithm> algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MinimumCostPath,
-            Algorithm.MinimumRiskPath, Algorithm.Bhandari);
+
 
 
     private HashingService hashingService;
@@ -76,28 +74,66 @@ public class AggregationOutputService {
 
      */
 
-    public String createAltAggregationOutput(Map<String, AggregateAnalysis> outputMap){
-        String fileName = "aggregatedTables";
+    public AggregationOutputParameters createOutputForRoutingType(String routingType){
+        List<FailureScenario> failureScenarios = new ArrayList<>();
+        List<Integer> nfeValues = new ArrayList<>();
+        List<Integer> numS = new ArrayList<>();
+        List<Integer> numD = new ArrayList<>();
+        List<Algorithm> algs = new ArrayList<>();
+        List<String> topologies = Arrays.asList("tw");
+        List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown,
+                CachingType.SourceAdjacent, CachingType.FailureAware);
+        List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, primaryCost, avgBackupCost, runningTime, feasible);
+        List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
+        List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, beforeHopsContent, afterHopsContent, cachingCost);
+        switch(routingType){
+            case "anycast":
+                failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
+                nfeValues = Arrays.asList(1, 2);
+                numS = Arrays.asList(1);
+                numD = Arrays.asList(1, 2, 3);
+                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MinimumCostPath,
+                        Algorithm.MinimumRiskPath, Algorithm.Bhandari);
+                break;
+            case "manytomany":
+                beforeMetrics = Arrays.asList(totalPaths, destsConnectedPerSrc, primaryCost, avgBackupCost, runningTime, feasible);
+                afterMetrics = Arrays.asList(primaryIntactPerSrc, connectionsIntact, postFailureCost);
+                failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
+                nfeValues = Arrays.asList(1, 2);
+                numS = Arrays.asList(5, 10);
+                numD = Arrays.asList(1, 2, 3);
+                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MinimumCostPath,
+                        Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo);
+                break;
+        }
 
-        List<FailureScenario> failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
-        List<Integer> nfeValues = Arrays.asList(1, 2);
-        List<Integer> numD = Arrays.asList(1, 2, 3);
+
+        return new AggregationOutputParameters(failureScenarios, nfeValues, numS, numD, algs, topologies, cachingTypes,
+                beforeMetrics, afterMetrics, cachingMetrics);
+    }
+
+
+    public String createAltAggregationOutput(Map<String, AggregateAnalysis> outputMap){
+        String routingType = "manyToMany";
+
+        AggregationOutputParameters aop = createOutputForRoutingType(routingType);
+        List<FailureScenario> failureScenarios = aop.getFailureScenarios();
+        List<Integer> nfeValues = aop.getNfeValues();
+        List<Integer> numS = aop.getNumS();
+        List<Integer> numD = aop.getNumD();
+        List<Algorithm> algs = aop.getAlgorithms();
         Map<Algorithm, Integer> algOrder = new HashMap<>();
         for(int i = 0; i < algs.size(); i++){
             algOrder.put(algs.get(i), i);
         }
-        List<String> topologies = Arrays.asList("tw");
+        List<String> topologies = aop.getTopologies();
+        List<CachingType> cachingTypes = aop.getCachingTypes();
+        List<String> beforeMetrics = aop.getBeforeMetrics();
+        List<String> afterMetrics = aop.getAfterMetrics();
+        List<String> cachingMetrics = aop.getCachingMetrics();
 
 
-        Map<String, Map<Integer, List<AggregateAnalysis>>> tableMap = buildTableMap(outputMap);
-
-        List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown,
-                CachingType.SourceAdjacent, CachingType.FailureAware);
-
-        List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, primaryCost, avgBackupCost, runningTime, feasible);
-        List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
-        List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, beforeHopsContent, afterHopsContent, cachingCost);
-
+        Map<String, Map<Integer, List<AggregateAnalysis>>> tableMap = buildTableMap(outputMap, algs);
         Map<Algorithm, String> algFormatMap = createAlgFormatMap(algs);
         Map<CachingType, String> cacheFormatMap = createCacheFormatMap(cachingTypes);
 
@@ -113,108 +149,109 @@ public class AggregationOutputService {
 
         List<String[]> output = new ArrayList<>();
         List<String[]> altOutput = new ArrayList<>();
-        for(String topology : topologies) {
-            for (FailureScenario failureScenario : failureScenarios) {
-                List<List<String[]>> linesPerNfe = new ArrayList<>();
-                for (Integer nfe : nfeValues) {
-                    List<String[]> tempOutput = new ArrayList<>();
-                    output.add(new String[]{"------"});
-                    output.add(new String[]{"------"});
-                    tempOutput.add(new String[]{"------"});
-                    tempOutput.add(new String[]{"------"});
-                    String hash = hashingService.hash(topology, failureScenario.getCode(), nfe);
-                    Map<Integer, List<AggregateAnalysis>> mapForTable = tableMap.get(hash);
-                    for(int categoryNumber = 0; categoryNumber < metricCategories.size(); categoryNumber++) {
-                        // Add header line for this table
-                        output.add(makeArray(topology, failureScenario.getCode(), nfe, determineCategory(categoryNumber)));
-                        tempOutput.add(makeArray(topology, failureScenario.getCode(), nfe, determineCategory(categoryNumber)));
-                        List<String> metrics = metricCategories.get(categoryNumber);
-                        if(categoryNumber == 2){
-                            // Caching Metrics
-                            // Only do this for anycast 1/3
-                            for(CachingType cachingType : cachingTypes) {
-                                String[] cachingHeader = makeCachingHeader(algs, cachingType, algFormatMap, cacheFormatMap);
-                                output.add(cachingHeader);
-                                tempOutput.add(cachingHeader); // add alt & output
-                                List<AggregateAnalysis> agForD = mapForTable.get(3);
-                                // Sort these analyses by which algorithm they're using
-                                agForD.sort(Comparator.comparing(ag -> algOrder.get(ag.getAlgorithm())));
-                                // Get the lines for the caching metrics
-                                List<String[]> metricsLines = makeMetricLines(metrics, agForD, bigFormat, littleFormat, cachingType);
-                                for(String[] metricLine : metricsLines){
-                                    output.add(metricLine);
-                                    tempOutput.add(metricLine); // add alt & output
+        for(Integer s : numS) {
+            // Create a file per S value
+            for (String topology : topologies) {
+                for (FailureScenario failureScenario : failureScenarios) {
+                    List<List<String[]>> linesPerNfe = new ArrayList<>();
+                    for (Integer nfe : nfeValues) {
+                        List<String[]> tempOutput = new ArrayList<>();
+                        output.add(new String[]{"------"});
+                        output.add(new String[]{"------"});
+                        tempOutput.add(new String[]{"------"});
+                        tempOutput.add(new String[]{"------"});
+                        String hash = hashingService.hash(s, topology, failureScenario.getCode(), nfe);
+                        Map<Integer, List<AggregateAnalysis>> mapForTable = tableMap.get(hash);
+                        for (int categoryNumber = 0; categoryNumber < metricCategories.size(); categoryNumber++) {
+                            // Add header line for this table
+                            output.add(makeArray(topology, failureScenario.getCode(), nfe, determineCategory(categoryNumber)));
+                            tempOutput.add(makeArray(topology, failureScenario.getCode(), nfe, determineCategory(categoryNumber)));
+                            List<String> metrics = metricCategories.get(categoryNumber);
+                            if (categoryNumber == 2) {
+                                // Caching Metrics
+                                // Only do this for anycast 1/3
+                                for (CachingType cachingType : cachingTypes) {
+                                    String[] cachingHeader = makeCachingHeader(algs, cachingType, algFormatMap, cacheFormatMap);
+                                    output.add(cachingHeader);
+                                    tempOutput.add(cachingHeader); // add alt & output
+                                    List<AggregateAnalysis> agForD = mapForTable.get(3);
+                                    // Sort these analyses by which algorithm they're using
+                                    agForD.sort(Comparator.comparing(ag -> algOrder.get(ag.getAlgorithm())));
+                                    // Get the lines for the caching metrics
+                                    List<String[]> metricsLines = makeMetricLines(metrics, agForD, bigFormat, littleFormat, cachingType);
+                                    for (String[] metricLine : metricsLines) {
+                                        output.add(metricLine);
+                                        tempOutput.add(metricLine); // add alt & output
+                                    }
+                                    tempOutput.add(new String[]{"\\hline"});
                                 }
-                                tempOutput.add(new String[]{"\\hline"});
+                            } else {
+                                for (Integer d : numD) {
+                                    // Sub header for Anycast # and Algorithms
+                                    String[] anycastHeader = makeAnycastHeader(algs, d, algFormatMap);
+                                    output.add(anycastHeader);
+                                    tempOutput.add(anycastHeader); // add alt & output
+                                    List<AggregateAnalysis> agForD = mapForTable.get(d);
+                                    // Sort these analyses by which algorithm they're using
+                                    agForD.sort(Comparator.comparing(ag -> algOrder.get(ag.getAlgorithm())));
+                                    // For each line: metric - value for Ag 1 - value for Ag 2 - value for Ag 3 - ...
+                                    List<String[]> metricsLines = makeMetricLines(metrics, agForD, bigFormat, littleFormat, null);
+                                    for (String[] metricLine : metricsLines) {
+                                        output.add(metricLine);
+                                        tempOutput.add(metricLine); // add alt & output
+                                    }
+                                    tempOutput.add(new String[]{"\\hline"});
+                                }
+                            }
+                            output.add(new String[]{});
+                            tempOutput.add(new String[]{});
+                        }
+                        linesPerNfe.add(tempOutput);
+                    }
+                    // We now have metrics and headers for each NFE value for this topo-failure scenario
+                    // Stored in linesPerNfe
+                    // Take each of these lines, and merge them together
+                    // Ignore first column for later nfes
+                    List<String[]> outputForZero = linesPerNfe.get(0);
+                    for (int i = 0; i < outputForZero.size(); i++) {
+                        String[] line = outputForZero.get(i);
+                        List<String> combinedLine = new ArrayList<>();
+                        Collections.addAll(combinedLine, line);
+                        boolean endLine = true;
+                        if (!Arrays.equals(line, new String[]{"\\hline"})) {
+                            for (int nfeI = 1; nfeI < nfeValues.size(); nfeI++) {
+                                String[] adjacentLine = linesPerNfe.get(nfeI).get(i);
+                                for (int adjacentI = 0; adjacentI < adjacentLine.length; adjacentI++) {
+                                    if (i != 0 && adjacentI == 0) {
+                                        continue;
+                                    }
+                                    combinedLine.add(adjacentLine[adjacentI]);
+                                }
                             }
                         } else {
-                            for (Integer d : numD) {
-                                // Sub header for Anycast # and Algorithms
-                                String[] anycastHeader = makeAnycastHeader(algs, d, algFormatMap);
-                                output.add(anycastHeader);
-                                tempOutput.add(anycastHeader); // add alt & output
-                                List<AggregateAnalysis> agForD = mapForTable.get(d);
-                                // Sort these analyses by which algorithm they're using
-                                 agForD.sort(Comparator.comparing(ag -> algOrder.get(ag.getAlgorithm())));
-                                // For each line: metric - value for Ag 1 - value for Ag 2 - value for Ag 3 - ...
-                                List<String[]> metricsLines = makeMetricLines(metrics, agForD, bigFormat, littleFormat, null);
-                                for(String[] metricLine : metricsLines){
-                                    output.add(metricLine);
-                                    tempOutput.add(metricLine); // add alt & output
-                                }
-                                tempOutput.add(new String[]{"\\hline"});
-                            }
+                            endLine = false;
                         }
-                        output.add(new String[]{});
-                        tempOutput.add(new String[]{});
+                        // Now we've got a combined line, have to append with ampersand
+                        String[] joined = joinWithAmpersand(combinedLine, endLine);
+                        altOutput.add(joined);
                     }
-                    linesPerNfe.add(tempOutput);
-                }
-                // We now have metrics and headers for each NFE value for this topo-failure scenario
-                // Stored in linesPerNfe
-                // Take each of these lines, and merge them together
-                // Ignore first column for later nfes
-                List<String[]> outputForZero = linesPerNfe.get(0);
-                for(int i = 0; i < outputForZero.size(); i++){
-                    String[] line = outputForZero.get(i);
-                    List<String> combinedLine = new ArrayList<>();
-                    for(String component : line){
-                        combinedLine.add(component);
-                    }
-                    boolean endLine = true;
-                    if(!Arrays.equals(line, new String[]{"\\hline"})) {
-                        for (int nfeI = 1; nfeI < nfeValues.size(); nfeI++) {
-                            String[] adjacentLine = linesPerNfe.get(nfeI).get(i);
-                            for (int adjacentI = 0; adjacentI < adjacentLine.length; adjacentI++) {
-                                if (i != 0 && adjacentI == 0) {
-                                    continue;
-                                }
-                                combinedLine.add(adjacentLine[adjacentI]);
-                            }
-                        }
-                    }
-                    else{
-                        endLine = false;
-                    }
-                    // Now we've got a combined line, have to append with ampersand
-                    String[] joined = joinWithAmpersand(combinedLine, endLine);
-                    altOutput.add(joined);
-                }
 
+                }
+            }
+            try {
+                String fileName = s + routingType + "_aggregatedTables";
+                CSVWriter writer = new CSVWriter(new FileWriter(fileName + ".csv"), ',');
+                writer.writeAll(output);
+                writer.close();
+                writer = new CSVWriter(new FileWriter("alt" + fileName + ".csv"), ',');
+                writer.writeAll(altOutput);
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        try {
-            CSVWriter writer =  new CSVWriter(new FileWriter(fileName + ".csv"), ',');
-            writer.writeAll(output);
-            writer.close();
-            writer = new CSVWriter(new FileWriter("alt" + fileName + ".csv"), ',');
-            writer.writeAll(altOutput);
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        return fileName;
+        return "";
     }
 
     private Map<CachingType,String> createCacheFormatMap(List<CachingType> types) {
@@ -265,6 +302,15 @@ public class AggregationOutputService {
                     break;
                 case Bhandari:
                     algFormatMap.put(alg, "Bhan");
+                    break;
+                case CycleForTwo:
+                    algFormatMap.put(alg, "CFT");
+                    break;
+                case MemberForwarding:
+                    algFormatMap.put(alg, "MemForw");
+                    break;
+                case OverlappingTrees:
+                    algFormatMap.put(alg, "OvTrees");
                     break;
             }
         }
@@ -349,7 +395,8 @@ public class AggregationOutputService {
         return "Error";
     }
 
-    public Map<String, Map<Integer, List<AggregateAnalysis>>> buildTableMap(Map<String, AggregateAnalysis> outputMap){
+    public Map<String, Map<Integer, List<AggregateAnalysis>>> buildTableMap(Map<String, AggregateAnalysis> outputMap,
+                                                                            List<Algorithm> algs){
         Map<String, Map<Integer, List<AggregateAnalysis>>> tableMap = new HashMap<>();
 
         // Categorize by Topology - Failure Scenario - NFE - Anycast #
@@ -360,8 +407,10 @@ public class AggregationOutputService {
             String topology = aggregateAnalysis.getTopologyId();
             FailureScenario failureScenario = aggregateAnalysis.getFailureScenario();
             Integer nfe = aggregateAnalysis.getNumFailuresEvents();
-            Integer d = aggregateAnalysis.getRoutingDescription().getNumDestinations();
-            String hash = hashingService.hash(topology, failureScenario.getCode(), nfe);
+            RoutingDescription routingDescription = aggregateAnalysis.getRoutingDescription();
+            Integer s = routingDescription.getNumSources();
+            Integer d = routingDescription.getNumDestinations();
+            String hash = hashingService.hash(s, topology, failureScenario.getCode(), nfe);
 
             tableMap.putIfAbsent(hash, new HashMap<>());
             Map<Integer, List<AggregateAnalysis>> numDMap = tableMap.get(hash);
@@ -393,6 +442,10 @@ public class AggregationOutputService {
                 return agAn.getAveragePrimaryCostPostFailure();
             case feasible:
                 return agAn.getPercentFeasible();
+            case destsConnectedPerSrc:
+                return agAn.getDestsConnectedPerSrc();
+            case primaryIntactPerSrc:
+                return agAn.getPrimaryIntactPerSrc();
         }
         return -1.0;
     }

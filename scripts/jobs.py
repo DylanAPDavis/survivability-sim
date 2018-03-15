@@ -5,7 +5,7 @@ algorithm_dict = {
     "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
-    "manytomany": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
+    "manytomany": ["ilp", "flexbhandari", "minimumcost", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "broadcast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
 }
 s_d_value_dict = {
@@ -39,14 +39,13 @@ s_d_value_dict = {
     "manytomany":
     [
         # {"num_s": 2, "num_d": 2, "use_min_s": 2, "use_max_s": 2, "use_min_d": 1, "use_max_d": 1},
-        {"num_s": 2, "num_d": 2, "use_min_s": 2, "use_max_s": 2, "use_min_d": 1, "use_max_d": 2},
-        {"num_s": 2, "num_d": 2, "use_min_s": 2, "use_max_s": 2, "use_min_d": 2, "use_max_d": 2},
-        # {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 1, "use_max_d": 1},
-        # {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 1, "use_max_d": 2},
-        # {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 2, "use_max_d": 2},
-        {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 1, "use_max_d": 3},
-        {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 2, "use_max_d": 3},
-        {"num_s": 3, "num_d": 3, "use_min_s": 3, "use_max_s": 3, "use_min_d": 3, "use_max_d": 3},
+        {"num_s": 5, "num_d": 1, "use_min_s": 5, "use_max_s": 5, "use_min_d": 1, "use_max_d": 1},
+        {"num_s": 10, "num_d": 1, "use_min_s": 10, "use_max_s": 10, "use_min_d": 1, "use_max_d": 1},
+        {"num_s": 5, "num_d": 2, "use_min_s": 5, "use_max_s": 5, "use_min_d": 1, "use_max_d": 2},
+        {"num_s": 10, "num_d": 2, "use_min_s": 10, "use_max_s": 10, "use_min_d": 1, "use_max_d": 2},
+        {"num_s": 5, "num_d": 3, "use_min_s": 5, "use_max_s": 5, "use_min_d": 1, "use_max_d": 3},
+        {"num_s": 10, "num_d": 3, "use_min_s": 10, "use_max_s": 10, "use_min_d": 1, "use_max_d": 3},
+
     ],
     "broadcast":
     [
@@ -66,10 +65,10 @@ traffic_combo_dict = {
 }
 
 # routing_types = ["unicast", "anycast", "manycast", "multicast", "manytoone", "manytomany", "broadcast"]
-routing_types = ["unicast", "anycast"]
-failure_scenarios = ["alllinks", "allnodes", "quake2"]
+routing_types = ["manytomany"]
+failure_scenarios = ["alllinks", "quake2"]
 # failure_scenarios = ["default", "alllinks", "allnodes", "quake1", "quake2", "quake3", "quake12", "quake13", "quake23", "quake123"]
-nfe_values = [1, 2]# [0, 1, 2, 3, 9999]
+nfe_values = [1, 2] # [0, 1, 2, 3, 9999]
 topologies = ["nsfnet", "tw"]
 
 
