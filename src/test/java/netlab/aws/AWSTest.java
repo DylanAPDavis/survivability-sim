@@ -82,11 +82,12 @@ public class AWSTest {
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
         String algorithm = "hamiltonian";
-        boolean deleteRecords = true;
+        String routing = "manytomany";
+        boolean deleteRecords = false;
         boolean deleteAnalysis = false;
         for(Long seed : seeds) {
             long startTime = System.nanoTime();
-            boolean success = storageController.deleteRecordsAndRequests(seed, algorithm, deleteRecords, deleteAnalysis);
+            boolean success = storageController.deleteRecordsAndRequests(seed, algorithm, routing, deleteRecords, deleteAnalysis);
             assert (success);
             long endTime = System.nanoTime();
             double duration = (endTime - startTime)/1e9;
