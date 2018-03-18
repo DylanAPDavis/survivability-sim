@@ -233,4 +233,30 @@ public class CycleForTwoServiceTest {
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
+
+    @Test
+    public void ManyToManyTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(10L)
+                .topologyId("NSFnet")
+                .algorithm("cycleForTwo")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manytomany")
+                .numSources(5)
+                .useMinS(5)
+                .numDestinations(2)
+                .useMinD(1)
+                .failureScenario("quake2")
+                .numFailureEvents(2)
+                .sourceSubsetDestType("all")
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
 }

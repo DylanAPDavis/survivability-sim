@@ -9,6 +9,9 @@ import javax.xml.transform.Source;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Data
@@ -39,19 +42,19 @@ public class Topology {
 
     public Topology(String id, Set<Node> nodes, Set<Link> links){
         this.id = id;
-        this.nodes = nodes;
-        this.links = links;
-        nodeIdMap = nodes.stream().collect(Collectors.toMap(Node::getId, node -> node));
-        linkIdMap = links.stream().collect(Collectors.toMap(Link::getId, link -> link));
-        nodeLinkMap = makeNodeLinkMap(nodes, links);
-        nodeOrderedLinkMap = makeNodeOrderedLinkMap(nodes, links);
-        neighborMap = makeNeighborMap(links);
-        neighborLinkMap = makeNeighborLinkMap(links);
+        this.nodes = nodes.stream().filter(distinctByKey(Node::getId)).collect(Collectors.toSet());
+        this.links = links.stream().filter(distinctByKey(Link::getId)).collect(Collectors.toSet());
+        nodeIdMap = this.nodes.stream().collect(Collectors.toMap(Node::getId, node -> node));
+        linkIdMap = this.links.stream().collect(Collectors.toMap(Link::getId, link -> link));
+        nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
+        nodeOrderedLinkMap = makeNodeOrderedLinkMap(this.nodes, this.links);
+        neighborMap = makeNeighborMap(this.links);
+        neighborLinkMap = makeNeighborLinkMap(this.links);
     }
 
 
     public void setLinks(Set<Link> links){
-        this.links = links;
+        this.links = links.stream().filter(distinctByKey(Link::getId)).collect(Collectors.toSet());
         nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
         nodeOrderedLinkMap = makeNodeOrderedLinkMap(this.nodes, this.links);
         neighborMap = makeNeighborMap(this.links);
@@ -59,7 +62,7 @@ public class Topology {
     }
 
     public void setNodes(Set<Node> nodes){
-        this.nodes = nodes;
+        this.nodes = nodes.stream().filter(distinctByKey(Node::getId)).collect(Collectors.toSet());
         nodeLinkMap = makeNodeLinkMap(this.nodes, this.links);
         nodeOrderedLinkMap = makeNodeOrderedLinkMap(this.nodes, this.links);
         neighborMap = makeNeighborMap(this.links);
@@ -126,5 +129,10 @@ public class Topology {
 
     public Link getLinkById(String id){
         return linkIdMap.get(id);
+    }
+
+    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
     }
 }

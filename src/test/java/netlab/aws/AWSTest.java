@@ -6,6 +6,7 @@ import netlab.TestConfiguration;
 import netlab.analysis.analyzed.*;
 import netlab.analysis.controller.AnalysisController;
 import netlab.analysis.services.AnalysisService;
+import netlab.processing.ProcessingService;
 import netlab.processing.pathmapping.PathMappingService;
 import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
@@ -61,6 +62,9 @@ public class AWSTest {
 
     @Autowired
     private PrintingService printingService;
+
+    @Autowired
+    private ProcessingService processingService;
 
     //@Test
     public void updateRows(){
@@ -161,8 +165,9 @@ public class AWSTest {
     @Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            String id = "10_tw_anycast_flexbhandari_1_3_1_1_1_1_none_alllinks_both_2_none_allow_allow_false_8";
+            String id = "10_nsfnet_manytomany_cyclefortwo_5_2_5_5_1_2_none_quake2_both_2_none_allow_allow_false_8";
             Request r = storageController.getRequest(id, true);
+            r = processingService.processRequest(r);
             //Analysis a = storageController.getAnalysis(id, true);
             Analysis analysis = analysisService.analyzeRequest(r);
             //analysisController.analyzeRequest(AnalysisParameters.builder().requestId(id).useAws(true).build());

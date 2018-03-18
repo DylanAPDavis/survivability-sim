@@ -101,8 +101,9 @@ public class CycleForTwoService {
             if(backupMap.containsKey(pair)){
                 Map<String, Path> establishedMap = chosenPathsMap.get(pair);
                 Map<String, Path> backupMapForPair = backupMap.get(pair);
+                Set<String> establishedIds = establishedMap.values().stream().map(Path::getId).collect(Collectors.toSet());
                 for(Path path : backupMapForPair.values()){
-                    if(!establishedMap.values().contains(path)){
+                    if(!establishedIds.contains(path.getId())){
                         establishedMap.put(String.valueOf(establishedMap.size() + 1), path);
                     }
                 }
