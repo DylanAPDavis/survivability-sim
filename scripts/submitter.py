@@ -6,7 +6,7 @@ analysis_job = "ANALYSIS_JOB"
 analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
 aggregate_analysis = False
-rerun = False
+rerun = True
 
 
 def process_job(job, analysis_type):
@@ -54,18 +54,19 @@ def rerun_jobs():
         for line in fp:
             line = line.strip("\n").strip("\r")
             params = line.split("_")
-            output_file_path = "results/output/" + line
-            run_time = "24:00"
-            memory = "16000"
-            queue = "long"
-            command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
-                             str(params[-1]), "-o", output_file_path, "python", "scripts/run_simulation.py"]
-            command_input += params
-            command_input.append("true")
-            command_input.append(line)
-            command_input.append("true")
-            #print(command_input)
-            process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+            if len(params) > 2:
+                output_file_path = "results/output/" + line
+                run_time = "24:00"
+                memory = "20000"
+                queue = "long"
+                command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
+                                 str(params[-1]), "-o", output_file_path, "python", "scripts/run_simulation.py"]
+                command_input += params
+                command_input.append("true")
+                command_input.append(line)
+                command_input.append("true")
+                #print(command_input)
+                process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 
 if aggregate_analysis:
