@@ -3,6 +3,9 @@ package netlab.topology.services;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.shortestPaths.MinimumCostPathService;
+import netlab.submission.enums.FailureClass;
+import netlab.submission.enums.FailureScenario;
+import netlab.submission.services.FailureAreaService;
 import netlab.submission.simulate.Network;
 import netlab.topology.elements.*;
 import netlab.topology.elements.Node;
@@ -35,8 +38,10 @@ public class TopologyService {
 
     private TopologyAdjustmentService topologyAdjustmentService;
 
+
     @Autowired
-    public TopologyService(MinimumCostPathService minimumCostPathService, TopologyAdjustmentService topologyAdjustmentService){
+    public TopologyService(MinimumCostPathService minimumCostPathService,
+                           TopologyAdjustmentService topologyAdjustmentService){
         this.minimumCostPathService = minimumCostPathService;
         this.topologyAdjustmentService = topologyAdjustmentService;
         topologyIdMap = new HashMap<>();
@@ -164,13 +169,24 @@ public class TopologyService {
         Map<String, Node> nodeIdMap = new HashMap<>();
         Map<String, Set<String>> nodeIdNeighborsMap = new HashMap<>();
         Set<Link> links = new HashSet<>();
+
+        List<String> simpleNodes = new ArrayList<>();
+        List<List<String>> simpleLinks = new ArrayList<>();
+
+
+        Set<Set<String>> usedPairs = new HashSet<>();
+
+        Map<String, String> idToLabelMap = new HashMap<>();
+
         for(org.graphstream.graph.Node node : g.getNodeSet()){
+            simpleNodes.add(node.getId());
             Iterator<org.graphstream.graph.Node> neighbors = node.getNeighborNodeIterator();
             // Skip nodes with no neighbors
             if(!neighbors.hasNext()){
                 continue;
             }
             String label = node.getAttribute("ui.label");
+            idToLabelMap.put(node.getId(), label);
             Double longitude = node.getAttribute("Longitude");
             Double latitude = node.getAttribute("Latitude");
             Location nodePoint = new Location(latitude, longitude);
@@ -180,6 +196,14 @@ public class TopologyService {
             nodeIdNeighborsMap.putIfAbsent(label, new HashSet<>());
             while(neighbors.hasNext()){
                 org.graphstream.graph.Node neighbor = neighbors.next();
+                Set<String> pair = new HashSet<>();
+                pair.add(node.getId());
+                pair.add(neighbor.getId());
+                if(!usedPairs.contains(pair)) {
+                    List<String> link = Arrays.asList(node.getId(), neighbor.getId());
+                    simpleLinks.add(link);
+                    usedPairs.add(pair);
+                }
                 String neighborLabel = neighbor.getAttribute("ui.label");
                 nodeIdNeighborsMap.get(label).add(neighborLabel);
             }
@@ -193,6 +217,31 @@ public class TopologyService {
                 links.add(otLink);
             }
         }
+
+        //System.out.println(simpleNodes);
+        //System.out.println(simpleLinks);
+        /*
+        Set<Failure> failures = failureAreaService.generateFailures(FailureScenario.Quake_2, nodes, links, FailureClass.Link);
+        Set<Link> failureLinks = failures.stream().map(Failure::getLink).collect(Collectors.toSet());
+        Set<List<String>> simpleFailureLinks = failureLinks.stream().map(l -> Arrays.asList(l.getOrigin().getId(), l.getTarget().getId())).collect(Collectors.toSet());
+
+        List<List<String>> actualFailureLinks = new ArrayList<>();
+
+        for(List<String> simpleLink : simpleLinks){
+            // Check the failure links
+            String originId = simpleLink.get(0);
+            String targetId = simpleLink.get(1);
+            List<String> modSimpleLink = Arrays.asList(idToLabelMap.get(originId), idToLabelMap.get(targetId));
+            List<String> modRevLink = Arrays.asList(idToLabelMap.get(targetId), idToLabelMap.get(originId));
+            if(simpleFailureLinks.contains(modSimpleLink) || simpleFailureLinks.contains(modRevLink)){
+                if(!actualFailureLinks.contains(simpleLink)) {
+                    actualFailureLinks.add(simpleLink);
+                }
+            }
+        }
+
+        System.out.println(actualFailureLinks);
+        */
 
         return new Topology(g.getId(), nodes, links);
     }
