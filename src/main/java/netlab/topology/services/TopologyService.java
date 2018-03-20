@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.submission.enums.FailureClass;
 import netlab.submission.enums.FailureScenario;
+import netlab.submission.request.FailureArea;
 import netlab.submission.services.FailureAreaService;
 import netlab.submission.simulate.Network;
 import netlab.topology.elements.*;
@@ -38,12 +39,15 @@ public class TopologyService {
 
     private TopologyAdjustmentService topologyAdjustmentService;
 
+    private FailureAreaService failureAreaService;
+
 
     @Autowired
     public TopologyService(MinimumCostPathService minimumCostPathService,
-                           TopologyAdjustmentService topologyAdjustmentService){
+                           TopologyAdjustmentService topologyAdjustmentService, FailureAreaService failureAreaService){
         this.minimumCostPathService = minimumCostPathService;
         this.topologyAdjustmentService = topologyAdjustmentService;
+        this.failureAreaService = failureAreaService;
         topologyIdMap = new HashMap<>();
         topologyIdMap.put("nsfnet", makeNsfNet());
         topologyIdMap.put("tw", makeTWTelecom());
@@ -176,17 +180,25 @@ public class TopologyService {
 
         Set<Set<String>> usedPairs = new HashSet<>();
 
+        int numNodes = 0;
         Map<String, String> idToLabelMap = new HashMap<>();
+        Map<String, String> labelToIdMap = new HashMap<>();
 
         for(org.graphstream.graph.Node node : g.getNodeSet()){
-            simpleNodes.add(node.getId());
             Iterator<org.graphstream.graph.Node> neighbors = node.getNeighborNodeIterator();
             // Skip nodes with no neighbors
             if(!neighbors.hasNext()){
                 continue;
             }
             String label = node.getAttribute("ui.label");
-            idToLabelMap.put(node.getId(), label);
+            String id = labelToIdMap.containsKey(label) ? labelToIdMap.get(label) : String.valueOf(numNodes);
+            if(!simpleNodes.contains(id)) {
+                simpleNodes.add(id);
+                idToLabelMap.put(id, label);
+                labelToIdMap.put(label, id);
+                numNodes++;
+            }
+
             Double longitude = node.getAttribute("Longitude");
             Double latitude = node.getAttribute("Latitude");
             Location nodePoint = new Location(latitude, longitude);
@@ -196,16 +208,23 @@ public class TopologyService {
             nodeIdNeighborsMap.putIfAbsent(label, new HashSet<>());
             while(neighbors.hasNext()){
                 org.graphstream.graph.Node neighbor = neighbors.next();
+                String neighborLabel = neighbor.getAttribute("ui.label");
+                nodeIdNeighborsMap.get(label).add(neighborLabel);
                 Set<String> pair = new HashSet<>();
                 pair.add(node.getId());
                 pair.add(neighbor.getId());
                 if(!usedPairs.contains(pair)) {
-                    List<String> link = Arrays.asList(node.getId(), neighbor.getId());
+                    String neighborId = labelToIdMap.containsKey(neighborLabel) ? labelToIdMap.get(neighborLabel) : String.valueOf(numNodes);
+                    if(!simpleNodes.contains(neighborId)) {
+                        simpleNodes.add(neighborId);
+                        idToLabelMap.put(neighborId, neighborLabel);
+                        labelToIdMap.put(neighborLabel, neighborId);
+                        numNodes++;
+                    }
+                    List<String> link = Arrays.asList(id, neighborId);
                     simpleLinks.add(link);
                     usedPairs.add(pair);
                 }
-                String neighborLabel = neighbor.getAttribute("ui.label");
-                nodeIdNeighborsMap.get(label).add(neighborLabel);
             }
         }
 
@@ -218,9 +237,9 @@ public class TopologyService {
             }
         }
 
-        //System.out.println(simpleNodes);
-        //System.out.println(simpleLinks);
         /*
+        System.out.println(simpleNodes);
+        System.out.println(simpleLinks);
         Set<Failure> failures = failureAreaService.generateFailures(FailureScenario.Quake_2, nodes, links, FailureClass.Link);
         Set<Link> failureLinks = failures.stream().map(Failure::getLink).collect(Collectors.toSet());
         Set<List<String>> simpleFailureLinks = failureLinks.stream().map(l -> Arrays.asList(l.getOrigin().getId(), l.getTarget().getId())).collect(Collectors.toSet());
