@@ -29,7 +29,7 @@ public class AnalysisService {
     public Analysis analyzeRequest(Request request) {
 
         Details details = request.getDetails();
-        Map<SourceDestPair, Map<String, Path>> chosenPaths = details.getChosenPaths();
+        Map<SourceDestPair, Map<String, Path>> chosenPaths = pathMappingService.filterEmptyPaths(details.getChosenPaths());
         Failures failureColl = details.getFailures();
 
         Map<String, Failure> failureIdMap = failureColl.getFailureSet().stream()

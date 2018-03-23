@@ -10,6 +10,7 @@ import netlab.analysis.services.AggregationOutputService;
 import netlab.analysis.services.AnalysisService;
 import netlab.analysis.services.HashingService;
 import netlab.storage.services.StorageService;
+import netlab.submission.enums.RoutingType;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,7 +108,7 @@ public class AnalysisController {
     public String aggregateWithParams(@RequestBody AggregationParameters agParams){
         long startTime = System.nanoTime();
         ExecutorService executor = Executors.newFixedThreadPool(5);
-        Map<String, List<Analysis>> analysisMap = buildAnalysisMap(agParams.getSeeds(), executor);
+        Map<String, List<Analysis>> analysisMap = buildAnalysisMap(agParams.getSeeds(), agParams.getRoutingTypes(), executor);
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
         log.info("Analysis gathering took: " + duration + " seconds");
@@ -131,11 +132,13 @@ public class AnalysisController {
         return aggregationOutputService.createAltAggregationOutput(aggregateAnalysisMap);
     }
 
-    private Map<String, List<Analysis>> buildAnalysisMap(List<Long> seeds, ExecutorService executor){
+    private Map<String, List<Analysis>> buildAnalysisMap(List<Long> seeds, List<RoutingType> routingTypes, ExecutorService executor){
         List<Callable<Map<String, List<Analysis>>>> analysisCallables = new ArrayList<>();
-        for(Long seed : seeds){
-            Callable<Map<String, List<Analysis>>> c = getAnalysis(seed);
-            analysisCallables.add(c);
+        for(RoutingType routingType : routingTypes) {
+            for (Long seed : seeds) {
+                Callable<Map<String, List<Analysis>>> c = getAnalysis(seed, routingType);
+                analysisCallables.add(c);
+            }
         }
         Set<Map<String, List<Analysis>>> analysisMaps = null;
         try {
@@ -198,23 +201,25 @@ public class AnalysisController {
         };
     }
 
-    private Callable<Map<String, List<Analysis>>> getAnalysis(Long seed){
+    private Callable<Map<String, List<Analysis>>> getAnalysis(Long seed, RoutingType routingType){
         return () -> {
             Map<String, List<Analysis>> analysisMap = new HashMap<>();
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
             for(SimulationParameters params : seedParams){
-                String id = params.getRequestId();
-                if(params.getCompleted()) {
-                    Analysis analysis = storageService.retrieveAnalyzedSet(id, true, false);
-                    if (analysis != null) {
-                        String hash = hashingService.hashAnalysis(analysis);
-                        analysisMap.putIfAbsent(hash, new ArrayList<>());
-                        analysisMap.get(hash).add(analysis);
+                if(params.getRoutingType().toLowerCase().equals(routingType.getCode().toLowerCase())) {
+                    String id = params.getRequestId();
+                    if (params.getCompleted()) {
+                        Analysis analysis = storageService.retrieveAnalyzedSet(id, true, false);
+                        if (analysis != null) {
+                            String hash = hashingService.hashAnalysis(analysis);
+                            analysisMap.putIfAbsent(hash, new ArrayList<>());
+                            analysisMap.get(hash).add(analysis);
+                        } else {
+                            log.info("Analysis for ID: " + id + " could not be found!");
+                        }
                     } else {
-                        log.info("Analysis for ID: " + id + " could not be found!");
+                        log.info("ID: " + id + " has not completed successfully!");
                     }
-                } else{
-                    log.info("ID: " + id + " has not completed successfully!");
                 }
             }
             try {

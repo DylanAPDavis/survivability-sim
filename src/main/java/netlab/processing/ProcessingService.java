@@ -9,6 +9,7 @@ import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.disjointpaths.FlexBhandariService;
 import netlab.processing.groupcast.MemberForwardingService;
 import netlab.processing.overlappingtrees.OverlappingTreeService;
+import netlab.processing.pathmapping.PathMappingService;
 import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.processing.shortestPaths.MinimumRiskPathService;
 import netlab.processing.shortestPaths.YensService;
@@ -16,11 +17,16 @@ import netlab.processing.tabu.TabuSearchService;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
 import netlab.submission.simulate.Network;
+import netlab.topology.elements.Path;
+import netlab.topology.elements.SourceDestPair;
 import netlab.topology.elements.Topology;
 import netlab.topology.services.TopologyService;
 import netlab.visualization.PrintingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -55,6 +61,8 @@ public class ProcessingService {
 
     private PrintingService printingService;
 
+    private PathMappingService pathMappingService;
+
     @Autowired
     public ProcessingService(TopologyService topologyService, PrintingService printingService,
                              AmplService amplService, FlexBhandariService flexBhandariService,
@@ -63,7 +71,7 @@ public class ProcessingService {
                              MemberForwardingService memberForwardingService,
                              CollapsedRingService collapsedRingService, CycleForTwoService cycleForTwoService,
                              MinimumRiskPathService minimumRiskPathService, YensService yensService,
-                             TabuSearchService tabuSearchService) {
+                             TabuSearchService tabuSearchService, PathMappingService pathMappingService) {
         this.topoService = topologyService;
         this.printingService = printingService;
         this.amplService = amplService;
@@ -78,6 +86,7 @@ public class ProcessingService {
         this.minimumRiskPathService = minimumRiskPathService;
         this.yensService = yensService;
         this.tabuSearchService = tabuSearchService;
+        this.pathMappingService = pathMappingService;
     }
 
     public Request processRequest(Request request) {
@@ -130,9 +139,11 @@ public class ProcessingService {
                 details = tabuSearchService.solve(request, topo);
                 break;
         }
+        details.setChosenPaths(pathMappingService.filterEmptyPaths(details.getChosenPaths()));
         request.setDetails(details);
         return request;
     }
+
 
 }
 

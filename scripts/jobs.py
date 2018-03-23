@@ -69,7 +69,7 @@ routing_types = ["manytomany"]
 failure_scenarios = ["alllinks", "quake2"]
 # failure_scenarios = ["default", "alllinks", "allnodes", "quake1", "quake2", "quake3", "quake12", "quake13", "quake23", "quake123"]
 nfe_values = [1, 2] # [0, 1, 2, 3, 9999]
-topologies = ["nsfnet", "tw"]
+topologies = ["tw"] # ["nsfnet", "tw"]
 
 
 def create_jobs(seed):

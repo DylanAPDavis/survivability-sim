@@ -165,7 +165,7 @@ public class AWSTest {
     @Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            String id = "10_nsfnet_manytomany_cyclefortwo_5_2_5_5_1_2_none_quake2_both_2_none_allow_allow_false_8";
+            String id = "27_tw_manytomany_flexbhandari_10_3_10_10_1_3_none_alllinks_both_2_none_allow_allow_false_8";
             Request r = storageController.getRequest(id, true);
             r = processingService.processRequest(r);
             //Analysis a = storageController.getAnalysis(id, true);

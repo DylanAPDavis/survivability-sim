@@ -258,4 +258,14 @@ public class PathMappingService {
         return pathsPerSrc;
     }
 
+    public Map<SourceDestPair,Map<String,Path>> filterEmptyPaths(Map<SourceDestPair, Map<String, Path>> chosenPaths) {
+        for(SourceDestPair pair : chosenPaths.keySet()){
+            Map<String, Path> pathMap = chosenPaths.get(pair).keySet().stream()
+                    .filter(id -> chosenPaths.get(pair).get(id).getNodes().size() > 0)
+                    .collect(Collectors.toMap(id -> id, id -> chosenPaths.get(pair).get(id)));
+            chosenPaths.put(pair, pathMap);
+        }
+        return chosenPaths;
+    }
+
 }

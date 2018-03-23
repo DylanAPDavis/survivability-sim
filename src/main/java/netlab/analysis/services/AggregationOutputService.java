@@ -86,7 +86,7 @@ public class AggregationOutputService {
         List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, primaryCost, avgBackupCost, runningTime, feasible);
         List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
         List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, beforeHopsContent, afterHopsContent, cachingCost);
-        switch(routingType){
+        switch(routingType.toLowerCase()){
             case "anycast":
                 failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
                 nfeValues = Arrays.asList(1, 2);
@@ -101,9 +101,8 @@ public class AggregationOutputService {
                 failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
                 nfeValues = Arrays.asList(1, 2);
                 numS = Arrays.asList(5, 10);
-                numD = Arrays.asList(1, 2, 3);
-                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MinimumCostPath,
-                        Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo);
+                numD = Arrays.asList(2, 3);
+                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MemberForwarding, Algorithm.CycleForTwo);
                 break;
         }
 
@@ -188,7 +187,7 @@ public class AggregationOutputService {
                             } else {
                                 for (Integer d : numD) {
                                     // Sub header for Anycast # and Algorithms
-                                    String[] anycastHeader = makeAnycastHeader(algs, d, algFormatMap);
+                                    String[] anycastHeader = routingType.equals("anycast") ? makeAnycastHeader(algs, d, algFormatMap) : makeManyToManyHeader(algs, d, algFormatMap);
                                     output.add(anycastHeader);
                                     tempOutput.add(anycastHeader); // add alt & output
                                     List<AggregateAnalysis> agForD = mapForTable.get(d);
@@ -254,6 +253,7 @@ public class AggregationOutputService {
         return "";
     }
 
+
     private Map<CachingType,String> createCacheFormatMap(List<CachingType> types) {
         Map<CachingType, String> algFormatMap = new HashMap<>();
         for(CachingType type : types){
@@ -307,10 +307,10 @@ public class AggregationOutputService {
                     algFormatMap.put(alg, "CFT");
                     break;
                 case MemberForwarding:
-                    algFormatMap.put(alg, "MemForw");
+                    algFormatMap.put(alg, "HBH");
                     break;
                 case OverlappingTrees:
-                    algFormatMap.put(alg, "OvTrees");
+                    algFormatMap.put(alg, "OverT");
                     break;
             }
         }
@@ -378,6 +378,14 @@ public class AggregationOutputService {
 
     private String[] makeAnycastHeader(List<Algorithm> algs, Integer d, Map<Algorithm, String> algFormatMap){
         String any = "\\textbf{Anycast 1/" + d + "}";
+        List<String> temp = algs.stream().map(algFormatMap::get).collect(Collectors.toList());
+        temp.add(0, any);
+        return makeArrayFromList(temp);
+    }
+
+
+    private String[] makeManyToManyHeader(List<Algorithm> algs, Integer d, Map<Algorithm, String> algFormatMap) {
+        String any = "\\textbf{|D| =" + d + "}";
         List<String> temp = algs.stream().map(algFormatMap::get).collect(Collectors.toList());
         temp.add(0, any);
         return makeArrayFromList(temp);
