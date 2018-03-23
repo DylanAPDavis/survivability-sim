@@ -6,7 +6,8 @@ import traceback
 import json
 
 
-def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web_server="true", aggregate="false"):
+def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web_server="true", aggregate="false",
+                     mass_analyze_params=None):
     process = None
 
     try:
@@ -25,6 +26,10 @@ def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web
         if len(analysis_params) > 0:
             command_input.append(analysis)
         command_input.append(aggregate_arg)
+        if mass_analyze_params is not None:
+            mass_analyze_arg = "--massAnalyze=" +  convert_params_to_string(mass_analyze_params)
+            command_input.append(mass_analyze_arg)
+
         process = subprocess.Popen(command_input)
 
         if loop:

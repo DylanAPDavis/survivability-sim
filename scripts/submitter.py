@@ -6,7 +6,8 @@ analysis_job = "ANALYSIS_JOB"
 analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
 aggregate_analysis = False
-rerun = True
+rerun = False
+mass_analysis = True
 
 
 def process_job(job, analysis_type):
@@ -69,10 +70,27 @@ def rerun_jobs():
                 process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 
+def analyze_jobs(seeds, topologies, routings):
+    for seed in seeds:
+        for topology in topologies:
+            for routing in routings:
+                output_file_path = "results/output/" + "mass_analyze" + seed + "_" + topology + "_" + routing
+                run_time = "3:59"
+                memory = "8000"
+                command_input = ["bsub", "-q", "short", "-W", run_time, "-R",
+                                 "rusage[mem=" + memory + "] span[hosts=1]", "-n", str(12), "-o", output_file_path,
+                                 "python", "scripts/run_mass_analysis.py", seed, topology, routing]
+                process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+
 if aggregate_analysis:
     process_aggregate_job()
 if rerun:
     rerun_jobs()
+if mass_analysis:
+    seeds = range(1,31)
+    topologies = ["tw"]
+    routings = ["manytomany"]
+    analyze_jobs(seeds, topologies, routing)
 else:
     seeds = range(1, 31)
     for seed in seeds:

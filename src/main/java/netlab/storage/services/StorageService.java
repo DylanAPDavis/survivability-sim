@@ -55,7 +55,7 @@ public class StorageService {
     }
 
     public boolean storeAnalyzedSet(Analysis analysis, boolean useAws){
-        File outputFile = createFile(analysis.getRequestId(), "/results/raw/");
+        File outputFile = createFile(analysis.getRequestId(), "/results/analyzed/");
         if(useAws){
             writeLocal(analysis, outputFile);
             return s3Interface.uploadToAnalyzed(outputFile, analysis.getRequestId());
@@ -139,6 +139,10 @@ public class StorageService {
         if(algorithm != null) {
             paramsToDelete = matchingParams.stream()
                     .filter(p -> p.getAlgorithm().toLowerCase().equals(algorithm.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+        if(routing != null){
+            paramsToDelete = matchingParams.stream()
                     .filter(p -> p.getRoutingType().toLowerCase().equals(routing.toLowerCase()))
                     .collect(Collectors.toList());
         }

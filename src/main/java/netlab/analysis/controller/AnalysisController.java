@@ -1,10 +1,7 @@
 package netlab.analysis.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import netlab.analysis.analyzed.AggregateAnalysis;
-import netlab.analysis.analyzed.AggregationParameters;
-import netlab.analysis.analyzed.Analysis;
-import netlab.analysis.analyzed.AnalysisParameters;
+import netlab.analysis.analyzed.*;
 import netlab.analysis.services.AggregationAnalysisService;
 import netlab.analysis.services.AggregationOutputService;
 import netlab.analysis.services.AnalysisService;
@@ -76,30 +73,69 @@ public class AnalysisController {
 
     }
 
+    public void massAnalysis(MassAnalysisParameters massAnalysisParameters) {
+        Long seed = massAnalysisParameters.getSeed();
+        String topology = massAnalysisParameters.getTopology();
+        String routingType = massAnalysisParameters.getRoutingType();
+        List<Long> seeds = Collections.singletonList(seed);
+        analyzeSeeds(seeds, routingType, topology);
+    }
+
     @RequestMapping(value="/analyze_seed", method = RequestMethod.POST)
     @ResponseBody
-    public String analyzeSeeds(@RequestBody List<Long> seeds){
+    public String analyzeSeeds(@RequestBody List<Long> seeds, String routingType, String topologyId){
+        ExecutorService executor = Executors.newFixedThreadPool(8);
+        List<Callable<Analysis>> analysisCallables = new ArrayList<>();
         for(Long seed : seeds) {
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
             seedParams.stream()
                     .filter(SimulationParameters::getCompleted)
                     .filter(SimulationParameters::getUseAws)
+                    .filter(sp -> sp.getRoutingType().toLowerCase().equals(routingType.toLowerCase()))
+                    .filter(sp -> sp.getTopologyId().toLowerCase().equals(topologyId.toLowerCase()))
                     .map(SimulationParameters::getRequestId)
                     .forEach( id -> {
-                        Analysis analysis = storageService.retrieveAnalyzedSet(id, true);
-                        if(analysis == null) {
-                            Request request = storageService.retrieveRequestSet(id, true);
-                            if(request != null) {
-                                analysis = analysisService.analyzeRequest(request);
-                                storageService.storeAnalyzedSet(analysis, true);
-                            } else{
-                                System.out.println("Details Set ID: " + id + " does not exist!");
-                            }
-                        }
+                        analysisCallables.add(analyze(id));
                     });
+            try {
+                Set<Analysis> analyses = executor.invokeAll(analysisCallables)
+                        .stream()
+                        .map(c -> {
+                            try {
+                                return c.get();
+                            } catch (Exception e) {
+                                throw new IllegalStateException(e);
+                            }
+                        })
+                        .collect(Collectors.toSet());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             System.out.println("Analyzed seed: " + seed);
         }
         return "Success";
+    }
+
+    private Callable<Analysis> analyze(String id){
+        return () -> {
+            Analysis analysis = storageService.retrieveAnalyzedSet(id, true);
+            if(analysis == null) {
+                Request request = storageService.retrieveRequestSet(id, true);
+                if(request != null) {
+                    analysis = analysisService.analyzeRequest(request);
+                    storageService.storeAnalyzedSet(analysis, true);
+                    //System.out.println(id + " analyzed!");
+                } else{
+                    System.out.println("Details Set ID: " + id + " does not exist!");
+                }
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return analysis;
+        };
     }
 
 
@@ -108,7 +144,7 @@ public class AnalysisController {
     public String aggregateWithParams(@RequestBody AggregationParameters agParams){
         long startTime = System.nanoTime();
         ExecutorService executor = Executors.newFixedThreadPool(5);
-        Map<String, List<Analysis>> analysisMap = buildAnalysisMap(agParams.getSeeds(), agParams.getRoutingTypes(), executor);
+        Map<String, List<Analysis>> analysisMap = buildAnalysisMap(agParams.getSeeds(), agParams.getRoutingTypes(), agParams.getTopologyIds(), executor);
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
         log.info("Analysis gathering took: " + duration + " seconds");
@@ -132,12 +168,15 @@ public class AnalysisController {
         return aggregationOutputService.createAltAggregationOutput(aggregateAnalysisMap);
     }
 
-    private Map<String, List<Analysis>> buildAnalysisMap(List<Long> seeds, List<RoutingType> routingTypes, ExecutorService executor){
+    private Map<String, List<Analysis>> buildAnalysisMap(List<Long> seeds, List<RoutingType> routingTypes,
+                                                         List<String> topologyIds, ExecutorService executor){
         List<Callable<Map<String, List<Analysis>>>> analysisCallables = new ArrayList<>();
         for(RoutingType routingType : routingTypes) {
-            for (Long seed : seeds) {
-                Callable<Map<String, List<Analysis>>> c = getAnalysis(seed, routingType);
-                analysisCallables.add(c);
+            for(String topologyId : topologyIds) {
+                for (Long seed : seeds) {
+                    Callable<Map<String, List<Analysis>>> c = getAnalysis(seed, routingType, topologyId);
+                    analysisCallables.add(c);
+                }
             }
         }
         Set<Map<String, List<Analysis>>> analysisMaps = null;
@@ -201,12 +240,13 @@ public class AnalysisController {
         };
     }
 
-    private Callable<Map<String, List<Analysis>>> getAnalysis(Long seed, RoutingType routingType){
+    private Callable<Map<String, List<Analysis>>> getAnalysis(Long seed, RoutingType routingType, String topologyId){
         return () -> {
             Map<String, List<Analysis>> analysisMap = new HashMap<>();
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
             for(SimulationParameters params : seedParams){
-                if(params.getRoutingType().toLowerCase().equals(routingType.getCode().toLowerCase())) {
+                if(params.getRoutingType().toLowerCase().equals(routingType.getCode().toLowerCase())
+                        && params.getTopologyId().toLowerCase().equals(topologyId.toLowerCase())) {
                     String id = params.getRequestId();
                     if (params.getCompleted()) {
                         Analysis analysis = storageService.retrieveAnalyzedSet(id, true, false);

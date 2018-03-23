@@ -82,7 +82,7 @@ public class AggregationOutputService {
         List<Algorithm> algs = new ArrayList<>();
         List<String> topologies = Arrays.asList("tw");
         List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown,
-                CachingType.SourceAdjacent, CachingType.FailureAware);
+                CachingType.SourceAdjacent, CachingType.FailureAware, CachingType.BranchingPoint);
         List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, primaryCost, avgBackupCost, runningTime, feasible);
         List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
         List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, beforeHopsContent, afterHopsContent, cachingCost);
@@ -271,7 +271,7 @@ public class AggregationOutputService {
                     algFormatMap.put(type, "FA");
                     break;
                 case BranchingPoint:
-                    algFormatMap.put(type, "BP");
+                    algFormatMap.put(type, "OP");
                     break;
             }
         }

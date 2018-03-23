@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.AggregationParameters;
 import netlab.analysis.analyzed.AnalysisParameters;
+import netlab.analysis.analyzed.MassAnalysisParameters;
 import netlab.analysis.controller.AnalysisController;
 import netlab.analysis.services.AggregationAnalysisService;
 import netlab.storage.controller.StorageController;
@@ -30,6 +31,7 @@ public class SurvivabilitySimApplication {
 		Long rerunSeed = null;
 		AnalysisParameters analysisParams = null;
 		AggregationParameters aggregationParameters = null;
+		MassAnalysisParameters massAnalysisParameters = null;
 		boolean defaultAggregate = false;
 		ObjectMapper mapper = new ObjectMapper();
 		printUsage(args);
@@ -69,6 +71,14 @@ public class SurvivabilitySimApplication {
 			}
 			if (option.contains("--defaultAggregate")){
 				defaultAggregate = Boolean.parseBoolean(value);
+			}
+			if(option.contains("----massAnalyze")){
+				try {
+					massAnalysisParameters = mapper.readValue(value, MassAnalysisParameters.class);
+					log.info("Mass Analysis Params: " + massAnalysisParameters.toString());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -121,6 +131,12 @@ public class SurvivabilitySimApplication {
 		if(aggregationParameters != null){
 			log.info("Aggregating Analyses");
 			analysCon.aggregateWithParams(aggregationParameters);
+		}
+
+		// Mass Analysis
+		if(massAnalysisParameters != null){
+			log.info("Mass Analyzing");
+			analysCon.massAnalysis(massAnalysisParameters);
 		}
 	}
 

@@ -85,10 +85,10 @@ public class AWSTest {
     //@Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
-        String algorithm = "hamiltonian";
+        String algorithm = null;
         String routing = "manytomany";
         boolean deleteRecords = false;
-        boolean deleteAnalysis = false;
+        boolean deleteAnalysis = true;
         for(Long seed : seeds) {
             long startTime = System.nanoTime();
             boolean success = storageController.deleteRecordsAndRequests(seed, algorithm, routing, deleteRecords, deleteAnalysis);
@@ -99,10 +99,12 @@ public class AWSTest {
         }
     }
 
-    //@Test
+    @Test
     public void analysisGeneration(){
-        List<Long> seeds = Arrays.asList(3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L);
-        analysisController.analyzeSeeds(seeds);
+        List<Long> seeds = LongStream.rangeClosed(8L, 30L).boxed().collect(Collectors.toList());
+        String routingType = "manytomany";
+        String topologyId = "tw";
+        analysisController.analyzeSeeds(seeds, routingType, topologyId);
     }
 
     @Test
@@ -162,10 +164,10 @@ public class AWSTest {
         }
     }
 
-    @Test
+    //@Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            String id = "27_tw_manytomany_flexbhandari_10_3_10_10_1_3_none_alllinks_both_2_none_allow_allow_false_8";
+            String id = "12_tw_manytomany_flexbhandari_10_3_10_10_1_3_none_quake2_both_2_none_allow_allow_false_8";
             Request r = storageController.getRequest(id, true);
             r = processingService.processRequest(r);
             //Analysis a = storageController.getAnalysis(id, true);
