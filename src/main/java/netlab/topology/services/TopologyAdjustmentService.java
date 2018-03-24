@@ -148,6 +148,26 @@ public class TopologyAdjustmentService {
         return createTopologyWithLinkSubset(topo, newLinkSet);
     }
 
+    public Topology removeNodesFromTopology(Topology topo, Collection<Node> nodesToRemove){
+        Set<Node> newNodeSet = new HashSet<>();
+        Set<Link> newLinkSet = new HashSet<>();
+        Map<Node, Set<Link>> nodeLinkMap = topo.getNodeLinkMap();
+        for(Node node : topo.getNodes()){
+            if(!nodesToRemove.contains(node)){
+                newNodeSet.add(node);
+                Set<Link> linksForThisNode = nodeLinkMap.get(node);
+                for(Link link : linksForThisNode){
+                    // Only add an incident link if neither the origin nor target are in the nodes to remove set
+                    if(!nodesToRemove.contains(link.getOrigin()) && !nodesToRemove.contains(link.getTarget())){
+                        newLinkSet.add(link);
+                    }
+                }
+            }
+        }
+
+        return createTopologyWithNodeLinkSubset(topo, newNodeSet, newLinkSet);
+    }
+
     public Topology createTopologyWithLinkSubset(Topology topo, Set<Link> linkSubset){
         Topology newTopo = new Topology(topo.getId(), topo.getNodes(), linkSubset);
         newTopo.copyPathCosts(topo);

@@ -93,6 +93,8 @@ public class AnalysisController {
                     .filter(SimulationParameters::getUseAws)
                     .filter(sp -> sp.getRoutingType().toLowerCase().equals(routingType.toLowerCase()))
                     .filter(sp -> sp.getTopologyId().toLowerCase().equals(topologyId.toLowerCase()))
+                    .filter(sp -> sp.getAlgorithm().toLowerCase().equals("ilp"))    // TEMP
+                    .filter(sp -> sp.getNumFailureEvents().equals(2))              // TEMP
                     .map(SimulationParameters::getRequestId)
                     .forEach( id -> {
                         analysisCallables.add(analyze(id));
@@ -108,10 +110,10 @@ public class AnalysisController {
                             }
                         })
                         .collect(Collectors.toSet());
+                System.out.println("Analyzed seed: " + seed);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println("Analyzed seed: " + seed);
         }
         return "Success";
     }

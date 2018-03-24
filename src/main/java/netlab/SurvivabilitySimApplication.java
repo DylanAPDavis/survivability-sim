@@ -1,14 +1,17 @@
 package netlab;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.AggregationParameters;
+import netlab.analysis.analyzed.Analysis;
 import netlab.analysis.analyzed.AnalysisParameters;
 import netlab.analysis.analyzed.MassAnalysisParameters;
 import netlab.analysis.controller.AnalysisController;
 import netlab.analysis.services.AggregationAnalysisService;
 import netlab.storage.controller.StorageController;
 import netlab.submission.controller.SubmissionController;
+import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,6 +19,8 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +37,7 @@ public class SurvivabilitySimApplication {
 		AnalysisParameters analysisParams = null;
 		AggregationParameters aggregationParameters = null;
 		MassAnalysisParameters massAnalysisParameters = null;
+		List<SimulationParameters> simParamList = null;
 		boolean defaultAggregate = false;
 		ObjectMapper mapper = new ObjectMapper();
 		printUsage(args);
@@ -72,10 +78,19 @@ public class SurvivabilitySimApplication {
 			if (option.contains("--defaultAggregate")){
 				defaultAggregate = Boolean.parseBoolean(value);
 			}
-			if(option.contains("----massAnalyze")){
+			if(option.contains("--massAnalyze")){
 				try {
 					massAnalysisParameters = mapper.readValue(value, MassAnalysisParameters.class);
 					log.info("Mass Analysis Params: " + massAnalysisParameters.toString());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if(option.contains("--massRun")){
+				try{
+					TypeReference<List<SimulationParameters>> mapType = new TypeReference<List<SimulationParameters>>() {};
+					value = new String(Files.readAllBytes(Paths.get("scripts/mass.txt"))).replace("\n", "").replace("\r", "");
+					simParamList = mapper.readValue(value, mapType);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -137,6 +152,24 @@ public class SurvivabilitySimApplication {
 		if(massAnalysisParameters != null){
 			log.info("Mass Analyzing");
 			analysCon.massAnalysis(massAnalysisParameters);
+		}
+
+		// Mass simulation run
+		if(simParamList != null){
+			for(SimulationParameters simulationParameters : simParamList){
+				String requestId = subCon.submitRequest(simulationParameters);
+				log.info("Details ID: " + requestId);
+				AnalysisParameters analysisParameters = AnalysisParameters.builder()
+						.requestId(requestId)
+						.useAws(simulationParameters.getUseAws())
+						.build();
+				analysCon.analyzeRequest(analysisParameters);
+			}
+			// If you're not analyzing the request, close the context and shut down the simulator
+			if(analysisParams == null) {
+				ctx.close();
+				System.exit(0);
+			}
 		}
 	}
 

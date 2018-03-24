@@ -142,7 +142,7 @@ public class StorageService {
                     .collect(Collectors.toList());
         }
         if(routing != null){
-            paramsToDelete = matchingParams.stream()
+            paramsToDelete = paramsToDelete.stream()
                     .filter(p -> p.getRoutingType().toLowerCase().equals(routing.toLowerCase()))
                     .collect(Collectors.toList());
         }

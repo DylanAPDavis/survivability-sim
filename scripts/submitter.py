@@ -1,13 +1,17 @@
 import subprocess
 import jobs
 import time
+import run_simulation
+import json
+from launch import launch_simulator
 
 analysis_job = "ANALYSIS_JOB"
 analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
 aggregate_analysis = False
 rerun = False
-mass_analysis = True
+mass_analysis = False
+mass_sim = True
 
 
 def process_job(job, analysis_type):
@@ -40,6 +44,26 @@ def process_job(job, analysis_type):
     process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 
+def mass_process_jobs(job_list):
+    output_file_path = "results/output/mass_process_" + job_list[0].request_id
+    run_time = "3:59"
+    memory = "6000"
+    queue = "short"
+    param_dicts = []
+    for job in job_list:
+        args = [arg for arg in job.ordered_params]
+        args.append(job.use_aws)
+        args.append(job.request_id)
+        param_dicts.append(run_simulation.build_param_dict(args))
+    params_string = json.dumps(param_dicts)
+    filepath = 'scripts/mass.txt'
+    with open(filepath, "w+") as fp:
+        fp.write(params_string)
+    command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
+                     str(job_list[0].num_threads), "-o", output_file_path, "python", "scripts/run_mass_simulation.py"]
+    process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+
+
 def process_aggregate_job():
     output_file_path = "results/output/" + "aggregate"
     run_time = "3:59"
@@ -47,6 +71,7 @@ def process_aggregate_job():
     command_input = ["bsub", "-q", "short", "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
                      str(12), "-o", output_file_path, "python", "scripts/run_aggregate.py"]
     process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+
 
 # 12_tw_manytomany_ilp_5_3_5_5_1_3_none_alllinks_both_2_none_allow_allow_false_8
 def rerun_jobs():
@@ -57,8 +82,8 @@ def rerun_jobs():
             params = line.split("_")
             if len(params) > 2:
                 output_file_path = "results/output/" + line
-                run_time = "24:00"
-                memory = "20000"
+                run_time = "6:00"
+                memory = "12000"
                 queue = "long"
                 command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
                                  str(params[-1]), "-o", output_file_path, "python", "scripts/run_simulation.py"]
@@ -84,13 +109,23 @@ def analyze_jobs(seeds, topologies, routings):
 
 if aggregate_analysis:
     process_aggregate_job()
-if rerun:
+elif rerun:
     rerun_jobs()
-if mass_analysis:
+elif mass_analysis:
     seeds = range(1,31)
     topologies = ["tw"]
     routings = ["manytomany"]
-    analyze_jobs(seeds, topologies, routing)
+    analyze_jobs(seeds, topologies, routings)
+elif mass_sim:
+    seeds = range(1,31)
+    topology = "tw"
+    routing = "manytomany"
+    algorithm = "tabu"
+    job_list = []
+    for seed in seeds:
+        jobs_for_seed = jobs.create_jobs(seed)
+        job_list += [job for job in jobs_for_seed if job.topo == topology and job.routing == routing and job.algorithm == algorithm]
+    mass_process_jobs(job_list)
 else:
     seeds = range(1, 31)
     for seed in seeds:

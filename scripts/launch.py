@@ -7,7 +7,7 @@ import json
 
 
 def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web_server="true", aggregate="false",
-                     mass_analyze_params=None):
+                     mass_analyze_params=None, mass_run="false"):
     process = None
 
     try:
@@ -20,6 +20,7 @@ def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web
         web = "--web=" + use_web_server
         analysis = "--analyze=" + convert_params_to_string(analysis_params)
         aggregate_arg = "--defaultAggregate=" + aggregate
+        sim_set = "--massRun=" + mass_run
         command_input = ['java', "-jar", os.path.join("target", "survivability-sim-0.0.1-SNAPSHOT.jar"), port, web]
         if len(sim_params) > 0:
             command_input.append(sim)
@@ -29,6 +30,8 @@ def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web
         if mass_analyze_params is not None:
             mass_analyze_arg = "--massAnalyze=" +  convert_params_to_string(mass_analyze_params)
             command_input.append(mass_analyze_arg)
+        if mass_run == "true":
+            command_input.append(sim_set)
 
         process = subprocess.Popen(command_input)
 

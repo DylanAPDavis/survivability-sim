@@ -83,14 +83,14 @@ public class TabuSearchService {
                                 Set<String> failureIds, Integer nfe, Double fitnessThreshold,
                                 Connections connectReqs, Random random, FailureClass failureClass, Set<String> sources,
                                 Set<String> destinations){
-        Solution bestSolution = new Solution(new HashSet<>(), Double.MAX_VALUE, 0.0, new HashMap<>());
-        Solution currentSolution =  new Solution(new HashSet<>(), Double.MAX_VALUE, 0.0, new HashMap<>());
+        Solution bestSolution = new Solution(new HashSet<>(), Double.MAX_VALUE, -Double.MIN_VALUE, new HashMap<>());
+        Solution currentSolution =  new Solution(new HashSet<>(), Double.MAX_VALUE, -Double.MIN_VALUE, new HashMap<>());
 
         Set<String> disconnPathIds = new HashSet<>();
         Map<String, Integer> tabuMap = new HashMap<>();
 
         Map<Set<String>, Double> pathSetFitnessMap = new HashMap<>();
-        pathSetFitnessMap.put(new HashSet<>(), 0.00000000001);
+        pathSetFitnessMap.put(new HashSet<>(), -Double.MIN_VALUE);
         Map<Set<String>, Double> pathSetCostMap = new HashMap<>();
         pathSetCostMap.put(new HashSet<>(), Double.MAX_VALUE);
         int iterationsWithoutImprovement = 0;
@@ -485,14 +485,15 @@ public class TabuSearchService {
             }
         }
 
-        return calculateFitness(pairPathMap, pathIdMap, failureIds, nfe, disconnIds, minCsMap, minCdMap, minCsdMap, sources, destinations);
+        return calculateFitness(pairPathMap, pathIdMap, failureIds, nfe, disconnIds, minCsMap, minCdMap, minCsdMap, useMinS, useMinD, sources, destinations);
 
     }
 
     private Double calculateFitness(Map<SourceDestPair, Set<String>> pairPathMap, Map<String, Path> pathIdMap,
                                     Set<String> failuresIds, Integer nfe, Set<String> disconnIds,
                                     Map<Node, Integer> minCsMap, Map<Node, Integer> minCdMap,
-                                    Map<SourceDestPair, Integer> minCsdMap, Set<String> sources, Set<String> destinations){
+                                    Map<SourceDestPair, Integer> minCsdMap, Integer useMinS, Integer useMinD,
+                                    Set<String> sources, Set<String> destinations){
         // Variables for tracking constraint satisfaction
         Map<Node, Set<String>> protectedCPerSrc = new HashMap<>();
         Map<Node, Set<String>> protectedCPerDst = new HashMap<>();
@@ -524,7 +525,7 @@ public class TabuSearchService {
             if(score >= 1){
                 satisfiedSCount++;
             }
-            if(score > minCsMap.get(node)){
+            if(score > minCsMap.get(node) && minCsMap.get(node) > 0){
                 score = minCsMap.get(node);
             }
             totalScore += score;
@@ -534,7 +535,7 @@ public class TabuSearchService {
             if(score >= 1){
                 satisfiedDCount++;
             }
-            if(score > minCdMap.get(node)){
+            if(score > minCdMap.get(node)  && minCdMap.get(node) > 0){
                 score = minCdMap.get(node);
             }
             totalScore += score;
@@ -542,7 +543,7 @@ public class TabuSearchService {
         // Add to the score for each pair
         for(SourceDestPair pair : protectedCPerPair.keySet()){
             double score = protectedCPerPair.get(pair).size() + (1.0 * fgDisjointCPerPair.get(pair).size() / nfeBase);
-            if(score > minCsdMap.get(pair)){
+            if(score > minCsdMap.get(pair)   && minCsdMap.get(pair) > 0){
                 score = minCsdMap.get(pair);
             }
             totalScore += score;

@@ -100,13 +100,13 @@ var C{(s,d) in SD, i in I} binary;
 var L{(s,d) in SD, i in I, u in V, v in V} binary;
 
 # There is at least one link flow coming from source s
-var L_s{s in S, u in V, v in V} binary;
+#var L_s{s in S, u in V, v in V} binary;
 
 # There is at least one link flow going to destination d
-var L_d{d in D, u in V, v in V} binary;
+#var L_d{d in D, u in V, v in V} binary;
 
 # There is at least one link flow between pair (s,d)
-var L_sd{(s,d) in SD, u in V, v in V} binary;
+#var L_sd{(s,d) in SD, u in V, v in V} binary;
 
 # NC - Node v is in Connection (s,d,i)
 var NC{(s,d) in SD, i in I, v in V} binary;
@@ -202,30 +202,30 @@ minimize totalcost:
 
 # Objective definition constraints
 # LINKS USED
-subject to linksUsed_combineTraffic_SourceOnly:
-    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v];
+#subject to linksUsed_combineTraffic_SourceOnly:
+#    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{s in S, u in V, v in V} L_s[s,u,v];
 
-subject to linksUsed_combineTraffic_DestOnly:
-    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{d in D, u in V, v in V} L_d[d,u,v];
+#subject to linksUsed_combineTraffic_DestOnly:
+#    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{d in D, u in V, v in V} L_d[d,u,v];
 
-subject to linksUsed_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
+#subject to linksUsed_doNotCombineTraffic:
+#    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Num_Links_Used >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v];
 
-subject to linksUsed_combineBothTraffic:
-    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v];
+#subject to linksUsed_combineBothTraffic:
+#    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Num_Links_Used >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v];
 
 # TOTAL WEIGHT
-subject to totalWeight_combineTraffic_SourceOnly:
-    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Total_Weight >= sum{s in S, u in V, v in V} L_s[s,u,v] * Weight[u,v];
+#subject to totalWeight_combineTraffic_SourceOnly:
+#    combineSourceTraffic == 1 and combineDestTraffic == 0 ==> Total_Weight >= sum{s in S, u in V, v in V} L_s[s,u,v] * Weight[u,v];
 
-subject to totalWeight_combineTraffic_DestOnly:
-    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Total_Weight >= sum{d in D, u in V, v in V} L_d[d,u,v] * Weight[u,v];
+#subject to totalWeight_combineTraffic_DestOnly:
+#    combineSourceTraffic == 0 and combineDestTraffic == 1 ==> Total_Weight >= sum{d in D, u in V, v in V} L_d[d,u,v] * Weight[u,v];
 
-subject to totalWeight_doNotCombineTraffic:
-    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
+#subject to totalWeight_doNotCombineTraffic:
+#    combineSourceTraffic == 0 and combineDestTraffic == 0 ==> Total_Weight >= sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
 
-subject to totalWeight_combineBothTraffic:
-    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Total_Weight >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v] * Weight[u,v];
+#subject to totalWeight_combineBothTraffic:
+#    combineSourceTraffic == 1 and combineDestTraffic == 1 ==> Total_Weight >= sum{(s,d) in SD, u in V, v in V} L_sd[s,d,u,v] * Weight[u,v];
 
 ## Connection Constraints
 
@@ -236,11 +236,11 @@ subject to totalConnectionsNeeded{g in GroupIndices}:
 subject to minNumConnectionsNeeded{(s,d) in SD, g in GroupIndices}:
 	Num_Conn[s,d] >= c_min_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededFails{(s,d) in SD, g in GroupIndices}:
-	FG_Conn_sd[s,d,g] == 1 ==> Num_Conn[s,d] <= c_max_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
+#subject to maxNumConnectionsNeededFails{(s,d) in SD, g in GroupIndices}:
+#	FG_Conn_sd[s,d,g] == 1 ==> Num_Conn[s,d] <= c_max_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
-	FG_Conn_sd_any[s,d] == 0 ==> Num_Conn[s,d] <= c_max_sd[s,d];
+#subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
+#	FG_Conn_sd_any[s,d] == 0 ==> Num_Conn[s,d] <= c_max_sd[s,d];
 
 # ENDPOINT CONSTRAINTS
 
@@ -248,22 +248,22 @@ subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
 subject to minNumConnectionsNeededSource{s in S, g in GroupIndices}:
 	Num_Conn_src[s] >= c_min_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices}:
-	FG_Conn_s[s,g] == 1 ==> Num_Conn_src[s] <= c_max_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+#subject to maxNumConnectionsNeededSource{s in S, g in GroupIndices}:
+#	FG_Conn_s[s,g] == 1 ==> Num_Conn_src[s] <= c_max_s[s] + sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededSourceNoFails{s in S}:
-	FG_Conn_s_any[s] == 0 ==> Num_Conn_src[s] <= c_max_s[s];
+#subject to maxNumConnectionsNeededSourceNoFails{s in S}:
+#	FG_Conn_s_any[s] == 0 ==> Num_Conn_src[s] <= c_max_s[s];
 
 # Destination Constraints
 
 subject to minNumConnectionsNeededDest{d in D, g in GroupIndices}:
 	Num_Conn_dst[d] >= c_min_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices}:
-	FG_Conn_d[d,g] == 1 ==> Num_Conn_dst[d] <= c_max_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
+#subject to maxNumConnectionsNeededDest{d in D, g in GroupIndices}:
+#	FG_Conn_d[d,g] == 1 ==> Num_Conn_dst[d] <= c_max_d[d] + sum{s in S, i in I: s != d} FG_Conn[s,d,i,g];
 
-subject to maxNumConnectionsNeededDestNoFails{d in D}:
-	FG_Conn_d_any[d] == 0 ==> Num_Conn_dst[d] <= c_max_d[d];
+#subject to maxNumConnectionsNeededDestNoFails{d in D}:
+#	FG_Conn_d_any[d] == 0 ==> Num_Conn_dst[d] <= c_max_d[d];
 
 #END ENDPOINT CONSTRAINTS
 
@@ -337,8 +337,8 @@ subject to maxDestsThatMustBeConnected_LessThanD{if dRequired < card(D)}:
 	sum{d in D} destConnected[d] <= useMaxD + maxDestsDisconnected;
 
 subject to minDestsThatMustBeConnected_NeedAll{g in GroupIndices: useMinD >= card(D)}:
-	sum{d in D} connSurvivesToD[d,g] = card(D)
-		;
+	sum{d in D} connSurvivesToD[d,g] = card(D);
+
 subject to minDestsThatMustBeConnected_GreaterThanD{if dRequired >= card(D)}:
 	sum{d in D} destConnected[d] = card(D);
 
@@ -388,23 +388,23 @@ subject to nodeInConnection_B{(s,d) in SD, i in I, v in V}:
 
 
 ### L_s, L_d, L_sd definition constraints
-subject to flowOnLinkFromSource_A{s in S, u in V, v in V}:
-	L_s[s,u,v] <= sum{d in D, i in I: s != d} L[s,d,i,u,v];
+#subject to flowOnLinkFromSource_A{s in S, u in V, v in V}:
+#	L_s[s,u,v] <= sum{d in D, i in I: s != d} L[s,d,i,u,v];
 
-subject to flowOnLinkFromSource_B{s in S, u in V, v in V}:
-	L_s[s,u,v] * card(V)^4 >= sum{d in D, i in I: s != d} L[s,d,i,u,v];
+#subject to flowOnLinkFromSource_B{s in S, u in V, v in V}:
+#	L_s[s,u,v] * card(V)^4 >= sum{d in D, i in I: s != d} L[s,d,i,u,v];
 
-subject to flowOnLinkToDestination_A{d in D, u in V, v in V}:
-	L_d[d,u,v] <= sum{s in S, i in I: s != d} L[s,d,i,u,v];
+#subject to flowOnLinkToDestination_A{d in D, u in V, v in V}:
+#	L_d[d,u,v] <= sum{s in S, i in I: s != d} L[s,d,i,u,v];
 
-subject to flowOnLinkToDestination_B{d in D, u in V, v in V}:
-	L_d[d,u,v] * card(V)^4 >= sum{s in S, i in I: s != d} L[s,d,i,u,v];
+#subject to flowOnLinkToDestination_B{d in D, u in V, v in V}:
+#	L_d[d,u,v] * card(V)^4 >= sum{s in S, i in I: s != d} L[s,d,i,u,v];
 
-subject to flowOnLinkBetweenPair_A{(s,d) in SD, u in V, v in V}:
-	L_sd[s,d,u,v] <= sum{i in I} L[s,d,i,u,v];
+#subject to flowOnLinkBetweenPair_A{(s,d) in SD, u in V, v in V}:
+#	L_sd[s,d,u,v] <= sum{i in I} L[s,d,i,u,v];
 
-subject to flowOnLinkBetweenPair_B{(s,d) in SD, u in V, v in V}:
-	L_sd[s,d,u,v] * card(V)^4 >= sum{i in I} L[s,d,i,u,v];
+#subject to flowOnLinkBetweenPair_B{(s,d) in SD, u in V, v in V}:
+#	L_sd[s,d,u,v] * card(V)^4 >= sum{i in I} L[s,d,i,u,v];
 
 
 

@@ -8,6 +8,7 @@ import netlab.analysis.controller.AnalysisController;
 import netlab.analysis.services.AnalysisService;
 import netlab.processing.ProcessingService;
 import netlab.processing.pathmapping.PathMappingService;
+import netlab.processing.shortestPaths.MinimumCostPathService;
 import netlab.storage.aws.dynamo.DynamoInterface;
 import netlab.storage.aws.s3.S3Interface;
 import netlab.storage.controller.StorageController;
@@ -16,7 +17,8 @@ import netlab.submission.controller.SubmissionController;
 import netlab.submission.enums.*;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
-import netlab.topology.elements.Topology;
+import netlab.topology.elements.*;
+import netlab.topology.services.TopologyAdjustmentService;
 import netlab.topology.services.TopologyService;
 import netlab.visualization.PrintingService;
 import org.junit.Test;
@@ -66,6 +68,12 @@ public class AWSTest {
     @Autowired
     private ProcessingService processingService;
 
+    @Autowired
+    private MinimumCostPathService minimumCostPathService;
+
+    @Autowired
+    private TopologyAdjustmentService topologyAdjustmentService;
+
     //@Test
     public void updateRows(){
         SimulationParameters seedParams = SimulationParameters.builder().seed(1L).build();
@@ -82,12 +90,12 @@ public class AWSTest {
         submissionController.rerunRequests(seeds);
     }
 
-    //@Test
+    @Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
-        String algorithm = null;
+        String algorithm = "tabu";
         String routing = "manytomany";
-        boolean deleteRecords = false;
+        boolean deleteRecords = true;
         boolean deleteAnalysis = true;
         for(Long seed : seeds) {
             long startTime = System.nanoTime();
@@ -101,7 +109,7 @@ public class AWSTest {
 
     @Test
     public void analysisGeneration(){
-        List<Long> seeds = LongStream.rangeClosed(8L, 30L).boxed().collect(Collectors.toList());
+        List<Long> seeds = Collections.singletonList(25L);//LongStream.rangeClosed(1L, 30L).boxed().collect(Collectors.toList());
         String routingType = "manytomany";
         String topologyId = "tw";
         analysisController.analyzeSeeds(seeds, routingType, topologyId);
@@ -164,13 +172,53 @@ public class AWSTest {
         }
     }
 
-    //@Test
+    @Test
+    public void testConnections(){
+        List<Long> seeds = LongStream.rangeClosed(1L, 30L).boxed().collect(Collectors.toList());
+        for(Long seed : seeds){
+            String id = String.valueOf(seed) +"_tw_manytomany_ilp_5_3_5_5_1_3_none_quake2_both_2_none_allow_allow_false_8";
+            Request r = storageController.getRequest(id, true);
+            Topology topo = topologyService.getTopologyById(r.getTopologyId());
+            Set<Node> failureNodes = r.getDetails().getFailures().getFailureSet().stream().filter(f -> f.getNode() != null).map(Failure::getNode).collect(Collectors.toSet());
+            Set<Link> failureLinks = r.getDetails().getFailures().getFailureSet().stream().filter(f -> f.getLink() != null).map(Failure::getLink).collect(Collectors.toSet());
+            Set<Node> sources = r.getDetails().getSources();
+            Set<Node> dests = r.getDetails().getDestinations();
+            Set<Node> safeDests = dests.stream().filter(d -> !failureNodes.contains(d)).collect(Collectors.toSet());
+
+            Topology adjusted = topologyAdjustmentService.removeNodesFromTopology(topo, failureNodes);
+            adjusted = topologyAdjustmentService.removeLinksFromTopology(adjusted, failureLinks);
+            //boolean sourceCanFail = r.getDetails().getSources().stream().anyMatch(failureNodes::contains);
+            //boolean allDestsCanFail = r.getDetails().getDestinations().stream().allMatch(failureNodes::contains);
+            Map<SourceDestPair, Path> paths = new HashMap<>();
+            for(Node src : sources){
+                for(Node dest : safeDests) {
+                    SourceDestPair pair = new SourceDestPair(src, dest);
+                    Path path = adjusted.getNodes().contains(src) && adjusted.getNodes().contains(dest) ?
+                            minimumCostPathService.findShortestPath(src, dest, adjusted) : new Path(new ArrayList<>());
+                    paths.put(pair, path);
+                }
+            }
+            Set<Node> satsifiedSources = new HashSet<>();
+            for(SourceDestPair pair : paths.keySet()){
+                System.out.println(pair + ": " + paths.get(pair));
+                if(paths.get(pair).getNodes().size() > 0){
+                    satsifiedSources.add(pair.getSrc());
+                }
+            }
+            System.out.println(seed);
+            System.out.println("Satisfied Sources: " + satsifiedSources);
+            System.out.println("---------");
+        }
+    }
+
+    @Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            String id = "12_tw_manytomany_flexbhandari_10_3_10_10_1_3_none_quake2_both_2_none_allow_allow_false_8";
+            String id = "3_tw_manytomany_ilp_5_3_5_5_1_3_none_quake2_both_2_none_allow_allow_false_8";
+            //String id = "2_tw_manytomany_tabu_5_2_5_5_1_2_none_alllinks_both_2_none_allow_allow_false_8";
             Request r = storageController.getRequest(id, true);
             r = processingService.processRequest(r);
-            //Analysis a = storageController.getAnalysis(id, true);
+            Analysis a = storageController.getAnalysis(id, true);
             Analysis analysis = analysisService.analyzeRequest(r);
             //analysisController.analyzeRequest(AnalysisParameters.builder().requestId(id).useAws(true).build());
             System.out.println(printingService.outputPaths(r));
