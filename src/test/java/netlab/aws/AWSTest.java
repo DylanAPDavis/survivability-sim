@@ -214,10 +214,10 @@ public class AWSTest {
     @Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            String id = "3_tw_manytomany_ilp_5_3_5_5_1_3_none_quake2_both_2_none_allow_allow_false_8";
-            //String id = "2_tw_manytomany_tabu_5_2_5_5_1_2_none_alllinks_both_2_none_allow_allow_false_8";
+            //String id = "3_tw_manytomany_ilp_5_3_5_5_1_3_none_quake2_both_2_none_allow_allow_false_8";
+            String id = "30_tw_manytomany_tabu_5_2_5_5_1_2_none_quake2_both_2_none_allow_allow_false_8";
             Request r = storageController.getRequest(id, true);
-            r = processingService.processRequest(r);
+            //r = processingService.processRequest(r);
             Analysis a = storageController.getAnalysis(id, true);
             Analysis analysis = analysisService.analyzeRequest(r);
             //analysisController.analyzeRequest(AnalysisParameters.builder().requestId(id).useAws(true).build());

@@ -478,10 +478,10 @@ subject to atLeastOneConnFailsForDAny_2{d in D}:
 
 
 # A failure element should only appear at most once in a pair's connections
-subject to fAtMostOncePair{s in S, d in D, u in V, v in V, g in GroupIndices: u != v and ((u,v) in FG[g] or (v,u) in FG[g])}:
-	sum{i in I} L[s,d,i,u,v] <= 1;
+#subject to fAtMostOncePair{s in S, d in D, u in V, v in V, g in GroupIndices: u != v and ((u,v) in FG[g] or (v,u) in FG[g])}:
+#	sum{i in I} L[s,d,i,u,v] <= 1;
 
-subject to fAtMostOncePair_nodes{s in S, d in D, v in V, g in GroupIndices: (v,v) in FG[g] and v != s and v != d}:
-	sum{i in I} NC[s,d,i,v] <= 1;
+#subject to fAtMostOncePair_nodes{s in S, d in D, v in V, g in GroupIndices: (v,v) in FG[g] and v != s and v != d}:
+#	sum{i in I} NC[s,d,i,v] <= 1;
 
 #-------------------------------------------------------

@@ -9,9 +9,9 @@ analysis_job = "ANALYSIS_JOB"
 analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
 aggregate_analysis = False
-rerun = False
+rerun = True
 mass_analysis = False
-mass_sim = True
+mass_sim = False
 
 
 def process_job(job, analysis_type):
@@ -45,6 +45,7 @@ def process_job(job, analysis_type):
 
 
 def mass_process_jobs(job_list):
+    print("Running all jobs in job list. Ids storeds in scripts/mass.txt")
     output_file_path = "results/output/mass_process_" + job_list[0].request_id
     run_time = "3:59"
     memory = "6000"
@@ -76,13 +77,14 @@ def process_aggregate_job():
 # 12_tw_manytomany_ilp_5_3_5_5_1_3_none_alllinks_both_2_none_allow_allow_false_8
 def rerun_jobs():
     filepath = 'scripts/Rerun.txt'
+    print("Rerunning jobs in scripts/Rerun.txt")
     with open(filepath) as fp:
         for line in fp:
             line = line.strip("\n").strip("\r")
             params = line.split("_")
             if len(params) > 2:
                 output_file_path = "results/output/" + line
-                run_time = "6:00"
+                run_time = "12:00"
                 memory = "12000"
                 queue = "long"
                 command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
