@@ -32,7 +32,7 @@ public class AggregationOutputService {
     private final String destsConnected = "Connected D";
     private final String destsConnectedPerSrc = "Avg. Connected D";
     private final String primaryIntact = "Primary Intact";
-    private final String primaryIntactPerSrc = "Primary Intact %";
+    private final String primaryIntactPerSrc = "Primary Intact \\%";
     private final String connectionsIntact = "Connections Intact";
     private final String postFailureCost = "Post-Failure Cost";
     private final String reachOnPrimary = "Reach on Primary";
