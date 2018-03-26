@@ -219,7 +219,7 @@ public class AWSTest {
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
             //String id = "1_tw_manytomany_ilp_5_3_5_5_1_3_none_alllinks_both_1_none_allow_allow_false_8";//"3_tw_manytomany_ilp_5_3_5_5_1_3_none_quake2_both_2_none_allow_allow_false_8";
-            String id = "2_tw_manytomany_tabu_10_3_10_10_1_3_none_alllinks_both_1_none_allow_allow_false_8"; //"30_tw_manytomany_tabu_5_2_5_5_1_2_none_alllinks_both_1_none_allow_allow_false_8";
+            String id = "2_tw_manytomany_cyclefortwo_10_3_10_10_1_3_none_alllinks_both_1_none_allow_allow_false_8"; //"30_tw_manytomany_tabu_5_2_5_5_1_2_none_alllinks_both_1_none_allow_allow_false_8";
             List<SimulationParameters> simParams = storageController.getParameter(id);
             if(!simParams.isEmpty()){
                 Request r = storageController.getRequest(id, true);//generationService.generateFromSimParams(simParams.get(0));//storageController.getRequest(id, true);

@@ -155,6 +155,7 @@ public class SurvivabilitySimApplication {
 		if(massAnalysisParameters != null){
 			log.info("Mass Analyzing");
 			analysCon.massAnalysis(massAnalysisParameters);
+			waitMinTime(startTime, 300);
 		}
 
 		// Mass simulation run
@@ -168,19 +169,23 @@ public class SurvivabilitySimApplication {
 						.build();
 				analysCon.analyzeRequest(analysisParameters);
 			}
-			long endTime = System.nanoTime();
-			double duration = (endTime - startTime)/1e9;
-			log.info("Mass Sim Run took: " + duration + " seconds");
-			if(duration < (300)){
-				try {
-					Thread.sleep((long)((300 - duration) * 1000));
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
+			waitMinTime(startTime, 300);
 			// If you're not analyzing the request, close the context and shut down the simulator
 			ctx.close();
 			System.exit(0);
+		}
+	}
+
+	private static void waitMinTime(long startTime, int capSeconds){
+		long endTime = System.nanoTime();
+		double duration = (endTime - startTime)/1e9;
+		log.info("Run took: " + duration + " seconds");
+		if(duration < (300)){
+			try {
+				Thread.sleep((long)((300 - duration) * 1000));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

@@ -86,7 +86,7 @@ def rerun_jobs():
             params = line.split("_")
             if len(params) > 2:
                 output_file_path = "results/output/" + line
-                run_time = "24:00"
+                run_time = "36:00"
                 memory = "12000"
                 queue = "long"
                 command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
@@ -103,12 +103,12 @@ def analyze_jobs(seeds, topologies, routings):
     for seed in seeds:
         for topology in topologies:
             for routing in routings:
-                output_file_path = "results/output/" + "mass_analyze" + seed + "_" + topology + "_" + routing
+                output_file_path = "results/output/" + "mass_analyze" + str(seed) + "_" + topology + "_" + routing
                 run_time = "3:59"
-                memory = "8000"
+                memory = "2000"
                 command_input = ["bsub", "-q", "short", "-W", run_time, "-R",
                                  "rusage[mem=" + memory + "] span[hosts=1]", "-n", str(12), "-o", output_file_path,
-                                 "python", "scripts/run_mass_analysis.py", seed, topology, routing]
+                                 "python", "scripts/run_mass_analysis.py", str(seed), topology, routing]
                 process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 if aggregate_analysis:

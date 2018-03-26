@@ -279,8 +279,9 @@ public class AnalysisService {
                 .cachingResults(cachingResults)
                 .build();
 
-        if(!request.getTrafficCombinationType().equals(TrafficCombinationType.None)){
-            adjustLinksUsedTotalCost(analysis, sourceLinkMap, destLinkMap, request.getTrafficCombinationType());
+        boolean combineTraffic = true;
+        if(combineTraffic/*!request.getTrafficCombinationType().equals(TrafficCombinationType.None)*/){
+            adjustLinksUsedTotalCost(analysis, sourceLinkMap, destLinkMap, TrafficCombinationType.Both);
         }
 
         return analysis;
@@ -335,7 +336,7 @@ public class AnalysisService {
                     count = destLinkMap.get(link).size();
                     break;
                 case Both:
-                    count = Math.min(sourceLinkMap.get(link).size(), destLinkMap.get(link).size());
+                    count = 1;//Math.max(sourceLinkMap.get(link).size(), destLinkMap.get(link).size());
                     break;
             }
             totalLinksUsed += count;
