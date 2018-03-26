@@ -200,6 +200,24 @@ public class SimulateEndpointTest {
         test(simRequest, true);
     }
 
+    @Test
+    public void errorNotDisjointTest() {
+        List<RoutingParam> routingParams = new ArrayList<>();
+        RoutingParam unicast1 = RoutingParam.builder()
+                .source("5")
+                .destinations(Arrays.asList("14"))
+                .build();
+        routingParams.add(unicast1);
+
+        SimRequest simRequest = SimRequest.builder()
+                .routingParams(routingParams)
+                .network(buildNSFnet())
+                .survivability(buildNodesAndLinks())
+                .build();
+
+        test(simRequest, true);
+    }
+
     private void test(SimRequest simRequest, Boolean succeed){
         SimResponse response = submissionController.simulateRequest(simRequest);
         System.out.println(response);
@@ -276,6 +294,13 @@ public class SimulateEndpointTest {
         return Survivability.builder()
                 .failureScenario("AllNodes")
                 .numFailureEvents(2)
+                .build();
+    }
+
+    private Survivability buildNodesAndLinks(){
+        return Survivability.builder()
+                .failures(Arrays.asList("1-7", "6"))
+                .numFailureEvents(1)
                 .build();
     }
 
