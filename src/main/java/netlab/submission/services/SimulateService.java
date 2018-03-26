@@ -169,6 +169,7 @@ public class SimulateService {
                 continue;
             }
             List<Path> sortedPaths = paths.values().stream()
+                    .filter(p -> p.getLinks().size() > 0)
                     .sorted(Comparator.comparing(Path::getTotalWeight))
                     .collect(Collectors.toList());
             List<List<String>> routes = sortedPaths.stream()
