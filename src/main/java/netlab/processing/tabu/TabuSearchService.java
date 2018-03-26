@@ -21,16 +21,16 @@ public class TabuSearchService {
 
     // Number of paths to consider at once
     static int partitionSize = 5;
-    static int minThresholdKeepAfterRestart = 3; // only keep parts of the best solution that have been around for this many iterations
+    static int minThresholdKeepAfterRestart = 5; // only keep parts of the best solution that have been around for this many iterations
 
     // Thresholds for stopping or changing large parts of the solution
-    static int tabuTime = 15;       // if a path has been added or removed, the opposite action cannot be performed
+    static int tabuTime = 10;       // if a path has been added or removed, the opposite action cannot be performed
     static int noImprovement = 20; // no improvement on best, stop running
-    static int notFitEnough = 10;   // solution is not improving enough, inject some disjoint paths
+    static int notFitEnough = 3;   // solution is not improving enough, inject some disjoint paths
     static int restartFromBest = 10;     // after so many iterations, restart from best subset of the best solution
 
     // Make connecting sources in solution a priority
-    static int srcMultiplier = 5;
+    static int srcMultiplier = 100;
 
     // Update the Tabu list after injecting and resetting, along with baseline add, swap, and remove
     static boolean updateTabuAfterSpecialAction = true;
@@ -83,8 +83,8 @@ public class TabuSearchService {
                                 Set<String> failureIds, Integer nfe, Double fitnessThreshold,
                                 Connections connectReqs, Random random, FailureClass failureClass, Set<String> sources,
                                 Set<String> destinations){
-        Solution bestSolution = new Solution(new HashSet<>(), Double.MAX_VALUE, -Double.MIN_VALUE, new HashMap<>());
-        Solution currentSolution =  new Solution(new HashSet<>(), Double.MAX_VALUE, -Double.MIN_VALUE, new HashMap<>());
+        Solution bestSolution = new Solution(new HashSet<>(), Double.MAX_VALUE, -Double.MIN_VALUE, new HashMap<>(), new HashMap<>(), new HashMap<>());
+        Solution currentSolution =  new Solution(new HashSet<>(), Double.MAX_VALUE, -Double.MIN_VALUE, new HashMap<>(), new HashMap<>(), new HashMap<>());
 
         Set<String> disconnPathIds = new HashSet<>();
         Map<String, Integer> tabuMap = new HashMap<>();
@@ -96,24 +96,28 @@ public class TabuSearchService {
         int iterationsWithoutImprovement = 0;
         int iterationsUnderThreshold = 0;
         int totalIterations = 0;
+        Set<Node> usedSourcesForInjection = new HashSet<>();
         Set<SourceDestPair> usedPairsForInjection = new HashSet<>();
         Map<String, Integer> pathBeenInBestMap = new HashMap<>();
+        currentSolution = injectDisjointPaths(currentSolution, topologyMetrics, pairs,
+                failureIds,  nfe, connectReqs, new HashSet<>(), pathSetFitnessMap, pathSetCostMap, failureClass,
+                sources, destinations, usedPairsForInjection, usedSourcesForInjection);
 
         Solution previousSolution = currentSolution.copy();
         while(iterationsWithoutImprovement < noImprovement){
             boolean changed = false;
 
             // If you've been under the threshold for too long, inject some disjoint paths
-            if(iterationsUnderThreshold == notFitEnough){
+            /*if(iterationsUnderThreshold == notFitEnough){
                 // Store the previous solution before changing the current
                 previousSolution = currentSolution.copy();
                 currentSolution = injectDisjointPaths(currentSolution, topologyMetrics, pairs,
                          failureIds,  nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, failureClass,
-                        sources, destinations, usedPairsForInjection);
+                        sources, destinations, usedPairsForInjection, usedSourcesForInjection);
                 iterationsUnderThreshold = 0;
             }
             // Otherwise, generate candidate solutions through remove/swap/add moves
-            else {
+            else {*/
                 List<Solution> candidateSolutions = generateCandidateSolutions(currentSolution, topologyMetrics, pairs,
                         failureIds, nfe, connectReqs, disconnPathIds, pathSetFitnessMap, pathSetCostMap, random,
                         sources, destinations, tabuMap.keySet());
@@ -127,7 +131,7 @@ public class TabuSearchService {
                 if(!updateTabuAfterSpecialAction) {
                     updateTabuMap(tabuMap, previousSolution, currentSolution);
                 }
-            }
+            //}
             // Update best solution (if applicable)
             if (isBetter(currentSolution, bestSolution, fitnessThreshold)) {
                 bestSolution = currentSolution;
@@ -235,11 +239,27 @@ public class TabuSearchService {
                                          Set<String> failureIds, Integer nfe, Connections connectionReqs,
                                          Set<String> disconnPaths, Map<Set<String>, Double> pathSetFitnessMap,
                                          Map<Set<String>, Double> pathSetCostMap, FailureClass failureClass,
-                                         Set<String> sources, Set<String> destinations, Set<SourceDestPair> usedPairsForInjection) {
+                                         Set<String> sources, Set<String> destinations, Set<SourceDestPair> usedPairsForInjection,
+                                         Set<Node> usedSourcesForInjection) {
         Set<String> pathIds = new HashSet<>(currentSolution.getPathIds());
         Map<String, Path> pathIdMap = topologyMetrics.getPathIdMap();
+        for(SourceDestPair pair : pairs){
+            Set<String> pairPathIds = new HashSet<>();
+            if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Node)) {
+                pairPathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
+            }
+            if (failureClass.equals(FailureClass.Both) || failureClass.equals(FailureClass.Link)) {
+                pairPathIds.addAll(topologyMetrics.getNodeDisjointPaths().get(pair));
+            }
+            if(pairPathIds.size() > 0){
+                pathIds.addAll(pairPathIds);
+            }
+        }
+        /*Map<Node, Set<String>> srcPathMap = currentSolution.getSrcPathMap();
         List<SourceDestPair> filteredPairs = pairs.stream()
                 .filter(p -> !usedPairsForInjection.contains(p))
+                .filter(p -> !usedSourcesForInjection.contains(p.getSrc()))
+                .sorted(Comparator.comparing(p -> srcPathMap.containsKey(p.getSrc()) ? srcPathMap.get(p.getSrc()).size() : 0))
                 .collect(Collectors.toList());
         if(failureIds.size() != 0 && filteredPairs.size() > 0) {
             int numPairsChecked = 0;
@@ -256,6 +276,7 @@ public class TabuSearchService {
                 if(pairPathIds.size() > 0) {
                     pathIds.addAll(pairPathIds);
                     usedPairsForInjection.add(pair);
+                    usedSourcesForInjection.add(pair.getSrc());
                     pairChosen = true;
                 }
                 else {
@@ -263,6 +284,7 @@ public class TabuSearchService {
                 }
             }
         }
+        */
         return makeCandidate(pathIds, pathIdMap, failureIds, nfe, connectionReqs,
                 disconnPaths, pathSetFitnessMap, pathSetCostMap, sources, destinations);
     }
@@ -287,6 +309,9 @@ public class TabuSearchService {
             return canCost < curCost;
         }
         if(canFit < thresh && curFit < thresh){
+            /*if(Math.abs(canFit - curFit) <= .1){
+                return canCost < curCost;
+            }*/
             return canFit > curFit;
         }
         if(canFit >= thresh && curFit >= thresh){
@@ -423,14 +448,17 @@ public class TabuSearchService {
                                    Integer nfe, Connections connectionReqs, Set<String> disconnPaths,
                                    Map<Set<String>, Double> pathSetFitnessMap, Map<Set<String>, Double> pathSetCostMap,
                                    Set<String> sources, Set<String> destinations){
-        Map<SourceDestPair, Set<String>> pairPathMap = makePairPathMap(candidatePathIds, pathIdMap);
+        Map<SourceDestPair, Set<String>> pairPathMap = new HashMap<>();
+        Map<Node, Set<String>> srcPathMap = new HashMap<>();
+        Map<Node, Set<String>> dstPathMap = new HashMap<>();
+        makePathMaps(candidatePathIds, pathIdMap, pairPathMap, srcPathMap, dstPathMap);
         Double cost = pathSetCostMap.containsKey(candidatePathIds) ? pathSetCostMap.get(candidatePathIds) :
                 getCost(candidatePathIds, pathIdMap);
         Double fitness = pathSetFitnessMap.containsKey(candidatePathIds) ? pathSetFitnessMap.get(candidatePathIds) :
                 getFitness(candidatePathIds, pathIdMap, failureIds, nfe, connectionReqs, disconnPaths, pairPathMap,
-                        sources, destinations);
+                        srcPathMap, dstPathMap, sources, destinations);
 
-        return new Solution(candidatePathIds, cost, fitness, pairPathMap);
+        return new Solution(candidatePathIds, cost, fitness, pairPathMap, srcPathMap, dstPathMap);
     }
 
     private Set<String> removePath(Set<String> basePathIds, String pathId){
@@ -456,19 +484,21 @@ public class TabuSearchService {
         return pathIds;
     }
 
-    private Map<SourceDestPair,Set<String>> makePairPathMap(Set<String> candidatePathIds, Map<String, Path> pathIdMap) {
-        Map<SourceDestPair, Set<String>> pairPathMap = new HashMap<>();
+    private void makePathMaps(Set<String> candidatePathIds, Map<String, Path> pathIdMap, Map<SourceDestPair, Set<String>> pairPathMap,
+                              Map<Node, Set<String>> srcPathMap, Map<Node, Set<String>> dstPathMap) {
         for(String pathId : candidatePathIds){
             Path path = pathIdMap.get(pathId);
             SourceDestPair pair = getPairFromPath(path);
             pairPathMap.putIfAbsent(pair, new HashSet<>());
             pairPathMap.get(pair).add(pathId);
+            srcPathMap.putIfAbsent(pair.getSrc(), new HashSet<>());
+            dstPathMap.putIfAbsent(pair.getDst(), new HashSet<>());
         }
-        return pairPathMap;
     }
 
     private double getFitness(Set<String> candidatePathIds, Map<String, Path> pathIdMap, Set<String> failureIds, Integer nfe,
                               Connections connectionReqs, Set<String> disconnIds, Map<SourceDestPair, Set<String>> pairPathMap,
+                              Map<Node, Set<String>> srcPathMap, Map<Node, Set<String>> dstPathMap,
                               Set<String> sources, Set<String> destinations){
         Set<Path> paths = candidatePathIds.stream().map(pathIdMap::get).collect(Collectors.toSet());
         Integer useMinS = connectionReqs.getUseMinS();
@@ -480,16 +510,17 @@ public class TabuSearchService {
             if(!disconnIds.contains(path.getId())) {
                 if (path.containsFailureIds(failureIds)) {
                     disconnIds.add(path.getId());
-                    break;
                 }
             }
         }
 
-        return calculateFitness(pairPathMap, pathIdMap, failureIds, nfe, disconnIds, minCsMap, minCdMap, minCsdMap, useMinS, useMinD, sources, destinations);
+        return calculateFitness(pairPathMap, srcPathMap, dstPathMap, pathIdMap, failureIds, nfe, disconnIds, minCsMap,
+                minCdMap, minCsdMap, useMinS, useMinD, sources, destinations);
 
     }
 
-    private Double calculateFitness(Map<SourceDestPair, Set<String>> pairPathMap, Map<String, Path> pathIdMap,
+    private Double calculateFitness(Map<SourceDestPair, Set<String>> pairPathMap, Map<Node, Set<String>> srcPathMap,
+                                    Map<Node, Set<String>> dstPathMap, Map<String, Path> pathIdMap,
                                     Set<String> failuresIds, Integer nfe, Set<String> disconnIds,
                                     Map<Node, Integer> minCsMap, Map<Node, Integer> minCdMap,
                                     Map<SourceDestPair, Integer> minCsdMap, Integer useMinS, Integer useMinD,
@@ -504,7 +535,7 @@ public class TabuSearchService {
 
         // Determine which paths per src/dst/pair are protected, or can fail but are FG-disjoint from each other
         fillInPathMaps(protectedCPerSrc, protectedCPerDst, protectedCPerPair, fgDisjointCPerSrc, fgDisjointCPerDst, fgDisjointCPerPair,
-                pairPathMap, pathIdMap, failuresIds, disconnIds, sources, destinations);
+                pairPathMap, srcPathMap, dstPathMap, pathIdMap, failuresIds, disconnIds, sources, destinations);
         // With the worst FG, find if the requirements are met
         // Have to consider this on a pair by pair basis
         // Even if a path gets disconnected, it's still relevant
@@ -521,30 +552,30 @@ public class TabuSearchService {
         int nfeBase = nfe + 1;
         // Add to the score for each source and destination node
         for(Node node : protectedCPerSrc.keySet()) {
-            double score = getScore(node, protectedCPerSrc, fgDisjointCPerSrc, nfeBase);
+            double score = getScore(node, protectedCPerSrc, fgDisjointCPerSrc, nfeBase, srcPathMap.get(node).size());
             if(score >= 1){
                 satisfiedSCount++;
             }
-            if(score > minCsMap.get(node) && minCsMap.get(node) > 0){
-                score = minCsMap.get(node);
+            if(score > minCsMap.get(node)){
+                score = Math.min(1, score);
             }
             totalScore += score;
         }
         for(Node node : protectedCPerDst.keySet()){
-            double score = getScore(node, protectedCPerDst, fgDisjointCPerDst, nfeBase);
+            double score = getScore(node, protectedCPerDst, fgDisjointCPerDst, nfeBase, dstPathMap.get(node).size());
             if(score >= 1){
                 satisfiedDCount++;
             }
-            if(score > minCdMap.get(node)  && minCdMap.get(node) > 0){
-                score = minCdMap.get(node);
+            if(score > minCdMap.get(node)){
+                score = Math.min(1, score);
             }
             totalScore += score;
         }
         // Add to the score for each pair
         for(SourceDestPair pair : protectedCPerPair.keySet()){
             double score = protectedCPerPair.get(pair).size() + (1.0 * fgDisjointCPerPair.get(pair).size() / nfeBase);
-            if(score > minCsdMap.get(pair)   && minCsdMap.get(pair) > 0){
-                score = minCsdMap.get(pair);
+            if(score > minCsdMap.get(pair)){
+                score = Math.min(1, score);
             }
             totalScore += score;
         }
@@ -554,10 +585,10 @@ public class TabuSearchService {
         return totalScore;
     }
 
-    private double getScore(Node node, Map<Node, Set<String>> protectedMap, Map<Node, Set<String>> disjointMap, int nfeBase) {
+    private double getScore(Node node, Map<Node, Set<String>> protectedMap, Map<Node, Set<String>> disjointMap, int nfeBase, int numPaths) {
         double score = 0.0;
         if (protectedMap.containsKey(node)) {
-            score = protectedMap.get(node).size() + (1.0 * disjointMap.get(node).size() / nfeBase);
+            score = (protectedMap.get(node).size() + (1.0 * disjointMap.get(node).size()  / nfeBase ));
         }
         return score;
     }
@@ -565,7 +596,8 @@ public class TabuSearchService {
     private void fillInPathMaps(Map<Node, Set<String>> protectedCPerSrc, Map<Node, Set<String>> protectedCPerDst,
                                 Map<SourceDestPair, Set<String>> protectedCPerPair, Map<Node, Set<String>> fgDisjointCPerSrc,
                                 Map<Node, Set<String>> fgDisjointCPerDst, Map<SourceDestPair, Set<String>> fgDisjointCPerPair,
-                                Map<SourceDestPair, Set<String>> pairPathMap, Map<String, Path> pathIdMap,
+                                Map<SourceDestPair, Set<String>> pairPathMap, Map<Node, Set<String>> pathsPerSrc, Map<Node, Set<String>> pathsPerDst,
+                                Map<String, Path> pathIdMap,
                                 Set<String> fails, Set<String> disconnIds, Set<String> sources, Set<String> dests) {
 
         boolean ignoreSrcFailForDsts = sources.size() == 1 && fails.contains(sources.iterator().next());
@@ -574,6 +606,8 @@ public class TabuSearchService {
             Set<String> pathIds = pairPathMap.get(pair);
             Node src = pair.getSrc();
             Node dst = pair.getDst();
+            pathsPerSrc.putIfAbsent(src, new HashSet<>());
+            pathsPerDst.putIfAbsent(dst, new HashSet<>());
             protectedCPerSrc.putIfAbsent(src, new HashSet<>());
             protectedCPerDst.putIfAbsent(dst, new HashSet<>());
             protectedCPerPair.putIfAbsent(pair, new HashSet<>());
@@ -586,6 +620,8 @@ public class TabuSearchService {
             Set<String> srcFGDisjointPaths = fgDisjointCPerSrc.get(src);
             Set<String> dstFGDisjointPaths =  fgDisjointCPerDst.get(dst);
             Set<String> pairFGDisjointPaths =  fgDisjointCPerPair.get(pair);
+            pathsPerSrc.get(src).addAll(pathIds);
+            pathsPerDst.get(dst).addAll(pathIds);
 
             // Evaluate each path, consider if it can or cannot be disconnected
             for(String pathId : pathIds){
