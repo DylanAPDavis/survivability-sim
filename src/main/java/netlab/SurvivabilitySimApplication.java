@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 public class SurvivabilitySimApplication {
 
 	public static void main(String[] args) {
+		long startTime = System.nanoTime();
 		Boolean webValue = false;
 		SimulationParameters simParams = null;
 		Long rerunSeed = null;
@@ -167,11 +168,19 @@ public class SurvivabilitySimApplication {
 						.build();
 				analysCon.analyzeRequest(analysisParameters);
 			}
-			// If you're not analyzing the request, close the context and shut down the simulator
-			if(analysisParams == null) {
-				ctx.close();
-				System.exit(0);
+			long endTime = System.nanoTime();
+			double duration = (endTime - startTime)/1e9;
+			log.info("Mass Sim Run took: " + duration + " seconds");
+			if(duration < (300)){
+				try {
+					Thread.sleep((long)((300 - duration) * 1000));
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
+			// If you're not analyzing the request, close the context and shut down the simulator
+			ctx.close();
+			System.exit(0);
 		}
 	}
 

@@ -124,21 +124,28 @@ elif mass_sim:
     seeds = range(1, 31)
     topology = "tw"
     routing = "manytomany"
-    algorithm = "ilp"
+    algorithm = "tabu"
     nfe = 1
+    regular_filter = True
     for seed in seeds:
-        jobs_for_seed = jobs.create_jobs(seed)
-        job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
-                    and job.algorithm == algorithm and job.nfe == nfe]
-        print(len(job_list))
-        mass_process_jobs(job_list)
-        single_job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
-                           and job.algorithm == algorithm and job.nfe != nfe]
-        print(len(single_job_list))
-        for j in single_job_list:
-            print(str(j.__dict__))
-            process_job(j, analysis_after_sim)
-        time.sleep(2)
+        if regular_filter:
+            jobs_for_seed = jobs.create_jobs(seed)
+            job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                        and job.algorithm == algorithm]
+            mass_process_jobs(job_list)
+            print(len(job_list))
+        else:
+            job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                        and job.algorithm == algorithm and job.nfe == nfe]
+            print(len(job_list))
+            mass_process_jobs(job_list)
+            single_job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                               and job.algorithm == algorithm and job.nfe != nfe]
+            print(len(single_job_list))
+            for j in single_job_list:
+                print(str(j.__dict__))
+                process_job(j, analysis_after_sim)
+            time.sleep(2)
 else:
     seeds = range(1, 31)
     for seed in seeds:

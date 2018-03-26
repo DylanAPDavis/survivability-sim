@@ -5,7 +5,7 @@ algorithm_dict = {
     "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
-    "manytomany": ["ilp"], #["ilp", "flexbhandari", "minimumcost", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
+    "manytomany": ["tabu"], #["ilp", "flexbhandari", "minimumcost", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
     "broadcast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
 }
 s_d_value_dict = {
