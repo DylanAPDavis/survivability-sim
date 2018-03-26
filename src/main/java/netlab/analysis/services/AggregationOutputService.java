@@ -26,7 +26,8 @@ public class AggregationOutputService {
 
     private final String primaryCost = "Primary Cost";
     private final String avgBackupCost = "Avg. Backup Cost";
-    private final String totalPaths = "Total paths";
+    private final String totalPaths = "Total Paths";
+    private final String totalCost = "Total Cost";
     private final String runningTime = "Running Time";
     private final String destsConnected = "Connected D";
     private final String destsConnectedPerSrc = "Avg. Connected D";
@@ -83,7 +84,7 @@ public class AggregationOutputService {
         List<String> topologies = Arrays.asList("tw");
         List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown,
                 CachingType.SourceAdjacent, CachingType.FailureAware, CachingType.BranchingPoint);
-        List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, primaryCost, avgBackupCost, runningTime, feasible);
+        List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, totalCost, primaryCost, avgBackupCost, runningTime, feasible);
         List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
         List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, beforeHopsContent, afterHopsContent, cachingCost);
         switch(routingType.toLowerCase()){
@@ -96,7 +97,7 @@ public class AggregationOutputService {
                         Algorithm.MinimumRiskPath, Algorithm.Bhandari);
                 break;
             case "manytomany":
-                beforeMetrics = Arrays.asList(totalPaths, destsConnectedPerSrc, primaryCost, avgBackupCost, runningTime, feasible);
+                beforeMetrics = Arrays.asList(totalPaths, totalCost, destsConnectedPerSrc, primaryCost, avgBackupCost, runningTime, feasible);
                 afterMetrics = Arrays.asList(primaryIntactPerSrc, connectionsIntact, postFailureCost);
                 failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
                 nfeValues = Arrays.asList(1, 2);
@@ -385,7 +386,7 @@ public class AggregationOutputService {
 
 
     private String[] makeManyToManyHeader(List<Algorithm> algs, Integer d, Map<Algorithm, String> algFormatMap) {
-        String any = "\\textbf{|D| =" + d + "}";
+        String any = "\\textbf{$|D|$ =" + d + "}";
         List<String> temp = algs.stream().map(algFormatMap::get).collect(Collectors.toList());
         temp.add(0, any);
         return makeArrayFromList(temp);
@@ -438,6 +439,8 @@ public class AggregationOutputService {
                 return agAn.getRunningTime();
             case totalPaths:
                 return agAn.getTotalPaths();
+            case totalCost:
+                return agAn.getTotalCost();
             case avgBackupCost:
                 return agAn.getAverageBackupCost();
             case destsConnected:

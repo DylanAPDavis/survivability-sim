@@ -190,15 +190,17 @@ var Total_Weight >= 0;
 
 # OBJECTIVE
 
-minimize linksused:
-	Num_Links_Used;
+#minimize linksused:
+#	Num_Links_Used;
 
-minimize connections:
-	Num_Conns_Total;
+#minimize connections:
+#	Num_Conns_Total;
 
 minimize totalcost:
 	Total_Weight;
 
+subject to totalWeightDefinition:
+    Total_Weight = sum{(s,d) in SD, i in I, u in V, v in V} L[s,d,i,u,v] * Weight[u,v];
 
 # Objective definition constraints
 # LINKS USED
@@ -236,11 +238,11 @@ subject to totalConnectionsNeeded{g in GroupIndices}:
 subject to minNumConnectionsNeeded{(s,d) in SD, g in GroupIndices}:
 	Num_Conn[s,d] >= c_min_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
 
-#subject to maxNumConnectionsNeededFails{(s,d) in SD, g in GroupIndices}:
-#	FG_Conn_sd[s,d,g] == 1 ==> Num_Conn[s,d] <= c_max_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
+subject to maxNumConnectionsNeededFails{(s,d) in SD, g in GroupIndices}:
+	FG_Conn_sd[s,d,g] == 1 ==> Num_Conn[s,d] <= c_max_sd[s,d] + sum{i in I} FG_Conn[s,d,i,g];
 
-#subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
-#	FG_Conn_sd_any[s,d] == 0 ==> Num_Conn[s,d] <= c_max_sd[s,d];
+subject to maxNumConnectionsNeededNoFails{(s,d) in SD}:
+	FG_Conn_sd_any[s,d] == 0 ==> Num_Conn[s,d] <= c_max_sd[s,d];
 
 # ENDPOINT CONSTRAINTS
 
@@ -276,11 +278,11 @@ subject to connSurvivesFromS_1_LessThanS{s in S, g in GroupIndices}:#: sRequired
 subject to connSurvivesFromS_2_LessThanS{s in S, g in GroupIndices}:#: sRequired < card(S)}:
    connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn_include_endpoints[s,d,i,g];
 
-#subject to connSurvivesFromS_1_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
-#	connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+subject to connSurvivesFromS_1_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
+	connSurvivesFromS[s,g] <= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
-#subject to connSurvivesFromS_2_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
-#	connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
+subject to connSurvivesFromS_2_GreaterThanS{s in S, g in GroupIndices: sRequired >= card(S)}:
+	connSurvivesFromS[s,g] * card(V)^4 >= Num_Conn_src[s] - sum{d in D, i in I: s != d} FG_Conn[s,d,i,g];
 
 
 subject to srcConnected_1{s in S}:
@@ -479,9 +481,11 @@ subject to atLeastOneConnFailsForDAny_2{d in D}:
 
 # A failure element should only appear at most once in a pair's connections
 #subject to fAtMostOncePair{s in S, d in D, u in V, v in V, g in GroupIndices: u != v and ((u,v) in FG[g] or (v,u) in FG[g])}:
+#subject to fAtMostOncePair{s in S, u in V, v in V, g in GroupIndices: u != v and ((u,v) in FG[g] or (v,u) in FG[g])}:
 #	sum{i in I} L[s,d,i,u,v] <= 1;
 
 #subject to fAtMostOncePair_nodes{s in S, d in D, v in V, g in GroupIndices: (v,v) in FG[g] and v != s and v != d}:
+#subject to fAtMostOncePair_nodes{s in S, v in V, g in GroupIndices: (v,v) in FG[g] and v != s and v != d}:
 #	sum{i in I} NC[s,d,i,v] <= 1;
 
 #-------------------------------------------------------

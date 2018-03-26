@@ -321,10 +321,10 @@ public class GenerationService {
     private Connections assignConnections(SimulationParameters params, Collection<SourceDestPair> pairs, Collection<Node> sources,
                                           Collection<Node> destinations){
         RoutingType routingType = enumGenerationService.getRoutingType(params.getRoutingType());
-        if(routingType != RoutingType.Default){
+        /*if(routingType != RoutingType.Default){
             return makeConnectionsFromRoutingType(pairs, sources, destinations, params.getUseMinS(), params.getUseMaxS(),
                     params.getUseMinD(), params.getUseMaxD(), routingType);
-        }
+        }*/
         // Connection params
         Integer numConnections = params.getMinConnections();
         Integer minPairConnections = params.getMinPairConnections();

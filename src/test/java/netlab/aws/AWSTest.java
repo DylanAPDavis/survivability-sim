@@ -17,6 +17,7 @@ import netlab.submission.controller.SubmissionController;
 import netlab.submission.enums.*;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
+import netlab.submission.services.GenerationService;
 import netlab.topology.elements.*;
 import netlab.topology.services.TopologyAdjustmentService;
 import netlab.topology.services.TopologyService;
@@ -74,6 +75,9 @@ public class AWSTest {
     @Autowired
     private TopologyAdjustmentService topologyAdjustmentService;
 
+    @Autowired
+    private GenerationService generationService;
+
     //@Test
     public void updateRows(){
         SimulationParameters seedParams = SimulationParameters.builder().seed(1L).build();
@@ -93,7 +97,7 @@ public class AWSTest {
     @Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
-        String algorithm = "tabu";
+        String algorithm = "ilp";
         String routing = "manytomany";
         boolean deleteRecords = true;
         boolean deleteAnalysis = true;
@@ -214,16 +218,19 @@ public class AWSTest {
     @Test
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
-            //String id = "3_tw_manytomany_ilp_5_3_5_5_1_3_none_quake2_both_2_none_allow_allow_false_8";
-            String id = "30_tw_manytomany_tabu_5_2_5_5_1_2_none_quake2_both_2_none_allow_allow_false_8";
-            Request r = storageController.getRequest(id, true);
-            //r = processingService.processRequest(r);
-            Analysis a = storageController.getAnalysis(id, true);
-            Analysis analysis = analysisService.analyzeRequest(r);
-            //analysisController.analyzeRequest(AnalysisParameters.builder().requestId(id).useAws(true).build());
-            System.out.println(printingService.outputPaths(r));
-            //System.out.println(a);
-            System.out.println(analysis);
+            String id = "1_tw_manytomany_ilp_5_3_5_5_1_3_none_alllinks_both_1_none_allow_allow_false_8";//"3_tw_manytomany_ilp_5_3_5_5_1_3_none_quake2_both_2_none_allow_allow_false_8";
+            //String id = "30_tw_manytomany_tabu_5_2_5_5_1_2_none_quake2_both_2_none_allow_allow_false_8";
+            List<SimulationParameters> simParams = storageController.getParameter(id);
+            if(!simParams.isEmpty()){
+                Request r = generationService.generateFromSimParams(simParams.get(0));//storageController.getRequest(id, true);
+                r = processingService.processRequest(r);
+                Analysis a = storageController.getAnalysis(id, true);
+                Analysis analysis = analysisService.analyzeRequest(r);
+                //analysisController.analyzeRequest(AnalysisParameters.builder().requestId(id).useAws(true).build());
+                System.out.println(printingService.outputPaths(r));
+                //System.out.println(a);
+                System.out.println(analysis);
+            }
         }
     }
 }

@@ -9,9 +9,9 @@ analysis_job = "ANALYSIS_JOB"
 analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
 aggregate_analysis = False
-rerun = True
+rerun = False
 mass_analysis = False
-mass_sim = False
+mass_sim = True
 
 
 def process_job(job, analysis_type):
@@ -24,12 +24,12 @@ def process_job(job, analysis_type):
                          str(job.use_aws)]
     else:
         output_file_path = "results/output/" + job.request_id
-        run_time = "3:59"
+        run_time = "12:00"
         memory = "6000"
-        queue = "short"
+        queue = "long"
         if job.algorithm == "ilp" and job.f_scenario != "default" and job.ignore == "false":
-            memory = "8000"
-            if job.f_scenario == "alllinks" and job.topo == "tw" and job.nfe == 3:
+            memory = "12000"
+            if job.f_scenario == "alllinks" and job.topo == "tw" and job.nfe == 2:
                 memory = "16000"
 
         command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
@@ -45,23 +45,25 @@ def process_job(job, analysis_type):
 
 
 def mass_process_jobs(job_list):
-    print("Running all jobs in job list. Ids storeds in scripts/mass.txt")
-    output_file_path = "results/output/mass_process_" + job_list[0].request_id
+    print("Running job list. Ids stored in scripts/input/seed_mass.txt")
+    first_job = job_list[0]
+    output_file_path = "results/output/mass_process_" + first_job.request_id
     run_time = "3:59"
-    memory = "6000"
+    memory = "12000"
     queue = "short"
     param_dicts = []
-    for job in job_list:
-        args = [arg for arg in job.ordered_params]
-        args.append(job.use_aws)
-        args.append(job.request_id)
+    for job_details in job_list:
+        args = [arg for arg in job_details.ordered_params]
+        args.append(job_details.use_aws)
+        args.append(job_details.request_id)
         param_dicts.append(run_simulation.build_param_dict(args))
     params_string = json.dumps(param_dicts)
-    filepath = 'scripts/mass.txt'
+    filepath = 'scripts/input/' + str(first_job.seed) + '_mass.txt'
     with open(filepath, "w+") as fp:
         fp.write(params_string)
     command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
-                     str(job_list[0].num_threads), "-o", output_file_path, "python", "scripts/run_mass_simulation.py"]
+                     str(job_list[0].num_threads), "-o", output_file_path, "python", "scripts/run_mass_simulation.py",
+                     str(seed)]
     process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 
@@ -77,7 +79,7 @@ def process_aggregate_job():
 # 12_tw_manytomany_ilp_5_3_5_5_1_3_none_alllinks_both_2_none_allow_allow_false_8
 def rerun_jobs():
     filepath = 'scripts/Rerun.txt'
-    print("Rerunning jobs in scripts/Rerun.txt")
+    print("Rerunning jobs in scripts/[seed]_Rerun.txt")
     with open(filepath) as fp:
         for line in fp:
             line = line.strip("\n").strip("\r")
@@ -119,20 +121,29 @@ elif mass_analysis:
     routings = ["manytomany"]
     analyze_jobs(seeds, topologies, routings)
 elif mass_sim:
-    seeds = range(1,31)
+    seeds = range(1, 31)
     topology = "tw"
     routing = "manytomany"
-    algorithm = "tabu"
-    job_list = []
+    algorithm = "ilp"
+    nfe = 1
     for seed in seeds:
         jobs_for_seed = jobs.create_jobs(seed)
-        job_list += [job for job in jobs_for_seed if job.topo == topology and job.routing == routing and job.algorithm == algorithm]
-    mass_process_jobs(job_list)
+        job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                    and job.algorithm == algorithm and job.nfe == nfe]
+        print(len(job_list))
+        mass_process_jobs(job_list)
+        single_job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                           and job.algorithm == algorithm and job.nfe != nfe]
+        print(len(single_job_list))
+        for j in single_job_list:
+            print(str(j.__dict__))
+            process_job(j, analysis_after_sim)
+        time.sleep(2)
 else:
     seeds = range(1, 31)
     for seed in seeds:
         job_list = jobs.create_jobs(seed)
         for j in job_list:
             print(str(j.__dict__))
-            process_job(j, analysis_job)
-        time.sleep(2)
+            process_job(j, analysis_after_sim)
+            time.sleep(2)

@@ -2,6 +2,8 @@ package netlab.processing;
 
 import lombok.extern.slf4j.Slf4j;
 import netlab.TestConfiguration;
+import netlab.analysis.analyzed.Analysis;
+import netlab.analysis.services.AnalysisService;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
@@ -35,6 +37,9 @@ public class AmplRoutingModelTest {
 
     @Autowired
     private TopologyService topologyService;
+
+    @Autowired
+    private AnalysisService analysisService;
 
     @Test
     public void unicastTest(){
@@ -811,7 +816,7 @@ public class AmplRoutingModelTest {
         System.out.println(printingService.outputPaths(request));
     }
 
-    //@Test
+    @Test
     public void manyToManyAllLinks1TestTW(){
 
         SimulationParameters params = SimulationParameters.builder()
@@ -821,8 +826,10 @@ public class AmplRoutingModelTest {
                 .objective("totalcost")
                 .routingType("manyToMany")
                 .numSources(5)
-                .numDestinations(5)
+                .useMinS(5)
+                .numDestinations(3)
                 .failureScenario("allLinks")
+                .trafficCombinationType("none")
                 .numFailureEvents(1)
                 .useAws(false)
                 .build();
@@ -830,6 +837,8 @@ public class AmplRoutingModelTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.println(analysis);
     }
 
     @Test
@@ -898,6 +907,57 @@ public class AmplRoutingModelTest {
                 .useMinD(1)
                 .useMaxD(7)
                 .failureScenario("allnodes")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    // 1_tw_manytomany_ilp_5_1_5_5_1_1_none_alllinks_both_1_none_allow_allow_false_8
+    @Test
+    public void manyToManyTwAllLinks1S5D1(){
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manytomany")
+                .numSources(5)
+                .numDestinations(1)
+                .useMinS(5)
+                .useMaxS(5)
+                .useMinD(1)
+                .useMaxD(1)
+                .failureScenario("alllinks")
+                .numFailureEvents(1)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
+    public void manyToManyTwQuake2S5D3(){
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
+                .algorithm("ilp")
+                .problemClass("combined")
+                .objective("totalcost")
+                .routingType("manytomany")
+                .numSources(5)
+                .numDestinations(3)
+                .useMinS(5)
+                .useMaxS(5)
+                .useMinD(1)
+                .useMaxD(3)
+                .failureScenario("quake2")
                 .numFailureEvents(1)
                 .useAws(false)
                 .build();
@@ -1072,7 +1132,6 @@ public class AmplRoutingModelTest {
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
     }
-
 
 
 

@@ -126,6 +126,12 @@ public class RoutingParamAssignmentService {
                 useMaxS = useMaxS == null || useMaxS > sources.size() ? sources.size() : useMaxS;
                 useMinD = useMinD == null || useMinD < 1 ? destinations.size() : useMinD;
                 useMaxD = useMaxD == null || useMaxD > destinations.size() ? destinations.size() : useMaxD;
+                if(useMinS == sources.size()){
+                    srcMinNumConnectionsMap = sources.stream().collect(Collectors.toMap(p -> p, p -> 1));
+                }
+                if(useMinD == destinations.size()){
+                    destMinNumConnectionsMap = destinations.stream().collect(Collectors.toMap(p -> p, p -> 1));
+                }
                 numConnections = Math.max(useMinS, useMinD);
                 break;
             case "broadcast":
@@ -275,7 +281,7 @@ public class RoutingParamAssignmentService {
                 useMaxS = useMaxS == null || useMaxS > numS ? numS : useMaxS;
                 useMinD = useMinD == null || useMinD < 1 ? numD : useMinD;
                 useMaxD = useMaxD == null || useMaxD > numD ? numD : useMaxD;
-                minConnections = Math.max(useMinS, useMinD);
+                minConnections = 0;//Math.max(useMinS, useMinD);
                 break;
             case "broadcast":
                 // |pairs| connections, 1/1 per pair, 0/|D| per src, 0/|S| per dst, |S| src connected, |D| dsts connected

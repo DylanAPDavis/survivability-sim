@@ -70,4 +70,10 @@ public class StorageController {
         return storageService.queryForSeed(seed);
     }
 
+    @RequestMapping(value="storage/get_sim_params", method = RequestMethod.GET)
+    @ResponseBody
+    public List<SimulationParameters> getParameter(String id){
+        return storageService.queryForId(id);
+    }
+
 }
