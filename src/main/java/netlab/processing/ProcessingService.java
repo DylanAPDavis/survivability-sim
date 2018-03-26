@@ -100,6 +100,9 @@ public class ProcessingService {
         } else{
             topo = topoService.getTopologyById(request.getTopologyId());
         }
+        if(topo == null){
+            return null;
+        }
         Details details = request.getDetails();
         switch(request.getAlgorithm()){
             case ILP:

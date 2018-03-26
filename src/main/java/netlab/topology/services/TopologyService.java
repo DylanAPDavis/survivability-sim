@@ -158,6 +158,45 @@ public class TopologyService {
         links.add(new Link(ithaca, pittsburgh, 500.0));
         links.add(new Link(ithaca, collegePark, 300.0));
         Topology topo = new Topology("nsfnet", nodes, links);
+
+        /*
+        Map<Node, String> simpleIdMap = new HashMap<>();
+        List<Node> sorted = nodes.stream().sorted(Comparator.comparing(Node::getId)).collect(Collectors.toList());
+        int idNum = 0;
+        for(Node node : sorted){
+            simpleIdMap.put(node, String.valueOf(idNum));
+            idNum++;
+        }
+        Set<Failure> failures = failureAreaService.generateFailures(FailureScenario.Quake_2, nodes, links, FailureClass.Link);
+        Set<Link> failureLinks = failures.stream().map(Failure::getLink).collect(Collectors.toSet());
+        Set<List<String>> simpleFailureLinks = failureLinks.stream()
+                .map(l -> Arrays.asList(simpleIdMap.get(l.getOrigin()), simpleIdMap.get(l.getTarget())))
+                .collect(Collectors.toSet());
+        List<List<String>> actualFailureLinks = new ArrayList<>();
+
+        List<String> ids = sorted.stream().map(simpleIdMap::get).collect(Collectors.toList());
+        List<List<String>> simpleLinks = new ArrayList<>();
+        List<Link> sortedLinks = links.stream().sorted(Comparator.comparing(Link::getId)).collect(Collectors.toList());
+        for(Link link : sortedLinks){
+            Node origin = link.getOrigin();
+            Node target = link.getTarget();
+            String originId = simpleIdMap.get(origin);
+            String targetId = simpleIdMap.get(target);
+            List<String> simpleLink = Arrays.asList(originId, targetId);
+            simpleLinks.add(simpleLink);
+            if(simpleFailureLinks.contains(simpleLink)){
+                actualFailureLinks.add(simpleLink);
+            }
+        }
+
+        Map<String, String> idToNameMap = simpleIdMap.keySet().stream()
+                .collect(Collectors.toMap(simpleIdMap::get, Node::getId));
+        System.out.println(idToNameMap);
+        System.out.println(ids);
+        System.out.println(simpleLinks);
+        System.out.println(actualFailureLinks);
+        */
+
         return populatePathCosts(topo);
     }
 
@@ -359,23 +398,29 @@ public class TopologyService {
         double count = 0.0;
         Map<String, Node> nodeIdMap = new HashMap<>();
         for(String nodeString : nodeStrings){
-            Node newNode = new Node(nodeString, count, count);
+            Node newNode = new Node(nodeString.replace(" ", ""), count, count);
             nodes.add(newNode);
             nodeIdMap.put(nodeString, newNode);
             count += 1.0;
         }
 
         for(String linkString : linkStrings){
-            String[] linkComponents = linkString.split("-");
+            String[] linkComponents = linkString.replace(" ", "").split("-");
             if(linkComponents.length != 2){
                 continue;
             }
             String origin = linkComponents[0];
             String target = linkComponents[1];
-            Link newLink = new Link(nodeIdMap.get(origin), nodeIdMap.get(target));
-            Link revLink = newLink.reverse();
-            links.add(newLink);
-            links.add(revLink);
+            try {
+                Link newLink = new Link(nodeIdMap.get(origin), nodeIdMap.get(target));
+                Link revLink = newLink.reverse();
+                links.add(newLink);
+                links.add(revLink);
+            } catch(Exception e){
+                log.error("One or both endpoints for link " + linkString + " not in the network");
+                log.error("Input nodes: " + nodeStrings);
+                return null;
+            }
         }
 
         return new Topology("generated", nodes, links);

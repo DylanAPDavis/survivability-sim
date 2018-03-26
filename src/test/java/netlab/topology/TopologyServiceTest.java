@@ -26,6 +26,14 @@ public class TopologyServiceTest
     }
 
     @Test
+    public void nsfTest(){
+        Topology topo = topologyService.getTopologyById("nsfnet");
+
+        assert(topo.getNodes().size() > 0);
+        assert(topo.getLinks().size() > 0);
+    }
+
+    @Test
     public void getMetricsTest(){
         Topology nsf = topologyService.getTopologyById("nsfnet");
         Topology tw = topologyService.getTopologyById("tw");

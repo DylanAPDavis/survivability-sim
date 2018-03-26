@@ -149,6 +149,33 @@ public class SimulateEndpointTest {
         test(simRequest, true);
     }
 
+    /*
+    payload={"routingParams":[{"source":"1","destinations":[14]}],
+
+        "network":{"nodes":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13","14"],
+        "links":["1-7", "1-11", "1-12", "2-6", "2-10", "3-6", "3-8", "3-12", "4-8", "4- 10", "5-6", "5-7","5-11","6-13","7-10","9-12","9-13","10-11","4-14","14-9","14-13"]
+        },
+
+        "survivability":{"failureScenario":"AllLinks" ,"numFailureEvents" : "1"}
+}
+     */
+    @Test
+    public void errorTest() {
+        List<RoutingParam> routingParams = new ArrayList<>();
+        RoutingParam unicast1 = RoutingParam.builder()
+                .source("1")
+                .destinations(Arrays.asList("14"))
+                .build();
+        routingParams.add(unicast1);
+
+        SimRequest simRequest = SimRequest.builder()
+                .routingParams(routingParams)
+                .network(buildNSFnet())
+                .survivability(buildAllLinksFailuresNfe1())
+                .build();
+
+        test(simRequest, true);
+    }
 
     private void test(SimRequest simRequest, Boolean succeed){
         SimResponse response = submissionController.simulateRequest(simRequest);
@@ -249,5 +276,17 @@ public class SimulateEndpointTest {
                 .nodes(nodes)
                 .links(forLinks)
                 .build();
+    }
+
+    private Network buildNSFnet() {
+
+         List<String> nodes = Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13","14");
+         List<String> links = Arrays.asList("1-7", "1-11", "1-12", "2-6", "2-10", "3-6", "3-8", "3-12", "4-8", "4- 10",
+                 "5-6", "5-7","5-11","6-13","7-10","9-12","9-13","10-11","4-14","14-9","14-13");
+         return Network.builder()
+                 .nodes(nodes)
+                 .links(links)
+                 .build();
+
     }
 }
