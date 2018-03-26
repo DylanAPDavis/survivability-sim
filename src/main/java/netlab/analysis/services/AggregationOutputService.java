@@ -188,7 +188,7 @@ public class AggregationOutputService {
                             } else {
                                 for (Integer d : numD) {
                                     // Sub header for Anycast # and Algorithms
-                                    String[] anycastHeader = routingType.equals("anycast") ? makeAnycastHeader(algs, d, algFormatMap) : makeManyToManyHeader(algs, d, algFormatMap);
+                                    String[] anycastHeader = routingType.equals("anycast") ? makeAnycastHeader(algs, d, algFormatMap) : makeManyToManyHeader(algs, s, d, algFormatMap);
                                     output.add(anycastHeader);
                                     tempOutput.add(anycastHeader); // add alt & output
                                     List<AggregateAnalysis> agForD = mapForTable.get(d);
@@ -246,6 +246,8 @@ public class AggregationOutputService {
                 writer = new CSVWriter(new FileWriter("alt" + fileName + ".csv"), ',');
                 writer.writeAll(altOutput);
                 writer.close();
+                output = new ArrayList<>();
+                altOutput = new ArrayList<>();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -385,8 +387,8 @@ public class AggregationOutputService {
     }
 
 
-    private String[] makeManyToManyHeader(List<Algorithm> algs, Integer d, Map<Algorithm, String> algFormatMap) {
-        String any = "\\textbf{$|D|$ =" + d + "}";
+    private String[] makeManyToManyHeader(List<Algorithm> algs, Integer s, Integer d, Map<Algorithm, String> algFormatMap) {
+        String any = "\\textbf{$|S| =$ " + s + ", $|D| =$ " + d + "}";
         List<String> temp = algs.stream().map(algFormatMap::get).collect(Collectors.toList());
         temp.add(0, any);
         return makeArrayFromList(temp);
