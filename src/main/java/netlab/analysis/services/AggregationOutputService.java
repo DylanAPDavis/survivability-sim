@@ -143,9 +143,9 @@ public class AggregationOutputService {
         metricCategories.put(2, cachingMetrics);
 
 
-        DecimalFormat bigFormat = new DecimalFormat("####.##");
+        DecimalFormat bigFormat = new DecimalFormat("###,###.##");
 
-        DecimalFormat littleFormat = new DecimalFormat("####.###");
+        DecimalFormat littleFormat = new DecimalFormat("#,###.###");
 
         List<String[]> output = new ArrayList<>();
         List<String[]> altOutput = new ArrayList<>();
@@ -365,6 +365,8 @@ public class AggregationOutputService {
             case avgBackupCost:
                 return true;
             case postFailureCost:
+                return true;
+            case totalCost:
                 return true;
             default:
                 return false;

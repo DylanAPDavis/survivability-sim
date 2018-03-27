@@ -149,6 +149,28 @@ public class MemberForwardingServiceTest {
     }
 
     @Test
+    public void manyToManyTest(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
+                .algorithm("memberForwarding")
+                .objective("totalcost")
+                .routingType("manytomany")
+                .numSources(10)
+                .numDestinations(3)
+                .useMinS(10)
+                .useMinD(1)
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+    }
+
+    @Test
     public void broadcast(){
 
         SimulationParameters params = SimulationParameters.builder()

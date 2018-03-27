@@ -1,6 +1,7 @@
 package netlab.topology;
 
 import netlab.TestConfiguration;
+import netlab.topology.elements.Link;
 import netlab.topology.elements.Topology;
 import netlab.topology.services.TopologyService;
 import org.junit.Test;
@@ -23,6 +24,8 @@ public class TopologyServiceTest
 
         assert(topo.getNodes().size() > 0);
         assert(topo.getLinks().size() > 0);
+        Double sum = topo.getLinks().stream().mapToDouble(Link::getWeight).sum();
+        System.out.println(sum);
     }
 
     @Test
