@@ -113,7 +113,7 @@ public class AWSTest {
 
     @Test
     public void analysisGeneration(){
-        List<Long> seeds = Collections.singletonList(25L);//LongStream.rangeClosed(1L, 30L).boxed().collect(Collectors.toList());
+        List<Long> seeds = LongStream.rangeClosed(1L, 30L).boxed().collect(Collectors.toList());
         String routingType = "manytomany";
         String topologyId = "tw";
         analysisController.analyzeSeeds(seeds, routingType, topologyId);
