@@ -52,53 +52,56 @@ public class MemberForwardingService {
 
         Set<Node> sources = details.getSources();
         Set<Node> dests = details.getDestinations();
-        Set<Node> members = new HashSet<>(dests);
-        if(sources.size() > 1) {
-            members.addAll(sources);
-        }
+        Set<Node> options = new HashSet<>(topo.getNodes());
+        options.removeAll(dests);
         Map<SourceDestPair, Double> pathCostMap = topo.getMinimumPathCostMap();
 
-        Map<Node, List<Double>> distanceToEachSource = new HashMap<>();
-        Map<Node, Map<Node, Double>> costFromSrcToDst = new HashMap<>();
-        // Get the costs of each src to each other src
-        // Get the costs of each s to each dst
+        Map<Node, List<Double>> distanceToEachNode = new HashMap<>();
+        Map<Node, Map<Node, Double>> costFromNodeToDst = new HashMap<>();
+        // Get the costs of each src to each other node
         for(Node src : sources){
-            Map<Node, Double> mapToOtherSrcs = createDistanceMap(src, sources, pathCostMap);
-            Map<Node, Double> mapToDests = createDistanceMap(src, dests, pathCostMap);
-            costFromSrcToDst.put(src, mapToDests);
-            for(Node node : mapToOtherSrcs.keySet()){
-                distanceToEachSource.putIfAbsent(node, new ArrayList<>());
-                distanceToEachSource.get(node).add(mapToOtherSrcs.get(node));
+            Map<Node, Double> mapToOtherNodes = createDistanceMap(src, options, pathCostMap);
+            for(Node node : mapToOtherNodes.keySet()){
+                distanceToEachNode.putIfAbsent(node, new ArrayList<>());
+                distanceToEachNode.get(node).add(mapToOtherNodes.get(node));
             }
+        }
+        // Get the costs of each node to each dst
+        for(Node node : options){
+            Map<Node, Double> mapToDests = createDistanceMap(node, dests, pathCostMap);
+            costFromNodeToDst.put(node, mapToDests);
         }
         // Pick the src bestS that minimizes the maximum distance any src would have to travel
 
-        Map<Node, Double> worstCaseDistanceUsingS = new HashMap<>();
-        Map<Node, Double> totalDistanceUsingS = new HashMap<>();
-        for(Node src : sources){
-            List<Double> distancesToSrc = distanceToEachSource.containsKey(src) ?
-                    distanceToEachSource.get(src) : Collections.singletonList(0.0);
-            Double maxDistanceToSrc = Collections.max(distancesToSrc);
-            Map<Node, Double> distanceToDsts = costFromSrcToDst.containsKey(src) ?
-                    costFromSrcToDst.get(src) : new HashMap<>();
+        Map<Node, Double> worstCaseDistanceUsingNode = new HashMap<>();
+        Map<Node, Double> totalDistanceUsingNode = new HashMap<>();
+        for(Node node : options){
+            List<Double> distancesToNode = distanceToEachNode.containsKey(node) ?
+                    distanceToEachNode.get(node) : Collections.singletonList(0.0);
+            Double maxDistanceToNode = Collections.max(distancesToNode);
+
+            Map<Node, Double> distanceToDsts = costFromNodeToDst.containsKey(node) ?
+                    costFromNodeToDst.get(node) : new HashMap<>();
             Double maxDistanceToDst = !distanceToDsts.isEmpty() ?
                     Collections.max(distanceToDsts.values()) : 99999999.99999;
-            Double worstCase = maxDistanceToSrc + maxDistanceToDst;
-            worstCaseDistanceUsingS.put(src, worstCase);
-            Double total = distancesToSrc.stream().mapToDouble(d -> d).sum()
+
+            Double worstCase = maxDistanceToNode + maxDistanceToDst;
+            worstCaseDistanceUsingNode.put(node, worstCase);
+
+            Double total = distancesToNode.stream().mapToDouble(d -> d).sum()
                     + distanceToDsts.values().stream().mapToDouble(d -> d).sum();
-            totalDistanceUsingS.put(src, total);
+            totalDistanceUsingNode.put(node, total);
         }
 
-        Node minSrc = null;
-        for(Node src : sources){
-            if(minSrc == null){
-                minSrc = src;
+        Node minNode = null;
+        for(Node node : options){
+            if(minNode == null){
+                minNode = node;
             } else{
-                if(worstCaseDistanceUsingS.get(src) <= worstCaseDistanceUsingS.get(minSrc)){
-                    if(worstCaseDistanceUsingS.get(src) < worstCaseDistanceUsingS.get(minSrc)
-                            || totalDistanceUsingS.get(src) < worstCaseDistanceUsingS.get(minSrc)){
-                        minSrc = src;
+                if(worstCaseDistanceUsingNode.get(node) <= worstCaseDistanceUsingNode.get(minNode)){
+                    if(worstCaseDistanceUsingNode.get(node) < worstCaseDistanceUsingNode.get(minNode)
+                            || totalDistanceUsingNode.get(node) < totalDistanceUsingNode.get(minNode)){
+                        minNode = node;
                     }
                 }
             }
@@ -107,10 +110,10 @@ public class MemberForwardingService {
         // Route each s in S to each destination combining the path to bestS and the path from bestS to each dst
 
         Map<SourceDestPair, Map<String, Path>> chosenPathsMap = new HashMap<>();
-        if(minSrc != null){
+        if(minNode != null){
             for(Node src : sources){
-                boolean isMin = src.getId().equals(minSrc.getId());
-                Path toMinSrc = isMin ? null : minimumCostPathService.findShortestPath(src, minSrc, topo);
+                boolean isMin = src.getId().equals(minNode.getId());
+                Path toMinNode = isMin ? null : minimumCostPathService.findShortestPath(src, minNode, topo);
                 for(Node dst : dests){
                     boolean srcIsDst = src.getId().equals(dst.getId());
                     // If the source is this destination, don't find a path
@@ -119,16 +122,16 @@ public class MemberForwardingService {
                     }
                     SourceDestPair srcDst = new SourceDestPair(src, dst);
                     Path completePath;
-                    boolean minSrcIsDst = minSrc.getId().equals(dst.getId());
+                    boolean minNodeIsDst = minNode.getId().equals(dst.getId());
                     // If the min src is this destination, you already have a path to reach it
-                    if(minSrcIsDst){
-                        completePath = toMinSrc;
+                    if(minNodeIsDst){
+                        completePath = toMinNode;
                     }
                     // Otherwise, you need to find a path from the src to the destination
                     // Start at the minSrc, then prepend the path to the minSrc
                     else{
-                        Path toDstFromMinSrc = minimumCostPathService.findShortestPath(minSrc, dst, topo);
-                        completePath = isMin ? toDstFromMinSrc : toMinSrc.combinePaths(toDstFromMinSrc);
+                        Path toDstFromMinNode = minimumCostPathService.findShortestPath(minNode, dst, topo);
+                        completePath = isMin ? toDstFromMinNode : toMinNode.combinePaths(toDstFromMinNode);
                     }
                     chosenPathsMap.putIfAbsent(srcDst, new HashMap<>());
                     chosenPathsMap.get(srcDst).put(completePath.getId(), completePath);

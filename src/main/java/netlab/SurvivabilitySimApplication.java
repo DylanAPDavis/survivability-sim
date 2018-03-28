@@ -169,7 +169,7 @@ public class SurvivabilitySimApplication {
 						.build();
 				analysCon.analyzeRequest(analysisParameters);
 			}
-			waitMinTime(startTime, 300);
+			//waitMinTime(startTime, 300);
 			// If you're not analyzing the request, close the context and shut down the simulator
 			ctx.close();
 			System.exit(0);

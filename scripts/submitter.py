@@ -9,9 +9,9 @@ analysis_job = "ANALYSIS_JOB"
 analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
 aggregate_analysis = False
-rerun = True
+rerun = False
 mass_analysis = False
-mass_sim = False
+mass_sim = True
 
 
 def process_job(job, analysis_type):
@@ -63,7 +63,7 @@ def mass_process_jobs(job_list):
         fp.write(params_string)
     command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
                      str(job_list[0].num_threads), "-o", output_file_path, "python", "scripts/run_mass_simulation.py",
-                     str(seed)]
+                     str(first_job.seed)]
     process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 
@@ -124,28 +124,38 @@ elif mass_sim:
     seeds = range(1, 31)
     topology = "tw"
     routing = "manytomany"
-    algorithm = "tabu"
+    algorithm = "memberforwarding"
     nfe = 1
     regular_filter = True
-    for seed in seeds:
-        if regular_filter:
+    all_seeds = True
+    if all_seeds:
+        job_list = []
+        for seed in seeds:
             jobs_for_seed = jobs.create_jobs(seed)
-            job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
-                        and job.algorithm == algorithm]
-            mass_process_jobs(job_list)
-            print(len(job_list))
-        else:
-            job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
-                        and job.algorithm == algorithm and job.nfe == nfe]
-            print(len(job_list))
-            mass_process_jobs(job_list)
-            single_job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
-                               and job.algorithm == algorithm and job.nfe != nfe]
-            print(len(single_job_list))
-            for j in single_job_list:
-                print(str(j.__dict__))
-                process_job(j, analysis_after_sim)
-            time.sleep(2)
+            job_list += [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                         and job.algorithm == algorithm]
+        print(len(job_list))
+        mass_process_jobs(job_list)
+    else:
+        for seed in seeds:
+            if regular_filter:
+                jobs_for_seed = jobs.create_jobs(seed)
+                job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                            and job.algorithm == algorithm]
+                mass_process_jobs(job_list)
+                print(len(job_list))
+            else:
+                job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                            and job.algorithm == algorithm and job.nfe == nfe]
+                print(len(job_list))
+                mass_process_jobs(job_list)
+                single_job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                                   and job.algorithm == algorithm and job.nfe != nfe]
+                print(len(single_job_list))
+                for j in single_job_list:
+                    print(str(j.__dict__))
+                    process_job(j, analysis_after_sim)
+                time.sleep(2)
 else:
     seeds = range(1, 31)
     for seed in seeds:

@@ -1,6 +1,8 @@
 package netlab.processing;
 
 import netlab.TestConfiguration;
+import netlab.analysis.analyzed.Analysis;
+import netlab.analysis.services.AnalysisService;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
@@ -23,6 +25,9 @@ public class MemberForwardingServiceTest {
 
     @Autowired
     GenerationService generationService;
+
+    @Autowired
+    AnalysisService analysisService;
 
     @Test
     public void unicastTest(){
@@ -168,6 +173,8 @@ public class MemberForwardingServiceTest {
         request = processingService.processRequest(request);
         assert(request.getDetails().getIsFeasible());
         System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.print(analysis);
     }
 
     @Test
