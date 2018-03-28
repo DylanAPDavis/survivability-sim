@@ -3,6 +3,7 @@ package netlab.processing.groupcast;
 import lombok.extern.slf4j.Slf4j;
 import netlab.processing.cycles.CollapsedRingService;
 import netlab.processing.shortestPaths.MinimumCostPathService;
+import netlab.submission.enums.RoutingType;
 import netlab.submission.enums.TrafficCombinationType;
 import netlab.submission.request.Details;
 import netlab.submission.request.Request;
@@ -76,30 +77,28 @@ public class CycleForTwoService {
 
         // Get the two main paths that make up the cycle
         List<Path> cyclePaths = collapsedRingService.findCollapsedRing(src, sortedDests, topo);
-        if(dests.contains(src)) {
-            collapsedRingService.augmentPathListWithPathsToSrc(cyclePaths);
-        }
+        collapsedRingService.augmentPathListWithPathsToSrc(cyclePaths);
+        Set<Link> cycleLinks = createBidirectionalCycleLinks(cyclePaths);
         //Set<Link> forwardCycleLinks = getLinksFromOneCycle(src, cyclePaths);//cyclePaths.stream().map(Path::getLinks).flatMap(Collection::stream).collect(Collectors.toSet());
 
         // Give these links Maximum weight
-        Topology cycleRemovedTopo = topologyAdjustmentService.adjustWeightsToMax(topo, cyclePaths);
+        Topology cycleRemovedTopo = topologyAdjustmentService.removeLinksFromTopology(topo, cycleLinks);
 
         // Find a shortestpath/tree solution for the problem without using the cycle links
-        Map<SourceDestPair, Map<String, Path>> chosenPathsMap = minimumCostPathService.findPaths(details, request.getRoutingType(),
+        Map<SourceDestPair, Map<String, Path>> chosenPathsMap = minimumCostPathService.findPaths(details, RoutingType.Broadcast,
                 pairs, cycleRemovedTopo, trafficCombinationType, false);
 
         // Convert any MAX_INT link weights back to their true weight
-        topologyAdjustmentService.readjustLinkWeights(chosenPathsMap, topo);
+        //topologyAdjustmentService.readjustLinkWeights(chosenPathsMap, topo);
 
         // Now, find paths for each source to each destination using the cycle links
-        Set<Link> bothCycleLinks = cyclePaths.stream().map(Path::getLinks).flatMap(Collection::stream).collect(Collectors.toSet());
-        Topology cycleOnlyTopo = topologyAdjustmentService.createTopologyWithLinkSubset(topo, bothCycleLinks);
+        Topology cycleOnlyTopo = topologyAdjustmentService.createTopologyWithLinkSubset(topo, cycleLinks);
         Map<SourceDestPair, Map<String, Path>> backupMap = getBackupPaths(pairs, cycleOnlyTopo);
 
         // Add backup paths to primary map
-        for(SourceDestPair pair : chosenPathsMap.keySet()){
+        for(SourceDestPair pair : pairs){
             if(backupMap.containsKey(pair)){
-                Map<String, Path> establishedMap = chosenPathsMap.get(pair);
+                Map<String, Path> establishedMap = chosenPathsMap.getOrDefault(pair, new HashMap<>());
                 Map<String, Path> backupMapForPair = backupMap.get(pair);
                 Set<String> establishedIds = establishedMap.values().stream().map(Path::getId).collect(Collectors.toSet());
                 for(Path path : backupMapForPair.values()){
@@ -107,6 +106,7 @@ public class CycleForTwoService {
                         establishedMap.put(String.valueOf(establishedMap.size() + 1), path);
                     }
                 }
+                chosenPathsMap.putIfAbsent(pair, establishedMap);
             }
         }
 
@@ -115,6 +115,20 @@ public class CycleForTwoService {
         details.setIsFeasible(true);
 
         return details;
+    }
+
+
+    private Set<Link> createBidirectionalCycleLinks(List<Path> cyclePaths) {
+        Set<Link> links = new HashSet<>();
+        for(Path path : cyclePaths){
+            List<Link> pathLinks = path.getLinks();
+            for(Link link : pathLinks){
+                Link revLink = link.reverse();
+                links.add(link);
+                links.add(revLink);
+            }
+        }
+        return links;
     }
 
 

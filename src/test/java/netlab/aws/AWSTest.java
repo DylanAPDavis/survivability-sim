@@ -97,7 +97,7 @@ public class AWSTest {
     @Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
-        String algorithm = "memberforwarding";
+        String algorithm = "cyclefortwo";
         String routing = "manytomany";
         boolean deleteRecords = true;
         boolean deleteAnalysis = true;

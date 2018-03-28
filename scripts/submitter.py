@@ -124,7 +124,7 @@ elif mass_sim:
     seeds = range(1, 31)
     topology = "tw"
     routing = "manytomany"
-    algorithm = "memberforwarding"
+    algorithm = "cyclefortwo"
     nfe = 1
     regular_filter = True
     all_seeds = True

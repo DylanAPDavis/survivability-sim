@@ -218,7 +218,6 @@ public class AggregationAnalysisService {
             numRequests++;
             requestSetIds.add(analysis.getRequestId());
             seeds.add(analysis.getSeed());
-            sumRunningTime += analysis.getRunningTime();
             if(analysis.getIsFeasible()) {
                 numFeasible++;
             }
@@ -227,6 +226,7 @@ public class AggregationAnalysisService {
             }
             if(analysis.getTotalCost() > 0.0){
                 totalWithResults++;
+                sumRunningTime += analysis.getRunningTime();
                 sumCost += analysis.getTotalCost();
                 sumLinksUsed += analysis.getTotalLinksUsed();
                 sumPaths += analysis.getTotalPaths();
@@ -286,7 +286,7 @@ public class AggregationAnalysisService {
                 .ignoreFailures(ignoreFailures)
                 .totalFeasible(numFeasible)
                 .percentFeasible(numFeasible / numRequests)
-                .runningTime(sumRunningTime / numRequests)
+                .runningTime(sumRunningTime / totalResultsDivisor)
                 .totalCost(sumCost / totalResultsDivisor)
                 .totalLinksUsed(sumLinksUsed / totalResultsDivisor)
                 .totalPaths(sumPaths / totalResultsDivisor)

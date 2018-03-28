@@ -1,6 +1,8 @@
 package netlab.processing;
 
 import netlab.TestConfiguration;
+import netlab.analysis.analyzed.Analysis;
+import netlab.analysis.services.AnalysisService;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
 import netlab.submission.services.GenerationService;
@@ -10,6 +12,10 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -23,6 +29,9 @@ public class CycleForTwoServiceTest {
 
     @Autowired
     GenerationService generationService;
+
+    @Autowired
+    AnalysisService analysisService;
 
     @Test
     public void unicastTest(){
@@ -237,26 +246,33 @@ public class CycleForTwoServiceTest {
     @Test
     public void ManyToManyTest(){
 
-        SimulationParameters params = SimulationParameters.builder()
-                .seed(10L)
-                .topologyId("NSFnet")
-                .algorithm("cycleForTwo")
-                .problemClass("combined")
-                .objective("totalcost")
-                .routingType("manytomany")
-                .numSources(5)
-                .useMinS(5)
-                .numDestinations(2)
-                .useMinD(1)
-                .failureScenario("quake2")
-                .numFailureEvents(2)
-                .sourceSubsetDestType("all")
-                .useAws(false)
-                .build();
-        Request request = generationService.generateFromSimParams(params);
-        request = processingService.processRequest(request);
-        assert(request.getDetails().getIsFeasible());
-        System.out.println(printingService.outputPaths(request));
+        //List<Long> seeds = LongStream.rangeClosed(1L, 30L).boxed().collect(Collectors.toList());
+        //for(Long seed : seeds) {
+            SimulationParameters params = SimulationParameters.builder()
+                    .seed(1L)
+                    .topologyId("tw")
+                    .algorithm("cycleForTwo")
+                    .problemClass("combined")
+                    .objective("totalcost")
+                    .routingType("manytomany")
+                    .numSources(5)
+                    .useMinS(5)
+                    .numDestinations(1)
+                    .useMinD(1)
+                    .failureScenario("alllinks")
+                    .numFailureEvents(1)
+                    .sourceSubsetDestType("none")
+                    .useAws(false)
+                    .build();
+            Request request = generationService.generateFromSimParams(params);
+            request = processingService.processRequest(request);
+            assert (request.getDetails().getIsFeasible());
+            Analysis a = analysisService.analyzeRequest(request);
+            //if(a.getConnectionsIntact() < params.getNumSources()) {
+                System.out.println(printingService.outputPaths(request));
+                System.out.print(a);
+            //}
+        //}
     }
 
 }
