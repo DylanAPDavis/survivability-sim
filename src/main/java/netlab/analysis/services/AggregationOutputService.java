@@ -33,7 +33,7 @@ public class AggregationOutputService {
     private final String destsConnectedPerSrc = "Avg. Connected D";
     private final String primaryIntact = "Primary Intact";
     private final String primaryIntactPerSrc = "Primary Intact \\%";
-    private final String connectionsIntact = "Connections Intact";
+    private final String connectionsIntact = "Consumers Connected \\%";
     private final String postFailureCost = "Post-Failure Cost";
     private final String reachOnPrimary = "Reach on Primary";
     private final String reachOnBackup = "Reach on Backup";
@@ -82,11 +82,10 @@ public class AggregationOutputService {
         List<Integer> numD = new ArrayList<>();
         List<Algorithm> algs = new ArrayList<>();
         List<String> topologies = Arrays.asList("tw");
-        List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown,
-                CachingType.SourceAdjacent, CachingType.FailureAware, CachingType.BranchingPoint);
+        List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown, CachingType.FailureAware, CachingType.BranchingPoint);
         List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, totalCost, primaryCost, avgBackupCost, runningTime, feasible);
         List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
-        List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, beforeHopsContent, afterHopsContent, cachingCost);
+        List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, afterHopsContent, cachingCost);
         switch(routingType.toLowerCase()){
             case "anycast":
                 failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);

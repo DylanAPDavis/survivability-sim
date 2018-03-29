@@ -204,7 +204,7 @@ public class AggregationAnalysisService {
 
         Double sumPrimaryIntactPerSrc = 0.0;
         Double sumDestsConnectedPerSrc = 0.0;
-        Double sumNumFoundBackup = 0.0;
+        Double totalFoundBackup = 0.0;
 
 
         List<CachingResult> aggregateCaching = new ArrayList<>();
@@ -256,12 +256,14 @@ public class AggregationAnalysisService {
 
                 sumDestsConnectedPerSrc += analysis.getDestsConnectedPerSrc();
                 sumPrimaryIntactPerSrc += analysis.getPrimaryIntactPerSrc();
-                sumNumFoundBackup += analysis.getNumFoundBackup();
                 sumAveragePrimaryCostPostFailure += analysis.getAveragePrimaryCostPostFailure();
                 sumAveragePrimaryHopsPostFailure += analysis.getAveragePrimaryHopsPostFailure();
 
                 if(analysis.getConnectionsIntact() > 0) {
                     numWithConnectionsIntact++;
+                    if(analysis.getNumFoundBackup() > 0){
+                        totalFoundBackup++;
+                    }
                 }
 
                 updateCachingResults(aggregateCaching, analysis.getCachingResults(), cachingIndices);
@@ -273,7 +275,7 @@ public class AggregationAnalysisService {
         double totalResultsDivisor = totalWithResults > 0 ? totalWithResults : 1.0;
         double totalIntactDivisor = numWithConnectionsIntact > 0 ? numWithConnectionsIntact : 1.0;
         double totalBackupDivisor = totalWithBackup > 0 ? totalWithBackup : 1.0;
-        double totalFoundBackupDivisor = sumNumFoundBackup > 0 ? sumNumFoundBackup : 1.0;
+        double totalFoundBackupDivisor = totalFoundBackup > 0 ? totalFoundBackup : 1.0;
 
         return AggregateAnalysis.builder()
                 .hash(hash)
@@ -295,8 +297,8 @@ public class AggregationAnalysisService {
                 .totalPaths(sumPaths / totalResultsDivisor)
                 .totalPrimaryPaths(sumPrimaryPaths / totalResultsDivisor)
                 .totalBackupPaths(sumBackupPaths / totalResultsDivisor)
-                .connectionsSevered(sumConnectionsSevered / totalResultsDivisor)
-                .connectionsIntact(sumConnectionsIntact / totalResultsDivisor)
+                .connectionsSevered(sumConnectionsSevered / totalResultsDivisor / routingDescription.getNumSources())
+                .connectionsIntact(sumConnectionsIntact / totalResultsDivisor / routingDescription.getNumSources())
                 .primaryPathsIntact(sumPrimaryPathsIntact / totalResultsDivisor)
                 .primaryPathsSevered(sumPrimaryPathsSevered / totalResultsDivisor)
                 .pathsSevered(sumPathsSevered / totalResultsDivisor)
