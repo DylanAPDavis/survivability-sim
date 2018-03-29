@@ -200,7 +200,7 @@ public class FlexBhandariService {
         // Build a map of paths and failures associated with those paths.
         Map<Node, Integer> intactPathsPerSrc = sources.stream().collect(Collectors.toMap(s -> s, s -> 0));
         Map<Node, Integer> intactPathsPerDst = destinations.stream().collect(Collectors.toMap(d -> d, d -> 0));
-        Map<SourceDestPair, Integer> intactPathsPerPair = pathsPerPair.keySet().stream()
+        Map<SourceDestPair, Integer> intactPathsPerPair = pairMinConnMap.keySet().stream()
                 .collect(Collectors.toMap(p -> p, p -> 0));
         Map<SourceDestPair, Map<String, Path>> chosenPathsMap = new HashMap<>();
         Map<Node, Set<Path>> pathsPerSrc = sources.stream().collect(Collectors.toMap(s -> s, s -> new HashSet<>()));

@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class)
@@ -216,6 +213,49 @@ public class SimulateEndpointTest {
                 .build();
 
         test(simRequest, true);
+    }
+
+    @Test
+    public void noResponseTest(){
+        List<RoutingParam> routingParams = new ArrayList<>();
+        List<String> sources = Arrays.asList("1", "13", "12", "13", "1", "14", "12", "14", "5");
+        List<String> destinations = Arrays.asList("3", "5", "6", "1", "9", "11", "7", "8", "10");
+        for(int i = 0; i < sources.size(); i++){
+            String src = sources.get(i);
+            String dst = destinations.get(i);
+            RoutingParam param = RoutingParam.builder()
+                    .source(src)
+                    .destinations(Collections.singletonList(dst))
+                    .build();
+            routingParams.add(param);
+        }
+
+        SimRequest simRequest = SimRequest.builder()
+                .routingParams(routingParams)
+                .network(buildNSFnet())
+                .survivability(buildAllLinksFailuresNfe1())
+                .build();
+
+        test(simRequest, true);
+        /*
+        payload={"routingParams":[{"source":"1","destinations":[3]},
+                            {"source":"13","destinations":[5]},
+                            {"source":"12","destinations":[6]},
+                            {"source":"13","destinations":[1]},
+                            {"source":"1","destinations":[9]},
+                            {"source":"14","destinations":[11]},
+                            {"source":"12","destinations":[7]},
+                            {"source":"14","destinations":[8]},
+                            {"source":"5","destinations":[10]}],
+
+        "network":{"nodes":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13","14"],
+        "links":["1-7", "1-11", "1-12", "2-6", "2-10", "3-6", "3-8", "3-12", "4-8", "4-10", "5-6", "5-7","5-11","6-13","7-10","9-12","9-13","10-11","4-14","14-9","14-13"]
+        },
+
+        "survivability":{"failureScenario":"AllLinks" ,"numFailureEvents" : "1"}
+
+}
+         */
     }
 
     private void test(SimRequest simRequest, Boolean succeed){
