@@ -97,9 +97,9 @@ public class AWSTest {
     @Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
-        String algorithm = "cyclefortwo";
+        String algorithm = null;
         String routing = "manytomany";
-        boolean deleteRecords = true;
+        boolean deleteRecords = false;
         boolean deleteAnalysis = true;
         for(Long seed : seeds) {
             long startTime = System.nanoTime();
@@ -219,11 +219,11 @@ public class AWSTest {
     public void downloadFromAnalyzed() {
         if(s3Interface.allFieldsDefined()){
             //String id = "1_tw_manytomany_ilp_5_3_5_5_1_3_none_alllinks_both_1_none_allow_allow_false_8";//"3_tw_manytomany_ilp_5_3_5_5_1_3_none_quake2_both_2_none_allow_allow_false_8";
-            String id = "2_tw_manytomany_memberforwarding_10_3_10_10_1_3_none_alllinks_both_1_none_allow_allow_false_8"; //"30_tw_manytomany_tabu_5_2_5_5_1_2_none_alllinks_both_1_none_allow_allow_false_8";
+            String id = "2_tw_manytomany_ilp_10_3_10_10_1_3_none_alllinks_both_1_none_allow_allow_false_8"; //"30_tw_manytomany_tabu_5_2_5_5_1_2_none_alllinks_both_1_none_allow_allow_false_8";
             List<SimulationParameters> simParams = storageController.getParameter(id);
             if(!simParams.isEmpty()){
                 Request r = storageController.getRequest(id, true);//generationService.generateFromSimParams(simParams.get(0));//storageController.getRequest(id, true);
-                r = processingService.processRequest(r);
+                //r = processingService.processRequest(r);
                 Analysis a = storageController.getAnalysis(id, true);
                 Analysis analysis = analysisService.analyzeRequest(r);
                 //analysisController.analyzeRequest(AnalysisParameters.builder().requestId(id).useAws(true).build());

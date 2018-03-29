@@ -60,6 +60,7 @@ public class Analysis implements Serializable {
 
     private Double primaryIntactPerSrc;
     private Double destsConnectedPerSrc;
+    private Double numFoundBackup;
 
     private List<String> chosenFailures;
     private List<CachingResult> cachingResults;
@@ -92,6 +93,7 @@ public class Analysis implements Serializable {
                 "Dests Connected: " + destsConnected + "\n" +
                 "Dests Connected Per Src: " + destsConnectedPerSrc + "\n" +
                 "-Post Failure-" + "\n" +
+                "Num Found Backup: " + numFoundBackup + "\n" +
                 "PF Avg Primary Hops: " + averagePrimaryHopsPostFailure + "\n" +
                 "PF Avg Primary Cost: " + averagePrimaryCostPostFailure + "\n" +
                 "Connections Intact: " + connectionsIntact + "\n" +

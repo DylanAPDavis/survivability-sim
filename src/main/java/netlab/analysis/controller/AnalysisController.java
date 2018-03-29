@@ -74,10 +74,9 @@ public class AnalysisController {
     }
 
     public void massAnalysis(MassAnalysisParameters massAnalysisParameters) {
-        Long seed = massAnalysisParameters.getSeed();
+        List<Long> seeds = massAnalysisParameters.getSeeds();
         String topology = massAnalysisParameters.getTopology();
         String routingType = massAnalysisParameters.getRoutingType();
-        List<Long> seeds = Collections.singletonList(seed);
         analyzeSeeds(seeds, routingType, topology);
     }
 

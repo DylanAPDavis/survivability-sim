@@ -1,6 +1,7 @@
 package netlab;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import netlab.analysis.analyzed.AggregationParameters;
@@ -41,6 +42,7 @@ public class SurvivabilitySimApplication {
 		List<SimulationParameters> simParamList = null;
 		boolean defaultAggregate = false;
 		ObjectMapper mapper = new ObjectMapper();
+		mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 		printUsage(args);
 		for (String arg : args) {
 			String[] splitArg = arg.split("=");
@@ -154,6 +156,7 @@ public class SurvivabilitySimApplication {
 		// Mass Analysis
 		if(massAnalysisParameters != null){
 			log.info("Mass Analyzing");
+			log.info(massAnalysisParameters.toString());
 			analysCon.massAnalysis(massAnalysisParameters);
 			waitMinTime(startTime, 300);
 		}

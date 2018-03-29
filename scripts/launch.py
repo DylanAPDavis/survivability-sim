@@ -27,7 +27,7 @@ def launch_simulator(loop, sim_params, analysis_params, port_num="9867", use_web
             command_input.append(analysis)
         command_input.append(aggregate_arg)
         if mass_analyze_params is not None:
-            mass_analyze_arg = "--massAnalyze=" +  convert_params_to_string(mass_analyze_params)
+            mass_analyze_arg = "--massAnalyze=" + convert_params_to_string(mass_analyze_params)
             command_input.append(mass_analyze_arg)
         if mass_run is not None:
             sim_set = "--massRun=" + mass_run

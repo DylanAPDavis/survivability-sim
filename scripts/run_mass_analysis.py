@@ -1,12 +1,14 @@
 from launch import launch_simulator, kill
 import sys
+import json
 
 default_len = 3
 
 
-def run_mass_analyze(seed, topology, routing_type):
+def run_mass_analyze(seeds, topology, routing_type):
+    seeds_list = json.loads(seeds)
     mass_analyze_params = {
-        "seed": seed,
+        "seeds": seeds_list,
         "topology": topology,
         "routingType": routing_type
     }

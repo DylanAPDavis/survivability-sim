@@ -77,6 +77,8 @@ public class AnalysisService {
         Double totalPrimaryRisk = 0.0;
         Double totalBackupRisk = 0.0;
 
+        Double numFoundBackup = 0.0;
+
         //Map for storing number of times a source/dest/pair sends a connection over a link
         Map<Link, Set<Node>> sourceLinkMap = new HashMap<>();
         Map<Link, Set<Node>> destLinkMap = new HashMap<>();
@@ -143,8 +145,8 @@ public class AnalysisService {
                             primarySevered = true;
                         } else {
                             primaryPathsIntact++;
-                            postFailureHops = 1.0 * path.getLinks().size();
-                            postFailureCost = path.getTotalWeight();
+                            //postFailureHops = 1.0 * path.getLinks().size();
+                            //postFailureCost = path.getTotalWeight();
                         }
                     } else {
                         totalBackupPaths++;
@@ -159,6 +161,7 @@ public class AnalysisService {
                         else {
                             backupPathsIntact++;
                             if (!foundIntactBackup && primarySevered) {
+                                numFoundBackup++;
                                 foundIntactBackup = true;
                                 postFailureHops = 1.0 * path.getLinks().size();
                                 postFailureCost = path.getTotalWeight();
@@ -209,6 +212,7 @@ public class AnalysisService {
             totalPrimaryCostPostFailure /= failureGroups.size();
             totalPrimaryRisk /= failureGroups.size();
             totalBackupRisk /= failureGroups.size();
+            numFoundBackup /= failureGroups.size();
 
             // Average post-failure content accessibility values
             cachingService.averageContentAccessibility(cachingResults, failureGroups.size());
@@ -222,8 +226,8 @@ public class AnalysisService {
         Double averageBackupRisk = totalBackupPaths > 0 ? totalBackupRisk / totalBackupPaths : 0.0;
         Double averageBackupPaths = numSrcs > 0 ? totalBackupPaths / numSrcs : 0.0;
 
-        Double averagePrimaryHopsPostFailure = connectionsIntact > 0 ? totalPrimaryHopsPostFailure / connectionsIntact : 0.0;
-        Double averagePrimaryCostPostFailure = connectionsIntact > 0 ? totalPrimaryCostPostFailure / connectionsIntact : 0.0;
+        Double averagePrimaryHopsPostFailure = numFoundBackup > 0 ? totalPrimaryHopsPostFailure / numFoundBackup : 0.0;
+        Double averagePrimaryCostPostFailure = numFoundBackup > 0 ? totalPrimaryCostPostFailure / numFoundBackup : 0.0;
         Double averageBackupPathsIntact = numSrcs > 0 ? backupPathsIntact / numSrcs : 0.0;
         Double averageBackupPathsSevered = numSrcs > 0 ? backupPathsSevered / numSrcs : 0.0;
 
@@ -275,6 +279,7 @@ public class AnalysisService {
                 .averageBackupPathsSevered(averageBackupPathsSevered)
                 .primaryIntactPerSrc(primaryIntactPerSrc)
                 .destsConnectedPerSrc(destsConnectedPerSrc)
+                .numFoundBackup(numFoundBackup)
                 .chosenFailures(convertFailuresToString(sortedFailureGroups.get(0)))
                 .cachingResults(cachingResults)
                 .build();

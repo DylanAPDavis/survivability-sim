@@ -10,8 +10,8 @@ analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
 aggregate_analysis = False
 rerun = False
-mass_analysis = False
-mass_sim = True
+mass_analysis = True
+mass_sim = False
 
 
 def process_job(job, analysis_type):
@@ -99,17 +99,16 @@ def rerun_jobs():
                 process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 
-def analyze_jobs(seeds, topologies, routings):
-    for seed in seeds:
-        for topology in topologies:
-            for routing in routings:
-                output_file_path = "results/output/" + "mass_analyze" + str(seed) + "_" + topology + "_" + routing
-                run_time = "3:59"
-                memory = "2000"
-                command_input = ["bsub", "-q", "short", "-W", run_time, "-R",
-                                 "rusage[mem=" + memory + "] span[hosts=1]", "-n", str(12), "-o", output_file_path,
-                                 "python", "scripts/run_mass_analysis.py", str(seed), topology, routing]
-                process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
+def analyze_jobs(analysis_seeds, topologies, routings):
+    for topology in topologies:
+        for routing in routings:
+            output_file_path = "results/output/" + "mass_analyze" + str(seeds).replace(" ", "") + "_" + topology + "_" + routing
+            run_time = "3:59"
+            memory = "2000"
+            command_input = ["bsub", "-q", "short", "-W", run_time, "-R",
+                             "rusage[mem=" + memory + "] span[hosts=1]", "-n", str(12), "-o", output_file_path,
+                             "python", "scripts/run_mass_analysis.py", json.dumps(seeds), topology, routing]
+            process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 if aggregate_analysis:
     process_aggregate_job()
