@@ -64,13 +64,16 @@ public class AggregationAnalysisService {
                 Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
         algorithmMap.put(RoutingType.ManyToOne, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu,
+                Algorithm.SurvivableHub));
         algorithmMap.put(RoutingType.ManyToMany, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu,
+                Algorithm.SurvivableHub));
         algorithmMap.put(RoutingType.Broadcast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
                 Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
+                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu,
+                Algorithm.SurvivableHub));
         return algorithmMap;
     }
 

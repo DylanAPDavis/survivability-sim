@@ -18,7 +18,8 @@ public enum Algorithm {
     CollapsedRing("collapsedring"),
     CycleForTwo("cyclefortwo"),
     Yens("yens"),
-    Tabu("tabu");
+    Tabu("tabu"),
+    SurvivableHub("survivablehub");
 
     private String code;
 

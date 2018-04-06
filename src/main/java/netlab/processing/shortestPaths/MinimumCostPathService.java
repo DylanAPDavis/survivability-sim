@@ -113,7 +113,7 @@ public class MinimumCostPathService {
                 .collect(Collectors.toMap(p -> p, p -> new Path(allPathsMap.get(p))));
     }
 
-    private Path findShortestPathWithAltWeights(SourceDestPair pair, Topology topo, Map<Link, Double> altWeightMap) {
+    public Path findShortestPathWithAltWeights(SourceDestPair pair, Topology topo, Map<Link, Double> altWeightMap) {
         return pathMappingService.convertToPath(dijkstraService.shortestPathWithAltWeights(topo, pair.getSrc(), pair.getDst(), altWeightMap), topo.getLinkIdMap());
     }
 

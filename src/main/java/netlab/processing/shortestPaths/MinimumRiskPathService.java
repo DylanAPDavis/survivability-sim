@@ -57,6 +57,19 @@ public class MinimumRiskPathService {
         return details;
     }
 
+    public Double findRisk(SourceDestPair pair, Topology topo, FailureScenario failureScenario, Set<Failure> failures){
+        Map<Link, Double> riskWeightMap = createRiskMap(topo.getLinks(), failures);
+        Path path = findPath(pair, topo, failureScenario, riskWeightMap);
+        return path.getLinks().stream().mapToDouble(riskWeightMap::get).sum();
+    }
+
+    public Path findPath(SourceDestPair pair, Topology topo, FailureScenario failureScenario, Map<Link, Double> riskWeightMap){
+        if(failureScenario.equals(FailureScenario.AllLinks) || failureScenario.equals(FailureScenario.AllNodes)){
+            return minimumCostPathService.findShortestPath(pair, topo);
+        }
+        return minimumCostPathService.findShortestPathWithAltWeights(pair, topo, riskWeightMap);
+    }
+
     public Map<Link, Double> createRiskMap(Set<Link> links, Set<Failure> failures){
         Map<Link, Double> riskWeightMap = new HashMap<>();
         Map<String, Failure> failureIdMap = createFailureIdMap(failures);

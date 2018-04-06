@@ -1,12 +1,12 @@
 import job
 algorithm_dict = {
-    "unicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "yens", "tabu"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
-    "anycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "yens", "tabu"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
-    "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
-    "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
-    "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
-    "manytomany": ["cyclefortwo"], #["ilp", "flexbhandari", "minimumcost", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
-    "broadcast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu"],
+    "unicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "yens", "tabu", "survivablehub"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
+    "anycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "yens", "tabu", "survivablehub"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
+    "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
+    "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
+    "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
+    "manytomany": ["cyclefortwo"], #["ilp", "flexbhandari", "minimumcost", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
+    "broadcast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
 }
 s_d_value_dict = {
     "unicast":

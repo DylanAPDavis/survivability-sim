@@ -8,6 +8,7 @@ import netlab.processing.cycles.HamiltonianCycleService;
 import netlab.processing.disjointpaths.BhandariService;
 import netlab.processing.disjointpaths.FlexBhandariService;
 import netlab.processing.groupcast.MemberForwardingService;
+import netlab.processing.groupcast.SurvivableHubBasedService;
 import netlab.processing.overlappingtrees.OverlappingTreeService;
 import netlab.processing.pathmapping.PathMappingService;
 import netlab.processing.shortestPaths.MinimumCostPathService;
@@ -63,6 +64,8 @@ public class ProcessingService {
 
     private PathMappingService pathMappingService;
 
+    private SurvivableHubBasedService survivableHubBasedService;
+
     @Autowired
     public ProcessingService(TopologyService topologyService, PrintingService printingService,
                              AmplService amplService, FlexBhandariService flexBhandariService,
@@ -71,7 +74,8 @@ public class ProcessingService {
                              MemberForwardingService memberForwardingService,
                              CollapsedRingService collapsedRingService, CycleForTwoService cycleForTwoService,
                              MinimumRiskPathService minimumRiskPathService, YensService yensService,
-                             TabuSearchService tabuSearchService, PathMappingService pathMappingService) {
+                             TabuSearchService tabuSearchService, PathMappingService pathMappingService,
+                             SurvivableHubBasedService survivableHubBasedService) {
         this.topoService = topologyService;
         this.printingService = printingService;
         this.amplService = amplService;
@@ -87,6 +91,7 @@ public class ProcessingService {
         this.yensService = yensService;
         this.tabuSearchService = tabuSearchService;
         this.pathMappingService = pathMappingService;
+        this.survivableHubBasedService = survivableHubBasedService;
     }
 
     public Request processRequest(Request request) {
@@ -140,6 +145,9 @@ public class ProcessingService {
                 break;
             case Tabu:
                 details = tabuSearchService.solve(request, topo);
+                break;
+            case SurvivableHub:
+                details = survivableHubBasedService.solve(request, topo);
                 break;
         }
         details.setChosenPaths(pathMappingService.filterEmptyPaths(details.getChosenPaths()));

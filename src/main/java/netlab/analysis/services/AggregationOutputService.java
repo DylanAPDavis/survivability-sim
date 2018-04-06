@@ -93,7 +93,7 @@ public class AggregationOutputService {
                 numS = Arrays.asList(1);
                 numD = Arrays.asList(1, 2, 3);
                 algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MinimumCostPath,
-                        Algorithm.MinimumRiskPath, Algorithm.Bhandari);
+                        Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.SurvivableHub);
                 break;
             case "manytomany":
                 beforeMetrics = Arrays.asList(totalPaths, totalCost, destsConnectedPerSrc, primaryCost, avgBackupCost, runningTime, feasible);
@@ -102,7 +102,7 @@ public class AggregationOutputService {
                 nfeValues = Arrays.asList(1, 2);
                 numS = Arrays.asList(5, 10);
                 numD = Arrays.asList(2, 3);
-                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MemberForwarding, Algorithm.CycleForTwo);
+                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.SurvivableHub);
                 break;
         }
 

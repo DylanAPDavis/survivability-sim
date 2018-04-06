@@ -158,6 +158,11 @@ public class BhandariService {
         return pathMappingService.convertToPaths(linkLists, topo.getLinkIdMap());
     }
 
+    public List<Path> computeDisjointPathsFlex(Topology topo, Node source, Node dest, Integer numC, Integer nfe,
+                                           Boolean nodesCanFail, Set<Failure> failures, Boolean defaultBehavior){
+        List<List<Link>> disjointPaths = computeDisjointPaths(topo, source, dest, numC, nfe, nodesCanFail, failures, defaultBehavior);
+        return pathMappingService.convertToPaths(disjointPaths, topo.getLinkIdMap());
+    }
 
     public List<List<Link>> computeDisjointPaths(Topology topo, Node source, Node dest, Integer numC, Integer nfe,
                                                  Boolean nodesCanFail, Set<Failure> failures, Boolean defaultBehavior)
