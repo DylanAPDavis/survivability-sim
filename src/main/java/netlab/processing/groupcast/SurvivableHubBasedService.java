@@ -64,6 +64,8 @@ public class SurvivableHubBasedService {
         Set<Node> dests = details.getDestinations();
         Set<Node> options = new HashSet<>(topo.getNodes());
         Map<SourceDestPair, Double> pathRiskMap = createRiskMap(pairs, topo, failureScenario, failures);
+        Map<Link, Double> linkRiskMap = minimumRiskPathService.createRiskMap(topo.getLinks(), failures);
+        Map<Node, Set<Link>> nodeLinkMap = topo.getNodeLinkMap();
 
         Map<Node, List<Double>> distanceToEachNode = new HashMap<>();
         Map<Node, Map<Node, Double>> costFromNodeToDst = new HashMap<>();
@@ -119,16 +121,33 @@ public class SurvivableHubBasedService {
         // Goal: Pick options such that one will be left over after nfe failures
         // If you can pick one non-failure option -> you're done
         // Otherwise, you'll have to pick 1 + nfe options
+        int numRiskyIncidentLinks = 0;
+        int numNonRiskyIncidentLinks = 0;
+        boolean usedANonFailure = false;
         for(Node option : sortedOptions){
+            Set<Link> incidentLinks = nodeLinkMap.get(option);
             if(nonFailureNodes.contains(option)){
                 hubs.add(option);
-                break;
+                usedANonFailure = true;
             }
             else{
                 hubs.add(option);
-                if(hubs.size() >= 1 + nfe){
+                /*if(hubs.size() >= 1 + nfe){
                     break;
+                }*/
+            }
+            for(Link link : incidentLinks){
+                if(linkRiskMap.get(link) > 0.0){
+                    numRiskyIncidentLinks++;
+                } else{
+                    numNonRiskyIncidentLinks++;
                 }
+            }
+            if(numNonRiskyIncidentLinks > 0 && usedANonFailure){
+                break;
+            }
+            if(numNonRiskyIncidentLinks + numRiskyIncidentLinks >= 1 + nfe && (usedANonFailure || hubs.size() >= 1 + nfe)){
+                break;
             }
         }
 

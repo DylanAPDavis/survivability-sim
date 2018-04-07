@@ -105,7 +105,32 @@ public class SurvivableHubBasedServiceTest {
     }
 
     @Test
-    public void manyToManyTestQAllNodes1(){
+    public void manyToManyTestQuake123(){
+
+        SimulationParameters params = SimulationParameters.builder()
+                .seed(1L)
+                .topologyId("tw")
+                .algorithm("survivablehub")
+                .objective("totalcost")
+                .routingType("manytomany")
+                .numSources(10)
+                .numDestinations(3)
+                .useMinS(10)
+                .useMinD(1)
+                .failureScenario("quake123")
+                .numFailureEvents(2)
+                .useAws(false)
+                .build();
+        Request request = generationService.generateFromSimParams(params);
+        request = processingService.processRequest(request);
+        assert(request.getDetails().getIsFeasible());
+        System.out.println(printingService.outputPaths(request));
+        Analysis analysis = analysisService.analyzeRequest(request);
+        System.out.print(analysis);
+    }
+
+    @Test
+    public void manyToManyTestAllNodes1(){
 
         SimulationParameters params = SimulationParameters.builder()
                 .seed(1L)
