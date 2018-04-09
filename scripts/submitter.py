@@ -10,8 +10,8 @@ analysis_after_sim = "ANALYSIS_AFTER_SIM"
 analysis_none = "ANALYSIS_NONE"
 aggregate_analysis = False
 rerun = False
-mass_analysis = True
-mass_sim = False
+mass_analysis = False
+mass_sim = True
 
 
 def process_job(job, analysis_type):
@@ -45,12 +45,12 @@ def process_job(job, analysis_type):
 
 
 def mass_process_jobs(job_list):
-    print("Running job list. Ids stored in scripts/input/seed_mass.txt")
+    #print("Running job list. Ids stored in scripts/input/first_id_mass.txt")
     first_job = job_list[0]
     output_file_path = "results/output/mass_process_" + first_job.request_id
-    run_time = "3:59"
+    run_time = "24:00"
     memory = "12000"
-    queue = "short"
+    queue = "long"
     param_dicts = []
     for job_details in job_list:
         args = [arg for arg in job_details.ordered_params]
@@ -58,12 +58,12 @@ def mass_process_jobs(job_list):
         args.append(job_details.request_id)
         param_dicts.append(run_simulation.build_param_dict(args))
     params_string = json.dumps(param_dicts)
-    filepath = 'scripts/input/' + str(first_job.seed) + '_mass.txt'
+    filepath = 'scripts/input/' + first_job.request_id + '_mass.txt'
     with open(filepath, "w+") as fp:
         fp.write(params_string)
     command_input = ["bsub", "-q", queue, "-W", run_time, "-R", "rusage[mem=" + memory + "] span[hosts=1]", "-n",
                      str(job_list[0].num_threads), "-o", output_file_path, "python", "scripts/run_mass_simulation.py",
-                     str(first_job.seed)]
+                     first_job.request_id]
     process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 
@@ -121,26 +121,39 @@ elif mass_analysis:
     analyze_jobs(seeds, topologies, routings)
 elif mass_sim:
     seeds = range(1, 31)
-    topology = "tw"
-    routing = "manytomany"
-    algorithm = "cyclefortwo"
-    nfe = 1
+    #topology = "tw"
+    #routing = "manytomany"
+    #algorithm = "cyclefortwo"
+    #nfe = 1
+    routing_types = ["anycast", "manytomany"]
+    failure_scenarios = ["alllinks", "quake2"]
+    nfe_values = [1, 2]
+    topologies = ["nsfnet", "tw"]
+    algorithm_dict = {
+        "anycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "tabu", "survivablehub"],
+        "manytomany": ["ilp", "flexbhandari", "minimumcost", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
+    }
     regular_filter = True
     all_seeds = True
     if all_seeds:
-        job_list = []
-        for seed in seeds:
-            jobs_for_seed = jobs.create_jobs(seed)
-            job_list += [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
-                         and job.algorithm == algorithm]
-        print(len(job_list))
-        mass_process_jobs(job_list)
+        for routing in routing_types:
+            for nfe in nfe_values:
+                for topology in topologies:
+                    for algorithm in algorithm_dict[routing]:
+                        for f_scenario in failure_scenarios:
+                            job_list = []
+                            for seed in seeds:
+                                jobs_for_seed = jobs.create_jobs(seed)
+                                job_list += [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
+                                             and job.algorithm == algorithm and job.nfe == nfe and job.f_scenario == f_scenario]
+                            print(routing + "_" + f_scenario + "_" + str(nfe) + "_" + topology + "_" + algorithm + ": " + str(len(job_list)))
+                            mass_process_jobs(job_list)
     else:
         for seed in seeds:
             if regular_filter:
                 jobs_for_seed = jobs.create_jobs(seed)
                 job_list = [job for job in jobs_for_seed if job.topo == topology and job.routing == routing
-                            and job.algorithm == algorithm]
+                            and job.algorithm == algorithm and nfe == nfe]
                 mass_process_jobs(job_list)
                 print(len(job_list))
             else:

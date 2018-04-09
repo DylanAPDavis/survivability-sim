@@ -1,11 +1,11 @@
 import job
 algorithm_dict = {
     "unicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "yens", "tabu", "survivablehub"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
-    "anycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "yens", "tabu", "survivablehub"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
+    "anycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "tabu", "survivablehub"],  # ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "tabu"],
     "multicast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
     "manycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
     "manytoone": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
-    "manytomany": ["cyclefortwo"], #["ilp", "flexbhandari", "minimumcost", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
+    "manytomany": ["ilp", "flexbhandari", "minimumcost", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
     "broadcast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "hamiltonian", "yens", "overlappingtrees", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
 }
 s_d_value_dict = {
@@ -15,6 +15,7 @@ s_d_value_dict = {
     ],
     "anycast":
     [
+        {"num_s": 1, "num_d": 1, "use_min_s": 1, "use_max_s":1, "use_min_d": 1, "use_max_d": 1},
         {"num_s": 1, "num_d": 2, "use_min_s": 1, "use_max_s": 1, "use_min_d": 1, "use_max_d": 1},
         {"num_s": 1, "num_d": 3, "use_min_s": 1, "use_max_s": 1, "use_min_d": 1, "use_max_d": 1},
     ],
@@ -65,11 +66,11 @@ traffic_combo_dict = {
 }
 
 # routing_types = ["unicast", "anycast", "manycast", "multicast", "manytoone", "manytomany", "broadcast"]
-routing_types = ["manytomany"]
+routing_types = ["anycast", "manytomany"]
 failure_scenarios = ["alllinks", "quake2"]
 # failure_scenarios = ["default", "alllinks", "allnodes", "quake1", "quake2", "quake3", "quake12", "quake13", "quake23", "quake123"]
 nfe_values = [1, 2] # [0, 1, 2, 3, 9999]
-topologies = ["tw"] # ["nsfnet", "tw"]
+topologies = ["nsfnet", "tw"] # ["nsfnet", "tw"]
 
 
 def create_jobs(seed):

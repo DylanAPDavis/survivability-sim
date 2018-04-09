@@ -3,10 +3,10 @@ import sys, ast
 import traceback
 
 
-def run_sim(seed):
+def run_sim(first_id):
     # Launch the simulator
     process = launch_simulator(loop=True, sim_params={}, analysis_params={}, port_num="0", use_web_server="false",
-                               mass_run=seed)
+                               mass_run=first_id)
 
     # Kill the simulator (in case it hasn't died)
     # kill(process)
@@ -14,7 +14,7 @@ def run_sim(seed):
 
 
 def print_usage_message():
-    message = "Usage: <Seed number>"
+    message = "Usage: <First Request ID Number>"
     print(message)
 
 

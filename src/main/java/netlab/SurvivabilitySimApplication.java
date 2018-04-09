@@ -91,8 +91,8 @@ public class SurvivabilitySimApplication {
 			}
 			if(option.contains("--massRun")){
 				try{
-					String seed = value;
-					String fileName = "scripts/input/" + seed + "_mass.txt";
+					String firstId = value;
+					String fileName = "scripts/input/" + firstId + "_mass.txt";
 					TypeReference<List<SimulationParameters>> mapType = new TypeReference<List<SimulationParameters>>() {};
 					value = new String(Files.readAllBytes(Paths.get(fileName))).replace("\n", "").replace("\r", "");
 					simParamList = mapper.readValue(value, mapType);
