@@ -97,9 +97,9 @@ public class AWSTest {
     @Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
-        String algorithm = null;
-        String routing = "manytomany";
-        boolean deleteRecords = false;
+        String algorithm = "tabu";
+        String routing = "anycast";
+        boolean deleteRecords = true;
         boolean deleteAnalysis = true;
         for(Long seed : seeds) {
             long startTime = System.nanoTime();

@@ -130,8 +130,8 @@ elif mass_sim:
     nfe_values = [1, 2]
     topologies = ["nsfnet", "tw"]
     algorithm_dict = {
-        "anycast": ["ilp", "flexbhandari", "minimumcost", "minimumrisk", "bhandari", "tabu", "survivablehub"],
-        "manytomany": ["ilp", "flexbhandari", "minimumcost", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
+        "anycast": ["flexbhandari", "minimumcost", "minimumrisk", "bhandari", "tabu", "survivablehub"],
+        "manytomany": ["flexbhandari", "minimumcost", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
     }
     regular_filter = True
     all_seeds = True
