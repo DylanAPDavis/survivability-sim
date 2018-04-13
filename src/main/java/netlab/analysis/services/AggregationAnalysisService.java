@@ -25,10 +25,10 @@ public class AggregationAnalysisService {
 
 
     public AggregationParameters makeDefaultParameters(List<Long> seeds){
-        List<String> topologyIds = Arrays.asList("tw");
+        List<String> topologyIds = Arrays.asList("nsfnet", "tw");
         /*List<RoutingType> routingTypes = Arrays.asList(RoutingType.Unicast, RoutingType.Anycast, RoutingType.Manycast, RoutingType.Multicast,
                 RoutingType.ManyToOne, RoutingType.ManyToMany, RoutingType.Broadcast);*/
-        List<RoutingType> routingTypes = Arrays.asList(RoutingType.ManyToMany);
+        List<RoutingType> routingTypes = Arrays.asList(RoutingType.Anycast, RoutingType.ManyToMany);
         List<FailureScenario> failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
         List<Integer> nfeValues = Arrays.asList(1, 2);
         Map<RoutingType, List<Algorithm>> algorithmMap = makeAlgorithmMap();
@@ -53,26 +53,20 @@ public class AggregationAnalysisService {
     public Map<RoutingType, List<Algorithm>> makeAlgorithmMap(){
         Map<RoutingType, List<Algorithm>> algorithmMap = new HashMap<>();
         algorithmMap.put(RoutingType.Unicast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
-                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens, Algorithm.Tabu));
+                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens, Algorithm.Tabu, Algorithm.SurvivableHub));
         algorithmMap.put(RoutingType.Anycast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
-                Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.Yens, Algorithm.Tabu));
+                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Tabu, Algorithm.SurvivableHub));
         algorithmMap.put(RoutingType.Multicast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
-                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
+                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu, Algorithm.SurvivableHub));
         algorithmMap.put(RoutingType.Manycast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
-                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu));
+                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu, Algorithm.SurvivableHub));
         algorithmMap.put(RoutingType.ManyToOne, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
-                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu,
+                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu,
                 Algorithm.SurvivableHub));
         algorithmMap.put(RoutingType.ManyToMany, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
-                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu,
-                Algorithm.SurvivableHub));
+                Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu, Algorithm.SurvivableHub));
         algorithmMap.put(RoutingType.Broadcast, Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.MinimumCostPath,
-                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens,
-                Algorithm.OverlappingTrees, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu,
+                Algorithm.MinimumRiskPath, Algorithm.Bhandari,  Algorithm.Yens,  Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.Tabu,
                 Algorithm.SurvivableHub));
         return algorithmMap;
     }
@@ -96,6 +90,7 @@ public class AggregationAnalysisService {
                 routingList.add(new RoutingDescription(1, 1, 1, 1, 1, 1));
                 break;
             case Anycast:
+                routingList.add(new RoutingDescription(1, 1, 1, 1, 1, 1));
                 routingList.add(new RoutingDescription(1, 2, 1, 1, 1, 1));
                 routingList.add(new RoutingDescription(1, 3, 1, 1, 1, 1));
                 break;

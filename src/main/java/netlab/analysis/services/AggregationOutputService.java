@@ -30,7 +30,7 @@ public class AggregationOutputService {
     private final String totalCost = "Total Cost";
     private final String runningTime = "Running Time";
     private final String destsConnected = "Connected D";
-    private final String destsConnectedPerSrc = "Avg. Connected D";
+    private final String destsConnectedPerSrc = "Avg. D";
     private final String primaryIntact = "Primary Intact";
     private final String primaryIntactPerSrc = "Primary Intact \\%";
     private final String connectionsIntact = "Consumers Connected \\%";
@@ -76,33 +76,28 @@ public class AggregationOutputService {
      */
 
     public AggregationOutputParameters createOutputForRoutingType(String routingType){
-        List<FailureScenario> failureScenarios = new ArrayList<>();
-        List<Integer> nfeValues = new ArrayList<>();
+        List<FailureScenario> failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
+        List<Integer> nfeValues = Arrays.asList(1, 2);
         List<Integer> numS = new ArrayList<>();
         List<Integer> numD = new ArrayList<>();
         List<Algorithm> algs = new ArrayList<>();
-        List<String> topologies = Arrays.asList("tw");
+        List<String> topologies = Arrays.asList("nsfnet", "tw");
         List<CachingType> cachingTypes = Arrays.asList(CachingType.EntirePath, CachingType.LeaveCopyDown, CachingType.FailureAware, CachingType.BranchingPoint);
-        List<String> beforeMetrics = Arrays.asList(totalPaths, destsConnected, totalCost, primaryCost, avgBackupCost, runningTime, feasible);
-        List<String> afterMetrics = Arrays.asList(primaryIntact, connectionsIntact, postFailureCost);
+        List<String> beforeMetrics = Arrays.asList(totalPaths, totalCost, destsConnectedPerSrc, primaryCost, avgBackupCost, runningTime, feasible);
+        List<String> afterMetrics = Arrays.asList(primaryIntactPerSrc, connectionsIntact, postFailureCost);
         List<String> cachingMetrics = Arrays.asList(reachOnPrimary, reachOnBackup, afterHopsContent, cachingCost);
         switch(routingType.toLowerCase()){
             case "anycast":
-                failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
-                nfeValues = Arrays.asList(1, 2);
                 numS = Arrays.asList(1);
                 numD = Arrays.asList(1, 2, 3);
-                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MinimumCostPath,
-                        Algorithm.MinimumRiskPath, Algorithm.Bhandari, Algorithm.SurvivableHub);
+                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.SurvivableHub, Algorithm.Tabu,
+                        Algorithm.Bhandari, Algorithm.MinimumCostPath, Algorithm.MinimumRiskPath);
                 break;
             case "manytomany":
-                beforeMetrics = Arrays.asList(totalPaths, totalCost, destsConnectedPerSrc, primaryCost, avgBackupCost, runningTime, feasible);
-                afterMetrics = Arrays.asList(primaryIntactPerSrc, connectionsIntact, postFailureCost);
-                failureScenarios = Arrays.asList(FailureScenario.AllLinks, FailureScenario.Quake_2);
-                nfeValues = Arrays.asList(1, 2);
                 numS = Arrays.asList(5, 10);
-                numD = Arrays.asList(2, 3);
-                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.Tabu, Algorithm.MemberForwarding, Algorithm.CycleForTwo, Algorithm.SurvivableHub);
+                numD = Arrays.asList(1, 2, 3);
+                algs = Arrays.asList(Algorithm.ILP, Algorithm.FlexBhandari, Algorithm.SurvivableHub,  Algorithm.Tabu,
+                        Algorithm.CycleForTwo, Algorithm.MinimumCostPath, Algorithm.MemberForwarding);
                 break;
         }
 
@@ -113,7 +108,8 @@ public class AggregationOutputService {
 
 
     public String createAltAggregationOutput(Map<String, AggregateAnalysis> outputMap){
-        String routingType = "manyToMany";
+        String routingType = "anycast";
+        boolean combineNfe = false;
 
         AggregationOutputParameters aop = createOutputForRoutingType(routingType);
         List<FailureScenario> failureScenarios = aop.getFailureScenarios();
@@ -187,7 +183,7 @@ public class AggregationOutputService {
                             } else {
                                 for (Integer d : numD) {
                                     // Sub header for Anycast # and Algorithms
-                                    String[] anycastHeader = routingType.equals("anycast") ? makeAnycastHeader(algs, d, algFormatMap) : makeManyToManyHeader(algs, s, d, algFormatMap);
+                                    String[] anycastHeader = makeManyToManyHeader(algs, s, d, algFormatMap);//routingType.equals("anycast") ? makeAnycastHeader(algs, d, algFormatMap) : makeManyToManyHeader(algs, s, d, algFormatMap);
                                     output.add(anycastHeader);
                                     tempOutput.add(anycastHeader); // add alt & output
                                     List<AggregateAnalysis> agForD = mapForTable.get(d);
@@ -211,44 +207,55 @@ public class AggregationOutputService {
                     // Stored in linesPerNfe
                     // Take each of these lines, and merge them together
                     // Ignore first column for later nfes
-                    List<String[]> outputForZero = linesPerNfe.get(0);
-                    for (int i = 0; i < outputForZero.size(); i++) {
-                        String[] line = outputForZero.get(i);
-                        List<String> combinedLine = new ArrayList<>();
-                        Collections.addAll(combinedLine, line);
-                        boolean endLine = true;
-                        if (!Arrays.equals(line, new String[]{"\\hline"})) {
-                            for (int nfeI = 1; nfeI < nfeValues.size(); nfeI++) {
-                                String[] adjacentLine = linesPerNfe.get(nfeI).get(i);
-                                for (int adjacentI = 0; adjacentI < adjacentLine.length; adjacentI++) {
-                                    if (i != 0 && adjacentI == 0) {
-                                        continue;
+                    if(combineNfe) {
+                        List<String[]> outputForZero = linesPerNfe.get(0);
+                        for (int i = 0; i < outputForZero.size(); i++) {
+                            String[] line = outputForZero.get(i);
+                            List<String> combinedLine = new ArrayList<>();
+                            Collections.addAll(combinedLine, line);
+                            boolean endLine = true;
+                            if (!Arrays.equals(line, new String[]{"\\hline"})) {
+                                for (int nfeI = 1; nfeI < nfeValues.size(); nfeI++) {
+                                    String[] adjacentLine = linesPerNfe.get(nfeI).get(i);
+                                    for (int adjacentI = 0; adjacentI < adjacentLine.length; adjacentI++) {
+                                        if (i != 0 && adjacentI == 0) {
+                                            continue;
+                                        }
+                                        combinedLine.add(adjacentLine[adjacentI]);
                                     }
-                                    combinedLine.add(adjacentLine[adjacentI]);
                                 }
+                            } else {
+                                endLine = false;
                             }
-                        } else {
-                            endLine = false;
+                            // Now we've got a combined line, have to append with ampersand
+                            String[] joined = joinWithAmpersand(combinedLine, endLine);
+                            altOutput.add(joined);
                         }
-                        // Now we've got a combined line, have to append with ampersand
-                        String[] joined = joinWithAmpersand(combinedLine, endLine);
-                        altOutput.add(joined);
+                    } else{
+                        for(List<String[]> linesForNfe : linesPerNfe){
+                            for(String[] line : linesForNfe){
+                                List<String> combinedLine = new ArrayList<>();
+                                Collections.addAll(combinedLine, line);
+                                String[] joined = joinWithAmpersand(combinedLine, !Arrays.equals(line, new String[]{"\\hline"}));
+                                altOutput.add(joined);
+                            }
+                        }
                     }
 
                 }
-            }
-            try {
-                String fileName = s + routingType + "_aggregatedTables";
-                CSVWriter writer = new CSVWriter(new FileWriter(fileName + ".csv"), ',');
-                writer.writeAll(output);
-                writer.close();
-                writer = new CSVWriter(new FileWriter("alt" + fileName + ".csv"), ',');
-                writer.writeAll(altOutput);
-                writer.close();
-                output = new ArrayList<>();
-                altOutput = new ArrayList<>();
-            } catch (IOException e) {
-                e.printStackTrace();
+                try {
+                    String fileName = s + routingType + "_" + topology + "_aggregatedTables";
+                    CSVWriter writer = new CSVWriter(new FileWriter(fileName + ".csv"), ',');
+                    writer.writeAll(output);
+                    writer.close();
+                    writer = new CSVWriter(new FileWriter("alt" + fileName + ".csv"), ',');
+                    writer.writeAll(altOutput);
+                    writer.close();
+                    output = new ArrayList<>();
+                    altOutput = new ArrayList<>();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -314,6 +321,8 @@ public class AggregationOutputService {
                 case OverlappingTrees:
                     algFormatMap.put(alg, "OverT");
                     break;
+                case SurvivableHub:
+                    algFormatMap.put(alg, "SurvHub");
             }
         }
         return algFormatMap;
@@ -389,7 +398,7 @@ public class AggregationOutputService {
 
 
     private String[] makeManyToManyHeader(List<Algorithm> algs, Integer s, Integer d, Map<Algorithm, String> algFormatMap) {
-        String any = "\\textbf{$|S| =$ " + s + ", $|D| =$ " + d + "}";
+        String any = "\\textbf{|D| = " + d + "}"; //"\\textbf{$|S| =$ " + s + ", $|D| =$ " + d + "}";
         List<String> temp = algs.stream().map(algFormatMap::get).collect(Collectors.toList());
         temp.add(0, any);
         return makeArrayFromList(temp);

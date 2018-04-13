@@ -158,7 +158,7 @@ public class SurvivabilitySimApplication {
 			log.info("Mass Analyzing");
 			log.info(massAnalysisParameters.toString());
 			analysCon.massAnalysis(massAnalysisParameters);
-			waitMinTime(startTime, 300);
+			//waitMinTime(startTime, 300);
 		}
 
 		// Mass simulation run

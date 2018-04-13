@@ -7,6 +7,7 @@ import netlab.analysis.services.AggregationOutputService;
 import netlab.analysis.services.AnalysisService;
 import netlab.analysis.services.HashingService;
 import netlab.storage.services.StorageService;
+import netlab.submission.enums.Algorithm;
 import netlab.submission.enums.RoutingType;
 import netlab.submission.request.Request;
 import netlab.submission.request.SimulationParameters;
@@ -145,7 +146,8 @@ public class AnalysisController {
     public String aggregateWithParams(@RequestBody AggregationParameters agParams){
         long startTime = System.nanoTime();
         ExecutorService executor = Executors.newFixedThreadPool(5);
-        Map<String, List<Analysis>> analysisMap = buildAnalysisMap(agParams.getSeeds(), agParams.getRoutingTypes(), agParams.getTopologyIds(), executor);
+        Map<RoutingType, List<Algorithm>> algorithmMap = agParams.getAlgorithmMap();
+        Map<String, List<Analysis>> analysisMap = buildAnalysisMap(agParams.getSeeds(), agParams.getRoutingTypes(), agParams.getTopologyIds(), algorithmMap, executor);
         long endTime = System.nanoTime();
         double duration = (endTime - startTime)/1e9;
         log.info("Analysis gathering took: " + duration + " seconds");
@@ -170,13 +172,16 @@ public class AnalysisController {
     }
 
     private Map<String, List<Analysis>> buildAnalysisMap(List<Long> seeds, List<RoutingType> routingTypes,
-                                                         List<String> topologyIds, ExecutorService executor){
+                                                         List<String> topologyIds, Map<RoutingType, List<Algorithm>> algorithmMap,
+                                                         ExecutorService executor){
         List<Callable<Map<String, List<Analysis>>>> analysisCallables = new ArrayList<>();
         for(RoutingType routingType : routingTypes) {
             for(String topologyId : topologyIds) {
-                for (Long seed : seeds) {
-                    Callable<Map<String, List<Analysis>>> c = getAnalysis(seed, routingType, topologyId);
-                    analysisCallables.add(c);
+                for(Algorithm algorithm : algorithmMap.get(routingType)) {
+                    for (Long seed : seeds) {
+                        Callable<Map<String, List<Analysis>>> c = getAnalysis(seed, routingType, topologyId, algorithm);
+                        analysisCallables.add(c);
+                    }
                 }
             }
         }
@@ -241,13 +246,14 @@ public class AnalysisController {
         };
     }
 
-    private Callable<Map<String, List<Analysis>>> getAnalysis(Long seed, RoutingType routingType, String topologyId){
+    private Callable<Map<String, List<Analysis>>> getAnalysis(Long seed, RoutingType routingType, String topologyId, Algorithm algorithm){
         return () -> {
             Map<String, List<Analysis>> analysisMap = new HashMap<>();
             List<SimulationParameters> seedParams = storageService.queryForSeed(seed);
             for(SimulationParameters params : seedParams){
                 if(params.getRoutingType().toLowerCase().equals(routingType.getCode().toLowerCase())
-                        && params.getTopologyId().toLowerCase().equals(topologyId.toLowerCase())) {
+                        && params.getTopologyId().toLowerCase().equals(topologyId.toLowerCase())
+                        && params.getAlgorithm().toLowerCase().equals(algorithm.getCode().toLowerCase())) {
                     String id = params.getRequestId();
                     if (params.getCompleted()) {
                         Analysis analysis = storageService.retrieveAnalyzedSet(id, true, false);

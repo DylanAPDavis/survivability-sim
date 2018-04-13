@@ -97,8 +97,9 @@ public class AWSTest {
     @Test
     public void deleteRequests(){
         List<Long> seeds = LongStream.rangeClosed(1, 30).boxed().collect(Collectors.toList());
-        String algorithm = "tabu";
-        String routing = "anycast";
+        // delete minimumcost anycast, manytomany ; bhandari anycast, manytomany
+        String algorithm = "bhandari";
+        String routing = "manytomany";
         boolean deleteRecords = true;
         boolean deleteAnalysis = true;
         for(Long seed : seeds) {
@@ -114,7 +115,7 @@ public class AWSTest {
     @Test
     public void analysisGeneration(){
         List<Long> seeds = LongStream.rangeClosed(1L, 30L).boxed().collect(Collectors.toList());
-        String routingType = "manytomany";
+        String routingType = "anycast";
         String topologyId = "tw";
         analysisController.analyzeSeeds(seeds, routingType, topologyId);
     }

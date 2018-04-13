@@ -107,7 +107,7 @@ public class PathMappingService {
             if (!usedS.contains(src) || !usedD.contains(dst) || minPerPairMap.get(pair) > 0) {
                 int newSSize = usedS.contains(src) ? usedS.size() : usedS.size() + 1;
                 int newDSize = usedD.contains(dst) ? usedD.size() : usedD.size() + 1;
-                if (newSSize <= useMaxS && newDSize <= useMaxD) {
+                if (newSSize <= useMaxS && newDSize <= useMaxD && !(newSSize == usedS.size() && usedD.size() >= useMinD)) {
                     usedS.add(src);
                     usedD.add(dst);
                     added = true;

@@ -24,7 +24,7 @@ def process_job(job, analysis_type):
                          str(job.use_aws)]
     else:
         output_file_path = "results/output/" + job.request_id
-        run_time = "12:00"
+        run_time = "36:00"
         memory = "6000"
         queue = "long"
         if job.algorithm == "ilp" and job.f_scenario != "default" and job.ignore == "false":
@@ -48,9 +48,9 @@ def mass_process_jobs(job_list):
     #print("Running job list. Ids stored in scripts/input/first_id_mass.txt")
     first_job = job_list[0]
     output_file_path = "results/output/mass_process_" + first_job.request_id
-    run_time = "24:00"
-    memory = "12000"
-    queue = "long"
+    run_time = "3:59"
+    memory = "4000"
+    queue = "short"
     param_dicts = []
     for job_details in job_list:
         args = [arg for arg in job_details.ordered_params]
@@ -102,12 +102,12 @@ def rerun_jobs():
 def analyze_jobs(analysis_seeds, topologies, routings):
     for topology in topologies:
         for routing in routings:
-            output_file_path = "results/output/" + "mass_analyze" + str(seeds).replace(" ", "") + "_" + topology + "_" + routing
+            output_file_path = "results/output/" + "mass_analyze" + str(analysis_seeds).replace(" ", "") + "_" + topology + "_" + routing
             run_time = "3:59"
-            memory = "2000"
+            memory = "8000"
             command_input = ["bsub", "-q", "short", "-W", run_time, "-R",
                              "rusage[mem=" + memory + "] span[hosts=1]", "-n", str(12), "-o", output_file_path,
-                             "python", "scripts/run_mass_analysis.py", json.dumps(seeds), topology, routing]
+                             "python", "scripts/run_mass_analysis.py", json.dumps(analysis_seeds), topology, routing]
             process = subprocess.Popen(command_input, stdout=subprocess.PIPE, universal_newlines=True)
 
 if aggregate_analysis:
@@ -115,9 +115,9 @@ if aggregate_analysis:
 elif rerun:
     rerun_jobs()
 elif mass_analysis:
-    seeds = range(1,31)
+    seeds = range(1, 31)
     topologies = ["tw"]
-    routings = ["manytomany"]
+    routings = ["anycast"]
     analyze_jobs(seeds, topologies, routings)
 elif mass_sim:
     seeds = range(1, 31)
@@ -130,8 +130,8 @@ elif mass_sim:
     nfe_values = [1, 2]
     topologies = ["nsfnet", "tw"]
     algorithm_dict = {
-        "anycast": ["flexbhandari", "minimumcost", "minimumrisk", "bhandari", "tabu", "survivablehub"],
-        "manytomany": ["flexbhandari", "minimumcost", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
+        "anycast": ["minimumcost", "bhandari"],#["flexbhandari", "minimumcost", "minimumrisk", "bhandari", "tabu", "survivablehub"],
+        "manytomany": ["minimumcost"]#["flexbhandari", "minimumcost", "memberforwarding", "cyclefortwo", "tabu", "survivablehub"],
     }
     regular_filter = True
     all_seeds = True
